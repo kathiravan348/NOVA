@@ -4,3 +4,7 @@ export * from "./charges";
 export * from "./trade";
 export * from "./strategy";
 export * from "./backtest";
+export * from "./broker";
+export * from "./rateLimit";
+export * from "./dataJob";
+export * from "./audit";

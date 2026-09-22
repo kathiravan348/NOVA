@@ -11,3 +11,7 @@
 | BacktestResult | `GET /api/v1/backtests/{id}/result` | NOVA-005 | Orbit |
 | Trade | `GET /api/v1/backtests/{id}/trades` | NOVA-005 | Orbit |
 | Charges | — | NOVA-005 | Ledger, Orbit, ui-trading |
+| BrokerAccount | `GET /api/v1/broker/accounts`, `GET /api/v1/broker/accounts/{id}` | NOVA-005 | Relay |
+| RateLimit | `GET /api/v1/broker/rate-limits` | NOVA-005 | Relay |
+| DataJob | `GET /api/v1/data-jobs`, `GET /api/v1/data-jobs/{id}` | NOVA-005 | Relay |
+| AuditEntry | `GET /api/v1/audit` | NOVA-005 | Relay |
