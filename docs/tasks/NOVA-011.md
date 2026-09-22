@@ -1,6 +1,6 @@
 # NOVA-011 — ui-trading: INR formatters, PriceText, PnLText, PnLCard, ChargesBreakdown, Meter
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-011 · **Depends on:** NOVA-007
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-011 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-trading` has tests and exports the money/number formatters (paise → Indian-grouped text, explicit signs) and the first five trading components built on ui-core.
@@ -37,10 +37,10 @@ Modify: `frontend/packages/ui-trading/{package.json,tsconfig.json,src/index.ts}`
 9. Component tests: rendered text uses the formatters, PnLText colour class by sign, PnLCard loading skeleton, ChargesBreakdown row count with/without `hideZero`, Meter aria values and threshold colour.
 
 ## Acceptance checks
-- [ ] `pnpm test` runs the ui-trading tests (root vitest picks up the new `vitest.config.ts`).
-- [ ] Stories render in dark and light, 0 a11y violations, no horizontal scroll at 360px.
-- [ ] No hex in components; ui-trading imports ui-core only from `@nova/ui-core`.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] `pnpm test` runs the ui-trading tests (root vitest picks up the new `vitest.config.ts`).
+- [x] Stories render in dark and light, 0 a11y violations, no horizontal scroll at 360px.
+- [x] No hex in components; ui-trading imports ui-core only from `@nova/ui-core`.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Charts (NOVA-012). Date/time formatters. Computing charges or net P&L. Changes to ui-core or contracts.
@@ -48,5 +48,10 @@ Modify: `frontend/packages/ui-trading/{package.json,tsconfig.json,src/index.ts}`
 ## Questions
 
 ## Handoff
+- Implemented money formatters (`formatInr`, `formatPrice`, `formatPercent`, `formatQuantity`) with en-IN grouping, `−` (U+2212), and explicit signs.
+- Implemented PriceText, PnLText, PnLCard, ChargesBreakdown, Meter components with full stories and vitest unit tests.
+- Re-exported all formatters and components in `packages/ui-trading/src/index.ts`.
+- Updated `docs/COMPONENTS.md` with trading component rows.
+- All acceptance checks pass, `pnpm lint`, `pnpm typecheck`, `pnpm test` (31 files, 229 tests), `pnpm build`, `pnpm format:check` all green.
 
 ## Review
