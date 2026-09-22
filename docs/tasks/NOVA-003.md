@@ -1,6 +1,6 @@
 # NOVA-003 — Storybook
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-003 · **Depends on:** NOVA-002
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-003 · **Depends on:** NOVA-002
 
 ## Goal
 `@nova/ui-storybook` runs Storybook 10 for `ui-core` and `ui-trading` with the NOVA theme, a dark/light toolbar toggle, 360/768/1440 viewports and the a11y panel. A "Foundations/Tokens" story shows every colour, type style, spacing and radius token.
@@ -66,3 +66,11 @@ Modify:
 **Known gaps:** none
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- `Tokens.stories.tsx`: `p-space-4`, `gap-space-4`, `mb-space-2` etc. generated no CSS (theme only defines `--spacing: var(--space-1)`), so all padding and gaps were missing. Changed to numeric utilities (`p-4` = `space-4`).
+- Prettier on `main.ts` (leading blank line) and `Tokens.stories.tsx`.
+**Verified in browser:** bg `#10172A` dark / `#F5F6F8` light from the toolbar; viewport menu has Mobile/Tablet/Desktop; no horizontal scroll at 360px on all 4 stories; axe finds 0 violations on 4 stories × 2 themes.
+**Accepted deviations:** relative story globs (Storybook resolves them from the config dir); `allowImportingTsExtensions` for the `vite.aliases.ts` import.
+**Rulebook issues found:** the handoff said all checks pass, but the spacing classes silently did nothing. Check the rendered story, not only the build.
+**Follow-up tasks created:** none. `prettier --check` fails on the generated `ui-core/src/theme/tokens.css` (already on main). Add it to `.prettierignore` in NOVA-007.

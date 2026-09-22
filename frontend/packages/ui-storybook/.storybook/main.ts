@@ -1,4 +1,3 @@
-
 import type { StorybookConfig } from "@storybook/react-vite";
 import { mergeConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";

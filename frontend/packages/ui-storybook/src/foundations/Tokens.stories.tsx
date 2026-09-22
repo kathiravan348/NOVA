@@ -27,30 +27,26 @@ const TYPE_CLASSES: Record<string, string> = {
 export const Colors: Story = {
   render: () => (
     <div className="w-full max-w-full">
-      <h1 className="text-page-title font-semibold text-text-primary mb-space-2">
-        Colors
-      </h1>
-      <p className="text-body text-text-muted mb-space-6">
+      <h1 className="text-page-title font-semibold text-text-primary mb-2">Colors</h1>
+      <p className="text-body text-text-muted mb-6">
         Theme color tokens defined for dark and light modes.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-space-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
         {tokens.color.tokens.map((token) => (
           <div
             key={token.name}
-            className="flex flex-col rounded-lg border border-border-default bg-bg-surface p-space-4 overflow-hidden"
+            className="flex flex-col rounded-lg border border-border-default bg-bg-surface p-4 overflow-hidden"
           >
             <div
-              className="h-16 w-full rounded-md border border-border-default mb-space-3"
+              className="h-16 w-full rounded-md border border-border-default mb-3"
               style={{ background: `var(--${token.name})` }}
               aria-hidden="true"
             />
             <div className="font-mono text-body font-medium text-text-primary break-words">
               {token.name}
             </div>
-            <p className="text-body-sm text-text-muted mt-space-1 leading-normal">
-              {token.usage}
-            </p>
+            <p className="text-body-sm text-text-muted mt-1 leading-normal">{token.usage}</p>
           </div>
         ))}
       </div>
@@ -61,34 +57,30 @@ export const Colors: Story = {
 export const Typography: Story = {
   render: () => (
     <div className="w-full max-w-full">
-      <h1 className="text-page-title font-semibold text-text-primary mb-space-2">
-        Typography
-      </h1>
-      <p className="text-body text-text-muted mb-space-6">
+      <h1 className="text-page-title font-semibold text-text-primary mb-2">Typography</h1>
+      <p className="text-body text-text-muted mb-6">
         Type scales and styles for text (IBM Plex Sans) and numbers (IBM Plex Mono).
       </p>
 
-      <div className="flex flex-col gap-space-6 w-full">
+      <div className="flex flex-col gap-6 w-full">
         {tokens.type.groups.map((group) => (
-          <section key={group.name} className="flex flex-col gap-space-4">
+          <section key={group.name} className="flex flex-col gap-4">
             <h2 className="text-section-title font-semibold text-text-primary">
               {group.name} ({group.family})
             </h2>
 
-            <div className="flex flex-col gap-space-4">
+            <div className="flex flex-col gap-4">
               {group.styles.map((style) => {
                 const typeClass =
                   TYPE_CLASSES[style.name] ??
-                  (group.family === "mono"
-                    ? "font-mono text-body"
-                    : "font-sans text-body");
+                  (group.family === "mono" ? "font-mono text-body" : "font-sans text-body");
 
                 return (
                   <div
                     key={style.name}
-                    className="rounded-lg border border-border-default bg-bg-surface p-space-4 overflow-hidden"
+                    className="rounded-lg border border-border-default bg-bg-surface p-4 overflow-hidden"
                   >
-                    <div className="flex flex-wrap items-baseline justify-between gap-space-2 mb-space-2">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
                       <div className="font-mono text-body font-medium text-text-primary">
                         {style.name}
                       </div>
@@ -97,14 +89,10 @@ export const Typography: Story = {
                       </div>
                     </div>
 
-                    <p className="text-body-sm text-text-muted mb-space-3">
-                      {style.usage}
-                    </p>
+                    <p className="text-body-sm text-text-muted mb-3">{style.usage}</p>
 
-                    <div className="rounded-md border border-border-default bg-bg-raised p-space-4 overflow-x-auto">
-                      <p className={`${typeClass} text-text-primary`}>
-                        {style.sample}
-                      </p>
+                    <div className="rounded-md border border-border-default bg-bg-raised p-4 overflow-x-auto">
+                      <p className={`${typeClass} text-text-primary`}>{style.sample}</p>
                     </div>
                   </div>
                 );
@@ -120,31 +108,25 @@ export const Typography: Story = {
 export const Spacing: Story = {
   render: () => (
     <div className="w-full max-w-full">
-      <h1 className="text-page-title font-semibold text-text-primary mb-space-2">
-        Spacing
-      </h1>
-      <p className="text-body text-text-muted mb-space-6">
+      <h1 className="text-page-title font-semibold text-text-primary mb-2">Spacing</h1>
+      <p className="text-body text-text-muted mb-6">
         Consistent spacing scale for margins, padding, and gaps.
       </p>
 
-      <div className="flex flex-col gap-space-3 w-full">
+      <div className="flex flex-col gap-3 w-full">
         {tokens.spacing.tokens.map((token) => (
           <div
             key={token.name}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-3 rounded-lg border border-border-default bg-bg-surface p-space-4"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border-default bg-bg-surface p-4"
           >
             <div className="min-w-48">
-              <div className="flex items-baseline gap-space-2">
+              <div className="flex items-baseline gap-2">
                 <span className="font-mono text-body font-medium text-text-primary">
                   {token.name}
                 </span>
-                <span className="font-mono text-body-sm text-text-secondary">
-                  {token.value}
-                </span>
+                <span className="font-mono text-body-sm text-text-secondary">{token.value}</span>
               </div>
-              <p className="text-body-sm text-text-muted mt-space-1">
-                {token.usage}
-              </p>
+              <p className="text-body-sm text-text-muted mt-1">{token.usage}</p>
             </div>
 
             <div className="flex items-center">
@@ -164,35 +146,29 @@ export const Spacing: Story = {
 export const Radius: Story = {
   render: () => (
     <div className="w-full max-w-full">
-      <h1 className="text-page-title font-semibold text-text-primary mb-space-2">
-        Radius
-      </h1>
-      <p className="text-body text-text-muted mb-space-6">
+      <h1 className="text-page-title font-semibold text-text-primary mb-2">Radius</h1>
+      <p className="text-body text-text-muted mb-6">
         Border radius tokens for cards, controls, and badges.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-space-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
         {tokens.radius.tokens.map((token) => (
           <div
             key={token.name}
-            className="flex flex-col rounded-lg border border-border-default bg-bg-surface p-space-4 overflow-hidden"
+            className="flex flex-col rounded-lg border border-border-default bg-bg-surface p-4 overflow-hidden"
           >
             <div
-              className="h-20 w-full border-2 border-border-strong bg-bg-raised mb-space-3 flex items-center justify-center"
+              className="h-20 w-full border-2 border-border-strong bg-bg-raised mb-3 flex items-center justify-center"
               style={{ borderRadius: `var(--${token.name})` }}
               aria-hidden="true"
             />
-            <div className="flex items-baseline justify-between gap-space-2">
+            <div className="flex items-baseline justify-between gap-2">
               <span className="font-mono text-body font-medium text-text-primary">
                 {token.name}
               </span>
-              <span className="font-mono text-body-sm text-text-secondary">
-                {token.value}
-              </span>
+              <span className="font-mono text-body-sm text-text-secondary">{token.value}</span>
             </div>
-            <p className="text-body-sm text-text-muted mt-space-1">
-              {token.usage}
-            </p>
+            <p className="text-body-sm text-text-muted mt-1">{token.usage}</p>
           </div>
         ))}
       </div>
