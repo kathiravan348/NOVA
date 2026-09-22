@@ -1,6 +1,6 @@
 # NOVA-016 — Orbit: strategy editor — Python mode (CodeMirror, static)
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-016 · **Depends on:** NOVA-015
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-016 · **Depends on:** NOVA-015
 
 ## Goal
 The strategy editor has a mode switch (Visual rules | Python). Python mode edits the strategy code in a token-themed CodeMirror editor; python strategies open in the editor and show their code on the detail page. Save still only validates and toasts.
@@ -38,5 +38,17 @@ Modify: ui-core `{package.json,src/index.ts}`; orbit `src/pages/editor/{editorFo
 ## Questions
 
 ## Handoff
+**Done:** ui-core `CodeEditor` (CodeMirror 6, token theme); editor mode switch; Python mode with template; python code on the detail page.
+**Files changed:** as listed; orbit `package.json` (dev `@codemirror/view` for the editor test); `frontend/pnpm-workspace.yaml` unchanged in the end.
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 1280px ✓ · 360px ✓ (wraps, no page scroll) · dark ✓ · light ✓ (keywords, strings, comments in token colours)
+**New dependencies:** ui-core: `@codemirror/state@6.7.5`, `@codemirror/view@6.43.12`, `@codemirror/language@6.12.4`, `@codemirror/commands@6.11.1`, `@codemirror/lang-python@6.2.1`, `@lezer/highlight@1.2.3` (D24).
+**Maps updated:** COMPONENTS, DECISIONS (D24).
+**Deviations from task:** state/view pinned one patch lower than listed: pnpm's minimum-release-age kept transitive copies at 6.7.5/6.43.12, and two copies of `@codemirror/state` break CodeMirror. Rule groups are validated only in visual mode (so hidden rows never block a Python save).
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

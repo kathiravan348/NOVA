@@ -15,12 +15,10 @@ const validForm = (): EditorForm => ({
 });
 
 describe("editorForm", () => {
-  it("round-trips every visual mock spec", () => {
-    const visual = mockStrategies.flatMap((s) =>
-      s.versions.flatMap((v) => (v.spec.mode === "visual" ? [{ s, spec: v.spec }] : [])),
-    );
-    expect(visual.length).toBeGreaterThanOrEqual(3);
-    for (const { s, spec } of visual) {
+  it("round-trips every mock spec, visual and python", () => {
+    const all = mockStrategies.flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })));
+    expect(all.some(({ spec }) => spec.mode === "python")).toBe(true);
+    for (const { s, spec } of all) {
       const form = fromSpec(s.name, s.description, spec);
       expect(issuesOf(form)).toEqual([]);
       expect(toSpec(form)).toEqual(spec);
@@ -66,10 +64,22 @@ describe("editorForm", () => {
   it("drops the period for VWAP", () => {
     const form = validForm();
     form.entry.conditions[0]!.right = { ...form.entry.conditions[0]!.right, name: "vwap" };
-    expect(toSpec(form).entry.conditions[0]!.right).toEqual({
+    const spec = toSpec(form);
+    expect(spec.mode === "visual" && spec.entry.conditions[0]!.right).toEqual({
       kind: "indicator",
       name: "vwap",
       params: {},
     });
+  });
+
+  it("requires code only in python mode and skips rule checks there", () => {
+    const form = validForm();
+    form.entry.conditions[0]!.right = { ...form.entry.conditions[0]!.right, period: "" };
+    expect(issuesOf(form)).toEqual(["entry.conditions.0.right.period"]);
+    const python = { ...form, mode: "python" as const };
+    expect(issuesOf(python)).toEqual(["code"]);
+    const spec = toSpec({ ...python, code: "def on_bar(ctx):\n    return []\n" });
+    expect(spec.mode).toBe("python");
+    expect(spec).not.toHaveProperty("entry");
   });
 });
