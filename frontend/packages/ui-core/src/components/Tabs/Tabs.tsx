@@ -47,7 +47,7 @@ export function Tabs({
               disabled={item.disabled}
               className={cn(
                 "relative py-3 text-body font-sans font-medium text-text-muted transition-colors cursor-pointer select-none",
-                "hover:text-text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring rounded-xs",
+                "hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-action rounded-xs",
                 "data-[state=active]:text-text-primary data-[state=active]:font-semibold",
                 "after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:scale-x-0 after:transition-transform",
                 "data-[state=active]:after:scale-x-100 data-[state=active]:after:bg-action",

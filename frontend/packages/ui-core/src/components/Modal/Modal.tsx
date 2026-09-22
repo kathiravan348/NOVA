@@ -33,6 +33,7 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-bg-ground/80 backdrop-blur-xs transition-opacity" />
         <Dialog.Content
+          {...(description ? {} : { "aria-describedby": undefined })}
           className={cn(
             "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50",
             "w-[calc(100%-2rem)] max-w-lg max-h-[85vh] flex flex-col",

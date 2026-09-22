@@ -1,6 +1,6 @@
 # NOVA-026 — ui-core: Modal, Tabs, Toast
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-026 · **Depends on:** NOVA-010
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-026 · **Depends on:** NOVA-010
 
 ## Goal
 `@nova/ui-core` exports a Modal dialog, data-driven Tabs and a toast system, all on Radix, each with stories and tests. (Split out of NOVA-010.)
@@ -68,3 +68,11 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Tabs used `ring-focus-ring` (no such token): keyboard focus was invisible; now `ring-action`, `ring-inset` so the scroll container does not clip it (test added).
+- Modal without `description`: pass `aria-describedby={undefined}` so Radix does not warn.
+- Merged main (NOVA-010 review, NOVA-027 plan); shared list conflicts kept both sides, lockfile regenerated.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** same unknown-token class as NOVA-009/010; NOVA-027 lint check will catch it.
+**Follow-up tasks created:** none.

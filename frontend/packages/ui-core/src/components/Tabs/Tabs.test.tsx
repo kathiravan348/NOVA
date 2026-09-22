@@ -49,4 +49,19 @@ describe("Tabs", () => {
       expect(fourthTab).toHaveFocus();
     });
   });
+
+  it("tab triggers have a visible, unclipped focus ring", () => {
+    render(
+      <Tabs
+        ariaLabel="Focus tabs"
+        items={[
+          { value: "a", label: "A", content: "Panel A" },
+          { value: "b", label: "B", content: "Panel B" },
+        ]}
+      />,
+    );
+    const tab = screen.getByRole("tab", { name: "A" });
+    expect(tab.className).toContain("focus-visible:ring-action");
+    expect(tab.className).toContain("focus-visible:ring-inset");
+  });
 });
