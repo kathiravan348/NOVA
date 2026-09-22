@@ -33,7 +33,7 @@
 | NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | done | Claude | 007, 008 |
 | NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | done | Claude | 010 |
 | NOVA-027 | Lint: fail on Tailwind classes with no theme token (ui-core, ui-trading) | done | Claude | 010 |
-| NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | planned | — | 011 |
+| NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | done | Claude | 011 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

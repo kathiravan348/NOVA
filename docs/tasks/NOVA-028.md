@@ -1,6 +1,6 @@
 # NOVA-028 — ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-028 · **Depends on:** NOVA-011
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-028 · **Depends on:** NOVA-011
 
 ## Goal
 `@nova/ui-trading` exports `CandlestickChart`: OHLC candles (optional volume) drawn with TradingView Lightweight Charts, coloured from theme tokens, that re-colours on theme switch and resizes with its container.
@@ -42,5 +42,17 @@ Modify: `frontend/packages/ui-trading/{package.json,src/index.ts}`, `frontend/pn
 ## Questions
 
 ## Handoff
+**Done:** `CandlestickChart` (Lightweight Charts 5), `Candle` type, `useThemeColors` hook, 6 stories, tests.
+**Files changed:** as listed, plus `ui-core/scripts/check-classes.{ts,test.ts}` (see deviations).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (theme switch re-colours live; intraday axis in IST 09:15–15:25)
+**New dependencies:** `lightweight-charts@5.2.1` (in stack), `date-fns-tz@3.2.0` (same as ui-core).
+**Maps updated:** COMPONENTS.
+**Deviations from task:** `timeScale.tickMarkFormatter` also formats axis ticks in IST (Lightweight Charts shows UTC otherwise). Candle scale keeps a 25% bottom margin so candles clear the volume band; volume hides its last-value label. `check-classes` treated the CSS-variable names (`"text-muted"`) as classes; a literal that is exactly one colour name is now skipped (+ test).
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in Storybook)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
