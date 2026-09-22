@@ -1,6 +1,6 @@
 # NOVA-008 — ui-core: form fields (Field, Input, Select, Checkbox, Switch, DateTimePicker IST)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-008 · **Depends on:** NOVA-007
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-008 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports accessible form controls that work with React Hook Form (`register` or `Controller`) and show Zod errors, plus a date/time picker that shows IST and stores UTC (D20).
@@ -31,10 +31,10 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 7. Tests: label is linked (`getByLabelText`), `aria-invalid` + error text when `error` set, disabled works, Checkbox/Switch toggle `onCheckedChange`, DateTimePicker converts IST input to UTC in `onChange`.
 
 ## Acceptance checks
-- [ ] All stories render in dark and light, 0 a11y violations, no horizontal scroll at 360px.
-- [ ] Tabbing shows a visible focus ring on every control. Labels click-toggle Checkbox and Switch.
-- [ ] `grep -rE "#[0-9a-fA-F]{3,6}" packages/ui-core/src/components` finds nothing.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] All stories render in dark and light, 0 a11y violations, no horizontal scroll at 360px.
+- [x] Tabbing shows a visible focus ring on every control. Labels click-toggle Checkbox and Switch.
+- [x] `grep -rE "#[0-9a-fA-F]{3,6}" packages/ui-core/src/components` finds nothing.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - A calendar popover or any date-picker library. Radix Select. Textarea, radio group, combobox.
@@ -44,5 +44,36 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 ## Questions
 
 ## Handoff
+**Done:** Form field controls (Field, Input, Select, Checkbox, Switch, DateTimePicker) + zonedTime UTC/IST helpers + stories and tests.
+**Files changed:**
+- `docs/COMPONENTS.md`
+- `docs/STRUCTURE.md`
+- `docs/tasks/BOARD.md`
+- `docs/tasks/NOVA-008.md`
+- `frontend/packages/ui-core/package.json`
+- `frontend/packages/ui-core/src/index.ts`
+- `frontend/packages/ui-core/src/components/Field/*`
+- `frontend/packages/ui-core/src/components/Input/*`
+- `frontend/packages/ui-core/src/components/Select/*`
+- `frontend/packages/ui-core/src/components/Checkbox/*`
+- `frontend/packages/ui-core/src/components/Switch/*`
+- `frontend/packages/ui-core/src/components/DateTimePicker/*`
+- `frontend/packages/ui-core/src/lib/zonedTime.ts`
+- `frontend/packages/ui-core/src/lib/zonedTime.test.ts`
+- `frontend/pnpm-lock.yaml`
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓
+**New dependencies:** `@radix-ui/react-checkbox@1.3.11`, `@radix-ui/react-switch@1.3.7`, `date-fns@4.4.0`, `date-fns-tz@3.2.0`, `lucide-react@1.47.0` (to deps), devDeps: `react-hook-form@7.88.0`, `@hookform/resolvers@5.9.1`, `zod@4.6.5`.
+**Maps updated:** STRUCTURE ✓ / CONTRACTS (none) / COMPONENTS ✓
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Input/Select/Checkbox/Switch: a consumer `aria-describedby` was overwritten by the `{...props}` spread; now merged (test added).
+- Select: no `defaultValue` when controlled (`value` + `placeholder` caused a React warning; test added).
+- DateTimePicker: the `IST` suffix was `aria-hidden`; it now has an id in `aria-describedby`, so screen readers hear the zone (tests updated).
+**Change requests (if sent back):** none.
+**Rulebook issues found:** none. Checkbox `text-[white]` and Switch thumb `bg-[white]` follow Button's precedent; added to NOVA-025 scope.
+**Follow-up tasks created:** none (NOVA-025 scope extended).

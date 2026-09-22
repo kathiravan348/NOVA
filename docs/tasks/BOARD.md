@@ -13,7 +13,7 @@
 | NOVA-005 | Mocks: static JSON per contract (consistent numbers) + schema and consistency tests | done | Claude | 004, 023 |
 | NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 024 |
 | NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | done | Claude | 003 |
-| NOVA-008 | ui-core: form fields (Field, Input, Select, Checkbox, Switch, DateTimePicker IST), RHF + Zod example | planned | — | 007 |
+| NOVA-008 | ui-core: form fields (Field, Input, Select, Checkbox, Switch, DateTimePicker IST), RHF + Zod example | done | Claude | 007 |
 | NOVA-009 | ui-core: DataTable (TanStack Table; sort, paginate; stacked cards on mobile) | planned | — | 007 |
 | NOVA-010 | ui-core: AppShell (sidebar, mobile menu, top bar), NavItem, ThemeToggle, DemoBanner, EmptyState | planned | — | 007 |
 | NOVA-011 | ui-trading: PriceText, PnLText, PnLCard, ChargesBreakdown, Meter, INR formatters | planned | — | 007 |
@@ -30,7 +30,7 @@
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | planned | — | 005 |
-| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary instead of `text-[white]` | planned | — | 007 |
+| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | planned | — | 007, 008 |
 | NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | planned | — | 010 |
 
 ## Parallel lanes (tasks that can run at the same time)
