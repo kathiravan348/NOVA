@@ -77,10 +77,12 @@ export function EquityCurve({
   const first = points[0]!;
   const last = points[points.length - 1]!;
   const hasBenchmark = points.some((p) => p.benchmarkPaise !== null);
-  // One tick per month (its first point), so labels never repeat.
+  // One tick per month (its first point), so labels never repeat. Runs shorter than
+  // three months use Recharts' own ticks labelled by day instead.
   const monthTicks = points
     .filter((p, i) => i === 0 || p.date.slice(0, 7) !== points[i - 1]!.date.slice(0, 7))
     .map((p) => p.date);
+  const byMonth = monthTicks.length >= 3;
 
   return (
     <div className={cn("w-full min-w-0", className)}>
@@ -100,12 +102,12 @@ export function EquityCurve({
             <CartesianGrid vertical={false} stroke="var(--border-default)" />
             <XAxis
               dataKey="date"
-              ticks={monthTicks}
+              ticks={byMonth ? monthTicks : undefined}
               tick={TICK}
               tickLine={false}
               axisLine={{ stroke: "var(--border-default)" }}
               minTickGap={32}
-              tickFormatter={(d: string) => format(parseISO(d), "MMM yy")}
+              tickFormatter={(d: string) => format(parseISO(d), byMonth ? "MMM yy" : "d MMM")}
             />
             <YAxis
               tick={TICK}

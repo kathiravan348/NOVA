@@ -1,6 +1,6 @@
 # NOVA-017 — Orbit: run-backtest form + backtest results screen
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-017 · **Depends on:** NOVA-012, NOVA-014
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-017 · **Depends on:** NOVA-012, NOVA-014
 
 ## Goal
 `/backtests` lists runs; `/backtests/new` is a form to configure a run (demo submit only); `/backtests/:id` shows a run: status, metrics, equity curve vs NIFTY 50, and trades with per-trade charges.
@@ -40,5 +40,17 @@ Modify: orbit `src/routes.tsx`, `src/lib/format.ts`, `src/pages/strategies/Strat
 ## Questions
 
 ## Handoff
+**Done:** backtest list, run-backtest form (demo queue), results page (metrics, equity curve, trades + charges modal); "Run backtest" on strategy detail.
+**Files changed:** as listed, plus orbit `src/test/setup.ts` (`ResizeObserver` stub), ui-core `DataTable.tsx` (numeric cells `whitespace-nowrap`), ui-trading `PnLText.tsx` (`whitespace-nowrap`), ui-trading `EquityCurve.tsx` (day ticks for runs under 3 months).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ (cards, P&L cards full width, no page scroll) · 1280px ✓ (trades table fits) · dark ✓ · light ✓
+**New dependencies:** none.
+**Maps updated:** none.
+**Deviations from task:** the three small shared-component fixes above came from the browser check (signs wrapped onto their own line; a two-week run showed one month tick). `run_001` has 4 trades, not 2.
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

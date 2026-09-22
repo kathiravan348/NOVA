@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil } from "lucide-react";
+import { Pencil, Play } from "lucide-react";
 import type { Strategy, StrategyVersion } from "@nova/contracts";
 import { Button, Card, DataTable, StatusBadge, Tabs } from "@nova/ui-core";
 import { useStrategy } from "@nova/services";
@@ -43,12 +43,22 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
               tone={strategyStatusTone[strategy.status]}
               label={strategyStatusLabel[strategy.status]}
             />
-            <Button asChild variant="secondary" size="sm" className="ml-auto">
-              <Link to={`/strategies/${strategy.id}/edit`}>
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-                Edit
-              </Link>
-            </Button>
+            <div className="flex gap-2 sm:ml-auto">
+              <Button asChild variant="secondary" size="sm">
+                <Link to={`/strategies/${strategy.id}/edit`}>
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
+              </Button>
+              {strategy.status !== "archived" && (
+                <Button asChild size="sm">
+                  <Link to={`/backtests/new?strategy=${strategy.id}`}>
+                    <Play className="h-4 w-4" aria-hidden="true" />
+                    Run backtest
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
           <p className="text-body text-text-secondary">{strategy.description}</p>
           <p className="text-body-sm text-text-muted">
