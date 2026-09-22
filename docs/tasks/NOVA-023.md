@@ -1,6 +1,6 @@
 # NOVA-023 — Contracts: Relay (broker account, rate limit, data job, audit entry)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-023 · **Depends on:** NOVA-004
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-023 · **Depends on:** NOVA-004
 
 ## Goal
 `@nova/contracts` also exports Zod schemas and inferred types for broker accounts, rate limits, data jobs and audit entries, so the Relay screens (NOVA-019/020) and mocks (NOVA-005) have a fixed shape.
@@ -39,19 +39,41 @@ Modify: `frontend/packages/contracts/src/index.ts` (re-export the four), `docs/C
 3. `CONTRACTS.md`: one row per top-level schema (BrokerAccount, RateLimit, DataJob, AuditEntry), Used by = Relay, Mock = `NOVA-005`. Endpoints: `GET /api/v1/broker/accounts`, `GET /api/v1/broker/accounts/{id}`, `GET /api/v1/broker/rate-limits`, `GET /api/v1/data-jobs`, `GET /api/v1/data-jobs/{id}`, `GET /api/v1/audit`.
 
 ## Acceptance checks
-- [ ] `pnpm --filter @nova/contracts test` passes, including the 64 existing tests.
-- [ ] No `any`, no `z.any()`, no secret/token/apiKey fields. Every file ≤ 300 lines.
-- [ ] `common.ts`, `package.json` and the Orbit schema files are unchanged.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] `pnpm --filter @nova/contracts test` passes, including the 64 existing tests.
+- [x] No `any`, no `z.any()`, no secret/token/apiKey fields. Every file ≤ 300 lines.
+- [x] `common.ts`, `package.json` and the Orbit schema files are unchanged.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Mocks, MSW, services, request/mutation shapes (login, cancel job), a Relay "overview" summary schema, and any change to Orbit contracts.
 
 ## Questions
-_(implementer writes here if blocked)_
+_(none)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Added Relay contracts (broker, rateLimit, dataJob, audit) with Zod schemas, types, and unit tests.
+**Files changed:**
+- `docs/CONTRACTS.md`
+- `frontend/packages/contracts/src/index.ts`
+- `frontend/packages/contracts/src/broker.ts`
+- `frontend/packages/contracts/src/broker.test.ts`
+- `frontend/packages/contracts/src/rateLimit.ts`
+- `frontend/packages/contracts/src/rateLimit.test.ts`
+- `frontend/packages/contracts/src/dataJob.ts`
+- `frontend/packages/contracts/src/dataJob.test.ts`
+- `frontend/packages/contracts/src/audit.ts`
+- `frontend/packages/contracts/src/audit.test.ts`
+**Commands run:** lint / typecheck / test / build → all pass? yes (125 tests pass workspace-wide; 112 in contracts)
+**Checked:** 360px n/a · desktop n/a · dark n/a · light n/a
+**New dependencies:** none
+**Maps updated:** CONTRACTS
+**Deviations from task:** none
+**Known gaps:** none
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Fixed directly (review: commits):**
+- Prettier on `dataJob.ts`, `rateLimit.ts` and their tests, and on `audit.test.ts`. `pnpm format:check` failed, and the handoff did not run it.
+**Verified:** all 4 schemas match the spec field for field. Every refine has an accept test and a reject test, and every enum rejects a bad value. IPs use 203.0.113.x. No secret or token fields. Lint, typecheck, test (112 in contracts) and build pass.
+**Rulebook issues found:** `pnpm format:check` is not in the §9 Definition of done, so implementers skip it. NOVA-007 lists it as an acceptance check, but it should be added to §9.
+**Follow-up tasks created:** none.
