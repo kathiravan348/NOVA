@@ -77,4 +77,9 @@ describe("TradeSchema", () => {
     const invalid = { ...validClosedTrade, qty: 0 };
     expect(TradeSchema.safeParse(invalid).success).toBe(false);
   });
+
+  it("rejects zero or negative prices", () => {
+    expect(TradeSchema.safeParse({ ...validClosedTrade, entryPricePaise: 0 }).success).toBe(false);
+    expect(TradeSchema.safeParse({ ...validClosedTrade, exitPricePaise: -1 }).success).toBe(false);
+  });
 });

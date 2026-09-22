@@ -109,11 +109,11 @@ describe("Backtest schemas", () => {
     });
 
     it("rejects winRatePercent outside 0-100", () => {
-      expect(BacktestMetricsSchema.safeParse({ ...validMetrics, winRatePercent: 105 }).success).toBe(
-        false
-      );
+      expect(
+        BacktestMetricsSchema.safeParse({ ...validMetrics, winRatePercent: 105 }).success,
+      ).toBe(false);
       expect(BacktestMetricsSchema.safeParse({ ...validMetrics, winRatePercent: -2 }).success).toBe(
-        false
+        false,
       );
     });
   });
@@ -125,7 +125,7 @@ describe("Backtest schemas", () => {
 
     it("accepts null benchmarkPaise", () => {
       expect(
-        EquityPointSchema.safeParse({ ...validEquityPoint, benchmarkPaise: null }).success
+        EquityPointSchema.safeParse({ ...validEquityPoint, benchmarkPaise: null }).success,
       ).toBe(true);
     });
   });

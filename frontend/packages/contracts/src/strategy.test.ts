@@ -80,7 +80,7 @@ describe("Strategy schemas", () => {
   it("validates OperandSchema", () => {
     expect(OperandSchema.safeParse({ kind: "price", field: "close" }).success).toBe(true);
     expect(
-      OperandSchema.safeParse({ kind: "indicator", name: "ema", params: { period: 20 } }).success
+      OperandSchema.safeParse({ kind: "indicator", name: "ema", params: { period: 20 } }).success,
     ).toBe(true);
     expect(OperandSchema.safeParse({ kind: "number", value: 42 }).success).toBe(true);
     expect(OperandSchema.safeParse({ kind: "unknown", value: 1 }).success).toBe(false);
@@ -92,14 +92,14 @@ describe("Strategy schemas", () => {
         left: { kind: "price", field: "close" },
         op: "crosses_above",
         right: { kind: "indicator", name: "sma", params: { period: 50 } },
-      }).success
+      }).success,
     ).toBe(true);
     expect(
       ConditionSchema.safeParse({
         left: { kind: "price", field: "close" },
         op: "unknown_op",
         right: { kind: "number", value: 100 },
-      }).success
+      }).success,
     ).toBe(false);
   });
 
@@ -114,13 +114,13 @@ describe("Strategy schemas", () => {
             right: { kind: "number", value: 100 },
           },
         ],
-      }).success
+      }).success,
     ).toBe(true);
     expect(
       RuleGroupSchema.safeParse({
         combinator: "all",
         conditions: [],
-      }).success
+      }).success,
     ).toBe(false);
   });
 
@@ -133,7 +133,9 @@ describe("Strategy schemas", () => {
 
   it("validates SizingSchema options and boundaries", () => {
     expect(SizingSchema.safeParse({ type: "fixed_qty", qty: 10 }).success).toBe(true);
-    expect(SizingSchema.safeParse({ type: "fixed_amount", amountPaise: 500000 }).success).toBe(true);
+    expect(SizingSchema.safeParse({ type: "fixed_amount", amountPaise: 500000 }).success).toBe(
+      true,
+    );
     expect(SizingSchema.safeParse({ type: "percent_equity", percent: 25 }).success).toBe(true);
     expect(SizingSchema.safeParse({ type: "percent_equity", percent: 0 }).success).toBe(false);
     expect(SizingSchema.safeParse({ type: "percent_equity", percent: 100.1 }).success).toBe(false);

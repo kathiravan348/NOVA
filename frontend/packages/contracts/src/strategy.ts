@@ -7,13 +7,7 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 
-export const PriceFieldSchema = z.enum([
-  "open",
-  "high",
-  "low",
-  "close",
-  "volume",
-]);
+export const PriceFieldSchema = z.enum(["open", "high", "low", "close", "volume"]);
 export type PriceField = z.infer<typeof PriceFieldSchema>;
 
 export const IndicatorNameSchema = z.enum([
@@ -81,11 +75,7 @@ export const RuleGroupSchema = z.strictObject({
 });
 export type RuleGroup = z.infer<typeof RuleGroupSchema>;
 
-export const IndexNameSchema = z.enum([
-  "NIFTY 50",
-  "NIFTY BANK",
-  "NIFTY NEXT 50",
-]);
+export const IndexNameSchema = z.enum(["NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50"]);
 export type IndexName = z.infer<typeof IndexNameSchema>;
 
 export const UniverseSymbolsSchema = z.strictObject({
@@ -197,6 +187,6 @@ export const StrategySchema = z
     {
       message: "latestVersion must equal the maximum version in versions array",
       path: ["latestVersion"],
-    }
+    },
   );
 export type Strategy = z.infer<typeof StrategySchema>;

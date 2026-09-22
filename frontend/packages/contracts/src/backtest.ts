@@ -7,12 +7,7 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 
-export const BacktestRunStatusSchema = z.enum([
-  "queued",
-  "running",
-  "completed",
-  "failed",
-]);
+export const BacktestRunStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
 export type BacktestRunStatus = z.infer<typeof BacktestRunStatusSchema>;
 
 export const BacktestBenchmarkSchema = z.literal("NIFTY 50");
@@ -38,13 +33,10 @@ export const BacktestRunSchema = z
     message: "from date must be less than or equal to to date",
     path: ["from"],
   })
-  .refine(
-    (data) => data.error === null || data.status === "failed",
-    {
-      message: "error is set only when status is failed",
-      path: ["error"],
-    }
-  );
+  .refine((data) => data.error === null || data.status === "failed", {
+    message: "error is set only when status is failed",
+    path: ["error"],
+  });
 export type BacktestRun = z.infer<typeof BacktestRunSchema>;
 
 export const BacktestMetricsSchema = z
@@ -61,20 +53,14 @@ export const BacktestMetricsSchema = z
     winCount: z.number().int().min(0),
     lossCount: z.number().int().min(0),
   })
-  .refine(
-    (data) => data.netPnlPaise === data.grossPnlPaise - data.chargesPaise,
-    {
-      message: "netPnlPaise must equal grossPnlPaise minus chargesPaise",
-      path: ["netPnlPaise"],
-    }
-  )
-  .refine(
-    (data) => data.winCount + data.lossCount <= data.tradeCount,
-    {
-      message: "winCount + lossCount must be less than or equal to tradeCount",
-      path: ["tradeCount"],
-    }
-  );
+  .refine((data) => data.netPnlPaise === data.grossPnlPaise - data.chargesPaise, {
+    message: "netPnlPaise must equal grossPnlPaise minus chargesPaise",
+    path: ["netPnlPaise"],
+  })
+  .refine((data) => data.winCount + data.lossCount <= data.tradeCount, {
+    message: "winCount + lossCount must be less than or equal to tradeCount",
+    path: ["tradeCount"],
+  });
 export type BacktestMetrics = z.infer<typeof BacktestMetricsSchema>;
 
 export const EquityPointSchema = z.strictObject({

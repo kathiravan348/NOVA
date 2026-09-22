@@ -48,6 +48,7 @@ Rules:
 ## 5. Tech stack (do not add others without a task saying so)
 Frontend: React 18, TypeScript (strict), Vite, pnpm workspaces, Tailwind CSS, shadcn/ui (Radix), TanStack Table, TanStack Query, React Hook Form + Zod, date-fns + date-fns-tz, Recharts, TradingView Lightweight Charts, lucide-react, React Router, MSW, Storybook, Vitest + Testing Library.
 Backend (Stage B, not now): Python 3.12, FastAPI, PostgreSQL + TimescaleDB, Redis, Parquet, Docker Compose.
+Pin exact versions in every `package.json` (no `^` or `~`).
 New dependency = note it in the handoff and in `docs/DECISIONS.md` request section. Never add a library that duplicates one above.
 
 ## 6. UI rules

@@ -11,11 +11,11 @@
     "lint": "eslint -c ../../eslint.config.js .",
     "test": "vitest run"
   },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
   "devDependencies": {
     "typescript": "5.7.3",
     "vitest": "3.2.7"
-  },
-  "dependencies": {
-    "zod": "^4.6.5"
   }
 }

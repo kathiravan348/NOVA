@@ -1,6 +1,6 @@
 # NOVA-004 — Contracts: Orbit (strategy, backtest, trade, charges, user)
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-004 · **Depends on:** NOVA-001
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-004 · **Depends on:** NOVA-001
 
 ## Goal
 `@nova/contracts` exports Zod schemas and inferred types for users, strategies, backtest runs/results, trades and charges. Relay contracts come in NOVA-023.
@@ -78,4 +78,13 @@ Modify: `package.json` (dep `zod` 4.x; devDep `vitest`; script `"test": "vitest 
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- `package.json`: `zod` pinned to exact `4.6.5` (was `^4.6.5`); `dependencies` placed before `devDependencies`; lockfile re-generated.
+- `trade.ts`: `entryPricePaise` / `exitPricePaise` must be positive integers (were any integer); test added.
+- Ran Prettier on `packages/contracts` (trailing commas, line width).
+**Verified:** shapes and refinements match the task; lint / typecheck / test (64) / build pass.
+**Change requests:** none.
+**Rulebook issues found:** exact version pinning was only stated in NOVA-002; added to `AGENTS.md` §5.
+**Follow-up tasks created:** none (NOVA-023 to be planned next).
 

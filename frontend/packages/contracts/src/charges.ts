@@ -25,7 +25,7 @@ export const ChargesSchema = z
     {
       message: "totalPaise must equal the sum of individual charges",
       path: ["totalPaise"],
-    }
+    },
   );
 
 export type Charges = z.infer<typeof ChargesSchema>;

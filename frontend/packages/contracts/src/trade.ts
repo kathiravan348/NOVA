@@ -19,20 +19,17 @@ export const TradeSchema = z
     side: SideSchema,
     qty: z.number().int().positive(),
     entryAt: UtcDateTimeSchema,
-    entryPricePaise: PaiseSchema,
+    entryPricePaise: z.number().int().positive(),
     exitAt: UtcDateTimeSchema.nullable(),
-    exitPricePaise: PaiseSchema.nullable(),
+    exitPricePaise: z.number().int().positive().nullable(),
     grossPnlPaise: PaiseSchema,
     charges: ChargesSchema,
     netPnlPaise: PaiseSchema,
   })
-  .refine(
-    (data) => data.netPnlPaise === data.grossPnlPaise - data.charges.totalPaise,
-    {
-      message: "netPnlPaise must equal grossPnlPaise minus charges.totalPaise",
-      path: ["netPnlPaise"],
-    }
-  )
+  .refine((data) => data.netPnlPaise === data.grossPnlPaise - data.charges.totalPaise, {
+    message: "netPnlPaise must equal grossPnlPaise minus charges.totalPaise",
+    path: ["netPnlPaise"],
+  })
   .refine(
     (data) =>
       (data.exitAt === null && data.exitPricePaise === null) ||
@@ -40,7 +37,7 @@ export const TradeSchema = z
     {
       message: "exitAt and exitPricePaise must both be null or both be provided",
       path: ["exitAt"],
-    }
+    },
   );
 
 export type Trade = z.infer<typeof TradeSchema>;
