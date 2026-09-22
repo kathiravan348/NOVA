@@ -2,15 +2,15 @@
 
 > Read at the start of every session. Update status + owner BEFORE starting work.
 > Statuses: planned · in-progress · ready-for-review · in-review · changes-requested · done
-> Only NOVA-001 is fully written. Claude writes each next task file from `docs/templates/TASK.md` before it becomes `planned`; until then its status is `draft`.
+> A task is written when it has a file in `docs/tasks/`. Claude writes each next task file from `docs/templates/TASK.md` before it becomes `planned`; until then its status is `draft`.
 
 | ID | Title | Status | Owner | Depends on |
 |---|---|---|---|---|
 | NOVA-001 | Monorepo setup: pnpm workspaces, Vite, TS strict, ESLint, Prettier, Vitest, .gitattributes | done | Claude | — |
-| NOVA-002 | Theme pipeline: tokens.json → tokens.css (dark/light), Tailwind preset, fonts, `data-theme` switch | draft | — | 001 |
+| NOVA-002 | Theme pipeline: tokens.json → tokens.css (dark/light), Tailwind v4 theme, fonts, `data-theme` switch | planned | — | 001 |
 | NOVA-003 | Storybook (`ui-storybook`): theme toggle, 360px/768px/1440px viewports, a11y addon | draft | — | 002 |
-| NOVA-004 | Contracts: types + Zod for user, strategy spec, backtest run/result, trade, charges, broker account, rate limit, data job, audit entry | draft | — | 001 |
-| NOVA-005 | Mocks: static JSON per contract (consistent numbers) + MSW handlers + schema tests | draft | — | 004 |
+| NOVA-004 | Contracts (Orbit): user, strategy spec, backtest run/result, trade, charges | planned | — | 001 |
+| NOVA-005 | Mocks: static JSON per contract (consistent numbers) + MSW handlers + schema tests | draft | — | 004, 023 |
 | NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 005 |
 | NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | draft | — | 003 |
 | NOVA-008 | ui-core: form fields (Input, Select, Checkbox, Switch, DateTimePicker IST) with RHF + Zod | draft | — | 007 |
@@ -28,8 +28,9 @@
 | NOVA-020 | Relay: rate limits, data jobs, audit log | draft | — | 019 |
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
+| NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | draft | — | 004 |
 
 ## Parallel lanes (tasks that can run at the same time)
-- After 001: lane A = 002 → 003 → 007…, lane B = 004 → 005 → 006.
+- After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 006.
 - After 007: 008, 009, 010, 011 touch different folders and can overlap.
 - After 013: Orbit screens (014–018) and Relay screens (019–020) can overlap.

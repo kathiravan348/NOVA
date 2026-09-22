@@ -18,6 +18,9 @@
 | D12 | 2026-09-22 | Single super-admin in Phase 1; roles tables exist for later | Roles not finalised |
 | D13 | 2026-09-22 | Mobile responsive from 360px | Family will use phones |
 | D14 | 2026-09-22 | Claude plans and reviews (may fix during review); Gemini implements; task status is the lock | Parallel work without collisions |
+| D15 | 2026-09-22 | Tailwind CSS v4 is configured in CSS (`@theme`) generated from `tokens.json`, with the default colours, radii and text sizes removed | Only token classes exist, so no hex values can creep in |
+| D16 | 2026-09-22 | IBM Plex fonts are self-hosted via `@fontsource/*` (no font CDN) | Works offline and makes no third-party requests |
+| D17 | 2026-09-22 | Contracts: money and prices in integer paise; timestamps as ISO-8601 UTC strings (`Z`); calendar dates as `YYYY-MM-DD`; strict objects | One unambiguous wire format for Stage B |
 
 ## Pending
 - Options historical data vendor (needed before options backtests).
