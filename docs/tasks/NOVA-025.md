@@ -1,6 +1,6 @@
 # NOVA-025 — Theme: `on-action` token, used by Button primary, Checkbox, Switch
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-025 · **Depends on:** NOVA-007, NOVA-008
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-025 · **Depends on:** NOVA-007, NOVA-008
 
 ## Goal
 Text, icons and thumbs on the `action` fill come from a theme token (`on-action`) instead of the arbitrary `text-[white]` / `bg-[white]` in Button primary, Checkbox and Switch (NOVA-007/008 reviews), with a test that it keeps 4.5:1 contrast in both themes.
@@ -38,5 +38,19 @@ Modify:
 ## Questions
 
 ## Handoff
+- Added `on-action` token (`#FFFFFF` dark/light) to `tokens.json` and updated `action` usage description.
+- Re-generated `tokens.css` and `tailwind-theme.css` via `pnpm --filter @nova/ui-core tokens`.
+- Replaced `text-[white]` in `Button.tsx` primary variant with `text-on-action`.
+- Added WCAG contrast ratio calculations and assertions in `tokens.test.ts` ensuring ≥ 4.5:1 contrast against `action` in both dark and light modes.
+- Added test in `Button.test.tsx` verifying primary variant has `text-on-action` and no arbitrary white.
+- Verified 0 instances of `text-[` in `frontend/packages/ui-core/src/components`.
+- Full suite green: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check`.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Branch started from an old main, so it had the pre-NOVA-008 task file (Button only). Restored the extended scope and did it here: Checkbox check `text-on-action`, Switch thumb `bg-on-action`, `on-action` usage text updated, tokens regenerated, tests added.
+- Merged main; task file = main's scope + Gemini's handoff.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** start each task branch from current `main` (this one was based on `ff6a15b`).
+**Follow-up tasks created:** none.

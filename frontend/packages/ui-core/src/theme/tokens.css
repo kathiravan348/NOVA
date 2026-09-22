@@ -34,6 +34,7 @@
   --action: #336FDB;
   --action-text: #7FAEFF;
   --action-subtle: #1E3560;
+  --on-action: #FFFFFF;
   --profit: #2BC48A;
   --profit-subtle: #0F2A21;
   --profit-text: #5EDBAA;
@@ -59,6 +60,7 @@
   --action: #1F5FD1;
   --action-text: #1F5FD1;
   --action-subtle: #E4ECFB;
+  --on-action: #FFFFFF;
   --profit: #087A52;
   --profit-subtle: #E3F4EC;
   --profit-text: #0A6B48;

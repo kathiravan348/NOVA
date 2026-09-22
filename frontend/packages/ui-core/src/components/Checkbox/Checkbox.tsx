@@ -65,7 +65,7 @@ export const Checkbox = React.forwardRef<
             "peer h-5 w-5 shrink-0 rounded-md border bg-bg-surface transition-colors cursor-pointer flex items-center justify-center",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg-ground",
             "disabled:pointer-events-none disabled:opacity-50",
-            "data-[state=checked]:bg-action data-[state=checked]:border-action data-[state=checked]:text-[white]",
+            "data-[state=checked]:bg-action data-[state=checked]:border-action data-[state=checked]:text-on-action",
             hasError ? "border-loss" : "border-border-strong",
             className,
           )}

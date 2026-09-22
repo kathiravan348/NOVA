@@ -30,7 +30,7 @@
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | done | Claude | 005 |
-| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | planned | — | 007, 008 |
+| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | done | Claude | 007, 008 |
 | NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | done | Claude | 010 |
 | NOVA-027 | Lint: fail on Tailwind classes with no theme token (ui-core, ui-trading) | planned | — | 010 |
 | NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | draft | — | 011 |

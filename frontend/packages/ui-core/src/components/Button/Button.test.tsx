@@ -55,4 +55,12 @@ describe("Button", () => {
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/target");
   });
+
+  it("renders primary variant with text-on-action class and no arbitrary white", () => {
+    render(<Button variant="primary">Primary</Button>);
+    const button = screen.getByRole("button", { name: /primary/i });
+    expect(button).toHaveClass("text-on-action");
+    const forbidden = `text-${"[white]"}`;
+    expect(button.className).not.toContain(forbidden);
+  });
 });

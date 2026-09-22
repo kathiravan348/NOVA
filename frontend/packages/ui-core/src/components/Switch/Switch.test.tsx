@@ -36,4 +36,11 @@ describe("Switch", () => {
     fireEvent.click(sw);
     expect(handleCheckedChange).not.toHaveBeenCalled();
   });
+
+  it("uses the on-action token for the thumb, not an arbitrary white", () => {
+    render(<Switch label="Token switch" />);
+    const thumb = screen.getByRole("switch", { name: "Token switch" }).firstElementChild;
+    expect(thumb?.className).toContain("bg-on-action");
+    expect(thumb?.className).not.toContain("[white]");
+  });
 });

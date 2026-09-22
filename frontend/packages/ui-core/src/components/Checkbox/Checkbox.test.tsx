@@ -36,4 +36,11 @@ describe("Checkbox", () => {
     fireEvent.click(checkbox);
     expect(handleCheckedChange).not.toHaveBeenCalled();
   });
+
+  it("uses the on-action token for the check, not an arbitrary white", () => {
+    render(<Checkbox label="Token check" />);
+    const box = screen.getByRole("checkbox", { name: "Token check" });
+    expect(box.className).toContain("data-[state=checked]:text-on-action");
+    expect(box.className).not.toContain("[white]");
+  });
 });
