@@ -3,6 +3,8 @@ import { AppLayout, type RouteHandle } from "./layout/AppLayout";
 import { RequireAuth } from "./layout/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { StrategiesPage } from "./pages/strategies/StrategiesPage";
+import { StrategyDetailPage } from "./pages/strategies/StrategyDetailPage";
 
 const page = (path: string, title: string): RouteObject => ({
   path,
@@ -19,7 +21,16 @@ export const routes: RouteObject[] = [
         element: <AppLayout />,
         children: [
           { index: true, element: <Navigate to="/strategies" replace /> },
-          page("/strategies", "Strategies"),
+          {
+            path: "/strategies",
+            handle: { title: "Strategies" } satisfies RouteHandle,
+            element: <StrategiesPage />,
+          },
+          {
+            path: "/strategies/:id",
+            handle: { title: "Strategy" } satisfies RouteHandle,
+            element: <StrategyDetailPage />,
+          },
           page("/backtests", "Backtests"),
           page("/compare", "Compare runs"),
           page("/market-data", "Market data"),

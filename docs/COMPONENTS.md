@@ -27,6 +27,7 @@
 | Checkbox | Radix-based accessible checkbox with clickable label wrapped in Field | `Core/Checkbox` |
 | Switch | Radix-based accessible toggle switch with clickable label wrapped in Field | `Core/Switch` |
 | DateTimePicker | Native date/datetime-local picker displaying IST and storing UTC ISO | `Core/DateTimePicker` |
+| DescriptionList | Label/value `<dl>` rows, optional two columns from `md`, numeric values mono right-aligned | `Core/DescriptionList` |
 | LoginForm | Centred sign-in card (username, password, error alert, submitting state, hint) | `Core/LoginForm` |
 
 ## ui-trading (built on ui-core)
