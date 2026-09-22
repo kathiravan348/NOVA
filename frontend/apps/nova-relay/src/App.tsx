@@ -1,9 +1,18 @@
-import { brand } from "@nova/brand";
+import { useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider, createBrowserRouter } from "react-router";
+import { ToastProvider } from "@nova/ui-core";
+import { createQueryClient } from "@nova/services";
+import { routes } from "./routes";
 
 export function App() {
+  const [queryClient] = useState(createQueryClient);
+  const [router] = useState(() => createBrowserRouter(routes));
   return (
-    <main>
-      <h1 className="text-page-title text-text-primary">{brand.products.relay.name}</h1>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </QueryClientProvider>
   );
 }

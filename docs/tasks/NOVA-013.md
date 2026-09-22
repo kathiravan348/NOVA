@@ -1,6 +1,6 @@
 # NOVA-013 — Login (mock super-admin) + Orbit and Relay app shells with routing
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-013 · **Depends on:** NOVA-006, NOVA-010
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-013 · **Depends on:** NOVA-006, NOVA-010
 
 ## Goal
 Both apps boot MSW in mock mode, show a login screen, and after sign-in show an `AppShell` with their nav, `DemoBanner`, theme toggle and sign-out, and placeholder pages for every later screen.
@@ -40,5 +40,17 @@ Modify: both apps `{package.json,src/App.tsx,src/main.tsx,src/App.test.tsx}`, ui
 ## Questions
 
 ## Handoff
+**Done:** mock sign-in (`session.ts`), `LoginForm`, MSW browser worker, Orbit + Relay shells with routes, nav, placeholders.
+**Files changed:** as listed; also both apps' `tsconfig.json` (`vite/client`, `node` types) and `src/test/setup.ts`, services `vitest.setup.ts`.
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ (menu opens, closes on nav) · desktop ✓ · dark ✓ · light: ThemeToggle only (no new colours).
+**New dependencies:** apps: `react-router@7.18.4`, `@tanstack/react-query@5.103.2`, `lucide-react@1.47.0`, dev `msw@2.15.0`.
+**Maps updated:** COMPONENTS, STRUCTURE, DECISIONS (D23).
+**Deviations from task:** test setups restore Node's native `AbortController`/`AbortSignal` (via `util.transferableAbortController()`); jsdom's versions break Node `fetch`/`Request` used by MSW, React Router and TanStack Query. This replaced the NOVA-006 fetch workaround. Placeholder shows "Not built yet" (the page title is already the top-bar `h1`).
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; clicked through Orbit in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

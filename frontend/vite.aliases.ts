@@ -21,5 +21,6 @@ export const novaAliases: Record<string, string> = {
   "@nova/ui-trading": packageEntry("ui-trading"),
   "@nova/contracts": packageEntry("contracts"),
   "@nova/services": packageEntry("services"),
+  "@nova/mocks/browser": path.join(frontendDir, "packages", "mocks", "src", "browser.ts"),
   "@nova/mocks": packageEntry("mocks"),
 };

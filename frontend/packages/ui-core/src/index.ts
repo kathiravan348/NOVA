@@ -50,3 +50,8 @@ export {
   type DateTimePickerProps,
 } from "./components/DateTimePicker/DateTimePicker";
 export { toZonedInputValue, fromZonedInputValue } from "./lib/zonedTime";
+export {
+  LoginForm,
+  type LoginFormProps,
+  type LoginCredentials,
+} from "./components/LoginForm/LoginForm";
