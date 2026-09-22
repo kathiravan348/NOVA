@@ -166,6 +166,8 @@ export function findUnknownClasses(source: string, theme: ThemeNames): string[] 
   const hits: string[] = [];
   for (const literal of source.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`/g)) {
     const text = literal[1] ?? literal[2] ?? literal[3] ?? "";
+    // A literal that is exactly a colour name ("text-muted") is a token key, not a class.
+    if (theme.colors.has(text)) continue;
     for (const token of text.split(/\s+/)) {
       if (!/^[!a-z0-9:-][\w:/.!-]*$/.test(token)) continue;
       const base = baseUtility(token);

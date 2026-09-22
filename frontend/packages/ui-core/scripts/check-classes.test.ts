@@ -61,6 +61,12 @@ describe("check-classes", () => {
     expect(findUnknownClasses(source, theme)).toEqual(["hover:text-danger"]);
   });
 
+  it("treats a literal that is exactly a colour name as a token key", () => {
+    const source = `const vars = ["text-muted", "bg-surface"]; colors["border-default"];`;
+    expect(findUnknownClasses(source, theme)).toEqual([]);
+    expect(findUnknownClasses(`cn("p-2 text-muted")`, theme)).toEqual(["text-muted"]);
+  });
+
   it("ignores plain prose and imports", () => {
     expect(
       findUnknownClasses(`import x from "react"; const t = "Border and text colours";`, theme),
