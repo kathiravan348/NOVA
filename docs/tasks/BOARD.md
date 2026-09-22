@@ -31,7 +31,7 @@
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | planned | — | 005 |
 | NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | planned | — | 007, 008 |
-| NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | planned | — | 010 |
+| NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | done | Claude | 010 |
 | NOVA-027 | Lint: fail on Tailwind classes with no theme token (ui-core, ui-trading) | planned | — | 010 |
 
 ## Parallel lanes (tasks that can run at the same time)

@@ -17,6 +17,9 @@
 | ThemeToggle | Ghost icon button toggling dark/light mode with sun/moon icon | `Core/ThemeToggle` |
 | DemoBanner | Non-dismissible full-width disclaimer bar for prototype data | `Core/DemoBanner` |
 | EmptyState | Centered empty or error placeholder with icon, title, description, and action | `Core/EmptyState` |
+| Modal | Accessible Radix dialog with title, description, body scroll, and footer actions | `Core/Modal` |
+| Tabs | Data-driven horizontal tabs with active indicator and mobile horizontal scroll | `Core/Tabs` |
+| ToastProvider / useToast | Radix toast notification manager with tone icons (success, danger, neutral) | `Core/Toast` |
 | DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards | `Core/DataTable` |
 | Field | Form control wrapper with label, helper description, and error message | `Core/Field` |
 | Input | Accessible text/numeric input with leading/trailing adornments wrapped in Field | `Core/Input` |
