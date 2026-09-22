@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | NOVA-001 | Monorepo setup: pnpm workspaces, Vite, TS strict, ESLint, Prettier, Vitest, .gitattributes | done | Claude | — |
 | NOVA-002 | Theme pipeline: tokens.json → tokens.css (dark/light), Tailwind v4 theme, fonts, `data-theme` switch | done | Claude | 001 |
-| NOVA-003 | Storybook (`ui-storybook`): theme toggle, 360px/768px/1440px viewports, a11y addon | draft | — | 002 |
+| NOVA-003 | Storybook (`ui-storybook`): theme toggle, 360px/768px/1440px viewports, a11y addon | planned | — | 002 |
 | NOVA-004 | Contracts (Orbit): user, strategy spec, backtest run/result, trade, charges | planned | — | 001 |
 | NOVA-005 | Mocks: static JSON per contract (consistent numbers) + MSW handlers + schema tests | draft | — | 004, 023 |
 | NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 005 |
