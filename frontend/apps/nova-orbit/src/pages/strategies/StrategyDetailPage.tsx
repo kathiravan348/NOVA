@@ -1,7 +1,8 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Pencil } from "lucide-react";
 import type { Strategy, StrategyVersion } from "@nova/contracts";
-import { Card, DataTable, StatusBadge, Tabs } from "@nova/ui-core";
+import { Button, Card, DataTable, StatusBadge, Tabs } from "@nova/ui-core";
 import { useStrategy } from "@nova/services";
 import { QueryState } from "../../components/QueryState";
 import { formatIstDateTime, strategyStatusLabel, strategyStatusTone } from "../../lib/format";
@@ -42,6 +43,12 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
               tone={strategyStatusTone[strategy.status]}
               label={strategyStatusLabel[strategy.status]}
             />
+            <Button asChild variant="secondary" size="sm" className="ml-auto">
+              <Link to={`/strategies/${strategy.id}/edit`}>
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+                Edit
+              </Link>
+            </Button>
           </div>
           <p className="text-body text-text-secondary">{strategy.description}</p>
           <p className="text-body-sm text-text-muted">

@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from "react-router";
 import { AppLayout, type RouteHandle } from "./layout/AppLayout";
 import { RequireAuth } from "./layout/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
+import { EditStrategyPage, NewStrategyPage } from "./pages/editor/StrategyEditorPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { StrategiesPage } from "./pages/strategies/StrategiesPage";
 import { StrategyDetailPage } from "./pages/strategies/StrategyDetailPage";
@@ -27,9 +28,19 @@ export const routes: RouteObject[] = [
             element: <StrategiesPage />,
           },
           {
+            path: "/strategies/new",
+            handle: { title: "New strategy" } satisfies RouteHandle,
+            element: <NewStrategyPage />,
+          },
+          {
             path: "/strategies/:id",
             handle: { title: "Strategy" } satisfies RouteHandle,
             element: <StrategyDetailPage />,
+          },
+          {
+            path: "/strategies/:id/edit",
+            handle: { title: "Edit strategy" } satisfies RouteHandle,
+            element: <EditStrategyPage />,
           },
           page("/backtests", "Backtests"),
           page("/compare", "Compare runs"),
