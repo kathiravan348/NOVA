@@ -12,6 +12,11 @@
 | Card | Container panel with optional heading title, actions bar, footer, and body | `Core/Card` |
 | StatCard | Metric card with uppercase label, mono number-lg value, caption tones, and loading skeleton | `Core/StatCard` |
 | Skeleton | Animated pulse block with aria-hidden for loading states | `Core/Skeleton` |
+| AppShell | Responsive page shell with desktop sidebar, mobile drawer, banner slot, and top bar | `Core/AppShell` |
+| NavItem | Sidebar navigation button/link with icon, active state, and mobile auto-close | `Core/NavItem` |
+| ThemeToggle | Ghost icon button toggling dark/light mode with sun/moon icon | `Core/ThemeToggle` |
+| DemoBanner | Non-dismissible full-width disclaimer bar for prototype data | `Core/DemoBanner` |
+| EmptyState | Centered empty or error placeholder with icon, title, description, and action | `Core/EmptyState` |
 | DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards | `Core/DataTable` |
 | Field | Form control wrapper with label, helper description, and error message | `Core/Field` |
 | Input | Accessible text/numeric input with leading/trailing adornments wrapped in Field | `Core/Input` |

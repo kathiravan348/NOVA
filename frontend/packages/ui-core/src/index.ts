@@ -12,6 +12,16 @@ export {
   type StatCardCaptionTone,
 } from "./components/StatCard/StatCard";
 export { Skeleton, type SkeletonProps } from "./components/Skeleton/Skeleton";
+export { AppShell, type AppShellProps } from "./components/AppShell/AppShell";
+export {
+  AppShellContext,
+  useAppShell,
+  type AppShellContextValue,
+} from "./components/AppShell/appShellContext";
+export { NavItem, type NavItemProps } from "./components/NavItem/NavItem";
+export { ThemeToggle, type ThemeToggleProps } from "./components/ThemeToggle/ThemeToggle";
+export { DemoBanner, type DemoBannerProps } from "./components/DemoBanner/DemoBanner";
+export { EmptyState, type EmptyStateProps } from "./components/EmptyState/EmptyState";
 export { DataTable, type DataTableProps } from "./components/DataTable/DataTable";
 export { DataTableCards, type DataTableCardsProps } from "./components/DataTable/DataTableCards";
 export {
