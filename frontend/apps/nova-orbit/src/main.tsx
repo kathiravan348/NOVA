@@ -1,7 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "@nova/ui-core/styles.css";
+import { applyTheme, getStoredTheme } from "@nova/ui-core";
 import { brand } from "@nova/brand";
 import { App } from "./App";
+
+applyTheme(getStoredTheme());
 
 document.title = brand.products.orbit.name;
 
