@@ -4,7 +4,7 @@ import { getApiBaseUrl } from "./config";
 
 export const API_PREFIX = "/api/v1";
 
-export type ApiRequestErrorCode = ApiErrorCode | "invalid_response" | "network";
+export type ApiRequestErrorCode = ApiErrorCode | "invalid_response" | "network" | "unauthorized";
 
 export class ApiRequestError extends Error {
   readonly status: number;

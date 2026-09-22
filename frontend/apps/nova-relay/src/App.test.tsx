@@ -4,10 +4,10 @@ import { brand } from "@nova/brand";
 import { App } from "./App";
 
 describe("NOVA Relay smoke test", () => {
-  it("renders the heading with the product name", () => {
+  it("starts on the login screen with the product name", async () => {
     render(<App />);
-    const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading).toBeInTheDocument();
+    const heading = await screen.findByRole("heading", { level: 1 });
     expect(heading.textContent).toBe(brand.products.relay.name);
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
   });
 });

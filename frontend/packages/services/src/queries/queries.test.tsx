@@ -31,22 +31,12 @@ server.events.on("request:start", ({ request }) => {
   requests.push(new URL(request.url).pathname);
 });
 
-// jsdom replaces AbortSignal and Node's fetch rejects a non-native one, so the
-// signal TanStack Query passes is dropped here (after MSW patches fetch).
-const originalFetch = globalThis.fetch;
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-  const mswFetch = globalThis.fetch;
-  globalThis.fetch = (input, init) => mswFetch(input, { ...init, signal: null });
-});
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
   requests = [];
 });
-afterAll(() => {
-  globalThis.fetch = originalFetch;
-  server.close();
-});
+afterAll(() => server.close());
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={createQueryClient()}>{children}</QueryClientProvider>;
