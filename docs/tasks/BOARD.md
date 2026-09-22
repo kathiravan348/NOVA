@@ -21,7 +21,7 @@
 | NOVA-013 | Shared login screen (mock super-admin auth) + app routing skeletons for Orbit and Relay | done | Claude | 006, 010 |
 | NOVA-014 | Orbit: strategy list + strategy detail (versions, status) | done | Claude | 009, 013, 026 |
 | NOVA-015 | Orbit: strategy editor — visual rule builder (static) | done | Claude | 008, 014 |
-| NOVA-016 | Orbit: strategy editor — Python mode (CodeMirror view, static) | draft | — | 015 |
+| NOVA-016 | Orbit: strategy editor — Python mode (CodeMirror view, static) | planned | — | 015 |
 | NOVA-017 | Orbit: run-backtest form + backtest results screen | draft | — | 012, 014 |
 | NOVA-018 | Orbit: compare runs + market data browser | draft | — | 017, 028 |
 | NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | draft | — | 009, 013, 026 |
