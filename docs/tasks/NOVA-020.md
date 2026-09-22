@@ -1,6 +1,6 @@
 # NOVA-020 — Relay: rate limits, data jobs, audit log
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-020 · **Depends on:** NOVA-019
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-020 · **Depends on:** NOVA-019
 
 ## Goal
 The last three Relay screens: API rate-limit usage per broker account, the NOVA Atlas data-job queue (list + detail), and a filterable audit log. After this Relay has no placeholder pages.
@@ -39,5 +39,17 @@ Modify: relay `src/routes.tsx`, `src/lib/format.ts`; delete relay `src/pages/Pla
 ## Questions
 
 ## Handoff
+**Done:** Relay rate limits (meters per endpoint and account), data jobs list + detail (demo cancel), filterable audit log (`?group=`). Relay has no placeholder pages.
+**Files changed:** as listed; relay `PlaceholderPage.tsx` deleted.
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ · 1280px ✓ (data-jobs table fits) · dark ✓ · light ✓; meters and badges always carry text.
+**New dependencies:** none.
+**Maps updated:** none.
+**Deviations from task:** the data-jobs "Timeframe" column is shown under the job name instead of its own column (the table overflowed at 1280px); `segmentLabel` added to `labels.ts` for the job detail.
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

@@ -21,3 +21,10 @@ export function formatIstShort(utc: string): string {
 export function formatCalendarDate(isoDate: string): string {
   return formatInTimeZone(`${isoDate}T00:00:00Z`, "UTC", "d MMM yyyy");
 }
+
+/** `2026-06-01`, `2026-06-15` → `1 Jun – 15 Jun 2026` (years shown on both sides when they differ). */
+export function formatPeriod(from: string, to: string): string {
+  const sameYear = from.slice(0, 4) === to.slice(0, 4);
+  const start = formatInTimeZone(`${from}T00:00:00Z`, "UTC", sameYear ? "d MMM" : "d MMM yyyy");
+  return `${start} – ${formatCalendarDate(to)}`;
+}

@@ -1,16 +1,20 @@
+import type { ReactNode } from "react";
 import { Navigate, type RouteObject } from "react-router";
 import { AppLayout, type RouteHandle } from "./layout/AppLayout";
 import { RequireAuth } from "./layout/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { AccountDetailPage } from "./pages/accounts/AccountDetailPage";
 import { AccountsPage } from "./pages/accounts/AccountsPage";
+import { AuditPage } from "./pages/audit/AuditPage";
+import { DataJobDetailPage } from "./pages/data-jobs/DataJobDetailPage";
+import { DataJobsPage } from "./pages/data-jobs/DataJobsPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { RateLimitsPage } from "./pages/rate-limits/RateLimitsPage";
 
-const page = (path: string, title: string): RouteObject => ({
+const page = (path: string, title: string, element: ReactNode): RouteObject => ({
   path,
   handle: { title } satisfies RouteHandle,
-  element: <PlaceholderPage title={title} />,
+  element,
 });
 
 export const routes: RouteObject[] = [
@@ -26,19 +30,12 @@ export const routes: RouteObject[] = [
             handle: { title: "Overview" } satisfies RouteHandle,
             element: <OverviewPage />,
           },
-          {
-            path: "/accounts",
-            handle: { title: "Broker accounts" } satisfies RouteHandle,
-            element: <AccountsPage />,
-          },
-          {
-            path: "/accounts/:id",
-            handle: { title: "Broker account" } satisfies RouteHandle,
-            element: <AccountDetailPage />,
-          },
-          page("/rate-limits", "Rate limits"),
-          page("/data-jobs", "Data jobs"),
-          page("/audit", "Audit log"),
+          page("/accounts", "Broker accounts", <AccountsPage />),
+          page("/accounts/:id", "Broker account", <AccountDetailPage />),
+          page("/rate-limits", "Rate limits", <RateLimitsPage />),
+          page("/data-jobs", "Data jobs", <DataJobsPage />),
+          page("/data-jobs/:id", "Data job", <DataJobDetailPage />),
+          page("/audit", "Audit log", <AuditPage />),
           { path: "*", element: <Navigate to="/" replace /> },
         ],
       },
