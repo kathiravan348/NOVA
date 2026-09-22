@@ -1,6 +1,6 @@
 # NOVA-014 — Orbit: strategy list + strategy detail (versions, status)
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-014 · **Depends on:** NOVA-009, NOVA-013, NOVA-026
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-014 · **Depends on:** NOVA-009, NOVA-013, NOVA-026
 
 ## Goal
 `/strategies` lists every strategy from `useStrategies()`; `/strategies/:id` shows one strategy: header, latest spec summary (universe, sizing, risk, entry/exit rules in words) and its version history.
@@ -15,7 +15,7 @@
 Create:
 - ui-core `src/components/DescriptionList/{DescriptionList.tsx,DescriptionList.stories.tsx,DescriptionList.test.tsx}`
 - orbit `src/lib/{format.ts,strategyText.ts,strategyText.test.ts}`, `src/test/renderApp.tsx`
-- orbit `src/pages/strategies/{StrategiesPage.tsx,StrategyDetailPage.tsx,StrategySpecCard.tsx,QueryState.tsx,strategies.test.tsx}`
+- orbit `src/components/QueryState.tsx`, `src/pages/strategies/{StrategiesPage.tsx,StrategyDetailPage.tsx,StrategySpecCard.tsx,strategies.test.tsx}`
 Modify: orbit `package.json`, `src/routes.tsx`; ui-core `src/index.ts`; `frontend/pnpm-lock.yaml`; `docs/COMPONENTS.md`
 
 ## Build
@@ -40,5 +40,17 @@ Modify: orbit `package.json`, `src/routes.tsx`; ui-core `src/index.ts`; `fronten
 ## Questions
 
 ## Handoff
+**Done:** strategy list + detail (spec in words, versions tab), `DescriptionList`, `QueryState`/`QueryError`, IST formatters, rule text helpers.
+**Files changed:** as listed (`QueryState` moved to `src/components/` for reuse by later Orbit pages).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ (cards, no page scroll) · desktop ✓ · dark ✓ · light ✓ (token classes only)
+**New dependencies:** orbit: `@tanstack/react-table@8.21.3`, `date-fns@4.4.0`, `date-fns-tz@3.2.0` (ui-core's versions).
+**Maps updated:** COMPONENTS.
+**Deviations from task:** none.
+**Known gaps:** at ~800px the 7-column table scrolls inside its own container (no page scroll).
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

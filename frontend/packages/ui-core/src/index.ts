@@ -51,6 +51,11 @@ export {
 } from "./components/DateTimePicker/DateTimePicker";
 export { toZonedInputValue, fromZonedInputValue } from "./lib/zonedTime";
 export {
+  DescriptionList,
+  type DescriptionListProps,
+  type DescriptionItem,
+} from "./components/DescriptionList/DescriptionList";
+export {
   LoginForm,
   type LoginFormProps,
   type LoginCredentials,
