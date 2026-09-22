@@ -16,4 +16,3 @@
 | DataJob | `GET /api/v1/data-jobs`, `GET /api/v1/data-jobs/{id}` | `data/dataJobs.json` | Relay |
 | AuditEntry | `GET /api/v1/audit` | `data/auditEntries.json` | Relay |
 | ApiError | any endpoint (404/500) | — | Core, Orbit, Relay |
-

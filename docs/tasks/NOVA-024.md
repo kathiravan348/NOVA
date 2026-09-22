@@ -1,6 +1,6 @@
 # NOVA-024 — MSW: handlers for every contract endpoint + ApiError contract
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-024 · **Depends on:** NOVA-005
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-024 · **Depends on:** NOVA-005
 
 ## Goal
 `@nova/mocks` exports MSW request handlers that serve the static mocks for every endpoint in `docs/CONTRACTS.md`, plus scenario handlers (empty, error) for stories and tests (D21). Services (NOVA-006) and apps will start MSW; this task does not.
@@ -54,3 +54,10 @@ Modify: `frontend/packages/contracts/src/index.ts`, `frontend/packages/mocks/{pa
 - All acceptance checks pass, `pnpm lint`, `pnpm typecheck`, `pnpm test` (29 files, 231 tests), `pnpm build`, `pnpm format:check` all green.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- `CONTRACTS.md`: removed the trailing blank line after the new `ApiError` row.
+- Merged main (NOVA-011, NOVA-012/028 plan); board and lockfile conflicts resolved.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** handoff did not use `docs/templates/HANDOFF.md` (no Files/Deviations lines). `frontend/pnpm-workspace.yaml` (`allowBuilds: msw`) was changed outside the Files list; accepted, it is needed for msw's install script.
+**Follow-up tasks created:** none.
