@@ -1,6 +1,6 @@
 # NOVA-011 — ui-trading: INR formatters, PriceText, PnLText, PnLCard, ChargesBreakdown, Meter
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-011 · **Depends on:** NOVA-007
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-011 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-trading` has tests and exports the money/number formatters (paise → Indian-grouped text, explicit signs) and the first five trading components built on ui-core.
