@@ -6,16 +6,10 @@ import { BacktestResultPage } from "./pages/backtests/BacktestResultPage";
 import { BacktestsPage } from "./pages/backtests/BacktestsPage";
 import { NewBacktestPage } from "./pages/backtests/NewBacktestPage";
 import { ComparePage } from "./pages/compare/ComparePage";
+import { MarketDataPage } from "./pages/market-data/MarketDataPage";
 import { EditStrategyPage, NewStrategyPage } from "./pages/editor/StrategyEditorPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { StrategiesPage } from "./pages/strategies/StrategiesPage";
 import { StrategyDetailPage } from "./pages/strategies/StrategyDetailPage";
-
-const page = (path: string, title: string): RouteObject => ({
-  path,
-  handle: { title } satisfies RouteHandle,
-  element: <PlaceholderPage title={title} />,
-});
 
 export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage /> },
@@ -66,7 +60,11 @@ export const routes: RouteObject[] = [
             handle: { title: "Compare runs" } satisfies RouteHandle,
             element: <ComparePage />,
           },
-          page("/market-data", "Market data"),
+          {
+            path: "/market-data",
+            handle: { title: "Market data" } satisfies RouteHandle,
+            element: <MarketDataPage />,
+          },
           { path: "*", element: <Navigate to="/" replace /> },
         ],
       },

@@ -1,0 +1,29 @@
+[
+  {
+    "symbol": "RELIANCE",
+    "name": "Reliance Industries",
+    "exchange": "NSE",
+    "segment": "equity_delivery",
+    "timeframes": ["1d", "5m"],
+    "dataFrom": "2026-06-29",
+    "dataTo": "2026-09-18"
+  },
+  {
+    "symbol": "TCS",
+    "name": "Tata Consultancy Services",
+    "exchange": "NSE",
+    "segment": "equity_delivery",
+    "timeframes": ["1d", "5m"],
+    "dataFrom": "2026-06-29",
+    "dataTo": "2026-09-18"
+  },
+  {
+    "symbol": "INFY",
+    "name": "Infosys",
+    "exchange": "NSE",
+    "segment": "equity_delivery",
+    "timeframes": ["1d", "5m"],
+    "dataFrom": "2026-06-29",
+    "dataTo": "2026-09-18"
+  }
+]

@@ -23,9 +23,21 @@ export const emptyHandlers = [
   http.get(apiPath("/audit"), () => {
     return HttpResponse.json([]);
   }),
+  http.get(apiPath("/market-data/instruments"), () => {
+    return HttpResponse.json([]);
+  }),
+  http.get(apiPath("/market-data/candles"), () => {
+    return HttpResponse.json([]);
+  }),
 ];
 
 export const errorHandlers = [
+  http.get(apiPath("/market-data/instruments"), () => {
+    return internalError();
+  }),
+  http.get(apiPath("/market-data/candles"), () => {
+    return internalError();
+  }),
   http.get(apiPath("/me"), () => {
     return internalError();
   }),

@@ -7,7 +7,9 @@ import {
   mockBacktestResults,
   mockBacktestRuns,
   mockBrokerAccounts,
+  mockCandles,
   mockDataJobs,
+  mockInstruments,
   mockRateLimits,
   mockStrategies,
   mockTrades,
@@ -30,6 +32,7 @@ import {
   listDataJobs,
   listRateLimits,
 } from "./relay";
+import { listCandles, listInstruments } from "./marketData";
 
 const server = setupServer(...handlers);
 
@@ -91,5 +94,19 @@ describe("Relay api", () => {
   it("maps error scenarios to code internal", async () => {
     server.use(...errorHandlers);
     await expect(listAuditEntries()).rejects.toMatchObject({ status: 500, code: "internal" });
+  });
+});
+
+describe("Market data api", () => {
+  it("returns instruments and candles from the mocks", async () => {
+    await expect(listInstruments()).resolves.toEqual(mockInstruments);
+    await expect(listCandles("INFY", "1d")).resolves.toEqual(mockCandles["INFY:1d"]);
+  });
+
+  it("maps an unknown symbol to not_found", async () => {
+    await expect(listCandles("NOPE", "1d")).rejects.toMatchObject({
+      status: 404,
+      code: "not_found",
+    });
   });
 });

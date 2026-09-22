@@ -1,6 +1,6 @@
 # NOVA-029 — Market data: contracts, mocks, handlers, services, Orbit browser
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-029 · **Depends on:** NOVA-013, NOVA-028
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-029 · **Depends on:** NOVA-013, NOVA-028
 
 ## Goal
 Orbit's `/market-data` shows candles for a chosen instrument and timeframe using `CandlestickChart`, fed through contracts → mocks → MSW → services like every other screen.
@@ -36,5 +36,17 @@ Modify: contracts `src/index.ts`; mocks `src/data.ts`, `src/handlers/{index.ts,s
 ## Questions
 
 ## Handoff
+**Done:** Instrument + Candle contracts, static mocks (3 instruments × 1d/5m), MSW handlers + scenarios, services + hooks, Orbit `/market-data` with `CandlestickChart`.
+**Files changed:** as listed, plus orbit `package.json` (dev `lightweight-charts@5.2.1`), `src/test/setup.ts` (no-op Lightweight Charts mock: jsdom has no canvas); removed orbit `PlaceholderPage.tsx` (no placeholders left).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ (chart fits, no page scroll) · 1280px ✓ · dark ✓ · light ✓ (re-colours live; 5m axis in IST)
+**New dependencies:** none at runtime.
+**Maps updated:** CONTRACTS.
+**Deviations from task:** mock JSON generated once by a throwaway script with fixed step tables (committed output only). Unknown `?symbol=` falls back to the first instrument instead of an error (friendlier for shared links).
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
