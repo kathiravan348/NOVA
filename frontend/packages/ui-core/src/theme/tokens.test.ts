@@ -2,12 +2,25 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+interface NameValue {
+  name: string;
+  value: string;
+}
+
+interface TokensJson {
+  color: { tokens: { name: string; value: { dark: string; light: string } }[] };
+  type: { families: { sans: string; mono: string } };
+  spacing: { tokens: NameValue[] };
+  radius: { tokens: NameValue[] };
+  size: { tokens: NameValue[] };
+}
+
 describe("tokens.css", () => {
   const packageDir = path.resolve(__dirname, "..", "..");
   const tokensJsonPath = path.join(packageDir, "src", "theme", "tokens.json");
   const tokensCssPath = path.join(packageDir, "src", "theme", "tokens.css");
 
-  const tokens = JSON.parse(fs.readFileSync(tokensJsonPath, "utf-8"));
+  const tokens = JSON.parse(fs.readFileSync(tokensJsonPath, "utf-8")) as TokensJson;
   const css = fs.readFileSync(tokensCssPath, "utf-8");
 
   // Extract blocks from CSS

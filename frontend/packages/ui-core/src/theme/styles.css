@@ -13,12 +13,7 @@
 @source "../";
 
 body {
-  background-color: var(--bg-ground);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
-  font-weight: 400;
+  @apply bg-bg-ground text-text-primary font-sans text-body;
 }
 
 :focus-visible {

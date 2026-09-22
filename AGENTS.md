@@ -30,7 +30,7 @@ Rules:
 1. Change the status on the board **before** starting work, and set yourself as owner.
 2. Never edit files of a task you do not own.
 3. Two tasks whose `Files` lists overlap may not be `in-progress` and `in-review` at the same time. Exception: `frontend/pnpm-lock.yaml` is generated. On a conflict, rebase and re-run `pnpm install`. Never hand-edit it.
-4. One branch per task: `task/NOVA-###`. Claude's review fixes are committed on the same branch with prefix `review:`.
+4. One branch per task: `task/NOVA-###`. Commit all work (`NOVA-###: …`) on it before setting `ready-for-review`. Claude's review fixes are committed on the same branch with prefix `review:`.
 5. Claude priority: review `ready-for-review` tasks first, then plan. Keep 1–2 tasks `planned` ahead so Gemini is never idle.
 6. Claude fixes small/medium issues directly. If the fix means rewriting most of the task, write a precise change request and set `changes-requested`.
 7. Only Claude merges to `main`, after tests pass.

@@ -1,6 +1,6 @@
 # NOVA-002 — Theme pipeline
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-002 · **Depends on:** NOVA-001
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-002 · **Depends on:** NOVA-001
 
 ## Goal
 `tokens.json` generates CSS variables (dark + light) and a Tailwind v4 theme, so apps and packages style with token classes only. IBM Plex fonts are self-hosted, and `<html data-theme>` switches the theme.
@@ -61,3 +61,13 @@ Modify:
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Work was left uncommitted on the branch; committed as-is before review (fce15e5).
+- `styles.css`: body hardcoded `15px / 1.5 / 400`; now `@apply bg-bg-ground text-text-primary font-sans text-body` (token-only).
+- `tokens.test.ts`: typed the parsed `tokens.json` (was implicit `any`).
+- `ui-core/package.json`: removed trailing blank line.
+**Verified:** `tokens` re-run gives no diff; lint/typecheck/test (13)/build pass; built CSS has `--bg-ground` #10172a/#f5f6f8, `.text-page-title` 26px/600, no default palette.
+**Change requests:** none.
+**Rulebook issues found:** handoff must be committed on the task branch before `ready-for-review` (add to AGENTS.md §3).
+**Follow-up tasks created:** none.
