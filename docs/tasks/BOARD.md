@@ -12,7 +12,7 @@
 | NOVA-004 | Contracts (Orbit): user, strategy spec, backtest run/result, trade, charges | done | Claude | 001 |
 | NOVA-005 | Mocks: static JSON per contract (consistent numbers) + MSW handlers + schema tests | draft | — | 004, 023 |
 | NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 005 |
-| NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | planned | — | 003 |
+| NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | ready-for-review | Gemini | 003 |
 | NOVA-008 | ui-core: form fields (Input, Select, Checkbox, Switch, DateTimePicker IST) with RHF + Zod | draft | — | 007 |
 | NOVA-009 | ui-core: DataTable (TanStack Table; sort, paginate; stacked cards on mobile) | draft | — | 007 |
 | NOVA-010 | ui-core: AppShell (sidebar, mobile menu, top bar), DemoBanner, Modal, Tabs, Toast, EmptyState | draft | — | 007 |

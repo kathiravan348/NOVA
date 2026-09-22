@@ -1,6 +1,6 @@
 # NOVA-007 — ui-core: Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-007 · **Depends on:** NOVA-003
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-007 · **Depends on:** NOVA-003
 
 ## Goal
 `@nova/ui-core` exports its first seven components, built the shadcn/ui way (D19), each with a story and a render test. ui-core tests run in jsdom with jest-dom matchers.
@@ -38,10 +38,10 @@ Modify:
 3. Tests use Testing Library: each component renders, Button `onClick` fires and does not fire when disabled or loading, IconButton has an accessible name, StatCard shows the Skeleton when `loading`.
 
 ## Acceptance checks
-- [ ] Every story renders in `pnpm storybook` in dark and light, with no horizontal scroll at 360px.
-- [ ] The a11y panel shows 0 violations on every story in both themes. Focus ring is visible on Button and IconButton when tabbing.
-- [ ] `pnpm format:check` passes. `grep -rE "#[0-9a-fA-F]{3,6}" packages/ui-core/src/components` finds nothing.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Every story renders in `pnpm storybook` in dark and light, with no horizontal scroll at 360px.
+- [x] The a11y panel shows 0 violations on every story in both themes. Focus ring is visible on Button and IconButton when tabbing.
+- [x] `pnpm format:check` passes. `grep -rE "#[0-9a-fA-F]{3,6}" packages/ui-core/src/components` finds nothing.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Form fields (NOVA-008), tables (NOVA-009), AppShell/Modal/Tabs/Toast/EmptyState/DemoBanner (NOVA-010), anything with trading words or INR formatting (NOVA-011).
@@ -51,5 +51,16 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** Implemented 7 ui-core components (Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton) with cva variants, stories, and tests.
+**Files changed:**
+- `frontend/packages/ui-core/src/components/{Button,IconButton,Badge,StatusBadge,Card,StatCard,Skeleton}/*`
+- `frontend/packages/ui-core/src/lib/{cn.ts,cn.test.ts}`, `vitest.setup.ts`, `vitest.config.ts`, `tsconfig.json`, `package.json`, `src/index.ts`
+- `frontend/.prettierignore`, `frontend/pnpm-lock.yaml`, `docs/COMPONENTS.md`, `docs/STRUCTURE.md`, `docs/tasks/{BOARD.md,NOVA-007.md}`
+**Commands run:** lint / typecheck / test / build / format:check → all pass: yes
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓
+**New dependencies:** class-variance-authority@0.7.1, clsx@2.1.1, tailwind-merge@3.7.0, @radix-ui/react-slot@1.3.3, @storybook/react-vite@10.6.0 (dev), lucide-react@1.47.0 (dev).
+**Maps updated:** STRUCTURE, COMPONENTS.
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
