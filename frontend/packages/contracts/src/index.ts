@@ -8,3 +8,4 @@ export * from "./broker";
 export * from "./rateLimit";
 export * from "./dataJob";
 export * from "./audit";
+export * from "./error";

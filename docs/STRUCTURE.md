@@ -26,7 +26,8 @@
 │  │  ├─ contracts/     API types + Zod schemas
 │  │  ├─ services/      data layer (mock | real)
 │  │  └─ mocks/         static JSON per contract + MSW handlers
-│  │     └─ data/       static mock JSON per contract
+│  │     ├─ data/       static mock JSON per contract
+│  │     └─ src/handlers/ MSW handlers for contracts and scenarios
 │  └─ apps/
 │     ├─ nova-orbit/    strategy builder + backtesting
 │     └─ nova-relay/    API config + limits
