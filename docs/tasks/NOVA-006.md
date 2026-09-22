@@ -1,6 +1,6 @@
 # NOVA-006 — Services layer: `DATA_MODE` switch, typed API client, TanStack Query hooks
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-006 · **Depends on:** NOVA-024
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-006 · **Depends on:** NOVA-024
 
 ## Goal
 `@nova/services` is the only way apps get data: a typed `apiGet` that validates every response with its contract schema, one function per endpoint, and a TanStack Query hook per function. `VITE_DATA_MODE` picks mock (MSW-served, default) or real (refused in Stage A).
@@ -39,5 +39,17 @@ Modify: `frontend/packages/services/{package.json,tsconfig.json,src/index.ts}`, 
 ## Questions
 
 ## Handoff
+**Done:** `@nova/services`: schema-validated `apiGet`, 13 endpoint functions, 13 query hooks, `createQueryClient`.
+**Files changed:** as listed (plus `vitest.config.ts`, `vitest.setup.ts`).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** n/a (no UI)
+**New dependencies:** `@tanstack/react-query@5.103.2` (in stack, AGENTS §5).
+**Maps updated:** STRUCTURE.
+**Deviations from task:** hook test wraps fetch to drop the `AbortSignal`: jsdom's AbortSignal is rejected by Node's fetch (test-only).
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; self-reviewed against the diff)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

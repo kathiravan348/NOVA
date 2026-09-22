@@ -25,6 +25,8 @@
 │  │  │  └─ src/foundations/ Tokens stories
 │  │  ├─ contracts/     API types + Zod schemas
 │  │  ├─ services/      data layer (mock | real)
+│  │  │  ├─ src/api/    one fetch function per endpoint (validated by contract schema)
+│  │  │  └─ src/queries/ TanStack Query keys, hooks, createQueryClient
 │  │  └─ mocks/         static JSON per contract + MSW handlers
 │  │     ├─ data/       static mock JSON per contract
 │  │     └─ src/handlers/ MSW handlers for contracts and scenarios
