@@ -41,29 +41,33 @@ export function DataTable<TData, TValue = unknown>({
   className,
 }: DataTableProps<TData, TValue>): React.ReactElement {
   const [sorting, setSorting] = React.useState<SortingState>(initialSort ?? []);
+  const [pageIndex, setPageIndex] = React.useState(0);
 
   const table = useReactTable({
     data,
     columns,
     state: {
       sorting,
+      pagination: { pageIndex, pageSize },
     },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      setSorting(updater);
+      setPageIndex(0);
+    },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      setPageIndex(next.pageIndex);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getRowId,
-    initialState: {
-      pagination: {
-        pageSize,
-      },
-    },
-    autoResetPageIndex: true,
+    autoResetPageIndex: false,
   });
 
   React.useEffect(() => {
-    table.setPageSize(pageSize);
-  }, [pageSize, table]);
+    setPageIndex(0);
+  }, [data, pageSize]);
 
   return (
     <div className={cn("w-full space-y-4", className)}>
@@ -104,7 +108,7 @@ export function DataTable<TData, TValue = unknown>({
                           type="button"
                           onClick={header.column.getToggleSortingHandler()}
                           className={cn(
-                            "inline-flex items-center gap-1.5 rounded-xs transition-colors hover:text-text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring",
+                            "inline-flex items-center gap-1.5 rounded-xs transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action",
                             isNumeric && "flex-row-reverse",
                           )}
                         >

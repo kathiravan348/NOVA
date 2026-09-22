@@ -49,6 +49,25 @@ describe("DataTable", () => {
     expect(nameTh).toHaveAttribute("aria-sort", "descending");
   });
 
+  it("sort buttons have a visible focus ring and sorting resets to page 1", () => {
+    render(
+      <DataTable<FileItem>
+        caption="Reset files"
+        columns={fileColumns}
+        data={sampleFiles}
+        pageSize={10}
+      />,
+    );
+
+    const sortButton = screen.getByRole("button", { name: /name/i });
+    expect(sortButton.className).toContain("focus-visible:ring-action");
+
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByText(/Showing 11–20/)).toBeInTheDocument();
+    fireEvent.click(sortButton);
+    expect(screen.getByText(/Showing 1–10/)).toBeInTheDocument();
+  });
+
   it("next and previous page buttons change page and pagination indicator text", () => {
     render(
       <DataTable<FileItem>

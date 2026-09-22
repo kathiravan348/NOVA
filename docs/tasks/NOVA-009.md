@@ -1,6 +1,6 @@
 # NOVA-009 — ui-core: DataTable (sort, paginate, stacked cards on mobile)
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-009 · **Depends on:** NOVA-007
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-009 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports a generic `DataTable<T>` built on TanStack Table: sortable columns, client-side pagination, loading/empty/error states, and stacked cards below 768px.
@@ -64,3 +64,11 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Sort buttons used `ring-focus-ring` (no such token), so keyboard focus was invisible; now `ring-action` like other controls (test added).
+- Sorting did not reset to page 1 (Build step 6); pagination is now controlled and resets on sort, data and pageSize change (test added).
+- Merged main (NOVA-008) into the branch; shared list conflicts kept both sides, lockfile regenerated.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** handoff ticked "visible focus ring" without it existing; check Tailwind class names against `tailwind-theme.css`.
+**Follow-up tasks created:** none.
