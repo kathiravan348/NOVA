@@ -1,6 +1,6 @@
 # NOVA-023 — Contracts: Relay (broker account, rate limit, data job, audit entry)
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-023 · **Depends on:** NOVA-004
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-023 · **Depends on:** NOVA-004
 
 ## Goal
 `@nova/contracts` also exports Zod schemas and inferred types for broker accounts, rate limits, data jobs and audit entries, so the Relay screens (NOVA-019/020) and mocks (NOVA-005) have a fixed shape.
@@ -71,4 +71,9 @@ _(none)_
 **Known gaps:** none
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Fixed directly (review: commits):**
+- Prettier on `dataJob.ts`, `rateLimit.ts` and their tests, and on `audit.test.ts`. `pnpm format:check` failed, and the handoff did not run it.
+**Verified:** all 4 schemas match the spec field for field. Every refine has an accept test and a reject test, and every enum rejects a bad value. IPs use 203.0.113.x. No secret or token fields. Lint, typecheck, test (112 in contracts) and build pass.
+**Rulebook issues found:** `pnpm format:check` is not in the §9 Definition of done, so implementers skip it. NOVA-007 lists it as an acceptance check, but it should be added to §9.
+**Follow-up tasks created:** none.

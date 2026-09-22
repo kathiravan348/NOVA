@@ -19,13 +19,10 @@ export const RateLimitSchema = z
     message: "peakPerSecond must be less than or equal to limitPerSecond",
     path: ["peakPerSecond"],
   })
-  .refine(
-    (data) => data.dailyLimit === null || data.requestsToday <= data.dailyLimit,
-    {
-      message: "requestsToday must be less than or equal to dailyLimit",
-      path: ["requestsToday"],
-    },
-  )
+  .refine((data) => data.dailyLimit === null || data.requestsToday <= data.dailyLimit, {
+    message: "requestsToday must be less than or equal to dailyLimit",
+    path: ["requestsToday"],
+  })
   .refine((data) => data.throttledToday <= data.requestsToday, {
     message: "throttledToday must be less than or equal to requestsToday",
     path: ["throttledToday"],

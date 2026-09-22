@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  AuditActionSchema,
-  AuditEntry,
-  AuditEntrySchema,
-  AuditTargetTypeSchema,
-} from "./audit";
+import { AuditActionSchema, AuditEntry, AuditEntrySchema, AuditTargetTypeSchema } from "./audit";
 
 describe("Audit schemas", () => {
   const validEntryWithTarget: AuditEntry = {

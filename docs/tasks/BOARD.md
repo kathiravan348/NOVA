@@ -28,7 +28,7 @@
 | NOVA-020 | Relay: rate limits, data jobs, audit log | draft | — | 019 |
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
-| NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | ready-for-review | Gemini | 004 |
+| NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 006.

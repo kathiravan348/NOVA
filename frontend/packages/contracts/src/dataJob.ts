@@ -8,11 +8,7 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 
-export const DataJobTypeSchema = z.enum([
-  "historical_download",
-  "tick_record",
-  "archive",
-]);
+export const DataJobTypeSchema = z.enum(["historical_download", "tick_record", "archive"]);
 export type DataJobType = z.infer<typeof DataJobTypeSchema>;
 
 export const DataJobStatusSchema = z.enum([

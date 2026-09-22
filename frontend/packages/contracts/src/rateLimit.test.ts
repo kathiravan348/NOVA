@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  RateLimit,
-  RateLimitEndpointSchema,
-  RateLimitSchema,
-} from "./rateLimit";
+import { RateLimit, RateLimitEndpointSchema, RateLimitSchema } from "./rateLimit";
 
 describe("RateLimit schemas", () => {
   const validRateLimit: RateLimit = {
@@ -87,7 +83,9 @@ describe("RateLimit schemas", () => {
 
     it("rejects non-positive dailyLimit when set", () => {
       expect(RateLimitSchema.safeParse({ ...validRateLimit, dailyLimit: 0 }).success).toBe(false);
-      expect(RateLimitSchema.safeParse({ ...validRateLimit, dailyLimit: -100 }).success).toBe(false);
+      expect(RateLimitSchema.safeParse({ ...validRateLimit, dailyLimit: -100 }).success).toBe(
+        false,
+      );
     });
 
     it("rejects extra fields because of strictObject", () => {

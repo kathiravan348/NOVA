@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  DataJob,
-  DataJobSchema,
-  DataJobStatusSchema,
-  DataJobTypeSchema,
-} from "./dataJob";
+import { DataJob, DataJobSchema, DataJobStatusSchema, DataJobTypeSchema } from "./dataJob";
 
 describe("DataJob schemas", () => {
   const validCompletedHistoricalJob: DataJob = {
