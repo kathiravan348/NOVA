@@ -19,7 +19,7 @@
 | NOVA-011 | ui-trading: PriceText, PnLText, PnLCard, ChargesBreakdown, Meter, INR formatters | done | Claude | 007 |
 | NOVA-012 | ui-trading: EquityCurve (Recharts), responsive | done | Claude | 011 |
 | NOVA-013 | Shared login screen (mock super-admin auth) + app routing skeletons for Orbit and Relay | done | Claude | 006, 010 |
-| NOVA-014 | Orbit: strategy list + strategy detail (versions, status) | draft | — | 009, 013, 026 |
+| NOVA-014 | Orbit: strategy list + strategy detail (versions, status) | planned | — | 009, 013, 026 |
 | NOVA-015 | Orbit: strategy editor — visual rule builder (static) | draft | — | 008, 014 |
 | NOVA-016 | Orbit: strategy editor — Python mode (CodeMirror view, static) | draft | — | 015 |
 | NOVA-017 | Orbit: run-backtest form + backtest results screen | draft | — | 012, 014 |
