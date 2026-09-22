@@ -1,0 +1,46 @@
+# NOVA-010 — ui-core: AppShell, NavItem, ThemeToggle, DemoBanner, EmptyState
+
+**Status:** planned · **Owner:** — · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
+
+## Goal
+`@nova/ui-core` exports the page frame both apps use: sidebar on desktop, slide-in menu on mobile, top bar, a banner slot, plus DemoBanner, EmptyState and a theme toggle. Modal/Tabs/Toast are NOVA-026.
+
+## Read first
+- `AGENTS.md` (§6–8), `docs/DECISIONS.md` (D19), `docs/COMPONENTS.md`
+- `frontend/packages/ui-core/{package.json,src/index.ts,src/lib/cn.ts,src/theme/theme.ts}`
+- `frontend/packages/ui-core/src/components/{Button/Button.tsx,IconButton/IconButton.tsx}`
+- `frontend/packages/ui-core/src/theme/tokens.json` (read only: `size` tokens)
+
+## Files
+Create in `frontend/packages/ui-core/src/components/`: `<Name>/<Name>.tsx`, `.stories.tsx`, `.test.tsx` for AppShell, NavItem, ThemeToggle, DemoBanner, EmptyState; plus `AppShell/appShellContext.ts`.
+Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-lock.yaml` (via `pnpm install`), `docs/COMPONENTS.md`
+
+## Build
+1. Deps: `@radix-ui/react-dialog` 1.x (exact latest stable). Make sure `lucide-react` is in `dependencies` (move it if NOVA-008/009 have not).
+2. **AppShell** props: `brand: ReactNode`, `nav: ReactNode` (NavItems), `navFooter?: ReactNode`, `title?: ReactNode`, `actions?: ReactNode` (top bar, right), `banner?: ReactNode` (above the top bar), `children`. No brand text or router inside ui-core.
+   - ≥ `md`: fixed `<aside>` of width `w-(--sidebar-width)`, `bg-bg-sidebar`, right border `border-border-default` (visible in light), holding brand, `<nav aria-label="Main">` and navFooter. Content column: banner, `<header>` top bar (`h-14`, bottom border), `<main id="main-content">` with `px-4 md:px-7 py-6`.
+   - < `md`: sidebar hidden; top bar shows an IconButton (`Menu`, `aria-label="Open menu"`) that opens a Radix Dialog sheet from the left with the same brand/nav/navFooter and a close IconButton (`X`). Overlay `bg-bg-ground/80`. Focus is trapped; Esc closes.
+   - First focusable element is a "Skip to content" link to `#main-content`, visible only on focus.
+   - `appShellContext.ts` exposes `closeMenu()`; NavItem calls it on click so the sheet closes after navigating.
+3. **NavItem**: props `icon?`, `active?`, `asChild?` (Radix Slot, so apps pass a router `NavLink`), `children`. Height `h-(--nav-item-height)`, `rounded-md`, `text-body text-text-secondary`; active = `bg-action-subtle text-text-primary` + `aria-current="page"`. Works outside AppShell (no context → no-op).
+4. **ThemeToggle**: IconButton (ghost) that flips `data-theme` using `getStoredTheme`/`applyTheme`. Icon `Sun` in dark, `Moon` in light; `aria-label` "Switch to light theme" / "Switch to dark theme".
+5. **DemoBanner**: full-width bar `bg-warning-subtle text-warning-text text-body-sm`, icon `TriangleAlert` (aria-hidden), `role="note"`. Prop `children?` default "Demo data. Nothing on this screen is real." Not dismissible.
+6. **EmptyState**: props `icon?`, `title`, `description?`, `action?`, `tone?: "neutral" | "error"` (error: icon in `text-loss`, `role="alert"`). Centred, `py-12`, title `text-card-title`.
+7. Stories: `Core/AppShell` Default (6 generic NavItems with Lucide icons, one active, DemoBanner in `banner`, ThemeToggle + a Button in `actions`, filler content), WithoutBanner, LongContent; use `parameters.layout = "fullscreen"`. NavItem: Default, Active, WithIcon. EmptyState: Default, WithAction, Error. DemoBanner: Default, CustomText.
+8. Tests: AppShell renders landmarks (`banner`/`navigation`/`main`), menu button opens the dialog with the nav and NavItem click closes it, skip link targets `#main-content`; NavItem `aria-current`; ThemeToggle flips `document.documentElement.dataset.theme`; DemoBanner default text; EmptyState action button and error role.
+
+## Acceptance checks
+- [ ] At 360px: no sidebar, menu opens/closes, no horizontal scroll. At 1440px: sidebar visible, no menu button.
+- [ ] 0 a11y violations in both themes; focus visible on skip link, menu, close and nav items.
+- [ ] No hex in components; no brand names in ui-core.
+- [ ] Definition of done in `AGENTS.md` §9.
+
+## Out of scope
+- Modal, Tabs, Toast (NOVA-026). Routing, auth, user menu, breadcrumbs, collapsible desktop sidebar.
+- Changes to tokens, theme files or existing components.
+
+## Questions
+
+## Handoff
+
+## Review

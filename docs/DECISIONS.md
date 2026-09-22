@@ -23,6 +23,8 @@
 | D17 | 2026-09-22 | Contracts: money and prices in integer paise; timestamps as ISO-8601 UTC strings (`Z`); calendar dates as `YYYY-MM-DD`; strict objects | One unambiguous wire format for Stage B |
 | D18 | 2026-09-22 | Storybook 10 lives in `ui-storybook`; stories sit next to their component (`X.stories.tsx`) in ui-core/ui-trading and are picked up by glob | Component, story and test stay together; one Storybook for both libraries |
 | D19 | 2026-09-22 | ui-core components follow shadcn/ui patterns, written by hand (no CLI): `cva` variants; `cn` = clsx + tailwind-merge extended with the token text sizes; Radix only where behaviour needs it (Slot for `asChild`) | We own the source and nothing is regenerated; tailwind-merge must know the custom `text-*` sizes or it drops classes |
+| D20 | 2026-09-23 | Form controls: native `<input>`/`<select>` (dates via `datetime-local`/`date`), Radix only for Checkbox and Switch. Controls take `label`/`error` props and never import react-hook-form or zod; apps wire RHF (`register`/`Controller`) with `@hookform/resolvers/zod`. Date values are UTC, shown in `Asia/Kolkata` via date-fns-tz | Native pickers work best on phones; ui-core stays props-only; no date-picker library |
+| D21 | 2026-09-23 | Mock API: MSW handlers in `@nova/mocks` under `/api/v1` (any origin); bare JSON bodies (lists are arrays); errors are `ApiError` `{ error: { code, message } }`; `emptyHandlers`/`errorHandlers` for states | One wire format for mock and real; stories and tests can show empty/error states. Pagination envelope is decided at scope freeze |
 
 ## Pending
 - Options historical data vendor (needed before options backtests).
