@@ -1,6 +1,6 @@
 # NOVA-010 — ui-core: AppShell, NavItem, ThemeToggle, DemoBanner, EmptyState
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports the page frame both apps use: sidebar on desktop, slide-in menu on mobile, top bar, a banner slot, plus DemoBanner, EmptyState and a theme toggle. Modal/Tabs/Toast are NOVA-026.
