@@ -39,4 +39,15 @@ describe("NavItem", () => {
 
     expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps the icon and focus ring when rendered asChild", () => {
+    render(
+      <NavItem asChild icon={<svg data-testid="nav-icon" />}>
+        <a href="/runs">Runs</a>
+      </NavItem>,
+    );
+    const link = screen.getByRole("link", { name: "Runs" });
+    expect(link).toContainElement(screen.getByTestId("nav-icon"));
+    expect(link.className).toContain("focus-visible:ring-action");
+  });
 });
