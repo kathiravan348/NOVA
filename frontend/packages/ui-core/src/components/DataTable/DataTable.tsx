@@ -176,7 +176,8 @@ export function DataTable<TData, TValue = unknown>({
                         key={cell.id}
                         className={cn(
                           "px-5 py-3 text-body text-text-primary",
-                          isNumeric && "text-right font-mono text-number tabular-nums",
+                          isNumeric &&
+                            "whitespace-nowrap text-right font-mono text-number tabular-nums",
                         )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
