@@ -19,6 +19,8 @@
 │  │  │  └─ src/theme/  tokens.json, tokens.css, tailwind-theme.css, styles.css
 │  │  ├─ ui-trading/    trading components built on ui-core
 │  │  ├─ ui-storybook/  Storybook for both libraries
+│  │  │  ├─ .storybook/ Storybook config (main, preview)
+│  │  │  └─ src/foundations/ Tokens stories
 │  │  ├─ contracts/     API types + Zod schemas
 │  │  ├─ services/      data layer (mock | real)
 │  │  └─ mocks/         static JSON per contract + MSW handlers
