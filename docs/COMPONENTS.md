@@ -17,6 +17,9 @@
 | ThemeToggle | Ghost icon button toggling dark/light mode with sun/moon icon | `Core/ThemeToggle` |
 | DemoBanner | Non-dismissible full-width disclaimer bar for prototype data | `Core/DemoBanner` |
 | EmptyState | Centered empty or error placeholder with icon, title, description, and action | `Core/EmptyState` |
+| Modal | Accessible Radix dialog with title, description, body scroll, and footer actions | `Core/Modal` |
+| Tabs | Data-driven horizontal tabs with active indicator and mobile horizontal scroll | `Core/Tabs` |
+| ToastProvider / useToast | Radix toast notification manager with tone icons (success, danger, neutral) | `Core/Toast` |
 
 ## ui-trading (built on ui-core)
 | Component | Purpose | Story |
