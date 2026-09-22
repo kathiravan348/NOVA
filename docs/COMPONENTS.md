@@ -31,4 +31,8 @@
 ## ui-trading (built on ui-core)
 | Component | Purpose | Story |
 |---|---|---|
-| _(filled from NOVA-011)_ | | |
+| PriceText | Formatted price from paise in mono tabular numbers, optional ₹ currency prefix | `Trading/PriceText` |
+| PnLText | Signed Profit/Loss number with profit/loss color and optional percentage | `Trading/PnLText` |
+| PnLCard | StatCard wrapping PnLText with label, caption, and loading skeleton | `Trading/PnLCard` |
+| ChargesBreakdown | Card showing itemized regulatory and brokerage charges with total | `Trading/ChargesBreakdown` |
+| Meter | Accessible progress bar with percentage thresholds (warning, danger) and custom labels | `Trading/Meter` |
