@@ -13,25 +13,27 @@
 | NOVA-005 | Mocks: static JSON per contract (consistent numbers) + schema and consistency tests | done | Claude | 004, 023 |
 | NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 024 |
 | NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | done | Claude | 003 |
-| NOVA-008 | ui-core: form fields (Field, Input, Select, Checkbox, Switch, DateTimePicker IST), RHF + Zod example | planned | — | 007 |
-| NOVA-009 | ui-core: DataTable (TanStack Table; sort, paginate; stacked cards on mobile) | planned | — | 007 |
-| NOVA-010 | ui-core: AppShell (sidebar, mobile menu, top bar), NavItem, ThemeToggle, DemoBanner, EmptyState | planned | — | 007 |
-| NOVA-011 | ui-trading: PriceText, PnLText, PnLCard, ChargesBreakdown, Meter, INR formatters | planned | — | 007 |
-| NOVA-012 | ui-trading: EquityCurve (Recharts), CandlestickChart (Lightweight Charts), responsive | draft | — | 011 |
+| NOVA-008 | ui-core: form fields (Field, Input, Select, Checkbox, Switch, DateTimePicker IST), RHF + Zod example | done | Claude | 007 |
+| NOVA-009 | ui-core: DataTable (TanStack Table; sort, paginate; stacked cards on mobile) | done | Claude | 007 |
+| NOVA-010 | ui-core: AppShell (sidebar, mobile menu, top bar), NavItem, ThemeToggle, DemoBanner, EmptyState | done | Claude | 007 |
+| NOVA-011 | ui-trading: PriceText, PnLText, PnLCard, ChargesBreakdown, Meter, INR formatters | done | Claude | 007 |
+| NOVA-012 | ui-trading: EquityCurve (Recharts), responsive | planned | — | 011 |
 | NOVA-013 | Shared login screen (mock super-admin auth) + app routing skeletons for Orbit and Relay | draft | — | 006, 010 |
 | NOVA-014 | Orbit: strategy list + strategy detail (versions, status) | draft | — | 009, 013, 026 |
 | NOVA-015 | Orbit: strategy editor — visual rule builder (static) | draft | — | 008, 014 |
 | NOVA-016 | Orbit: strategy editor — Python mode (CodeMirror view, static) | draft | — | 015 |
 | NOVA-017 | Orbit: run-backtest form + backtest results screen | draft | — | 012, 014 |
-| NOVA-018 | Orbit: compare runs + market data browser | draft | — | 017 |
+| NOVA-018 | Orbit: compare runs + market data browser | draft | — | 017, 028 |
 | NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | draft | — | 009, 013, 026 |
 | NOVA-020 | Relay: rate limits, data jobs, audit log | draft | — | 019 |
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
-| NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | ready-for-review | Gemini | 005 |
-| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary instead of `text-[white]` | planned | — | 007 |
-| NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | planned | — | 010 |
+| NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | in-review | Claude | 005 |
+| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | planned | — | 007, 008 |
+| NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | done | Claude | 010 |
+| NOVA-027 | Lint: fail on Tailwind classes with no theme token (ui-core, ui-trading) | planned | — | 010 |
+| NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | draft | — | 011 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

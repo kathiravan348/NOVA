@@ -1,6 +1,6 @@
 # NOVA-024 — MSW: handlers for every contract endpoint + ApiError contract
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-024 · **Depends on:** NOVA-005
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-024 · **Depends on:** NOVA-005
 
 ## Goal
 `@nova/mocks` exports MSW request handlers that serve the static mocks for every endpoint in `docs/CONTRACTS.md`, plus scenario handlers (empty, error) for stories and tests (D21). Services (NOVA-006) and apps will start MSW; this task does not.
