@@ -76,7 +76,7 @@ New dependency = note it in the handoff and in `docs/DECISIONS.md` request secti
 
 ## 9. Definition of done (every task)
 - [ ] Acceptance checks in the task file all pass
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` pass
+- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check` pass
 - [ ] Stories added/updated and checked at 360px and desktop, dark and light
 - [ ] Maps updated (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) if touched
 - [ ] Handoff note written in the task file; board status updated
