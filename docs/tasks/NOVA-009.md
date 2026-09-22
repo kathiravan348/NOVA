@@ -1,6 +1,6 @@
 # NOVA-009 — ui-core: DataTable (sort, paginate, stacked cards on mobile)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-009 · **Depends on:** NOVA-007
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-009 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports a generic `DataTable<T>` built on TanStack Table: sortable columns, client-side pagination, loading/empty/error states, and stacked cards below 768px.
@@ -28,10 +28,10 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 9. Tests: renders headers and first page, clicking a header sorts and sets `aria-sort`, Next/Previous change page and the "Showing" text, loading/empty/error states, numeric column cells are right-aligned, cards view shows `mobileLabel` labels.
 
 ## Acceptance checks
-- [ ] At 360px the story shows cards, no horizontal page scroll. At desktop it shows the table.
-- [ ] 0 a11y violations in both themes. Sort buttons and pager are keyboard usable with a visible focus ring.
-- [ ] No hex in components. Each file ≤ 300 lines.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] At 360px the story shows cards, no horizontal page scroll. At desktop it shows the table.
+- [x] 0 a11y violations in both themes. Sort buttons and pager are keyboard usable with a visible focus ring.
+- [x] No hex in components. Each file ≤ 300 lines.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Server-side sort/paging, filtering, search, column resize/visibility, row selection, clickable rows, virtualisation.
@@ -41,5 +41,26 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 ## Questions
 
 ## Handoff
+**Done:** Implemented generic `DataTable<TData, TValue>` with TanStack Table, desktop table, mobile stacked cards, client-side pagination, sorting, states, stories and unit tests.
+**Files changed:**
+- `frontend/packages/ui-core/package.json`
+- `frontend/pnpm-lock.yaml`
+- `frontend/packages/ui-core/src/index.ts`
+- `frontend/packages/ui-core/src/components/DataTable/columnMeta.ts`
+- `frontend/packages/ui-core/src/components/DataTable/DataTable.tsx`
+- `frontend/packages/ui-core/src/components/DataTable/DataTableCards.tsx`
+- `frontend/packages/ui-core/src/components/DataTable/DataTablePagination.tsx`
+- `frontend/packages/ui-core/src/components/DataTable/storyData.ts`
+- `frontend/packages/ui-core/src/components/DataTable/DataTable.stories.tsx`
+- `frontend/packages/ui-core/src/components/DataTable/DataTable.test.tsx`
+- `docs/COMPONENTS.md`
+- `docs/tasks/BOARD.md`
+- `docs/tasks/NOVA-009.md`
+**Commands run:** lint / typecheck / test / build / format:check → all pass: yes
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓
+**New dependencies:** `@tanstack/react-table@8.21.3`. Moved `lucide-react@1.47.0` to dependencies.
+**Maps updated:** COMPONENTS
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review

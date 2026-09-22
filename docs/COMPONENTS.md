@@ -12,6 +12,7 @@
 | Card | Container panel with optional heading title, actions bar, footer, and body | `Core/Card` |
 | StatCard | Metric card with uppercase label, mono number-lg value, caption tones, and loading skeleton | `Core/StatCard` |
 | Skeleton | Animated pulse block with aria-hidden for loading states | `Core/Skeleton` |
+| DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards | `Core/DataTable` |
 
 ## ui-trading (built on ui-core)
 | Component | Purpose | Story |

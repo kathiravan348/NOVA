@@ -12,3 +12,10 @@ export {
   type StatCardCaptionTone,
 } from "./components/StatCard/StatCard";
 export { Skeleton, type SkeletonProps } from "./components/Skeleton/Skeleton";
+export { DataTable, type DataTableProps } from "./components/DataTable/DataTable";
+export { DataTableCards, type DataTableCardsProps } from "./components/DataTable/DataTableCards";
+export {
+  DataTablePagination,
+  type DataTablePaginationProps,
+} from "./components/DataTable/DataTablePagination";
+import "./components/DataTable/columnMeta";
