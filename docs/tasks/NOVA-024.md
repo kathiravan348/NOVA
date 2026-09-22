@@ -1,6 +1,6 @@
 # NOVA-024 — MSW: handlers for every contract endpoint + ApiError contract
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-024 · **Depends on:** NOVA-005
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-024 · **Depends on:** NOVA-005
 
 ## Goal
 `@nova/mocks` exports MSW request handlers that serve the static mocks for every endpoint in `docs/CONTRACTS.md`, plus scenario handlers (empty, error) for stories and tests (D21). Services (NOVA-006) and apps will start MSW; this task does not.
@@ -31,10 +31,10 @@ Modify: `frontend/packages/contracts/src/index.ts`, `frontend/packages/mocks/{pa
 8. `CONTRACTS.md`: add an `ApiError` row (any endpoint, 404/500, no mock file) and a note under the title: handlers live in `mocks/src/handlers/`. `STRUCTURE.md`: add `src/handlers/` under `mocks/`.
 
 ## Acceptance checks
-- [ ] `pnpm --filter @nova/mocks test` and `pnpm --filter @nova/contracts test` pass; root `pnpm test` runs both.
-- [ ] Every endpoint in `CONTRACTS.md` has a handler and a test. No existing mock JSON or contract changes.
-- [ ] `pnpm build` passes (no Node-only import in the browser path). Files ≤ 300 lines, no `any`.
-- [ ] Definition of done in `AGENTS.md` §9 (stories n/a).
+- [x] `pnpm --filter @nova/mocks test` and `pnpm --filter @nova/contracts test` pass; root `pnpm test` runs both.
+- [x] Every endpoint in `CONTRACTS.md` has a handler and a test. No existing mock JSON or contract changes.
+- [x] `pnpm build` passes (no Node-only import in the browser path). Files ≤ 300 lines, no `any`.
+- [x] Definition of done in `AGENTS.md` §9 (stories n/a).
 
 ## Out of scope
 - `msw init` / `mockServiceWorker.js`, starting the worker in apps or Storybook, `DATA_MODE` (NOVA-006).
@@ -44,5 +44,20 @@ Modify: `frontend/packages/contracts/src/index.ts`, `frontend/packages/mocks/{pa
 ## Questions
 
 ## Handoff
+- Created ApiError contract schema, types, unit test (`error.ts`, `error.test.ts`), and exported from `@nova/contracts`.
+- Pinned `msw` exact `2.15.0` in `@nova/mocks` and approved scripts.
+- Created `handlers/api.ts` (API_BASE_PATH, apiPath, notFound, internalError).
+- Implemented Orbit handlers (`/me`, `/strategies`, `/backtests`, `/result`, `/trades`) and Relay handlers (`/broker/accounts`, `/rate-limits`, `/data-jobs`, `/audit`).
+- Implemented scenario handlers (`emptyHandlers`, `errorHandlers`).
+- Added comprehensive unit tests in `orbit.test.ts`, `relay.test.ts`, `scenarios.test.ts`.
+- Updated `CONTRACTS.md` and `STRUCTURE.md`.
+- All acceptance checks pass, `pnpm lint`, `pnpm typecheck`, `pnpm test` (29 files, 231 tests), `pnpm build`, `pnpm format:check` all green.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- `CONTRACTS.md`: removed the trailing blank line after the new `ApiError` row.
+- Merged main (NOVA-011, NOVA-012/028 plan); board and lockfile conflicts resolved.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** handoff did not use `docs/templates/HANDOFF.md` (no Files/Deviations lines). `frontend/pnpm-workspace.yaml` (`allowBuilds: msw`) was changed outside the Files list; accepted, it is needed for msw's install script.
+**Follow-up tasks created:** none.

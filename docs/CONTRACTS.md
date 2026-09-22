@@ -1,7 +1,7 @@
 # NOVA — Contracts index
 
 > One line per contract. Update in the same task that adds or changes a contract.
-> Source: `frontend/packages/contracts/src/`. Mock: `frontend/packages/mocks/data/`.
+> Source: `frontend/packages/contracts/src/`. Mock: `frontend/packages/mocks/data/`. Handlers live in `mocks/src/handlers/`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
@@ -15,3 +15,4 @@
 | RateLimit | `GET /api/v1/broker/rate-limits` | `data/rateLimits.json` | Relay |
 | DataJob | `GET /api/v1/data-jobs`, `GET /api/v1/data-jobs/{id}` | `data/dataJobs.json` | Relay |
 | AuditEntry | `GET /api/v1/audit` | `data/auditEntries.json` | Relay |
+| ApiError | any endpoint (404/500) | — | Core, Orbit, Relay |

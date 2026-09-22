@@ -16,8 +16,8 @@
 │  ├─ packages/
 │  │  ├─ ui-core/       generic components + theme tokens
 │  │  │  ├─ scripts/    build-tokens generator
-│  │  │  ├─ src/components/ Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton
-│  │  │  ├─ src/lib/    cn utility extended with token text sizes
+│  │  │  ├─ src/components/ Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton, Field, Input, Select, Checkbox, Switch, DateTimePicker
+│  │  │  ├─ src/lib/    cn utility, zonedTime UTC/IST conversion
 │  │  │  └─ src/theme/  tokens.json, tokens.css, tailwind-theme.css, styles.css
 │  │  ├─ ui-trading/    trading components built on ui-core
 │  │  ├─ ui-storybook/  Storybook for both libraries
@@ -26,7 +26,8 @@
 │  │  ├─ contracts/     API types + Zod schemas
 │  │  ├─ services/      data layer (mock | real)
 │  │  └─ mocks/         static JSON per contract + MSW handlers
-│  │     └─ data/       static mock JSON per contract
+│  │     ├─ data/       static mock JSON per contract
+│  │     └─ src/handlers/ MSW handlers for contracts and scenarios
 │  └─ apps/
 │     ├─ nova-orbit/    strategy builder + backtesting
 │     └─ nova-relay/    API config + limits

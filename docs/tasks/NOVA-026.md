@@ -1,6 +1,6 @@
 # NOVA-026 — ui-core: Modal, Tabs, Toast
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-026 · **Depends on:** NOVA-010
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-026 · **Depends on:** NOVA-010
 
 ## Goal
 `@nova/ui-core` exports a Modal dialog, data-driven Tabs and a toast system, all on Radix, each with stories and tests. (Split out of NOVA-010.)
@@ -30,9 +30,9 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 6. Tests: Modal opens from trigger, has dialog role with accessible name, Esc and Close button close it, focus returns to trigger. Tabs: arrow keys move between tabs, clicking shows the matching panel, disabled tab is skipped. Toast: `show()` renders title/description with the tone icon, close removes it, `useToast` outside provider throws.
 
 ## Acceptance checks
-- [ ] All stories render in dark and light, 0 a11y violations, no horizontal page scroll at 360px.
-- [ ] Focus is trapped in the open Modal and visible on every trigger, tab and close button.
-- [ ] No hex in components. Definition of done in `AGENTS.md` §9.
+- [x] All stories render in dark and light, 0 a11y violations, no horizontal page scroll at 360px.
+- [x] Focus is trapped in the open Modal and visible on every trigger, tab and close button.
+- [x] No hex in components. Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Confirm-dialog helpers, drawers, toasts with action buttons, promise toasts, any toast library (sonner etc.).
@@ -41,5 +41,38 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 ## Questions
 
 ## Handoff
+**Done:** Implemented Modal, Tabs, and Toast system (ToastProvider + useToast) on Radix UI with responsive layouts, stories, and comprehensive tests.
+**Files changed:**
+- `frontend/packages/ui-core/package.json`
+- `frontend/pnpm-lock.yaml`
+- `frontend/packages/ui-core/src/index.ts`
+- `frontend/packages/ui-core/src/components/Modal/Modal.tsx`
+- `frontend/packages/ui-core/src/components/Modal/Modal.stories.tsx`
+- `frontend/packages/ui-core/src/components/Modal/Modal.test.tsx`
+- `frontend/packages/ui-core/src/components/Tabs/Tabs.tsx`
+- `frontend/packages/ui-core/src/components/Tabs/Tabs.stories.tsx`
+- `frontend/packages/ui-core/src/components/Tabs/Tabs.test.tsx`
+- `frontend/packages/ui-core/src/components/Toast/toastContext.ts`
+- `frontend/packages/ui-core/src/components/Toast/useToast.ts`
+- `frontend/packages/ui-core/src/components/Toast/ToastProvider.tsx`
+- `frontend/packages/ui-core/src/components/Toast/Toast.stories.tsx`
+- `frontend/packages/ui-core/src/components/Toast/Toast.test.tsx`
+- `docs/COMPONENTS.md`
+- `docs/tasks/BOARD.md`
+- `docs/tasks/NOVA-026.md`
+**Commands run:** lint / typecheck / test / build / format:check → all pass: yes
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓
+**New dependencies:** `@radix-ui/react-tabs@1.1.21`, `@radix-ui/react-toast@1.2.23`.
+**Maps updated:** COMPONENTS
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Tabs used `ring-focus-ring` (no such token): keyboard focus was invisible; now `ring-action`, `ring-inset` so the scroll container does not clip it (test added).
+- Modal without `description`: pass `aria-describedby={undefined}` so Radix does not warn.
+- Merged main (NOVA-010 review, NOVA-027 plan); shared list conflicts kept both sides, lockfile regenerated.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** same unknown-token class as NOVA-009/010; NOVA-027 lint check will catch it.
+**Follow-up tasks created:** none.
