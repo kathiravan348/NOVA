@@ -24,7 +24,7 @@
 | NOVA-016 | Orbit: strategy editor — Python mode (CodeMirror view, static) | done | Claude | 015 |
 | NOVA-017 | Orbit: run-backtest form + backtest results screen | done | Claude | 012, 014 |
 | NOVA-018 | Orbit: compare runs (market data split to 029) | done | Claude | 017 |
-| NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | draft | — | 009, 013, 026 |
+| NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | planned | — | 009, 013, 026 |
 | NOVA-020 | Relay: rate limits, data jobs, audit log | draft | — | 019 |
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020, 029 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
