@@ -1,6 +1,6 @@
 # NOVA-009 — ui-core: DataTable (sort, paginate, stacked cards on mobile)
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-009 · **Depends on:** NOVA-007
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-009 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports a generic `DataTable<T>` built on TanStack Table: sortable columns, client-side pagination, loading/empty/error states, and stacked cards below 768px.
