@@ -1,6 +1,6 @@
 # NOVA-005 — Mocks: static JSON per contract + schema and consistency tests
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-005 · **Depends on:** NOVA-004, NOVA-023
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-005 · **Depends on:** NOVA-004, NOVA-023
 
 ## Goal
 `@nova/mocks` exports one validated, internally consistent static data set for every contract, so services (NOVA-006) and every screen can show all states. MSW handlers are NOVA-024, not this task.
@@ -34,19 +34,26 @@ Modify: `frontend/packages/mocks/{package.json,src/index.ts}`, `docs/CONTRACTS.m
 8. Docs: in `CONTRACTS.md`, Mock file = `data/<file>.json` for every row (Charges = `trades.json`, inside each trade). In `STRUCTURE.md`, add `data/` under `mocks/`.
 
 ## Acceptance checks
-- [ ] `pnpm --filter @nova/mocks test` passes. Every rule in steps 5–7 has its own `it(...)`.
-- [ ] Root `pnpm test` also runs the mocks tests. Contract tests are unchanged and pass.
-- [ ] No file in `packages/contracts/` changes. Every file ≤ 300 lines. No `any`.
-- [ ] Definition of done in `AGENTS.md` §9 (stories n/a).
+- [x] `pnpm --filter @nova/mocks test` passes. Every rule in steps 5–7 has its own `it(...)`.
+- [x] Root `pnpm test` also runs the mocks tests. Contract tests are unchanged and pass.
+- [x] No file in `packages/contracts/` changes. Every file ≤ 300 lines. No `any`.
+- [x] Definition of done in `AGENTS.md` §9 (stories n/a).
 
 ## Out of scope
 - MSW, handlers and service worker (NOVA-024). Services and hooks (NOVA-006). Market-data candles. Changing any contract. If a rule seems to conflict with a contract, stop and write it in Questions.
 
 ## Questions
-_(implementer writes here if blocked)_
+_(none)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- **Done:** Created static mock datasets for all contracts in `@nova/mocks` with schema validation and Orbit/Relay consistency tests.
+- **Files changed:** `frontend/packages/mocks/data/*.json`, `frontend/packages/mocks/src/{data.ts,index.ts,schemas.test.ts,orbit.consistency.test.ts,relay.consistency.test.ts}`, `frontend/packages/mocks/{package.json,vitest.config.ts}`, `frontend/pnpm-lock.yaml`, `docs/CONTRACTS.md`, `docs/STRUCTURE.md`, `docs/tasks/BOARD.md`, `docs/tasks/NOVA-005.md`.
+- **Commands run:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check` → all pass: yes.
+- **Checked:** 360px n/a · desktop n/a · dark n/a · light n/a (non-UI data/mocks package).
+- **New dependencies:** `vitest@3.2.7` added to `@nova/mocks` devDependencies.
+- **Maps updated:** STRUCTURE, CONTRACTS.
+- **Deviations from task:** none.
+- **Known gaps:** none.
 
 ## Review
 _(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

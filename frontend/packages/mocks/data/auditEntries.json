@@ -1,0 +1,134 @@
+[
+  {
+    "id": "aud_012",
+    "at": "2026-09-21T06:20:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "backtest.run",
+    "targetType": "backtest",
+    "targetId": "run_004",
+    "summary": "Queued backtest VWAP September Dry Run",
+    "ip": "203.0.113.10"
+  },
+  {
+    "id": "aud_011",
+    "at": "2026-09-21T06:10:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "data_job.create",
+    "targetType": "data_job",
+    "targetId": "job_003",
+    "summary": "Created archive data job for banking symbols",
+    "ip": "203.0.113.10"
+  },
+  {
+    "id": "aud_010",
+    "at": "2026-09-21T05:30:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "auth.login",
+    "targetType": "user",
+    "targetId": "usr_001",
+    "summary": "User logged in successfully",
+    "ip": "203.0.113.10"
+  },
+  {
+    "id": "aud_009",
+    "at": "2026-09-20T18:30:00Z",
+    "actorId": null,
+    "actorName": "System",
+    "action": "broker.session_expired",
+    "targetType": "broker_account",
+    "targetId": "brk_002",
+    "summary": "Broker session expired for account CD5678",
+    "ip": null
+  },
+  {
+    "id": "aud_008",
+    "at": "2026-09-20T03:00:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "broker.login",
+    "targetType": "broker_account",
+    "targetId": "brk_002",
+    "summary": "Logged in to broker account CD5678",
+    "ip": "203.0.113.10"
+  },
+  {
+    "id": "aud_007",
+    "at": "2026-09-18T10:00:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "settings.update",
+    "targetType": "settings",
+    "targetId": "risk_limits",
+    "summary": "Updated default daily drawdown limit",
+    "ip": "203.0.113.10"
+  },
+  {
+    "id": "aud_006",
+    "at": "2026-09-15T02:05:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "data_job.cancel",
+    "targetType": "data_job",
+    "targetId": "job_005",
+    "summary": "Cancelled archive job for TATAMOTORS",
+    "ip": "203.0.113.10"
+  },
+  {
+    "id": "aud_005",
+    "at": "2026-09-01T04:00:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "backtest.run",
+    "targetType": "backtest",
+    "targetId": "run_002",
+    "summary": "Started backtest VWAP Intraday v2 Backtest",
+    "ip": "203.0.113.12"
+  },
+  {
+    "id": "aud_004",
+    "at": "2026-08-15T06:00:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "strategy.update",
+    "targetType": "strategy",
+    "targetId": "stg_001",
+    "summary": "Created version 2 of strategy stg_001",
+    "ip": "203.0.113.12"
+  },
+  {
+    "id": "aud_003",
+    "at": "2026-07-10T05:00:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "strategy.create",
+    "targetType": "strategy",
+    "targetId": "stg_002",
+    "summary": "Created strategy Delivery Mean Reversion",
+    "ip": "203.0.113.14"
+  },
+  {
+    "id": "aud_002",
+    "at": "2026-05-02T05:00:15Z",
+    "actorId": null,
+    "actorName": "System",
+    "action": "settings.update",
+    "targetType": "settings",
+    "targetId": "global_flags",
+    "summary": "Automated safety flag triggered after run failure",
+    "ip": null
+  },
+  {
+    "id": "aud_001",
+    "at": "2026-01-15T05:00:00Z",
+    "actorId": "usr_001",
+    "actorName": "Aarav Sharma",
+    "action": "auth.logout",
+    "targetType": "user",
+    "targetId": "usr_001",
+    "summary": "User logged out",
+    "ip": "203.0.113.10"
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "accountId": "brk_001",
+    "endpoint": "quote",
+    "limitPerSecond": 10,
+    "peakPerSecond": 6,
+    "requestsToday": 4200,
+    "dailyLimit": 50000,
+    "throttledToday": 0,
+    "updatedAt": "2026-09-21T06:25:00Z"
+  },
+  {
+    "accountId": "brk_001",
+    "endpoint": "historical",
+    "limitPerSecond": 3,
+    "peakPerSecond": 2,
+    "requestsToday": 850,
+    "dailyLimit": 10000,
+    "throttledToday": 0,
+    "updatedAt": "2026-09-21T06:20:00Z"
+  },
+  {
+    "accountId": "brk_001",
+    "endpoint": "orders",
+    "limitPerSecond": 10,
+    "peakPerSecond": 3,
+    "requestsToday": 120,
+    "dailyLimit": 5000,
+    "throttledToday": 0,
+    "updatedAt": "2026-09-21T06:10:00Z"
+  },
+  {
+    "accountId": "brk_001",
+    "endpoint": "other",
+    "limitPerSecond": 5,
+    "peakPerSecond": 1,
+    "requestsToday": 60,
+    "dailyLimit": null,
+    "throttledToday": 0,
+    "updatedAt": "2026-09-21T06:00:00Z"
+  },
+  {
+    "accountId": "brk_002",
+    "endpoint": "quote",
+    "limitPerSecond": 10,
+    "peakPerSecond": 8,
+    "requestsToday": 12500,
+    "dailyLimit": 50000,
+    "throttledToday": 2,
+    "updatedAt": "2026-09-20T18:00:00Z"
+  },
+  {
+    "accountId": "brk_002",
+    "endpoint": "historical",
+    "limitPerSecond": 3,
+    "peakPerSecond": 3,
+    "requestsToday": 3200,
+    "dailyLimit": 10000,
+    "throttledToday": 5,
+    "updatedAt": "2026-09-20T17:30:00Z"
+  },
+  {
+    "accountId": "brk_002",
+    "endpoint": "orders",
+    "limitPerSecond": 10,
+    "peakPerSecond": 5,
+    "requestsToday": 450,
+    "dailyLimit": 5000,
+    "throttledToday": 0,
+    "updatedAt": "2026-09-20T16:00:00Z"
+  },
+  {
+    "accountId": "brk_002",
+    "endpoint": "other",
+    "limitPerSecond": 5,
+    "peakPerSecond": 2,
+    "requestsToday": 110,
+    "dailyLimit": null,
+    "throttledToday": 0,
+    "updatedAt": "2026-09-20T15:00:00Z"
+  }
+]
