@@ -5,4 +5,9 @@
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
-| _(filled by NOVA-004)_ | | | |
+| User | `GET /api/v1/me` | NOVA-005 | Core, Orbit, Relay |
+| Strategy | `GET /api/v1/strategies`, `GET /api/v1/strategies/{id}` | NOVA-005 | Orbit |
+| BacktestRun | `GET /api/v1/backtests`, `GET /api/v1/backtests/{id}` | NOVA-005 | Orbit |
+| BacktestResult | `GET /api/v1/backtests/{id}/result` | NOVA-005 | Orbit |
+| Trade | `GET /api/v1/backtests/{id}/trades` | NOVA-005 | Orbit |
+| Charges | — | NOVA-005 | Ledger, Orbit, ui-trading |
