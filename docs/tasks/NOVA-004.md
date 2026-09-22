@@ -1,6 +1,6 @@
 # NOVA-004 — Contracts: Orbit (strategy, backtest, trade, charges, user)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-004 · **Depends on:** NOVA-001
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-004 · **Depends on:** NOVA-001
 
 ## Goal
 `@nova/contracts` exports Zod schemas and inferred types for users, strategies, backtest runs/results, trades and charges. Relay contracts come in NOVA-023.
@@ -40,9 +40,9 @@ Modify: `package.json` (dep `zod` 4.x; devDep `vitest`; script `"test": "vitest 
 3. `CONTRACTS.md`: one row per top-level schema. Endpoints: `GET /api/v1/me`, `GET /api/v1/strategies`, `GET /api/v1/strategies/{id}`, `GET /api/v1/backtests`, `GET /api/v1/backtests/{id}`, `GET /api/v1/backtests/{id}/result`, `GET /api/v1/backtests/{id}/trades`. Leave the Mock column as `NOVA-005`.
 
 ## Acceptance checks
-- [ ] `pnpm --filter @nova/contracts test` passes (root `pnpm test` also covers it once NOVA-002 is merged).
-- [ ] No `any`, no `z.any()`, no floats named `*Paise`. Every file ≤ 300 lines.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] `pnpm --filter @nova/contracts test` passes (root `pnpm test` also covers it once NOVA-002 is merged).
+- [x] No `any`, no `z.any()`, no floats named `*Paise`. Every file ≤ 300 lines.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Broker account, rate limit, data job, audit entry (NOVA-023), mocks, MSW, services, request/mutation shapes, and root `vitest.config.ts` (owned by NOVA-002).
@@ -50,5 +50,32 @@ Modify: `package.json` (dep `zod` 4.x; devDep `vitest`; script `"test": "vitest 
 ## Questions
 
 ## Handoff
+**Done:** Implemented all Orbit contracts in `@nova/contracts` with Zod schemas, inferred types, unit tests, and updated CONTRACTS.md.
+**Files changed:**
+- `frontend/packages/contracts/package.json`
+- `frontend/packages/contracts/vitest.config.ts`
+- `frontend/packages/contracts/src/index.ts`
+- `frontend/packages/contracts/src/common.ts`
+- `frontend/packages/contracts/src/common.test.ts`
+- `frontend/packages/contracts/src/user.ts`
+- `frontend/packages/contracts/src/user.test.ts`
+- `frontend/packages/contracts/src/charges.ts`
+- `frontend/packages/contracts/src/charges.test.ts`
+- `frontend/packages/contracts/src/trade.ts`
+- `frontend/packages/contracts/src/trade.test.ts`
+- `frontend/packages/contracts/src/strategy.ts`
+- `frontend/packages/contracts/src/strategy.test.ts`
+- `frontend/packages/contracts/src/backtest.ts`
+- `frontend/packages/contracts/src/backtest.test.ts`
+- `docs/CONTRACTS.md`
+- `docs/tasks/BOARD.md`
+- `docs/tasks/NOVA-004.md`
+**Commands run:** lint / typecheck / test / build → all pass? yes
+**Checked:** 360px N/A · desktop N/A · dark N/A · light N/A (contracts package only)
+**New dependencies:** `zod@^4.6.5` (contract schemas), `vitest@3.2.7` (test runner devDep).
+**Maps updated:** CONTRACTS.
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
+
