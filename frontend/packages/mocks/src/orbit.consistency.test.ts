@@ -245,4 +245,31 @@ describe("Orbit consistency rules", () => {
       }
     }
   });
+
+  it("ensures run dates, trade dates and equity curve dates are weekdays", () => {
+    const isWeekday = (date: string) => {
+      const day = new Date(`${date.slice(0, 10)}T00:00:00Z`).getUTCDay();
+      return day !== 0 && day !== 6;
+    };
+    const dates = [
+      ...mockBacktestRuns.flatMap((r) => [r.from, r.to]),
+      ...mockTrades.flatMap((t) => [t.entryAt, t.exitAt as string]),
+      ...mockBacktestResults.flatMap((r) => r.equityCurve.map((p) => p.date)),
+    ];
+    for (const date of dates) {
+      expect(isWeekday(date), date).toBe(true);
+    }
+  });
+
+  it("ensures maxDrawdownPercent matches the deepest drop in the equity curve", () => {
+    for (const result of mockBacktestResults) {
+      let peak = 0;
+      let deepest = 0;
+      for (const pt of result.equityCurve) {
+        peak = Math.max(peak, pt.equityPaise);
+        deepest = Math.min(deepest, ((pt.equityPaise - peak) / peak) * 100);
+      }
+      expect(result.metrics.maxDrawdownPercent).toBeCloseTo(deepest, 2);
+    }
+  });
 });

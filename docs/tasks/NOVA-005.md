@@ -1,6 +1,6 @@
 # NOVA-005 — Mocks: static JSON per contract + schema and consistency tests
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-005 · **Depends on:** NOVA-004, NOVA-023
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-005 · **Depends on:** NOVA-004, NOVA-023
 
 ## Goal
 `@nova/mocks` exports one validated, internally consistent static data set for every contract, so services (NOVA-006) and every screen can show all states. MSW handlers are NOVA-024, not this task.
@@ -56,4 +56,12 @@ _(none)_
 - **Known gaps:** none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Fixed directly (review: commits):**
+- `backtestResults.json`: removed weekend points from both equity curves (NSE is closed; charts showed flat weekend segments).
+- `backtestRuns.json`: run_002 `from` 2026-08-16 (Sunday) → 2026-08-14 (Friday); first curve point moved to match.
+- `backtestResults.json`: `maxDrawdownPercent` −1.15 / −0.95 → −0.11 (both curves only drop ~0.106%). `cagrPercent` 12.8 / 11.4 → 13.87 / 10.39 (return annualised over calendar days).
+- `orbit.consistency.test.ts`: new tests: run, trade and curve dates are weekdays; drawdown = deepest drop in the curve.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

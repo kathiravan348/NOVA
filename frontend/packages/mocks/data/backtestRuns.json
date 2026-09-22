@@ -20,7 +20,7 @@
     "strategyVersion": 2,
     "name": "VWAP Intraday v2 Backtest",
     "status": "completed",
-    "from": "2026-08-16",
+    "from": "2026-08-14",
     "to": "2026-08-31",
     "initialCapitalPaise": 100000000,
     "benchmark": null,
