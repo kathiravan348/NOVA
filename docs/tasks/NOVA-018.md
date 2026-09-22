@@ -1,6 +1,6 @@
 # NOVA-018 — Orbit: compare backtest runs
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-018 · **Depends on:** NOVA-017
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-018 · **Depends on:** NOVA-017
 
 ## Goal
 `/compare` lets the owner pick 2–3 completed backtest runs and see their metrics side by side and their equity curves together on one screen. The selection lives in the URL (`?runs=run_001,run_002`) so it can be shared. (Market data moved to NOVA-029.)
@@ -36,5 +36,17 @@ Modify: services `src/queries/orbit.ts`, `src/queries/queries.test.tsx`; orbit `
 ## Questions
 
 ## Handoff
+**Done:** `/compare` with run picker (URL `?runs=`), metrics comparison with "Best" badges, equity curves per run; `useBacktestResults`; "Compare" link on completed results.
+**Files changed:** as listed, plus ui-core `DataTableCards.tsx` (numeric values `whitespace-nowrap`, same fix as the table view in 017).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ (metric cards, one chart per row, no page scroll) · 1280px ✓ · dark ✓ · light ✓ (token classes only)
+**New dependencies:** none.
+**Maps updated:** none.
+**Deviations from task:** market data split into NOVA-029 (board updated; 021 now depends on 029).
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** NOVA-029 (market data browser).

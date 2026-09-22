@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   getBacktest,
   getBacktestResult,
@@ -57,5 +57,15 @@ export function useBacktestTrades(id: string) {
     queryKey: queryKeys.backtests.trades(id),
     queryFn: ({ signal }) => listBacktestTrades(id, { signal }),
     enabled: Boolean(id),
+  });
+}
+
+/** One result query per run id (same cache entries as useBacktestResult). */
+export function useBacktestResults(ids: string[]) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: queryKeys.backtests.result(id),
+      queryFn: ({ signal }: { signal: AbortSignal }) => getBacktestResult(id, { signal }),
+    })),
   });
 }
