@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nova/brand": ["../brand.config.ts"],
+      "@nova/ui-core": ["packages/ui-core/src/index.ts"],
+      "@nova/ui-trading": ["packages/ui-trading/src/index.ts"],
+      "@nova/contracts": ["packages/contracts/src/index.ts"],
+      "@nova/services": ["packages/services/src/index.ts"],
+      "@nova/mocks": ["packages/mocks/src/index.ts"]
+    }
+  }
+}
