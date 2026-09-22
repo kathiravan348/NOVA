@@ -23,10 +23,10 @@
 | NOVA-015 | Orbit: strategy editor — visual rule builder (static) | done | Claude | 008, 014 |
 | NOVA-016 | Orbit: strategy editor — Python mode (CodeMirror view, static) | done | Claude | 015 |
 | NOVA-017 | Orbit: run-backtest form + backtest results screen | done | Claude | 012, 014 |
-| NOVA-018 | Orbit: compare runs + market data browser | draft | — | 017, 028 |
+| NOVA-018 | Orbit: compare runs (market data split to 029) | planned | — | 017 |
 | NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | draft | — | 009, 013, 026 |
 | NOVA-020 | Relay: rate limits, data jobs, audit log | draft | — | 019 |
-| NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020 |
+| NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020, 029 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | done | Claude | 005 |
@@ -34,6 +34,7 @@
 | NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | done | Claude | 010 |
 | NOVA-027 | Lint: fail on Tailwind classes with no theme token (ui-core, ui-trading) | done | Claude | 010 |
 | NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | done | Claude | 011 |
+| NOVA-029 | Market data: Instrument + Candle contracts, mocks, handlers, services, Orbit market data browser (split from 018) | draft | — | 028, 013 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
