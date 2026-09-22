@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router";
-import { AlertTriangle, Hourglass } from "lucide-react";
+import { AlertTriangle, GitCompare, Hourglass } from "lucide-react";
 import type { BacktestRun } from "@nova/contracts";
-import { Card, DescriptionList, EmptyState, Skeleton, StatusBadge } from "@nova/ui-core";
+import { Button, Card, DescriptionList, EmptyState, Skeleton, StatusBadge } from "@nova/ui-core";
 import { EquityCurve, formatInr } from "@nova/ui-trading";
 import { useBacktest, useBacktestResult, useBacktestTrades, useStrategy } from "@nova/services";
 import { QueryError, QueryState } from "../../components/QueryState";
@@ -17,6 +17,14 @@ function RunHeader({ run }: { run: BacktestRun }) {
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-page-title text-text-primary">{run.name}</h2>
           <StatusBadge tone={runStatusTone[run.status]} label={runStatusLabel[run.status]} />
+          {run.status === "completed" && (
+            <Button asChild variant="secondary" size="sm" className="sm:ml-auto">
+              <Link to={`/compare?runs=${run.id}`}>
+                <GitCompare className="h-4 w-4" aria-hidden="true" />
+                Compare
+              </Link>
+            </Button>
+          )}
         </div>
         <DescriptionList
           columns={2}
