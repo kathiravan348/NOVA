@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@nova/contracts": "workspace:*",
-    "@nova/ui-core": "workspace:*"
+    "@nova/ui-core": "workspace:*",
+    "date-fns": "4.4.0",
+    "recharts": "3.10.1"
   },
   "peerDependencies": {
     "react": "18.3.1",

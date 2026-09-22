@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatInr, formatPercent, formatPrice, formatQuantity } from "./money";
+import { formatInr, formatInrCompact, formatPercent, formatPrice, formatQuantity } from "./money";
 
 describe("money formatters", () => {
   describe("formatInr", () => {
@@ -64,6 +64,20 @@ describe("money formatters", () => {
       expect(formatQuantity(150000)).toBe("1,50,000");
       expect(formatQuantity(10000000)).toBe("1,00,00,000");
       expect(formatQuantity(50)).toBe("50");
+    });
+  });
+
+  describe("formatInrCompact", () => {
+    it("uses Cr, L and K units", () => {
+      expect(formatInrCompact(1_23_00_000_00)).toBe("₹1.23Cr");
+      expect(formatInrCompact(5_20_000_00)).toBe("₹5.2L");
+      expect(formatInrCompact(85_000_00)).toBe("₹85K");
+      expect(formatInrCompact(950_00)).toBe("₹950");
+      expect(formatInrCompact(0)).toBe("₹0");
+    });
+
+    it("prefixes negatives with a real minus sign", () => {
+      expect(formatInrCompact(-5_20_000_00)).toBe("−₹5.2L");
     });
   });
 });

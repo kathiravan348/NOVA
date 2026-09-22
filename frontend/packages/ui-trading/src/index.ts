@@ -3,6 +3,7 @@ export const UI_TRADING_NAME = "@nova/ui-trading";
 // Money and Number Formatters
 export {
   formatInr,
+  formatInrCompact,
   formatPrice,
   formatPercent,
   formatQuantity,
@@ -19,3 +20,4 @@ export {
   type ChargesBreakdownProps,
 } from "./components/ChargesBreakdown/ChargesBreakdown";
 export { Meter, type MeterProps } from "./components/Meter/Meter";
+export { EquityCurve, type EquityCurveProps } from "./components/EquityCurve/EquityCurve";

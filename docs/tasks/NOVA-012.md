@@ -1,6 +1,6 @@
 # NOVA-012 — ui-trading: EquityCurve (Recharts), responsive
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-012 · **Depends on:** NOVA-011
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-012 · **Depends on:** NOVA-011
 
 ## Goal
 `@nova/ui-trading` exports `EquityCurve`: a responsive line chart of a backtest's equity (and optional NIFTY 50 benchmark) from `EquityPoint[]`, themed only by tokens, readable at 360px.
@@ -40,5 +40,17 @@ Modify: `frontend/packages/ui-trading/{package.json,src/index.ts}`, `frontend/pn
 ## Questions
 
 ## Handoff
+**Done:** `EquityCurve` + `EquityCurveTooltip` (Recharts), `formatInrCompact`, 5 stories, tests.
+**Files changed:** as listed, plus `format/money.ts` + `money.test.ts` (for `formatInrCompact`).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (no page scroll at 360px, 3 month ticks, no overlap)
+**New dependencies:** `recharts@3.10.1` (in stack), `date-fns@4.4.0` (same version as ui-core).
+**Maps updated:** COMPONENTS.
+**Deviations from task:** X ticks are one per month (first trading day) instead of Recharts' automatic ticks, which repeated month labels; `minTickGap` still thins them at 360px.
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in Storybook)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
