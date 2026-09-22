@@ -1,6 +1,6 @@
 # NOVA-015 — Orbit: strategy editor — visual rule builder (static)
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-015 · **Depends on:** NOVA-008, NOVA-014
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-015 · **Depends on:** NOVA-008, NOVA-014
 
 ## Goal
 `/strategies/new` and `/strategies/:id/edit` open a form (React Hook Form + Zod) that builds a visual Strategy Spec: basics, universe, sizing, risk, and entry/exit rule groups with add/remove conditions. Save validates against `StrategySpecVisualSchema` and shows a demo toast; nothing is stored (Stage A).
@@ -39,5 +39,17 @@ Modify: orbit `package.json`, `src/routes.tsx`, `src/pages/strategies/{Strategie
 ## Questions
 
 ## Handoff
+**Done:** visual rule builder at `/strategies/new` and `/strategies/:id/edit` (RHF + Zod), live spec preview, demo-save toast; "New strategy" and "Edit" entry points.
+**Files changed:** as listed, plus `src/test/renderApp.tsx` (adds `ToastProvider`).
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ (all fields stack, no page scroll) · 1280px ✓ · dark ✓ · light ✓ (token classes only)
+**New dependencies:** orbit: `react-hook-form@7.88.0`, `@hookform/resolvers@5.9.1`, `zod@4.6.5` (ui-core's versions).
+**Maps updated:** none (no new shared component).
+**Deviations from task:** rule groups stack (side by side was too cramped); a condition row is one line from `lg` instead of `md`. Condition controls have short visible labels (Left, Operator, Right…) plus screen-reader context ("entry condition 2").
+**Known gaps:** indicator params other than `period` (e.g. MACD fast/slow) are not editable yet; none in the mocks.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
