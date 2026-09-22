@@ -6,7 +6,7 @@
 
 | ID | Title | Status | Owner | Depends on |
 |---|---|---|---|---|
-| NOVA-001 | Monorepo setup: pnpm workspaces, Vite, TS strict, ESLint, Prettier, Vitest, .gitattributes | planned | — | — |
+| NOVA-001 | Monorepo setup: pnpm workspaces, Vite, TS strict, ESLint, Prettier, Vitest, .gitattributes | done | Claude | — |
 | NOVA-002 | Theme pipeline: tokens.json → tokens.css (dark/light), Tailwind preset, fonts, `data-theme` switch | draft | — | 001 |
 | NOVA-003 | Storybook (`ui-storybook`): theme toggle, 360px/768px/1440px viewports, a11y addon | draft | — | 002 |
 | NOVA-004 | Contracts: types + Zod for user, strategy spec, backtest run/result, trade, charges, broker account, rate limit, data job, audit entry | draft | — | 001 |
