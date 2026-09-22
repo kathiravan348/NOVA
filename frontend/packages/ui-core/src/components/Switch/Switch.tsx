@@ -27,6 +27,7 @@ export const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitive.R
       onCheckedChange,
       containerClassName,
       className,
+      "aria-describedby": ariaDescribedBy,
       ...props
     },
     ref,
@@ -55,9 +56,7 @@ export const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitive.R
           disabled={disabled}
           required={required}
           aria-invalid={hasError ? true : undefined}
-          aria-describedby={
-            [props["aria-describedby"], describedBy].filter(Boolean).join(" ") || undefined
-          }
+          aria-describedby={[ariaDescribedBy, describedBy].filter(Boolean).join(" ") || undefined}
           className={cn(
             "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-pill border-2 border-transparent transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg-ground",

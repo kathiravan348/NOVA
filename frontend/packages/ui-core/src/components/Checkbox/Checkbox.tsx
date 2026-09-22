@@ -31,6 +31,7 @@ export const Checkbox = React.forwardRef<
       onCheckedChange,
       containerClassName,
       className,
+      "aria-describedby": ariaDescribedBy,
       ...props
     },
     ref,
@@ -59,9 +60,7 @@ export const Checkbox = React.forwardRef<
           disabled={disabled}
           required={required}
           aria-invalid={hasError ? true : undefined}
-          aria-describedby={
-            [props["aria-describedby"], describedBy].filter(Boolean).join(" ") || undefined
-          }
+          aria-describedby={[ariaDescribedBy, describedBy].filter(Boolean).join(" ") || undefined}
           className={cn(
             "peer h-5 w-5 shrink-0 rounded-md border bg-bg-surface transition-colors cursor-pointer flex items-center justify-center",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg-ground",

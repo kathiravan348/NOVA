@@ -27,6 +27,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       numeric,
       containerClassName,
       className,
+      "aria-describedby": ariaDescribedBy,
       inputMode,
       ...props
     },
@@ -61,9 +62,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             required={required}
             aria-invalid={hasError ? true : undefined}
-            aria-describedby={
-              [props["aria-describedby"], describedBy].filter(Boolean).join(" ") || undefined
-            }
+            aria-describedby={[ariaDescribedBy, describedBy].filter(Boolean).join(" ") || undefined}
             inputMode={numeric ? (inputMode ?? "decimal") : inputMode}
             className={cn(
               "h-10 w-full rounded-md border bg-bg-surface px-3 font-sans text-body text-text-primary placeholder:text-text-muted transition-colors",

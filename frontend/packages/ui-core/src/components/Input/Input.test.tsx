@@ -60,4 +60,9 @@ describe("Input", () => {
     expect(input.className).toContain("font-mono");
     expect(input.className).toContain("text-right");
   });
+
+  it("keeps a consumer aria-describedby next to its own ids", () => {
+    render(<Input id="amt" label="Amount" error="Required" aria-describedby="hint" />);
+    expect(screen.getByLabelText("Amount")).toHaveAttribute("aria-describedby", "hint amt-error");
+  });
 });

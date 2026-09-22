@@ -32,6 +32,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       placeholder,
       containerClassName,
       className,
+      "aria-describedby": ariaDescribedBy,
       defaultValue,
       children,
       ...props
@@ -58,11 +59,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             required={required}
-            defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
-            aria-invalid={hasError ? true : undefined}
-            aria-describedby={
-              [props["aria-describedby"], describedBy].filter(Boolean).join(" ") || undefined
+            defaultValue={
+              defaultValue ?? (placeholder && props.value === undefined ? "" : undefined)
             }
+            aria-invalid={hasError ? true : undefined}
+            aria-describedby={[ariaDescribedBy, describedBy].filter(Boolean).join(" ") || undefined}
             className={cn(
               "h-10 w-full appearance-none rounded-md border bg-bg-surface pl-3 pr-10 font-sans text-body text-text-primary transition-colors cursor-pointer",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg-ground",

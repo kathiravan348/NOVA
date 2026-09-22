@@ -57,7 +57,7 @@ describe("DateTimePicker", () => {
     render(<DateTimePicker label="Event Time" id="event-time" error="Date is out of range" />);
     const picker = screen.getByLabelText("Event Time");
     expect(picker).toHaveAttribute("aria-invalid", "true");
-    expect(picker).toHaveAttribute("aria-describedby", "event-time-error");
+    expect(picker).toHaveAttribute("aria-describedby", "event-time-zone event-time-error");
 
     const err = screen.getByRole("alert");
     expect(err).toHaveTextContent("Date is out of range");
@@ -67,5 +67,11 @@ describe("DateTimePicker", () => {
     render(<DateTimePicker label="Locked time" disabled />);
     const picker = screen.getByLabelText("Locked time");
     expect(picker).toBeDisabled();
+  });
+
+  it("announces the time zone label to screen readers", () => {
+    render(<DateTimePicker id="start" label="Start" />);
+    expect(screen.getByLabelText("Start")).toHaveAttribute("aria-describedby", "start-zone");
+    expect(screen.getByText("IST")).toHaveAttribute("id", "start-zone");
   });
 });

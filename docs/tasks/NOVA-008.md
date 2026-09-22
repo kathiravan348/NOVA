@@ -1,6 +1,6 @@
 # NOVA-008 — ui-core: form fields (Field, Input, Select, Checkbox, Switch, DateTimePicker IST)
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-008 · **Depends on:** NOVA-007
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-008 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports accessible form controls that work with React Hook Form (`register` or `Controller`) and show Zod errors, plus a date/time picker that shows IST and stores UTC (D20).
@@ -69,3 +69,11 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Input/Select/Checkbox/Switch: a consumer `aria-describedby` was overwritten by the `{...props}` spread; now merged (test added).
+- Select: no `defaultValue` when controlled (`value` + `placeholder` caused a React warning; test added).
+- DateTimePicker: the `IST` suffix was `aria-hidden`; it now has an id in `aria-describedby`, so screen readers hear the zone (tests updated).
+**Change requests (if sent back):** none.
+**Rulebook issues found:** none. Checkbox `text-[white]` and Switch thumb `bg-[white]` follow Button's precedent; added to NOVA-025 scope.
+**Follow-up tasks created:** none (NOVA-025 scope extended).

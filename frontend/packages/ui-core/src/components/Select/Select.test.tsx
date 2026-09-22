@@ -49,4 +49,19 @@ describe("Select", () => {
     const select = screen.getByLabelText("Disabled select");
     expect(select).toBeDisabled();
   });
+
+  it("does not set defaultValue when controlled with a placeholder", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <Select
+        label="Controlled"
+        options={testOptions}
+        placeholder="Pick one"
+        value={testOptions[0]!.value}
+        onChange={() => {}}
+      />,
+    );
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
 });

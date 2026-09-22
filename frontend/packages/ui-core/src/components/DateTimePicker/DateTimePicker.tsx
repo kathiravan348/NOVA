@@ -50,6 +50,8 @@ export const DateTimePicker = React.forwardRef<HTMLInputElement, DateTimePickerP
     const pickerId = id ?? generatedId;
     const hasError = Boolean(error);
     const hasDescription = Boolean(description);
+    const showZoneLabel = mode === "datetime" && Boolean(timeZoneLabel);
+    const zoneLabelId = `${pickerId}-zone`;
     const describedBy = getDescribedBy(pickerId, hasDescription, hasError);
 
     const inputValue =
@@ -109,21 +111,25 @@ export const DateTimePicker = React.forwardRef<HTMLInputElement, DateTimePickerP
             disabled={disabled}
             required={required}
             aria-invalid={hasError ? true : undefined}
-            aria-describedby={[ariaDescribedBy, describedBy].filter(Boolean).join(" ") || undefined}
+            aria-describedby={
+              [ariaDescribedBy, showZoneLabel ? zoneLabelId : undefined, describedBy]
+                .filter(Boolean)
+                .join(" ") || undefined
+            }
             className={cn(
               "h-10 w-full rounded-md border bg-bg-surface px-3 font-sans text-body text-text-primary transition-colors cursor-pointer",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 focus-visible:ring-offset-bg-ground",
               "disabled:pointer-events-none disabled:opacity-50",
               hasError ? "border-loss" : "border-border-strong",
-              mode === "datetime" && timeZoneLabel ? "pr-14" : "",
+              showZoneLabel ? "pr-14" : "",
               className,
             )}
             {...props}
           />
-          {mode === "datetime" && timeZoneLabel && (
+          {showZoneLabel && (
             <span
+              id={zoneLabelId}
               className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-text-muted text-body-sm font-sans font-medium"
-              aria-hidden="true"
             >
               {timeZoneLabel}
             </span>
