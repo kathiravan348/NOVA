@@ -1,6 +1,6 @@
 # NOVA-010 — ui-core: AppShell, NavItem, ThemeToggle, DemoBanner, EmptyState
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports the page frame both apps use: sidebar on desktop, slide-in menu on mobile, top bar, a banner slot, plus DemoBanner, EmptyState and a theme toggle. Modal/Tabs/Toast are NOVA-026.
@@ -30,10 +30,10 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 8. Tests: AppShell renders landmarks (`banner`/`navigation`/`main`), menu button opens the dialog with the nav and NavItem click closes it, skip link targets `#main-content`; NavItem `aria-current`; ThemeToggle flips `document.documentElement.dataset.theme`; DemoBanner default text; EmptyState action button and error role.
 
 ## Acceptance checks
-- [ ] At 360px: no sidebar, menu opens/closes, no horizontal scroll. At 1440px: sidebar visible, no menu button.
-- [ ] 0 a11y violations in both themes; focus visible on skip link, menu, close and nav items.
-- [ ] No hex in components; no brand names in ui-core.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] At 360px: no sidebar, menu opens/closes, no horizontal scroll. At 1440px: sidebar visible, no menu button.
+- [x] 0 a11y violations in both themes; focus visible on skip link, menu, close and nav items.
+- [x] No hex in components; no brand names in ui-core.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Modal, Tabs, Toast (NOVA-026). Routing, auth, user menu, breadcrumbs, collapsible desktop sidebar.
@@ -42,5 +42,35 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 ## Questions
 
 ## Handoff
+**Done:** Implemented AppShell, NavItem, ThemeToggle, DemoBanner, and EmptyState components with Radix Dialog mobile drawer, skip link, landmarks, stories and tests.
+**Files changed:**
+- `frontend/packages/ui-core/package.json`
+- `frontend/pnpm-lock.yaml`
+- `frontend/packages/ui-core/src/index.ts`
+- `frontend/packages/ui-core/src/components/AppShell/appShellContext.ts`
+- `frontend/packages/ui-core/src/components/AppShell/AppShell.tsx`
+- `frontend/packages/ui-core/src/components/AppShell/AppShell.stories.tsx`
+- `frontend/packages/ui-core/src/components/AppShell/AppShell.test.tsx`
+- `frontend/packages/ui-core/src/components/NavItem/NavItem.tsx`
+- `frontend/packages/ui-core/src/components/NavItem/NavItem.stories.tsx`
+- `frontend/packages/ui-core/src/components/NavItem/NavItem.test.tsx`
+- `frontend/packages/ui-core/src/components/ThemeToggle/ThemeToggle.tsx`
+- `frontend/packages/ui-core/src/components/ThemeToggle/ThemeToggle.stories.tsx`
+- `frontend/packages/ui-core/src/components/ThemeToggle/ThemeToggle.test.tsx`
+- `frontend/packages/ui-core/src/components/DemoBanner/DemoBanner.tsx`
+- `frontend/packages/ui-core/src/components/DemoBanner/DemoBanner.stories.tsx`
+- `frontend/packages/ui-core/src/components/DemoBanner/DemoBanner.test.tsx`
+- `frontend/packages/ui-core/src/components/EmptyState/EmptyState.tsx`
+- `frontend/packages/ui-core/src/components/EmptyState/EmptyState.stories.tsx`
+- `frontend/packages/ui-core/src/components/EmptyState/EmptyState.test.tsx`
+- `docs/COMPONENTS.md`
+- `docs/tasks/BOARD.md`
+- `docs/tasks/NOVA-010.md`
+**Commands run:** lint / typecheck / test / build / format:check → all pass: yes
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓
+**New dependencies:** `@radix-ui/react-dialog@1.1.23`. Moved `lucide-react@1.47.0` to dependencies.
+**Maps updated:** COMPONENTS
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
