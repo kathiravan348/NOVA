@@ -24,4 +24,9 @@ export const queryKeys = {
   auditEntries: {
     all: ["audit-entries"] as const,
   },
+  marketData: {
+    instruments: ["market-data", "instruments"] as const,
+    candles: (symbol: string, timeframe: string) =>
+      ["market-data", "candles", symbol, timeframe] as const,
+  },
 };

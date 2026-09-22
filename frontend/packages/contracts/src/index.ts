@@ -9,3 +9,4 @@ export * from "./rateLimit";
 export * from "./dataJob";
 export * from "./audit";
 export * from "./error";
+export * from "./marketData";
