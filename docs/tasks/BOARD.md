@@ -30,7 +30,7 @@
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | planned | — | 005 |
-| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary instead of `text-[white]` | planned | — | 007 |
+| NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary instead of `text-[white]` | ready-for-review | Gemini | 007 |
 | NOVA-026 | ui-core: Modal, Tabs, Toast (split from 010) | planned | — | 010 |
 
 ## Parallel lanes (tasks that can run at the same time)

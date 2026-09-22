@@ -68,4 +68,45 @@ describe("tokens.css", () => {
       expect(rootBlock).toContain(`--${token.name}: ${token.value};`);
     }
   });
+
+  describe("WCAG contrast", () => {
+    function hexToRgb(hex: string): [number, number, number] {
+      const cleanHex = hex.replace("#", "");
+      const r = parseInt(cleanHex.substring(0, 2), 16);
+      const g = parseInt(cleanHex.substring(2, 4), 16);
+      const b = parseInt(cleanHex.substring(4, 6), 16);
+      return [r, g, b];
+    }
+
+    function relativeLuminance(hex: string): number {
+      const [r, g, b] = hexToRgb(hex).map((val) => {
+        const s = val / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      }) as [number, number, number];
+
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function contrastRatio(hex1: string, hex2: string): number {
+      const l1 = relativeLuminance(hex1);
+      const l2 = relativeLuminance(hex2);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    it("maintains at least 4.5:1 contrast ratio between on-action and action in both dark and light themes", () => {
+      const actionToken = tokens.color.tokens.find((t) => t.name === "action");
+      const onActionToken = tokens.color.tokens.find((t) => t.name === "on-action");
+
+      expect(actionToken).toBeDefined();
+      expect(onActionToken).toBeDefined();
+
+      const darkContrast = contrastRatio(onActionToken!.value.dark, actionToken!.value.dark);
+      const lightContrast = contrastRatio(onActionToken!.value.light, actionToken!.value.light);
+
+      expect(darkContrast).toBeGreaterThanOrEqual(4.5);
+      expect(lightContrast).toBeGreaterThanOrEqual(4.5);
+    });
+  });
 });

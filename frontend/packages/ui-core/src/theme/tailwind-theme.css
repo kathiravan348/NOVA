@@ -18,6 +18,7 @@
   --color-action: var(--action);
   --color-action-text: var(--action-text);
   --color-action-subtle: var(--action-subtle);
+  --color-on-action: var(--on-action);
   --color-profit: var(--profit);
   --color-profit-subtle: var(--profit-subtle);
   --color-profit-text: var(--profit-text);

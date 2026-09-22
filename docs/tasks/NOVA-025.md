@@ -1,6 +1,6 @@
 # NOVA-025 — Theme: `on-action` text token, used by Button primary
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-025 · **Depends on:** NOVA-007
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-025 · **Depends on:** NOVA-007
 
 ## Goal
 Text on the `action` fill comes from a theme token (`text-on-action`) instead of the arbitrary `text-[white]` in Button primary (NOVA-007 review), with a test that it keeps 4.5:1 contrast in both themes.
@@ -26,15 +26,24 @@ Modify:
 5. `Button.test.tsx`: primary button has class `text-on-action` and no `text-[white]`.
 
 ## Acceptance checks
-- [ ] `grep -rn "text-\[" frontend/packages/ui-core/src/components` finds nothing.
-- [ ] Storybook `Foundations/Tokens` lists `on-action`; `Core/Button` primary looks unchanged in dark and light, 0 a11y violations.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] `grep -rn "text-\[" frontend/packages/ui-core/src/components` finds nothing.
+- [x] Storybook `Foundations/Tokens` lists `on-action`; `Core/Button` primary looks unchanged in dark and light, 0 a11y violations.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Any other token value or name, the generator script, other components, other arbitrary values.
 
 ## Questions
+None.
 
 ## Handoff
+- Added `on-action` token (`#FFFFFF` dark/light) to `tokens.json` and updated `action` usage description.
+- Re-generated `tokens.css` and `tailwind-theme.css` via `pnpm --filter @nova/ui-core tokens`.
+- Replaced `text-[white]` in `Button.tsx` primary variant with `text-on-action`.
+- Added WCAG contrast ratio calculations and assertions in `tokens.test.ts` ensuring ≥ 4.5:1 contrast against `action` in both dark and light modes.
+- Added test in `Button.test.tsx` verifying primary variant has `text-on-action` and no arbitrary white.
+- Verified 0 instances of `text-[` in `frontend/packages/ui-core/src/components`.
+- Full suite green: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check`.
 
 ## Review
+
