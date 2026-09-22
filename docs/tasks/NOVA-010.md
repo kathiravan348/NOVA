@@ -1,6 +1,6 @@
 # NOVA-010 — ui-core: AppShell, NavItem, ThemeToggle, DemoBanner, EmptyState
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-010 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-core` exports the page frame both apps use: sidebar on desktop, slide-in menu on mobile, top bar, a banner slot, plus DemoBanner, EmptyState and a theme toggle. Modal/Tabs/Toast are NOVA-026.
@@ -74,3 +74,13 @@ Modify: `frontend/packages/ui-core/{package.json,src/index.ts}`, `frontend/pnpm-
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Skip link and NavItem used `ring-focus-ring` (no such token): focus was invisible; now `ring-action`.
+- AppShell title used `text-title` (no such token); now `text-section-title`.
+- NavItem `asChild` (router links) dropped the icon; now uses Radix `Slottable` and keeps it (test added).
+- Mobile sheet: `aria-describedby={undefined}` silences Radix's missing-Description warning. EmptyState icon `rounded-full` → `rounded-pill` token.
+- Merged main (NOVA-008/009); shared list conflicts kept both sides, lockfile regenerated.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** second task in a row with class names that are not theme tokens while acceptance was ticked; follow-up NOVA-027 adds a lint check.
+**Follow-up tasks created:** NOVA-027.

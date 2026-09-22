@@ -26,7 +26,7 @@ export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         {icon && (
           <div
             className={cn(
-              "mb-4 flex items-center justify-center p-3 rounded-full bg-bg-raised text-text-muted",
+              "mb-4 flex items-center justify-center p-3 rounded-pill bg-bg-raised text-text-muted",
               isError && "text-loss",
             )}
             aria-hidden="true"

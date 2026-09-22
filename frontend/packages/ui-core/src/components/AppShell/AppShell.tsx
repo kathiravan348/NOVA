@@ -38,7 +38,7 @@ export function AppShell({
         {/* Skip to content link */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-bg-raised focus:border focus:border-border-default focus:rounded-md focus:text-body focus:text-text-primary focus:outline-hidden focus:ring-2 focus:ring-focus-ring"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-bg-raised focus:border focus:border-border-default focus:rounded-md focus:text-body focus:text-text-primary focus:outline-none focus:ring-2 focus:ring-action"
         >
           Skip to content
         </a>
@@ -49,6 +49,7 @@ export function AppShell({
             <Dialog.Overlay className="fixed inset-0 z-40 bg-bg-ground/80 backdrop-blur-xs transition-opacity" />
             <Dialog.Content
               aria-label="Navigation menu"
+              aria-describedby={undefined}
               className="fixed inset-y-0 left-0 z-50 flex flex-col w-(--sidebar-width) max-w-[85vw] bg-bg-sidebar border-r border-border-default shadow-lg focus:outline-hidden"
             >
               <Dialog.Title className="sr-only">Navigation Menu</Dialog.Title>
@@ -99,7 +100,7 @@ export function AppShell({
                 onClick={() => setMenuOpen(true)}
               />
               {title && (
-                <div className="font-sans text-title font-semibold text-text-primary">{title}</div>
+                <div className="font-sans text-section-title text-text-primary">{title}</div>
               )}
             </div>
             {actions && <div className="flex items-center gap-2">{actions}</div>}

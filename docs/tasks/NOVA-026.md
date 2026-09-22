@@ -1,6 +1,6 @@
 # NOVA-026 — ui-core: Modal, Tabs, Toast
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-026 · **Depends on:** NOVA-010
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-026 · **Depends on:** NOVA-010
 
 ## Goal
 `@nova/ui-core` exports a Modal dialog, data-driven Tabs and a toast system, all on Radix, each with stories and tests. (Split out of NOVA-010.)
