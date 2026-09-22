@@ -1,6 +1,6 @@
 # NOVA-007 — ui-core: Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-007 · **Depends on:** NOVA-003
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-007 · **Depends on:** NOVA-003
 
 ## Goal
 `@nova/ui-core` exports its first seven components, built the shadcn/ui way (D19), each with a story and a render test. ui-core tests run in jsdom with jest-dom matchers.
@@ -64,3 +64,10 @@ Modify:
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- `StatCard.stories.tsx`, `StatCard.test.tsx`: replaced trading examples (Net P&L, ₹, Max Drawdown, Trades) with generic ones (§6: ui-core has no trading words).
+**Change requests:** none.
+**Rulebook issues found:** `Button.tsx` primary uses `text-[white]`, an arbitrary colour outside the tokens (D15 intent). Contrast passes in both themes, but there is no `on-action` token. Accepted for now; tracked in NOVA-024.
+**Follow-up tasks created:** NOVA-024 (add `on-action` text token; swap `text-[white]` in Button).
+**Checked:** lint, typecheck, test (32 passing), build, format:check pass; no hex in components.
