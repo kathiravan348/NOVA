@@ -1,5 +1,5 @@
 import type { StrategySpec } from "@nova/contracts";
-import { Card, DescriptionList } from "@nova/ui-core";
+import { Card, CodeEditor, DescriptionList } from "@nova/ui-core";
 import { segmentLabel, timeframeLabel } from "../../lib/format";
 import {
   describeRisk,
@@ -55,9 +55,13 @@ export function StrategySpecCard({ spec, version }: StrategySpecCardProps) {
             <RuleBlock title="Exit" group={describeRuleGroup(spec.exit)} />
           </div>
         ) : (
-          <p className="text-body text-text-secondary">
-            Python strategy: entry and exit rules live in its code.
-          </p>
+          <section className="flex flex-col gap-2">
+            <h3 className="text-card-title text-text-primary">Code</h3>
+            <p className="text-body-sm text-text-muted">
+              Python strategy: entry and exit rules live in its code.
+            </p>
+            <CodeEditor value={spec.code} readOnly minHeight={80} ariaLabel="Strategy code" />
+          </section>
         )}
       </div>
     </Card>

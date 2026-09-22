@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { EditorView } from "@codemirror/view";
 import { setupServer } from "msw/node";
 import { handlers } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
@@ -56,8 +57,38 @@ describe("Strategy editor", () => {
     expect(screen.getByLabelText("Strategy spec JSON").textContent).toContain('"NIFTY 50"');
   });
 
-  it("points python strategies to the code editor", async () => {
+  it("opens a python strategy in python mode with its code", async () => {
     renderApp("/strategies/stg_002/edit");
-    expect(await screen.findByText("Python strategies use the code editor")).toBeInTheDocument();
+    const code = await screen.findByLabelText("Strategy code");
+    expect(code.textContent).toContain("def on_candle(candle):");
+    expect(screen.getByRole("radio", { name: "Python" })).toBeChecked();
+    expect(screen.queryByText("Entry rules")).not.toBeInTheDocument();
+  });
+
+  it("switches a new strategy to python with a template", async () => {
+    renderApp("/strategies/new");
+    fireEvent.click(await screen.findByRole("radio", { name: "Python" }));
+    const code = await screen.findByLabelText("Strategy code");
+    expect(code.textContent).toContain("def on_bar(ctx):");
+    expect(screen.queryByText("Entry rules")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Visual rules" }));
+    expect(await screen.findByText("Entry rules")).toBeInTheDocument();
+  });
+
+  it("requires code in python mode", async () => {
+    renderApp("/strategies/stg_002/edit");
+    await screen.findByLabelText("Strategy code");
+    const view = EditorView.findFromDOM(screen.getByTestId("code-editor"))!;
+    act(() => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "" } }));
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+    expect(await screen.findByText("Code is required")).toBeInTheDocument();
+    expect(screen.queryByText("Draft saved")).not.toBeInTheDocument();
+  });
+
+  it("shows python code read-only on the detail page", async () => {
+    renderApp("/strategies/stg_002");
+    const code = await screen.findByLabelText("Strategy code");
+    expect(code).toHaveAttribute("contenteditable", "false");
+    expect(code.textContent).toContain("Order.buy()");
   });
 });

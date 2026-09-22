@@ -50,6 +50,7 @@ export {
   type DateTimePickerProps,
 } from "./components/DateTimePicker/DateTimePicker";
 export { toZonedInputValue, fromZonedInputValue } from "./lib/zonedTime";
+export { CodeEditor, type CodeEditorProps } from "./components/CodeEditor/CodeEditor";
 export {
   DescriptionList,
   type DescriptionListProps,
