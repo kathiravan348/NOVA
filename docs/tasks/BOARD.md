@@ -10,8 +10,8 @@
 | NOVA-002 | Theme pipeline: tokens.json → tokens.css (dark/light), Tailwind v4 theme, fonts, `data-theme` switch | done | Claude | 001 |
 | NOVA-003 | Storybook (`ui-storybook`): theme toggle, 360px/768px/1440px viewports, a11y addon | done | Claude | 002 |
 | NOVA-004 | Contracts (Orbit): user, strategy spec, backtest run/result, trade, charges | done | Claude | 001 |
-| NOVA-005 | Mocks: static JSON per contract (consistent numbers) + MSW handlers + schema tests | draft | — | 004, 023 |
-| NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 005 |
+| NOVA-005 | Mocks: static JSON per contract (consistent numbers) + schema and consistency tests | planned | — | 004, 023 |
+| NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 024 |
 | NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | planned | — | 003 |
 | NOVA-008 | ui-core: form fields (Input, Select, Checkbox, Switch, DateTimePicker IST) with RHF + Zod | draft | — | 007 |
 | NOVA-009 | ui-core: DataTable (TanStack Table; sort, paginate; stacked cards on mobile) | draft | — | 007 |
@@ -29,8 +29,9 @@
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | draft | — | 018, 020 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
+| NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + handler tests | draft | — | 005 |
 
 ## Parallel lanes (tasks that can run at the same time)
-- After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 006.
+- After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
 - After 007: 008, 009, 010, 011 touch different folders and can overlap.
 - After 013: Orbit screens (014–018) and Relay screens (019–020) can overlap.
