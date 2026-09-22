@@ -1,6 +1,6 @@
 # NOVA-019 — Relay: overview + broker accounts (session status, daily login prompt)
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-019 · **Depends on:** NOVA-009, NOVA-013, NOVA-026
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-019 · **Depends on:** NOVA-009, NOVA-013, NOVA-026
 
 ## Goal
 Relay's Overview (`/`) shows broker session health at a glance with a daily-login prompt and recent activity; `/accounts` lists broker accounts; `/accounts/:id` shows one account and its Kite session.
@@ -40,5 +40,17 @@ Modify: relay `package.json`, `src/routes.tsx`, `src/test/setup.ts`; `frontend/p
 ## Questions
 
 ## Handoff
+**Done:** Relay overview (session stats, daily-login prompts, recent activity), broker accounts list and detail with Kite session card; login is a demo toast only.
+**Files changed:** as listed.
+**Commands run:** lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** 360px ✓ · 1280px ✓ · dark ✓ · light ✓ (token classes only); statuses always have text labels.
+**New dependencies:** relay: `@tanstack/react-table@8.21.3`, `date-fns@4.4.0`, `date-fns-tz@3.2.0` (same as Orbit).
+**Maps updated:** none.
+**Deviations from task:** none.
+**Known gaps:** `QueryState`, `renderApp` and date formatters are copied from Orbit (two small files per app); a shared app-kit package can replace them at scope freeze if wanted.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline; checked in the browser)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
