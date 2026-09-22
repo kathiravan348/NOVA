@@ -36,3 +36,4 @@
 | PnLCard | StatCard wrapping PnLText with label, caption, and loading skeleton | `Trading/PnLCard` |
 | ChargesBreakdown | Card showing itemized regulatory and brokerage charges with total | `Trading/ChargesBreakdown` |
 | Meter | Accessible progress bar with percentage thresholds (warning, danger) and custom labels | `Trading/Meter` |
+| EquityCurve | Responsive Recharts line of backtest equity with optional dashed NIFTY 50 benchmark | `Trading/EquityCurve` |
