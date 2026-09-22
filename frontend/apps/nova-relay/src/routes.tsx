@@ -2,6 +2,9 @@ import { Navigate, type RouteObject } from "react-router";
 import { AppLayout, type RouteHandle } from "./layout/AppLayout";
 import { RequireAuth } from "./layout/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
+import { AccountDetailPage } from "./pages/accounts/AccountDetailPage";
+import { AccountsPage } from "./pages/accounts/AccountsPage";
+import { OverviewPage } from "./pages/overview/OverviewPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 
 const page = (path: string, title: string): RouteObject => ({
@@ -21,9 +24,18 @@ export const routes: RouteObject[] = [
           {
             index: true,
             handle: { title: "Overview" } satisfies RouteHandle,
-            element: <PlaceholderPage title="Overview" />,
+            element: <OverviewPage />,
           },
-          page("/accounts", "Broker accounts"),
+          {
+            path: "/accounts",
+            handle: { title: "Broker accounts" } satisfies RouteHandle,
+            element: <AccountsPage />,
+          },
+          {
+            path: "/accounts/:id",
+            handle: { title: "Broker account" } satisfies RouteHandle,
+            element: <AccountDetailPage />,
+          },
           page("/rate-limits", "Rate limits"),
           page("/data-jobs", "Data jobs"),
           page("/audit", "Audit log"),

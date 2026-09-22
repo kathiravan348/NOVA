@@ -6,3 +6,10 @@ import { transferableAbortController } from "node:util";
 const NativeAbortController = transferableAbortController().constructor as typeof AbortController;
 globalThis.AbortController = NativeAbortController;
 globalThis.AbortSignal = new NativeAbortController().signal.constructor as typeof AbortSignal;
+
+// jsdom has no ResizeObserver (used by Radix and chart components).
+globalThis.ResizeObserver ??= class {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+};
