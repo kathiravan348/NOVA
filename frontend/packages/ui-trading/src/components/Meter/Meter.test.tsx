@@ -32,4 +32,10 @@ describe("Meter", () => {
     fill = screen.getByRole("meter").firstElementChild;
     expect(fill).toHaveClass("bg-loss");
   });
+
+  it("is named by its label and keeps aria-valuenow within range", () => {
+    render(<Meter label="Orders" value={12} max={10} />);
+    const meter = screen.getByRole("meter", { name: "Orders" });
+    expect(meter).toHaveAttribute("aria-valuenow", "10");
+  });
 });

@@ -1,6 +1,6 @@
 # NOVA-011 — ui-trading: INR formatters, PriceText, PnLText, PnLCard, ChargesBreakdown, Meter
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-011 · **Depends on:** NOVA-007
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-011 · **Depends on:** NOVA-007
 
 ## Goal
 `@nova/ui-trading` has tests and exports the money/number formatters (paise → Indian-grouped text, explicit signs) and the first five trading components built on ui-core.
@@ -55,3 +55,11 @@ Modify: `frontend/packages/ui-trading/{package.json,tsconfig.json,src/index.ts}`
 - All acceptance checks pass, `pnpm lint`, `pnpm typecheck`, `pnpm test` (31 files, 229 tests), `pnpm build`, `pnpm format:check` all green.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- Meter: `role="meter"` had no accessible name (axe `aria-meter-name`); label now has an id and the meter uses `aria-labelledby`.
+- Meter: `aria-valuenow` is clamped to 0–max (value above max was invalid ARIA). Test added for both.
+- Merged main (NOVA-026); board conflict resolved.
+**Change requests (if sent back):** none.
+**Rulebook issues found:** none. Formatters match every example in the task; no unknown theme classes.
+**Follow-up tasks created:** none.
