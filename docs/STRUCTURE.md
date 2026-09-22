@@ -15,6 +15,8 @@
 ├─ frontend/            (created by NOVA-001)
 │  ├─ packages/
 │  │  ├─ ui-core/       generic components + theme tokens
+│  │  │  ├─ scripts/    build-tokens generator
+│  │  │  └─ src/theme/  tokens.json, tokens.css, tailwind-theme.css, styles.css
 │  │  ├─ ui-trading/    trading components built on ui-core
 │  │  ├─ ui-storybook/  Storybook for both libraries
 │  │  ├─ contracts/     API types + Zod schemas

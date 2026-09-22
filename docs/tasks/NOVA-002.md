@@ -1,6 +1,6 @@
 # NOVA-002 — Theme pipeline
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-002 · **Depends on:** NOVA-001
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-002 · **Depends on:** NOVA-001
 
 ## Goal
 `tokens.json` generates CSS variables (dark + light) and a Tailwind v4 theme, so apps and packages style with token classes only. IBM Plex fonts are self-hosted, and `<html data-theme>` switches the theme.
@@ -33,10 +33,10 @@ Modify:
 2. The generator uses `path.join` and writes LF. Output order follows `tokens.json`, and the files start with a "generated, do not edit" comment.
 
 ## Acceptance checks
-- [ ] `pnpm --filter @nova/ui-core tokens` followed by `git diff` shows no change. Editing a value in `tokens.json` makes `pnpm lint` fail until you re-run it.
-- [ ] Orbit and Relay dev: page background is `#10172A` (dark). Running `document.documentElement.dataset.theme="light"` in the console switches it to `#F5F6F8`. The heading renders in IBM Plex Sans, 26px/600.
-- [ ] A test class such as `bg-blue-500` produces no CSS (default palette removed).
-- [ ] `pnpm test` runs the ui-core tests. Definition of done in `AGENTS.md` §9.
+- [x] `pnpm --filter @nova/ui-core tokens` followed by `git diff` shows no change. Editing a value in `tokens.json` makes `pnpm lint` fail until you re-run it.
+- [x] Orbit and Relay dev: page background is `#10172A` (dark). Running `document.documentElement.dataset.theme="light"` in the console switches it to `#F5F6F8`. The heading renders in IBM Plex Sans, 26px/600.
+- [x] A test class such as `bg-blue-500` produces no CSS (default palette removed).
+- [x] `pnpm test` runs the ui-core tests. Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Storybook, shadcn/ui, any component, a theme toggle UI, a lint rule for hex values, changes to `tokens.json`.
@@ -44,5 +44,20 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** Implemented theme pipeline (tokens generator, CSS variables, Tailwind v4 theme, fonts, data-theme switch).
+**Files changed:**
+- `docs/STRUCTURE.md`, `docs/tasks/BOARD.md`, `docs/tasks/NOVA-002.md`
+- `frontend/packages/ui-core/package.json`, `tsconfig.json`, `src/index.ts`
+- `frontend/packages/ui-core/scripts/build-tokens.ts`, `vitest.config.ts`
+- `frontend/packages/ui-core/src/theme/{tokens.css,tailwind-theme.css,styles.css,theme.ts,theme.test.ts,tokens.test.ts}`
+- `frontend/vite.aliases.ts`, `frontend/vitest.config.ts`, `frontend/pnpm-lock.yaml`
+- `frontend/apps/nova-orbit/{package.json,vite.config.ts,index.html,src/main.tsx,src/App.tsx}`
+- `frontend/apps/nova-relay/{package.json,vite.config.ts,index.html,src/main.tsx,src/App.tsx}`
+**Commands run:** lint / typecheck / test / build → all pass? yes
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓
+**New dependencies:** tailwindcss@4.3.3, @tailwindcss/vite@4.3.3, @fontsource/ibm-plex-sans@5.3.0, @fontsource/ibm-plex-mono@5.3.0.
+**Maps updated:** STRUCTURE.
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
