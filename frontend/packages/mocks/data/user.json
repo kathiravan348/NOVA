@@ -1,0 +1,8 @@
+{
+  "id": "usr_001",
+  "name": "Aarav Sharma",
+  "email": "aarav.sharma@example.com",
+  "role": "super_admin",
+  "createdAt": "2026-01-15T04:30:00Z",
+  "lastLoginAt": "2026-09-21T05:30:00Z"
+}

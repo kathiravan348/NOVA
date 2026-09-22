@@ -1,0 +1,250 @@
+[
+  {
+    "id": "stg_001",
+    "name": "VWAP Momentum Intraday",
+    "description": "Intraday trend-following strategy using VWAP crossover and RSI filter on liquid equities.",
+    "status": "active",
+    "latestVersion": 2,
+    "versions": [
+      {
+        "version": 1,
+        "createdAt": "2026-03-01T04:00:00Z",
+        "note": "Initial VWAP crossover spec",
+        "spec": {
+          "mode": "visual",
+          "segment": "equity_intraday",
+          "exchange": "NSE",
+          "timeframe": "5m",
+          "universe": {
+            "type": "symbols",
+            "symbols": ["RELIANCE", "TCS", "INFY"]
+          },
+          "sizing": {
+            "type": "fixed_qty",
+            "qty": 50
+          },
+          "risk": {
+            "stopLossPercent": 1.5,
+            "targetPercent": 3.0
+          },
+          "entry": {
+            "combinator": "all",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "crosses_above",
+                "right": {
+                  "kind": "indicator",
+                  "name": "vwap",
+                  "params": {}
+                }
+              }
+            ]
+          },
+          "exit": {
+            "combinator": "any",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "crosses_below",
+                "right": {
+                  "kind": "indicator",
+                  "name": "vwap",
+                  "params": {}
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "version": 2,
+        "createdAt": "2026-08-15T06:00:00Z",
+        "note": "Added RSI confirmation and index-based universe",
+        "spec": {
+          "mode": "visual",
+          "segment": "equity_intraday",
+          "exchange": "NSE",
+          "timeframe": "5m",
+          "universe": {
+            "type": "index",
+            "index": "NIFTY 50"
+          },
+          "sizing": {
+            "type": "percent_equity",
+            "percent": 20
+          },
+          "risk": {
+            "stopLossPercent": 1.0,
+            "targetPercent": 2.5
+          },
+          "entry": {
+            "combinator": "all",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "crosses_above",
+                "right": {
+                  "kind": "indicator",
+                  "name": "vwap",
+                  "params": {}
+                }
+              },
+              {
+                "left": {
+                  "kind": "indicator",
+                  "name": "rsi",
+                  "params": {
+                    "period": 14
+                  }
+                },
+                "op": "gt",
+                "right": {
+                  "kind": "number",
+                  "value": 55
+                }
+              }
+            ]
+          },
+          "exit": {
+            "combinator": "any",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "indicator",
+                  "name": "rsi",
+                  "params": {
+                    "period": 14
+                  }
+                },
+                "op": "lt",
+                "right": {
+                  "kind": "number",
+                  "value": 45
+                }
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "createdAt": "2026-03-01T04:00:00Z",
+    "updatedAt": "2026-08-15T06:00:00Z"
+  },
+  {
+    "id": "stg_002",
+    "name": "Delivery Mean Reversion",
+    "description": "Daily timeframe mean-reversion strategy for large-cap banking equities.",
+    "status": "draft",
+    "latestVersion": 1,
+    "versions": [
+      {
+        "version": 1,
+        "createdAt": "2026-07-10T05:00:00Z",
+        "note": "Initial python script for swing delivery",
+        "spec": {
+          "mode": "python",
+          "segment": "equity_delivery",
+          "exchange": "NSE",
+          "timeframe": "1d",
+          "universe": {
+            "type": "symbols",
+            "symbols": ["HDFCBANK", "ICICIBANK"]
+          },
+          "sizing": {
+            "type": "fixed_amount",
+            "amountPaise": 10000000
+          },
+          "risk": {
+            "stopLossPercent": 5.0,
+            "targetPercent": 10.0
+          },
+          "code": "def on_candle(candle):\n    if candle.close < candle.sma(20):\n        return Order.buy()\n"
+        }
+      }
+    ],
+    "createdAt": "2026-07-10T05:00:00Z",
+    "updatedAt": "2026-07-10T05:00:00Z"
+  },
+  {
+    "id": "stg_003",
+    "name": "SMA Breakout Archived",
+    "description": "Legacy 5-minute breakout model archived after market regime shift.",
+    "status": "archived",
+    "latestVersion": 1,
+    "versions": [
+      {
+        "version": 1,
+        "createdAt": "2026-02-01T04:00:00Z",
+        "note": "Legacy single-indicator breakout",
+        "spec": {
+          "mode": "visual",
+          "segment": "equity_intraday",
+          "exchange": "NSE",
+          "timeframe": "5m",
+          "universe": {
+            "type": "symbols",
+            "symbols": ["SBIN"]
+          },
+          "sizing": {
+            "type": "fixed_qty",
+            "qty": 100
+          },
+          "risk": {
+            "stopLossPercent": null,
+            "targetPercent": null
+          },
+          "entry": {
+            "combinator": "all",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "gt",
+                "right": {
+                  "kind": "indicator",
+                  "name": "sma",
+                  "params": {
+                    "period": 20
+                  }
+                }
+              }
+            ]
+          },
+          "exit": {
+            "combinator": "all",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "lt",
+                "right": {
+                  "kind": "indicator",
+                  "name": "sma",
+                  "params": {
+                    "period": 20
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "createdAt": "2026-02-01T04:00:00Z",
+    "updatedAt": "2026-05-01T08:00:00Z"
+  }
+]

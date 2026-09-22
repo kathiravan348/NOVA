@@ -10,7 +10,7 @@
 | NOVA-002 | Theme pipeline: tokens.json → tokens.css (dark/light), Tailwind v4 theme, fonts, `data-theme` switch | done | Claude | 001 |
 | NOVA-003 | Storybook (`ui-storybook`): theme toggle, 360px/768px/1440px viewports, a11y addon | done | Claude | 002 |
 | NOVA-004 | Contracts (Orbit): user, strategy spec, backtest run/result, trade, charges | done | Claude | 001 |
-| NOVA-005 | Mocks: static JSON per contract (consistent numbers) + schema and consistency tests | planned | — | 004, 023 |
+| NOVA-005 | Mocks: static JSON per contract (consistent numbers) + schema and consistency tests | done | Claude | 004, 023 |
 | NOVA-006 | Services layer: `DATA_MODE` mock/real switch + TanStack Query hooks | draft | — | 024 |
 | NOVA-007 | ui-core: Button, IconButton, Badge/StatusBadge, Card, StatCard, Skeleton | done | Claude | 003 |
 | NOVA-008 | ui-core: form fields (Input, Select, Checkbox, Switch, DateTimePicker IST) with RHF + Zod | draft | — | 007 |
