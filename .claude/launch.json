@@ -6,6 +6,34 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--dir", "frontend", "storybook", "--no-open", "--ci"],
       "port": 6006
+    },
+    {
+      "name": "storybook-review",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "../Nova-review/frontend/packages/ui-storybook",
+        "exec",
+        "storybook",
+        "dev",
+        "-p",
+        "6007",
+        "--no-open",
+        "--ci"
+      ],
+      "port": 6007
+    },
+    {
+      "name": "orbit-review",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "../Nova-review/frontend/apps/nova-orbit", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "relay-review",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "../Nova-review/frontend/apps/nova-relay", "dev"],
+      "port": 3001
     }
   ]
 }
