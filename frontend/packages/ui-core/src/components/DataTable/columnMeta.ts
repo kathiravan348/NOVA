@@ -7,5 +7,7 @@ declare module "@tanstack/react-table" {
     mobileLabel?: string;
     hideOnMobile?: boolean;
     primary?: boolean;
+    /** Internal: the row selection checkbox column. */
+    selection?: boolean;
   }
 }

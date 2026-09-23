@@ -20,7 +20,7 @@
 | Modal | Accessible Radix dialog with title, description, body scroll, and footer actions | `Core/Modal` |
 | Tabs | Data-driven horizontal tabs with active indicator and mobile horizontal scroll | `Core/Tabs` |
 | ToastProvider / useToast | Radix toast notification manager with tone icons (success, danger, neutral) | `Core/Toast` |
-| DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards | `Core/DataTable` |
+| DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards; optional row selection (`selectedIds`, "Select all shown"), search box and toolbar slot | `Core/DataTable` |
 | Field | Form control wrapper with label, helper description, and error message | `Core/Field` |
 | Input | Accessible text/numeric input with leading/trailing adornments wrapped in Field | `Core/Input` |
 | Select | Native select dropdown with ChevronDown indicator wrapped in Field | `Core/Select` |

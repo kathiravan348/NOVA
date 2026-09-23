@@ -38,7 +38,7 @@
 | NOVA-030 | Instrument info: sector, indices, last close, change, 52w range, volume, lot size; 24 mock instruments (R2) | done | Claude | 029 |
 | NOVA-031 | Universe moves from strategy to backtest run: contracts, mocks, editor, detail, run list, compare (R2, D25) | draft | — | 030 |
 | NOVA-032 | StrategyStats contract + `/strategies/stats` mock, handler, service (R1, D26) | draft | — | 031 |
-| NOVA-033 | ui-core DataTable: row selection (checkbox column, select all shown) + search box (D29) | planned | — | 009 |
+| NOVA-033 | ui-core DataTable: row selection (checkbox column, select all shown) + search box (D29) | done | Claude | 009 |
 | NOVA-034 | ui-trading StrategyCard + Orbit strategies card grid (filter, sort) + detail stats and Backtests tab (R1) | draft | — | 032 |
 | NOVA-035 | Orbit backtest form: symbol picker (DataTable selection, filters, data-coverage check) (R2) | draft | — | 031, 033 |
 | NOVA-036 | Orbit market data page: instrument list with search and info instead of a select (R2) | draft | — | 030, 033 |
@@ -47,7 +47,7 @@
 | NOVA-039 | Relay rate limits page v2: per-window usage, reset time, edit NOVA limit modal, 80% warnings (R3) | draft | — | 038 |
 | NOVA-040 | Relay broker page (profile + useful links) and account detail limits/session countdown (R4) | draft | — | 038 |
 | NOVA-041 | Review guide round 2: walkthrough + checklist for round 1 changes | draft | — | 034–040 |
-| NOVA-042 | Faster checks: no duplicate tsc, tool caches, threads pool, parallel `review:check` (D30) | done | Claude | — |
+| NOVA-042 | Faster checks: no duplicate tsc, tool caches, threads pool (D30) | done | Claude | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -13,6 +14,8 @@ import { cn } from "../../lib/cn";
 import { Skeleton } from "../Skeleton/Skeleton";
 import { DataTableCards } from "./DataTableCards";
 import { DataTablePagination } from "./DataTablePagination";
+import { DataTableToolbar, type DataTableSearch } from "./DataTableToolbar";
+import { selectionColumn } from "./selectionColumn";
 import "./columnMeta";
 
 export interface DataTableProps<TData, TValue> {
@@ -26,6 +29,13 @@ export interface DataTableProps<TData, TValue> {
   error?: React.ReactNode;
   emptyState?: React.ReactNode;
   className?: string;
+  /** Selection is on when both are set; needs `getRowId`. */
+  selectedIds?: string[];
+  onSelectedIdsChange?: (ids: string[]) => void;
+  isRowSelectable?: (row: TData) => boolean;
+  search?: DataTableSearch<TData>;
+  /** Extra controls (e.g. filter selects) shown next to the search box. */
+  toolbar?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue = unknown>({
@@ -39,15 +49,34 @@ export function DataTable<TData, TValue = unknown>({
   error,
   emptyState,
   className,
+  selectedIds,
+  onSelectedIdsChange,
+  isRowSelectable,
+  search,
+  toolbar,
 }: DataTableProps<TData, TValue>): React.ReactElement {
   const [sorting, setSorting] = React.useState<SortingState>(initialSort ?? []);
   const [pageIndex, setPageIndex] = React.useState(0);
+  const [query, setQuery] = React.useState("");
+  const selecting = selectedIds !== undefined && onSelectedIdsChange !== undefined;
+
+  const allColumns = React.useMemo(
+    () =>
+      selecting
+        ? [
+            selectionColumn<TData, TValue>({ selectedIds, onSelectedIdsChange, isRowSelectable }),
+            ...columns,
+          ]
+        : columns,
+    [selecting, selectedIds, onSelectedIdsChange, isRowSelectable, columns],
+  );
 
   const table = useReactTable({
     data,
-    columns,
+    columns: allColumns,
     state: {
       sorting,
+      globalFilter: query,
       pagination: { pageIndex, pageSize },
     },
     onSortingChange: (updater) => {
@@ -58,7 +87,16 @@ export function DataTable<TData, TValue = unknown>({
       const next = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
       setPageIndex(next.pageIndex);
     },
+    onGlobalFilterChange: (value: string) => {
+      setQuery(value);
+      setPageIndex(0);
+    },
+    getColumnCanGlobalFilter: () => true,
+    globalFilterFn: (row, _columnId, value: string) =>
+      search === undefined ||
+      search.getText(row.original).toLowerCase().includes(value.trim().toLowerCase()),
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getRowId,
@@ -69,8 +107,23 @@ export function DataTable<TData, TValue = unknown>({
     setPageIndex(0);
   }, [data, pageSize]);
 
+  const noMatch =
+    query.trim() !== "" && data.length > 0 ? `No rows match "${query.trim()}"` : undefined;
+  const emptyContent = noMatch ?? emptyState;
+
   return (
     <div className={cn("w-full space-y-4", className)}>
+      {(search || toolbar || selecting) && (
+        <DataTableToolbar
+          searchLabel={search?.label}
+          searchPlaceholder={search?.placeholder}
+          query={query}
+          onQueryChange={(value) => table.setGlobalFilter(value)}
+          selectedCount={selecting ? selectedIds.length : undefined}
+        >
+          {toolbar}
+        </DataTableToolbar>
+      )}
       {/* Desktop view */}
       <div className="hidden md:block overflow-x-auto rounded-lg border border-border-default bg-bg-surface">
         <table className="w-full text-left border-collapse">
@@ -141,7 +194,7 @@ export function DataTable<TData, TValue = unknown>({
             {loading ? (
               Array.from({ length: 5 }).map((_, rowIndex) => (
                 <tr key={rowIndex}>
-                  {columns.map((_, colIndex) => (
+                  {allColumns.map((_, colIndex) => (
                     <td key={colIndex} className="px-5 py-3">
                       <Skeleton className="h-4 w-full" />
                     </td>
@@ -150,7 +203,7 @@ export function DataTable<TData, TValue = unknown>({
               ))
             ) : error ? (
               <tr>
-                <td colSpan={columns.length} className="px-5 py-8 text-center">
+                <td colSpan={allColumns.length} className="px-5 py-8 text-center">
                   <div role="alert" className="text-body text-loss">
                     {error}
                   </div>
@@ -159,10 +212,10 @@ export function DataTable<TData, TValue = unknown>({
             ) : table.getRowModel().rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={allColumns.length}
                   className="px-5 py-8 text-center text-body text-text-muted"
                 >
-                  {emptyState ?? "No rows to show"}
+                  {emptyContent ?? "No rows to show"}
                 </td>
               </tr>
             ) : (
@@ -198,7 +251,7 @@ export function DataTable<TData, TValue = unknown>({
           caption={caption}
           loading={loading}
           error={error}
-          emptyState={emptyState}
+          emptyState={emptyContent}
         />
       </div>
 

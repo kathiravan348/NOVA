@@ -66,3 +66,5 @@ export const fileColumns: ColumnDef<FileItem>[] = [
     },
   },
 ];
+
+export const fileSearchText = (file: FileItem): string => `${file.name} ${file.owner}`;

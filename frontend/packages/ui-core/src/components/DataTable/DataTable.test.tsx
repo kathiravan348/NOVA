@@ -1,7 +1,8 @@
+import * as React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DataTable } from "./DataTable";
-import { fileColumns, sampleFiles, type FileItem } from "./storyData";
+import { fileColumns, fileSearchText, sampleFiles, type FileItem } from "./storyData";
 
 describe("DataTable", () => {
   it("renders caption, headers and first page rows", () => {
@@ -167,5 +168,89 @@ describe("DataTable", () => {
     expect(screen.getAllByText("File Type")[0]).toBeInTheDocument();
     expect(screen.getAllByText("Size")[0]).toBeInTheDocument();
     expect(screen.getAllByText("Last Updated")[0]).toBeInTheDocument();
+  });
+
+  describe("selection and search", () => {
+    function Harness(props: {
+      initial?: string[];
+      isRowSelectable?: (row: FileItem) => boolean;
+    }): React.ReactElement {
+      const [selected, setSelected] = React.useState<string[]>(props.initial ?? []);
+      return (
+        <>
+          <output data-testid="selected">{selected.join(",")}</output>
+          <DataTable<FileItem>
+            caption="Selectable files"
+            columns={fileColumns}
+            data={sampleFiles}
+            pageSize={10}
+            getRowId={(row) => row.id}
+            selectedIds={selected}
+            onSelectedIdsChange={setSelected}
+            isRowSelectable={props.isRowSelectable}
+            search={{ label: "Search files", getText: fileSearchText }}
+          />
+        </>
+      );
+    }
+    const selectedText = (): string => screen.getByTestId("selected").textContent ?? "";
+    // Desktop table and mobile cards both render in jsdom; [0] is the table.
+    const rowBox = (id: string): HTMLElement =>
+      screen.getAllByRole("checkbox", { name: `Select ${id}` })[0]!;
+    const allBox = (): HTMLElement => screen.getByRole("checkbox", { name: "Select all shown" });
+
+    it("selects a row and shows the count", () => {
+      render(<Harness />);
+      fireEvent.click(rowBox("file-1"));
+      expect(selectedText()).toBe("file-1");
+      expect(rowBox("file-1")).toHaveAttribute("data-state", "checked");
+      expect(screen.getByText("selected")).toHaveTextContent("1 selected");
+    });
+
+    it("header is indeterminate when some shown rows are selected", () => {
+      render(<Harness initial={["file-3"]} />);
+      expect(allBox()).toHaveAttribute("data-state", "indeterminate");
+    });
+
+    it("select all shown takes only filtered, selectable rows and keeps other ids", () => {
+      render(<Harness initial={["file-2"]} isRowSelectable={(row) => row.type !== "PDF"} />);
+      fireEvent.change(screen.getByLabelText("Search files"), { target: { value: "Rohan" } });
+      fireEvent.click(allBox());
+      const ids = selectedText().split(",");
+      const rohanSelectable = sampleFiles
+        .filter((f) => f.owner === "Rohan" && f.type !== "PDF")
+        .map((f) => f.id);
+      expect(ids).toEqual(expect.arrayContaining(["file-2", ...rohanSelectable]));
+      expect(ids).toHaveLength(1 + rohanSelectable.length);
+      expect(allBox()).toHaveAttribute("data-state", "checked");
+      fireEvent.click(allBox());
+      expect(selectedText()).toBe("file-2");
+    });
+
+    it("unselectable rows show a disabled checkbox", () => {
+      render(<Harness isRowSelectable={(row) => row.type !== "PDF"} />);
+      expect(rowBox("file-1")).toBeDisabled();
+      expect(rowBox("file-2")).not.toBeDisabled();
+    });
+
+    it("search filters rows, resets to page 1 and shows no-match text", () => {
+      render(<Harness />);
+      fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+      expect(screen.getByText(/Showing 11–20/)).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText("Search files"), { target: { value: "_v1." } });
+      expect(screen.getAllByText(sampleFiles[0]!.name)[0]).toBeInTheDocument();
+      expect(screen.queryByText(sampleFiles[1]!.name)).not.toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText("Search files"), { target: { value: "zzz" } });
+      expect(screen.getAllByText('No rows match "zzz"')[0]).toBeInTheDocument();
+    });
+
+    it("cards view has a checkbox per row", () => {
+      render(<Harness />);
+      const cards = screen.getByRole("list", { name: "Selectable files" });
+      const box = cards.querySelector<HTMLElement>('[role="checkbox"]');
+      expect(box).not.toBeNull();
+      fireEvent.click(box!);
+      expect(selectedText()).toBe("file-1");
+    });
   });
 });

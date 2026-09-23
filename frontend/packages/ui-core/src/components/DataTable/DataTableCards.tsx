@@ -59,7 +59,9 @@ export function DataTableCards<TData>({
   return (
     <ul aria-label={caption} className="space-y-3">
       {rows.map((row) => {
-        const cells = row.getVisibleCells();
+        const allCells = row.getVisibleCells();
+        const selectCell = allCells.find((cell) => cell.column.columnDef.meta?.selection);
+        const cells = allCells.filter((cell) => cell !== selectCell);
         const primaryCell =
           cells.find((cell) => cell.column.columnDef.meta?.primary) ??
           cells.find((cell) => !cell.column.columnDef.meta?.hideOnMobile);
@@ -71,9 +73,15 @@ export function DataTableCards<TData>({
 
         return (
           <li key={row.id} className="rounded-lg border border-border-default bg-bg-surface p-4">
-            {primaryCell && (
-              <div className="font-sans text-body font-semibold text-text-primary">
-                {flexRender(primaryCell.column.columnDef.cell, primaryCell.getContext())}
+            {(selectCell || primaryCell) && (
+              <div className="flex items-start gap-3">
+                {selectCell &&
+                  flexRender(selectCell.column.columnDef.cell, selectCell.getContext())}
+                {primaryCell && (
+                  <div className="font-sans text-body font-semibold text-text-primary">
+                    {flexRender(primaryCell.column.columnDef.cell, primaryCell.getContext())}
+                  </div>
+                )}
               </div>
             )}
             {visibleCells.length > 0 && (

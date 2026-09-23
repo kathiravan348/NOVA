@@ -1,6 +1,6 @@
 # NOVA-033 — DataTable: row selection + search box
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-033 · **Depends on:** NOVA-009
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-033 · **Depends on:** NOVA-009
 
 ## Goal
 `DataTable` can show a checkbox per row with controlled selection and a search box that filters
@@ -44,5 +44,11 @@ Create (if `DataTable.tsx` would pass 300 lines):
 ## Questions
 
 ## Handoff
+**Done:** Built by Claude directly on `main` (Gemini offline; Owner request 2026-09-23).
+**Files changed:** DataTable `{DataTable.tsx, DataTableCards.tsx, columnMeta.ts, DataTable.stories.tsx, DataTable.test.tsx, storyData.ts}`; new `DataTableToolbar.tsx`, `selectionColumn.tsx`; `Checkbox.tsx` (indeterminate shows a minus icon); `docs/COMPONENTS.md`.
+**Deviations:** selection column split into `selectionColumn.tsx` to keep `DataTable.tsx` small; Checkbox gained the indeterminate icon (needed for "Select all shown").
+**Checked:** DataTable + Checkbox tests (18) pass; ui-core lint/typecheck pass.
 
 ## Review
+**Result:** done (self-built; no separate review).
+**Follow-up tasks created:** none.
