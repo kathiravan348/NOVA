@@ -1,6 +1,6 @@
 # NOVA-021 — Review build: one-command local run, demo walkthrough, feedback checklist
 
-**Status:** planned · **Owner:** - · **Branch:** task/NOVA-021 · **Depends on:** NOVA-018, NOVA-020, NOVA-029
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-021 · **Depends on:** NOVA-018, NOVA-020, NOVA-029
 
 ## Goal
 The owner can start the whole Stage A prototype with one command, follow a short walkthrough of every screen, and record feedback in a checklist that feeds the scope freeze (NOVA-022).
@@ -34,5 +34,17 @@ Modify: `frontend/package.json` (scripts only), `docs/STRUCTURE.md`, `START-HERE
 ## Questions
 
 ## Handoff
+**Done:** `pnpm review` (Orbit :3000, Relay :3001, Storybook :6006 in parallel), `pnpm review:check`, `docs/REVIEW-GUIDE.md` (start, 16-step walkthrough, feedback checklist, known limits).
+**Files changed:** as listed.
+**Commands run:** `pnpm review` → Orbit and Relay served 200 (Storybook skipped here only because port 6006 was already taken by another session); lint / typecheck / test / build / format:check → all pass (yes)
+**Checked:** every walkthrough step was exercised in NOVA-013…029 browser checks.
+**New dependencies:** none.
+**Maps updated:** STRUCTURE.
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built by Claude while Gemini is offline)
+**Fixed directly (review: commits):** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none. NOVA-022 needs the owner's filled checklist.
