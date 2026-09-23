@@ -27,7 +27,7 @@
 | NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | done | Claude | 009, 013, 026 |
 | NOVA-020 | Relay: rate limits, data jobs, audit log | done | Claude | 019 |
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | done | Claude | 018, 020, 029 |
-| NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
+| NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 041 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | done | Claude | 005 |
 | NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | done | Claude | 007, 008 |
@@ -35,8 +35,21 @@
 | NOVA-027 | Lint: fail on Tailwind classes with no theme token (ui-core, ui-trading) | done | Claude | 010 |
 | NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | done | Claude | 011 |
 | NOVA-029 | Market data: Instrument + Candle contracts, mocks, handlers, services, Orbit market data browser (split from 018) | done | Claude | 028, 013 |
+| NOVA-030 | Instrument info: sector, indices, last close, change, 52w range, volume, lot size; 24 mock instruments (R2) | planned | — | 029 |
+| NOVA-031 | Universe moves from strategy to backtest run: contracts, mocks, editor, detail, run list, compare (R2, D25) | draft | — | 030 |
+| NOVA-032 | StrategyStats contract + `/strategies/stats` mock, handler, service (R1, D26) | draft | — | 031 |
+| NOVA-033 | ui-core DataTable: row selection (checkbox column, select all shown) + search box (D29) | planned | — | 009 |
+| NOVA-034 | ui-trading StrategyCard + Orbit strategies card grid (filter, sort) + detail stats and Backtests tab (R1) | draft | — | 032 |
+| NOVA-035 | Orbit backtest form: symbol picker (DataTable selection, filters, data-coverage check) (R2) | draft | — | 031, 033 |
+| NOVA-036 | Orbit market data page: instrument list with search and info instead of a select (R2) | draft | — | 030, 033 |
+| NOVA-037 | Backtest result: per-symbol breakdown + trade symbol filter (R2) | draft | — | 031 |
+| NOVA-038 | Relay contracts: RateLimit v2 (windows, broker/NOVA limits, reset), BrokerProfile, session expiry fix (R3, R4) | planned | — | 023 |
+| NOVA-039 | Relay rate limits page v2: per-window usage, reset time, edit NOVA limit modal, 80% warnings (R3) | draft | — | 038 |
+| NOVA-040 | Relay broker page (profile + useful links) and account detail limits/session countdown (R4) | draft | — | 038 |
+| NOVA-041 | Review guide round 2: walkthrough + checklist for round 1 changes | draft | — | 034–040 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
 - After 007: 008, 009, 010, 011, 025 touch different folders and can overlap (shared files: AGENTS §3 rule 3). 026 follows 010.
 - After 013: Orbit screens (014–018) and Relay screens (019–020) can overlap.
+- Review round 1 (see `docs/PLAN.md`): 030, 033, 038 run in parallel. Then Orbit 031 → 032 → 034 and 035/036/037; Relay 039 and 040 in parallel.

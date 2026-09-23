@@ -18,7 +18,48 @@
 2. Contracts, mocks, services layer (NOVA-004 → 006)
 3. NOVA UI library: `ui-core`, then `ui-trading` (NOVA-007 → 012)
 4. Screens: login, NOVA Orbit, NOVA Relay (NOVA-013 → 020)
-5. Review build, feedback, scope freeze (NOVA-021 → 022)
+5. Review build, feedback (NOVA-021)
+6. Review round 1 changes (NOVA-030 → 041, below), then scope freeze (NOVA-022)
+
+### Review round 1 — requirement changes (Owner feedback, 2026-09-23)
+**Orbit — strategies list (R1).** Cards instead of a table. Each card: name, status, mode, segment,
+timeframe, version, updated, and backtest stats: runs total / completed / failed / in progress,
+last run date, best and worst return %, win-rate range (min–max), worst drawdown, best net P&L
+(links to that run). Filter by status, sort by updated / best return / runs. Stats come from a
+backend summary (`StrategyStats`), never computed in the screen. Strategy detail gets the same
+stats and a *Backtests* tab listing that strategy's runs.
+
+**Orbit — symbols (R2).** A strategy no longer holds symbols: it is rules only (segment, exchange,
+timeframe, sizing, risk, entry/exit or code). Symbols are chosen when a backtest is queued, so one
+strategy can be tested on different baskets. The run stores its universe (symbols, or a whole index).
+- Picker = searchable, filterable list with a checkbox per row and "select all shown": symbol,
+  name, sector, index membership, last close, day change %, 52-week range, avg daily volume,
+  F&O lot size, data available from–to. Filters: index, sector, F&O only.
+- A symbol whose data does not cover the chosen period is flagged; queueing asks to drop it.
+- Selected count is always visible; at least 1 symbol required.
+- Run list, result page and compare show the universe (e.g. "12 symbols" / "NIFTY BANK").
+- Results add a per-symbol breakdown (trades, win rate, net P&L) and a symbol filter on trades.
+- Market data page uses the same instrument list (search + info) instead of a plain select.
+
+**Relay — broker limits (R3).** Broker limits are set by Zerodha and cannot be raised from NOVA.
+NOVA keeps its own *safety limit* per endpoint and window (≤ broker limit) and throttles to it.
+- Per endpoint (quote, historical, orders, other) and window (per second / per minute / per day):
+  broker limit, NOVA limit, used (peak for second/minute, count for day), % used, and when the
+  counter resets (daily reset time in IST; per-second/minute windows are rolling).
+- Kite v3 values (docs, checked 2026-09-23): quote 1/s, historical 3/s, orders 10/s + 400/min +
+  5,000/day, other 10/s; max 25 modifications per order. Daily reset time is unconfirmed; mocks
+  assume 00:00 IST and Stage B must verify.
+- *Edit limits* (per account + endpoint): change the NOVA limit only, validated ≤ broker limit,
+  recorded in the audit log. Stage A shows a demo toast.
+- Warning when any window passes 80% of the NOVA limit (rate-limit page and overview).
+
+**Relay — broker information (R4).** A *Broker* page per broker: API (Kite Connect v3), plan,
+subscription renewal date, API key (last 4 characters only, never the secret), redirect and postback
+URLs, registered static IP (SEBI, needed from Phase 3), session rule (daily login; token valid until
+06:00 IST next day), and useful links opening in a new tab: API docs, rate limits, developer
+console, forum, charges, Python client. Links come from data, not code. Account detail shows its
+limits summary and the time left on its session.
+Mock session expiry corrected to 06:00 IST the next day (was 00:00 IST).
 
 ### Stage B order (planned after freeze)
 Database design → NOVA Core (gateway + auth) → Broker service (Kite login, tokens, rate limiter) → NOVA Atlas (data download, tick recorder, archive) → NOVA Ledger (charges engine) → Strategy service → Backtest engine → switch screens from mock to real, one at a time.
