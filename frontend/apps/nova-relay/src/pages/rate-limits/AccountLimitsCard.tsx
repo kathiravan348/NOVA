@@ -1,8 +1,14 @@
-import type { RateLimit } from "@nova/contracts";
+import type { RateLimit, RateLimitWindow } from "@nova/contracts";
 import { Badge, Card } from "@nova/ui-core";
 import { Meter, formatQuantity } from "@nova/ui-trading";
 import { formatIstShort } from "../../lib/format";
 import { endpointLabel } from "../../lib/labels";
+
+const windowLabel: Record<RateLimitWindow, string> = {
+  second: "Per second",
+  minute: "Per minute",
+  day: "Per day",
+};
 
 export interface AccountLimitsCardProps {
   title: string;
@@ -36,27 +42,15 @@ export function AccountLimitsCard({ title, limits }: AccountLimitsCardProps) {
                 <Badge>No throttling</Badge>
               )}
             </div>
-            <Meter
-              label="Peak per second"
-              value={l.peakPerSecond}
-              max={l.limitPerSecond}
-              valueText={`${l.peakPerSecond} / ${l.limitPerSecond} per sec`}
-            />
-            {l.dailyLimit === null ? (
-              <p className="flex justify-between text-body-sm">
-                <span className="font-medium text-text-primary">Requests today</span>
-                <span className="font-mono text-text-muted">
-                  {formatQuantity(l.requestsToday)} · No daily limit
-                </span>
-              </p>
-            ) : (
+            {l.rules.map((rule) => (
               <Meter
-                label="Requests today"
-                value={l.requestsToday}
-                max={l.dailyLimit}
-                valueText={`${formatQuantity(l.requestsToday)} / ${formatQuantity(l.dailyLimit)}`}
+                key={rule.window}
+                label={windowLabel[rule.window]}
+                value={rule.used}
+                max={rule.novaLimit}
+                valueText={`${formatQuantity(rule.used)} / ${formatQuantity(rule.novaLimit)}`}
               />
-            )}
+            ))}
           </li>
         ))}
       </ul>

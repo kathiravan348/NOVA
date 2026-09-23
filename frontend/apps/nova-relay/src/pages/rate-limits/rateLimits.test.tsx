@@ -21,13 +21,14 @@ describe("Rate limits", () => {
     renderApp("/rate-limits");
     await screen.findByText("Secondary Algorithmic Account");
     const secondary = card("Secondary Algorithmic Account");
-    expect(within(secondary).getByText("3 / 3 per sec")).toBeInTheDocument();
+    expect(within(secondary).getByText("3,400 / 4,000")).toBeInTheDocument();
     expect(within(secondary).getByText("Throttled 5")).toBeInTheDocument();
     expect(within(secondary).getAllByRole("meter").length).toBeGreaterThan(0);
     const primary = card("Primary Trading Account");
     expect(within(primary).getAllByText("No throttling")).toHaveLength(4);
-    expect(within(primary).getByText(/No daily limit/)).toBeInTheDocument();
-    expect(within(primary).getByText("4,200 / 50,000")).toBeInTheDocument();
+    expect(within(primary).getByText("120 / 4,000")).toBeInTheDocument();
+    expect(within(primary).getAllByText("Per second")).toHaveLength(4);
+    expect(within(primary).getByText("Per minute")).toBeInTheDocument();
   });
 
   it("shows the empty state", async () => {

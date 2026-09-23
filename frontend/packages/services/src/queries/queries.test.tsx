@@ -9,6 +9,7 @@ import {
   mockAuditEntries,
   mockBacktestResults,
   mockBrokerAccounts,
+  mockBrokerProfiles,
   mockDataJobs,
   mockRateLimits,
   mockStrategies,
@@ -22,6 +23,9 @@ import {
   useAuditEntries,
   useBrokerAccount,
   useBrokerAccounts,
+  useBrokerProfile,
+  useBrokerProfiles,
+  useUpdateRateLimit,
   useDataJobs,
   useRateLimits,
 } from "./relay";
@@ -98,6 +102,34 @@ describe("query hooks", () => {
     });
     await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 4000 });
     expect(result.current.error).toMatchObject({ code: "internal" });
+  });
+
+  it("useBrokerProfiles and useBrokerProfile resolve to the mock", async () => {
+    const { result } = renderHook(
+      () => ({ list: useBrokerProfiles(), one: useBrokerProfile("zerodha") }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.one.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.list.isSuccess).toBe(true));
+    expect(result.current.list.data).toEqual(mockBrokerProfiles);
+    expect(result.current.one.data).toEqual(mockBrokerProfiles[0]);
+  });
+
+  it("useUpdateRateLimit sends a PATCH and refetches rate limits", async () => {
+    const { result } = renderHook(
+      () => ({ limits: useRateLimits(), update: useUpdateRateLimit() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.limits.isSuccess).toBe(true));
+    requests = [];
+    await result.current.update.mutateAsync({
+      accountId: "brk_001",
+      endpoint: "orders",
+      window: "day",
+      novaLimit: 4500,
+    });
+    await waitFor(() => expect(requests).toContain("/api/v1/broker/rate-limits"));
+    expect(requests[0]).toBe("/api/v1/broker/rate-limits/brk_001/orders");
   });
 });
 

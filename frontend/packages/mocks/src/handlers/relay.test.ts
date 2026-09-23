@@ -4,10 +4,17 @@ import {
   ApiErrorSchema,
   AuditEntrySchema,
   BrokerAccountSchema,
+  BrokerProfileSchema,
   DataJobSchema,
   RateLimitSchema,
 } from "@nova/contracts";
-import { mockAuditEntries, mockBrokerAccounts, mockDataJobs, mockRateLimits } from "../data";
+import {
+  mockAuditEntries,
+  mockBrokerAccounts,
+  mockBrokerProfiles,
+  mockDataJobs,
+  mockRateLimits,
+} from "../data";
 import { relayHandlers } from "./relay";
 
 const server = setupServer(...relayHandlers);
@@ -78,6 +85,47 @@ describe("Relay MSW handlers", () => {
     const parsed = ApiErrorSchema.parse(data);
     expect(parsed.error.code).toBe("not_found");
     expect(parsed.error.message).toContain("unknown_job");
+  });
+
+  it("GET /api/v1/broker/profiles returns the profiles, and one by broker", async () => {
+    const list = await fetch("http://localhost/api/v1/broker/profiles");
+    expect(BrokerProfileSchema.array().parse(await list.json())).toEqual(mockBrokerProfiles);
+    const one = await fetch("http://localhost/api/v1/broker/profiles/zerodha");
+    expect(BrokerProfileSchema.parse(await one.json())).toEqual(mockBrokerProfiles[0]);
+    const missing = await fetch("http://localhost/api/v1/broker/profiles/upstox");
+    expect(missing.status).toBe(404);
+  });
+
+  describe("PATCH /api/v1/broker/rate-limits/:accountId/:endpoint", () => {
+    const patch = (path: string, body: unknown) =>
+      fetch(`http://localhost/api/v1/broker/rate-limits/${path}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+    it("accepts a NOVA limit up to the broker limit with 204", async () => {
+      const res = await patch("brk_001/orders", { window: "minute", novaLimit: 400 });
+      expect(res.status).toBe(204);
+    });
+
+    it("rejects a limit above the broker limit, a bad body or a missing window with 400", async () => {
+      for (const body of [
+        { window: "second", novaLimit: 2 },
+        { window: "second", novaLimit: 0 },
+        { window: "second" },
+        { window: "day", novaLimit: 1 },
+      ]) {
+        const res = await patch("brk_001/quote", body);
+        expect(res.status).toBe(400);
+        expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("invalid_request");
+      }
+    });
+
+    it("returns 404 for an unknown account or endpoint", async () => {
+      expect((await patch("brk_999/orders", { window: "second", novaLimit: 1 })).status).toBe(404);
+      expect((await patch("brk_001/margins", { window: "second", novaLimit: 1 })).status).toBe(404);
+    });
   });
 
   it("GET /api/v1/audit returns list of audit entries", async () => {

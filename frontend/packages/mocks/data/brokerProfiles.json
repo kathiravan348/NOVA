@@ -1,0 +1,46 @@
+[
+  {
+    "broker": "zerodha",
+    "name": "Zerodha",
+    "api": "Kite Connect v3",
+    "plan": "Kite Connect (paid, monthly)",
+    "subscriptionRenewsOn": "2026-10-15",
+    "apiKeyLast4": "k7Q2",
+    "redirectUrl": "https://relay.nova.example/broker/zerodha/callback",
+    "postbackUrl": null,
+    "staticIp": null,
+    "sessionRule": "Log in once a day; the access token is valid until 06:00 IST the next day.",
+    "links": [
+      {
+        "label": "Kite Connect API docs",
+        "url": "https://kite.trade/docs/connect/v3/",
+        "kind": "docs"
+      },
+      {
+        "label": "API rate limits",
+        "url": "https://kite.trade/docs/connect/v3/exceptions/#api-rate-limit",
+        "kind": "rate_limits"
+      },
+      {
+        "label": "Developer console",
+        "url": "https://developers.kite.trade/",
+        "kind": "console"
+      },
+      {
+        "label": "Kite Connect forum",
+        "url": "https://kite.trade/forum/",
+        "kind": "forum"
+      },
+      {
+        "label": "Brokerage and charges",
+        "url": "https://zerodha.com/charges",
+        "kind": "charges"
+      },
+      {
+        "label": "Python client (pykiteconnect)",
+        "url": "https://github.com/zerodha/pykiteconnect",
+        "kind": "client_library"
+      }
+    ]
+  }
+]

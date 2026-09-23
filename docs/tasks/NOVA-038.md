@@ -1,6 +1,6 @@
 # NOVA-038 — Relay contracts: RateLimit v2, BrokerProfile, session expiry fix
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-038 · **Depends on:** NOVA-023
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-038 · **Depends on:** NOVA-023
 
 ## Goal
 Contracts, mocks, handlers and services describe broker limits per window with a broker limit, an
@@ -52,5 +52,11 @@ Create: mocks `data/brokerProfiles.json`
 ## Questions
 
 ## Handoff
+**Done:** Built by Claude directly on `main` (Gemini offline; Owner request 2026-09-23).
+**Files changed:** contracts `rateLimit.ts` (v2 rules, `RateLimitUpdateSchema`), `broker.ts` (`BrokerProfileSchema`), `error.ts` (`invalid_request`), `audit.ts` (`broker.rate_limit_update`) + tests; mocks `rateLimits.json`, new `brokerProfiles.json`, session expiry 06:00 IST in `brokerAccounts.json` and `auditEntries.json`, `data.ts`, handlers (`GET /broker/profiles[/{broker}]`, `PATCH /broker/rate-limits/{accountId}/{endpoint}`), scenarios + tests; services `apiSend`, `updateRateLimit`, `listBrokerProfiles`, `getBrokerProfile`, hooks `useUpdateRateLimit`, `useBrokerProfiles`, `useBrokerProfile` + tests; relay `AccountLimitsCard` (one Meter per window), labels; `docs/CONTRACTS.md`.
+**Deviations:** added ApiError code `invalid_request` and audit action `broker.rate_limit_update` (both needed by R3); `apiSend` added to `services/src/http.ts`.
+**Checked:** contracts, mocks, services, relay tests pass; typecheck and lint pass.
 
 ## Review
+**Result:** done (self-built; no separate review).
+**Follow-up tasks created:** none.

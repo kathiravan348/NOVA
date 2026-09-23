@@ -1,6 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { RateLimitEndpoint, RateLimitUpdate } from "@nova/contracts";
 import {
   getBrokerAccount,
+  getBrokerProfile,
+  listBrokerProfiles,
+  updateRateLimit,
   getDataJob,
   listAuditEntries,
   listBrokerAccounts,
@@ -28,6 +32,35 @@ export function useRateLimits() {
   return useQuery({
     queryKey: queryKeys.rateLimits.all,
     queryFn: ({ signal }) => listRateLimits({ signal }),
+  });
+}
+
+export interface RateLimitEdit extends RateLimitUpdate {
+  accountId: string;
+  endpoint: RateLimitEndpoint;
+}
+
+export function useUpdateRateLimit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ accountId, endpoint, ...body }: RateLimitEdit) =>
+      updateRateLimit(accountId, endpoint, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.rateLimits.all }),
+  });
+}
+
+export function useBrokerProfiles() {
+  return useQuery({
+    queryKey: queryKeys.brokerProfiles.all,
+    queryFn: ({ signal }) => listBrokerProfiles({ signal }),
+  });
+}
+
+export function useBrokerProfile(broker: string) {
+  return useQuery({
+    queryKey: queryKeys.brokerProfiles.detail(broker),
+    queryFn: ({ signal }) => getBrokerProfile(broker, { signal }),
+    enabled: Boolean(broker),
   });
 }
 

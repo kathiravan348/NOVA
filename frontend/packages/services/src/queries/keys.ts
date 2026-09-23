@@ -17,6 +17,10 @@ export const queryKeys = {
   rateLimits: {
     all: ["rate-limits"] as const,
   },
+  brokerProfiles: {
+    all: ["broker-profiles"] as const,
+    detail: (broker: string) => ["broker-profiles", broker] as const,
+  },
   dataJobs: {
     all: ["data-jobs"] as const,
     detail: (id: string) => ["data-jobs", id] as const,

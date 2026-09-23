@@ -4,11 +4,63 @@ import {
   mockAuditEntries,
   mockBacktestRuns,
   mockBrokerAccounts,
+  mockBrokerProfiles,
   mockDataJobs,
   mockRateLimits,
   mockStrategies,
   mockUser,
 } from "./data";
+
+describe("Relay rate limits v2 and broker profile", () => {
+  const KITE: Record<string, Record<string, number>> = {
+    quote: { second: 1 },
+    historical: { second: 3 },
+    orders: { second: 10, minute: 400, day: 5000 },
+    other: { second: 10 },
+  };
+
+  it("broker limits are the Kite v3 values and NOVA limits keep usage within them", () => {
+    for (const limit of mockRateLimits) {
+      const expected = KITE[limit.endpoint]!;
+      expect(limit.rules.map((r) => r.window).sort()).toEqual(Object.keys(expected).sort());
+      for (const rule of limit.rules) {
+        expect(rule.brokerLimit).toBe(expected[rule.window]);
+        expect(rule.novaLimit).toBe(Math.max(1, Math.floor(rule.brokerLimit * 0.8)));
+        expect(rule.used).toBeLessThanOrEqual(rule.novaLimit);
+      }
+    }
+  });
+
+  it("day windows reset at the next 00:00 IST after MOCK_NOW", () => {
+    for (const rule of mockRateLimits.flatMap((l) => l.rules)) {
+      if (rule.window === "day") expect(rule.resetsAt).toBe("2026-09-21T18:30:00Z");
+    }
+  });
+
+  it("at least one enabled account passes 80% of a NOVA limit", () => {
+    const hot = mockRateLimits.flatMap((l) => l.rules).filter((r) => r.used > r.novaLimit * 0.8);
+    expect(hot.length).toBeGreaterThan(0);
+  });
+
+  it("sessions expire at 06:00 IST the day after login", () => {
+    for (const b of mockBrokerAccounts) {
+      if (!b.session.loggedInAt || !b.session.expiresAt) continue;
+      const login = new Date(b.session.loggedInAt);
+      const expected = new Date(
+        Date.UTC(login.getUTCFullYear(), login.getUTCMonth(), login.getUTCDate() + 1, 0, 30),
+      );
+      expect(b.session.expiresAt).toBe(expected.toISOString().replace(".000Z", "Z"));
+    }
+  });
+
+  it("broker profile shows only the last 4 key characters and https links", () => {
+    expect(mockBrokerProfiles).toHaveLength(1);
+    const json = JSON.stringify(mockBrokerProfiles);
+    expect(json).not.toMatch(/secret|password/i);
+    for (const link of mockBrokerProfiles[0]!.links)
+      expect(link.url.startsWith("https://")).toBe(true);
+  });
+});
 
 describe("Relay consistency rules", () => {
   it("ensures active sessions have expiresAt > MOCK_NOW", () => {

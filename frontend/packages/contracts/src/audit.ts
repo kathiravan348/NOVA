@@ -6,6 +6,7 @@ export const AuditActionSchema = z.enum([
   "auth.logout",
   "broker.login",
   "broker.session_expired",
+  "broker.rate_limit_update",
   "strategy.create",
   "strategy.update",
   "backtest.run",

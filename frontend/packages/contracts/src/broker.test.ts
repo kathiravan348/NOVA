@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   BrokerAccount,
   BrokerAccountSchema,
+  BrokerProfileSchema,
+  type BrokerProfile,
   BrokerSchema,
   BrokerSession,
   BrokerSessionSchema,
@@ -145,5 +147,50 @@ describe("Broker schemas", () => {
       const invalid = { ...validAccount, apiKey: "secret-key" };
       expect(BrokerAccountSchema.safeParse(invalid).success).toBe(false);
     });
+  });
+});
+
+describe("BrokerProfileSchema", () => {
+  const profile: BrokerProfile = {
+    broker: "zerodha",
+    name: "Zerodha",
+    api: "Kite Connect v3",
+    plan: "Connect",
+    subscriptionRenewsOn: "2026-12-01",
+    apiKeyLast4: "x7Q2",
+    redirectUrl: "https://nova.example/relay/callback",
+    postbackUrl: null,
+    staticIp: "203.0.113.25",
+    sessionRule: "Daily login; token valid until 06:00 IST next day",
+    links: [{ label: "API docs", url: "https://kite.trade/docs/connect/v3/", kind: "docs" }],
+  };
+
+  it("accepts a valid profile, with null optional fields", () => {
+    expect(BrokerProfileSchema.parse(profile)).toEqual(profile);
+    expect(
+      BrokerProfileSchema.safeParse({ ...profile, subscriptionRenewsOn: null, staticIp: null })
+        .success,
+    ).toBe(true);
+  });
+
+  it("rejects a full API key and a bad IP", () => {
+    expect(BrokerProfileSchema.safeParse({ ...profile, apiKeyLast4: "abcdef12" }).success).toBe(
+      false,
+    );
+    expect(BrokerProfileSchema.safeParse({ ...profile, staticIp: "300.1.1.1" }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects non-https links, unknown link kinds and extra keys", () => {
+    const link = profile.links[0]!;
+    expect(
+      BrokerProfileSchema.safeParse({ ...profile, links: [{ ...link, url: "http://kite.trade" }] })
+        .success,
+    ).toBe(false);
+    expect(
+      BrokerProfileSchema.safeParse({ ...profile, links: [{ ...link, kind: "video" }] }).success,
+    ).toBe(false);
+    expect(BrokerProfileSchema.safeParse({ ...profile, apiSecret: "s" }).success).toBe(false);
   });
 });

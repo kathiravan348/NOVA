@@ -17,6 +17,9 @@ export const emptyHandlers = [
   http.get(apiPath("/broker/rate-limits"), () => {
     return HttpResponse.json([]);
   }),
+  http.get(apiPath("/broker/profiles"), () => {
+    return HttpResponse.json([]);
+  }),
   http.get(apiPath("/data-jobs"), () => {
     return HttpResponse.json([]);
   }),
@@ -66,6 +69,12 @@ export const errorHandlers = [
     return internalError();
   }),
   http.get(apiPath("/broker/rate-limits"), () => {
+    return internalError();
+  }),
+  http.get(apiPath("/broker/profiles"), () => {
+    return internalError();
+  }),
+  http.get(apiPath("/broker/profiles/:broker"), () => {
     return internalError();
   }),
   http.get(apiPath("/data-jobs"), () => {

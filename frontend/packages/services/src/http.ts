@@ -39,17 +39,47 @@ export async function apiGet<T>(
 
   const body: unknown = await res.json().catch(() => undefined);
 
-  if (!res.ok) {
-    const parsed = ApiErrorSchema.safeParse(body);
-    if (parsed.success) {
-      throw new ApiRequestError(res.status, parsed.data.error.code, parsed.data.error.message);
-    }
-    throw new ApiRequestError(res.status, "internal", `GET ${path} failed with ${res.status}`);
-  }
+  if (!res.ok) throw toApiError(res.status, body, `GET ${path}`);
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     throw new ApiRequestError(res.status, "invalid_response", `Invalid response for GET ${path}`);
   }
   return parsed.data;
+}
+
+function toApiError(status: number, body: unknown, what: string): ApiRequestError {
+  const parsed = ApiErrorSchema.safeParse(body);
+  if (parsed.success) {
+    return new ApiRequestError(status, parsed.data.error.code, parsed.data.error.message);
+  }
+  return new ApiRequestError(status, "internal", `${what} failed with ${status}`);
+}
+
+/** Sends a JSON body and expects an empty success response (e.g. 204). */
+export async function apiSend(
+  method: "POST" | "PATCH" | "DELETE",
+  path: string,
+  body: unknown,
+  init?: RequestOptions,
+): Promise<void> {
+  const url = new URL(API_PREFIX + path, getApiBaseUrl());
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      signal: init?.signal,
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new ApiRequestError(0, "network", `Network error for ${method} ${path}`);
+  }
+
+  if (!res.ok) {
+    const errorBody: unknown = await res.json().catch(() => undefined);
+    throw toApiError(res.status, errorBody, `${method} ${path}`);
+  }
 }

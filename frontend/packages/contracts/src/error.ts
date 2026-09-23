@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ApiErrorCodeSchema = z.enum(["not_found", "internal"]);
+export const ApiErrorCodeSchema = z.enum(["not_found", "invalid_request", "internal"]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;
 
 export const ApiErrorSchema = z.strictObject({

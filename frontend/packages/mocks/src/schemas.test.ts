@@ -18,6 +18,7 @@ import {
   mockBrokerAccounts,
   mockDataJobs,
   mockRateLimits,
+  mockBrokerProfiles,
   mockStrategies,
   mockTrades,
   mockUser,
@@ -204,6 +205,7 @@ describe("Mock data schemas and general conventions", () => {
       mockTrades,
       mockBrokerAccounts,
       mockRateLimits,
+      mockBrokerProfiles,
       mockDataJobs,
       mockAuditEntries,
     });

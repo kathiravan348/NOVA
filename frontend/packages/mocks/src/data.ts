@@ -7,6 +7,7 @@ import {
   DataJobSchema,
   InstrumentSchema,
   RateLimitSchema,
+  BrokerProfileSchema,
   StrategySchema,
   TradeSchema,
   UserSchema,
@@ -20,6 +21,7 @@ import backtestRunsJson from "../data/backtestRuns.json";
 import brokerAccountsJson from "../data/brokerAccounts.json";
 import dataJobsJson from "../data/dataJobs.json";
 import rateLimitsJson from "../data/rateLimits.json";
+import brokerProfilesJson from "../data/brokerProfiles.json";
 import strategiesJson from "../data/strategies.json";
 import tradesJson from "../data/trades.json";
 import userJson from "../data/user.json";
@@ -33,6 +35,7 @@ export const mockBacktestResults = BacktestResultSchema.array().parse(backtestRe
 export const mockTrades = TradeSchema.array().parse(tradesJson);
 export const mockBrokerAccounts = BrokerAccountSchema.array().parse(brokerAccountsJson);
 export const mockRateLimits = RateLimitSchema.array().parse(rateLimitsJson);
+export const mockBrokerProfiles = BrokerProfileSchema.array().parse(brokerProfilesJson);
 export const mockDataJobs = DataJobSchema.array().parse(dataJobsJson);
 export const mockAuditEntries = AuditEntrySchema.array().parse(auditEntriesJson);
 export const mockInstruments = InstrumentSchema.array().parse(instrumentsJson);

@@ -12,9 +12,11 @@
 | Trade | `GET /api/v1/backtests/{id}/trades` | `data/trades.json` | Orbit |
 | Charges | — | `data/trades.json` (inside each trade) | Ledger, Orbit, ui-trading |
 | BrokerAccount | `GET /api/v1/broker/accounts`, `GET /api/v1/broker/accounts/{id}` | `data/brokerAccounts.json` | Relay |
-| RateLimit | `GET /api/v1/broker/rate-limits` | `data/rateLimits.json` | Relay |
+| RateLimit (v2: `rules[]` per window with brokerLimit, novaLimit, used, resetsAt) | `GET /api/v1/broker/rate-limits` | `data/rateLimits.json` | Relay |
+| RateLimitUpdate | `PATCH /api/v1/broker/rate-limits/{accountId}/{endpoint}` → 204 (400 `invalid_request` above broker limit) | — (Stage A: validated, not stored) | Relay |
+| BrokerProfile | `GET /api/v1/broker/profiles`, `GET /api/v1/broker/profiles/{broker}` | `data/brokerProfiles.json` | Relay |
 | DataJob | `GET /api/v1/data-jobs`, `GET /api/v1/data-jobs/{id}` | `data/dataJobs.json` | Relay |
 | AuditEntry | `GET /api/v1/audit` | `data/auditEntries.json` | Relay |
 | Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range) |
 | Candle | `GET /api/v1/market-data/candles?symbol=&timeframe=` | `data/candles.json` (keyed `SYMBOL:tf`) | Orbit, ui-trading |
-| ApiError | any endpoint (404/500) | — | Core, Orbit, Relay |
+| ApiError | any endpoint (400/404/500; codes `invalid_request`, `not_found`, `internal`) | — | Core, Orbit, Relay |

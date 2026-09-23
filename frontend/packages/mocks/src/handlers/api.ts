@@ -27,3 +27,13 @@ export function internalError(message = "Internal server error"): Response {
   };
   return HttpResponse.json<ApiError>(body, { status: 500 });
 }
+
+export function badRequest(message: string): Response {
+  const body: ApiError = {
+    error: {
+      code: "invalid_request",
+      message,
+    },
+  };
+  return HttpResponse.json<ApiError>(body, { status: 400 });
+}

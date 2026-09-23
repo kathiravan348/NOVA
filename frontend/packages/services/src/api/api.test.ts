@@ -7,6 +7,7 @@ import {
   mockBacktestResults,
   mockBacktestRuns,
   mockBrokerAccounts,
+  mockBrokerProfiles,
   mockCandles,
   mockDataJobs,
   mockInstruments,
@@ -26,6 +27,9 @@ import {
 } from "./orbit";
 import {
   getBrokerAccount,
+  getBrokerProfile,
+  listBrokerProfiles,
+  updateRateLimit,
   getDataJob,
   listAuditEntries,
   listBrokerAccounts,
@@ -94,6 +98,22 @@ describe("Relay api", () => {
   it("maps error scenarios to code internal", async () => {
     server.use(...errorHandlers);
     await expect(listAuditEntries()).rejects.toMatchObject({ status: 500, code: "internal" });
+    await expect(listBrokerProfiles()).rejects.toMatchObject({ status: 500, code: "internal" });
+  });
+
+  it("returns broker profiles and 404 for an unknown broker", async () => {
+    await expect(listBrokerProfiles()).resolves.toEqual(mockBrokerProfiles);
+    await expect(getBrokerProfile("zerodha")).resolves.toEqual(mockBrokerProfiles[0]);
+    await expect(getBrokerProfile("nope")).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("updateRateLimit resolves on 204 and maps 400 to invalid_request", async () => {
+    await expect(
+      updateRateLimit("brk_001", "orders", { window: "minute", novaLimit: 300 }),
+    ).resolves.toBeUndefined();
+    await expect(
+      updateRateLimit("brk_001", "orders", { window: "minute", novaLimit: 401 }),
+    ).rejects.toMatchObject({ status: 400, code: "invalid_request" });
   });
 });
 
