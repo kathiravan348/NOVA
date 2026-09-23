@@ -19,3 +19,12 @@ export const brokerLabel: Record<BrokerAccount["broker"], string> = {
 /** An enabled account whose Kite session is not active needs the daily login. */
 export const needsLogin = (account: BrokerAccount) =>
   account.enabled && account.session.status !== "active";
+
+/** Time until a session expires: `18 h 05 m`, `42 m`, or null once it has passed. */
+export function timeLeft(expiresAt: string, now: Date): string | null {
+  const minutes = Math.floor((new Date(expiresAt).getTime() - now.getTime()) / 60_000);
+  if (minutes <= 0) return null;
+  const h = Math.floor(minutes / 60);
+  const m = String(minutes % 60).padStart(2, "0");
+  return h > 0 ? `${h} h ${m} m` : `${minutes} m`;
+}

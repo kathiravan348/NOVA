@@ -38,6 +38,16 @@ describe("Broker accounts", () => {
     expect(screen.queryByRole("button", { name: "Log in to Kite" })).not.toBeInTheDocument();
   });
 
+  it("shows the time left on an active session and the account's limits", async () => {
+    renderApp("/accounts/brk_001");
+    expect(await screen.findByText("18 h 00 m")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Rate limits" })).toBeInTheDocument();
+    expect(screen.getByText("120 / 4,000 · 3%")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Edit limits on the rate limits page" }),
+    ).toHaveAttribute("href", "/rate-limits");
+  });
+
   it("prompts login on an expired account", async () => {
     renderApp("/accounts/brk_002");
     expect(await screen.findByRole("button", { name: "Log in to Kite" })).toBeInTheDocument();

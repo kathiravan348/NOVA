@@ -6,6 +6,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { AccountDetailPage } from "./pages/accounts/AccountDetailPage";
 import { AccountsPage } from "./pages/accounts/AccountsPage";
 import { AuditPage } from "./pages/audit/AuditPage";
+import { BrokerPage } from "./pages/broker/BrokerPage";
 import { DataJobDetailPage } from "./pages/data-jobs/DataJobDetailPage";
 import { DataJobsPage } from "./pages/data-jobs/DataJobsPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
@@ -32,6 +33,7 @@ export const routes: RouteObject[] = [
           },
           page("/accounts", "Broker accounts", <AccountsPage />),
           page("/accounts/:id", "Broker account", <AccountDetailPage />),
+          page("/broker", "Broker", <BrokerPage />),
           page("/rate-limits", "Rate limits", <RateLimitsPage />),
           page("/data-jobs", "Data jobs", <DataJobsPage />),
           page("/data-jobs/:id", "Data job", <DataJobDetailPage />),

@@ -1,9 +1,12 @@
 import type { BrokerSession } from "@nova/contracts";
 import { Card, DescriptionList, StatusBadge } from "@nova/ui-core";
+import { getNow } from "@nova/services";
 import { formatIstDateTime } from "../../lib/format";
-import { sessionLabel, sessionTone } from "../../lib/session";
+import { sessionLabel, sessionTone, timeLeft } from "../../lib/session";
 
 export function SessionCard({ session }: { session: BrokerSession }) {
+  const left =
+    session.status === "active" && session.expiresAt ? timeLeft(session.expiresAt, getNow()) : null;
   return (
     <Card
       title="Kite session"
@@ -21,6 +24,7 @@ export function SessionCard({ session }: { session: BrokerSession }) {
             label: "Expires",
             value: session.expiresAt ? formatIstDateTime(session.expiresAt) : "—",
           },
+          { label: "Time left", value: left ?? "—", numeric: left !== null },
         ]}
       />
     </Card>

@@ -1,11 +1,26 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { Badge, Card, DescriptionList } from "@nova/ui-core";
-import { useBrokerAccount } from "@nova/services";
+import { useBrokerAccount, useRateLimits } from "@nova/services";
 import { QueryState } from "../../components/QueryState";
 import { formatIstDate } from "../../lib/format";
 import { brokerLabel, needsLogin } from "../../lib/session";
 import { LoginPrompt } from "../overview/LoginPrompt";
+import { AccountLimitsCard } from "../rate-limits/AccountLimitsCard";
 import { SessionCard } from "./SessionCard";
+
+function AccountLimits({ accountId }: { accountId: string }) {
+  const limits = useRateLimits();
+  const own = (limits.data ?? []).filter((l) => l.accountId === accountId);
+  if (own.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <AccountLimitsCard title="Rate limits" limits={own} />
+      <Link to="/rate-limits" className="text-body-sm text-action-text hover:underline">
+        Edit limits on the rate limits page
+      </Link>
+    </div>
+  );
+}
 
 export function AccountDetailPage() {
   const { id = "" } = useParams();
@@ -35,6 +50,7 @@ export function AccountDetailPage() {
             </div>
           </Card>
           <SessionCard session={account.session} />
+          <AccountLimits accountId={account.id} />
         </div>
       )}
     </QueryState>
