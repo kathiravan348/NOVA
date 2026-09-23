@@ -27,7 +27,7 @@
 | NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | done | Claude | 009, 013, 026 |
 | NOVA-020 | Relay: rate limits, data jobs, audit log | done | Claude | 019 |
 | NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | done | Claude | 018, 020, 029 |
-| NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 041 |
+| NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | done | Claude | 041 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | done | Claude | 005 |
 | NOVA-025 | Theme: add `on-action` text token (dark/light) and use it in Button primary, Checkbox, Switch instead of `[white]` | done | Claude | 007, 008 |
@@ -48,9 +48,27 @@
 | NOVA-040 | Relay broker page (profile + useful links) and account detail limits/session countdown (R4) | done | Claude | 038 |
 | NOVA-041 | Review guide round 2: walkthrough + checklist for round 1 changes | done | Claude | 034–040 |
 | NOVA-042 | Faster checks: no duplicate tsc, tool caches, threads pool (D30) | done | Claude | — |
+| NOVA-043 | Backend skeleton: Compose (TimescaleDB, Redis), uv workspace, NOVA Core health, backend-check (D33) | planned | — | 022 |
+| NOVA-044 | Contract parity: JSON Schema from Zod, Pydantic models + parity tests (User, ApiError) (D34) | planned | — | 043 |
+| NOVA-045 | Pagination envelope: contracts, mock handlers, services (screens unchanged) (D32) | planned | — | 022 |
+| NOVA-046 | Load more on backtests, trades, data jobs, audit; strategy detail uses `strategyId` filter | draft | — | 045 |
+| NOVA-047 | Database schema v1 + Alembic migrations (all Phase 1 tables, candles hypertable) | draft | — | 043 |
+| NOVA-048 | NOVA Core: super-admin auth (session cookie), `/me`, gateway routing, audit writes | draft | — | 044, 047 |
+| NOVA-049 | Broker: Kite login flow, encrypted token store, session expiry, accounts + profiles endpoints (D35) | draft | — | 048 |
+| NOVA-050 | Broker: rate limiter (Redis, endpoint × window), rate-limits GET/PATCH + audit; verify daily reset | draft | — | 049 |
+| NOVA-051 | Atlas: instrument master + historical candle downloads, data-jobs and market-data endpoints; job queue | draft | — | 050 |
+| NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |
+| NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables | draft | — | 047 |
+| NOVA-054 | Strategy service: strategies CRUD, versions, stats summary | draft | — | 048 |
+| NOVA-055 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 051, 053, 054 |
+| NOVA-056 | Backtest engine: equity intraday | draft | — | 055 |
+| NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox | draft | — | 055 |
+| NOVA-058 | Real mode: login + Relay screens on the real API | draft | — | 046, 050, 051 |
+| NOVA-059 | Real mode: Orbit screens on the real API | draft | — | 055, 058 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
 - After 007: 008, 009, 010, 011, 025 touch different folders and can overlap (shared files: AGENTS §3 rule 3). 026 follows 010.
 - After 013: Orbit screens (014–018) and Relay screens (019–020) can overlap.
 - Review round 1 (see `docs/PLAN.md`): 030, 033, 038 run in parallel. Then Orbit 031 → 032 → 034 and 035/036/037; Relay 039 and 040 in parallel.
+- Stage B (after 022): lane A = 043 → 044 / 047 (backend); lane B = 045 → 046 (frontend) runs alongside. Then 048 → 049 → 050 → 051; 053 and 054 can overlap 049–051.

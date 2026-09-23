@@ -5,9 +5,10 @@
 > Brand names come from `brand.config.ts` only. Never hardcode "NOVA" in UI text.
 
 ## 1. Current phase
-**Stage A — Prototype.** Frontend only, static mock data, no backend, no real API calls, no orders.
-Goal: a clickable, mobile-responsive prototype of NOVA Orbit and NOVA Relay for review.
-Full plan: `docs/PLAN.md`. Do not build anything from a later stage.
+**Stage B — Real backend.** Stage A (prototype) is done and its scope is frozen (D31).
+Goal: build the backend behind the frozen screens and contracts, then switch screens from mock to real.
+Only the broker service may call Zerodha (D35). No orders. Screens and contracts change only through a task.
+Full plan: `docs/PLAN.md`. Do not build anything from a later phase (paper or live trading).
 
 ## 2. Roles
 | Agent | Role | May change code? |
@@ -43,14 +44,14 @@ Rules:
 - Handoff note ≤ 20 lines (`docs/templates/HANDOFF.md`). Review note ≤ 20 lines (`docs/templates/REVIEW.md`).
 - Claude reviews `git diff main...task/NOVA-###`, not whole files.
 - Prove work with tests and a build, not by re-reading code.
-- While working, run only the checks for the packages you touch (e.g. `pnpm vitest run packages/mocks`, `pnpm --filter @nova/mocks lint`). Run the full `pnpm review:check` once, before `ready-for-review` (Claude: once, before merge).
+- While working, run only the checks for the packages you touch (e.g. `pnpm vitest run packages/mocks`, `pnpm --filter @nova/mocks lint`). Run the full `pnpm review:check` once, before `ready-for-review` (Claude: once, before merge). Backend: `docker compose run --rm backend-check` once, before `ready-for-review`, when the task touches `backend/`.
 - Do not restate the task or this rulebook in replies. Report only: done / changed files / open questions.
 - Update the maps (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) in the same task that changes them.
 
 ## 5. Tech stack (do not add others without a task saying so)
 Frontend: React 18, TypeScript (strict), Vite, pnpm workspaces, Tailwind CSS, shadcn/ui (Radix), TanStack Table, TanStack Query, React Hook Form + Zod, date-fns + date-fns-tz, Recharts, TradingView Lightweight Charts, lucide-react, React Router, MSW, Storybook, Vitest + Testing Library.
-Backend (Stage B, not now): Python 3.12, FastAPI, PostgreSQL + TimescaleDB, Redis, Parquet, Docker Compose.
-Pin exact versions in every `package.json` (no `^` or `~`).
+Backend (D33): Python 3.12 in Docker only, uv workspace, FastAPI, Pydantic v2, pydantic-settings, SQLAlchemy 2 + Alembic, PostgreSQL + TimescaleDB, Redis, Parquet, Docker Compose; ruff, mypy `--strict`, pytest.
+Pin exact versions in every `package.json` (no `^` or `~`) and in `pyproject.toml` (`==`), locked in `backend/uv.lock`.
 New dependency = note it in the handoff and in `docs/DECISIONS.md` request section. Never add a library that duplicates one above.
 
 ## 6. UI rules
@@ -75,16 +76,19 @@ New dependency = note it in the handoff and in `docs/DECISIONS.md` request secti
 - Tests: every component has a render test; every contract has a schema test against its mock.
 - No secrets, keys or tokens in code, mocks, logs or commits. `.env` files are git-ignored.
 - Windows: use pnpm scripts, not shell-specific commands. Line endings LF (`.gitattributes`). Paths via `path.join`, never hardcoded `\` or `/`.
+- Python: full type hints (mypy strict), no `Any` without a comment saying why. Pydantic models forbid extra fields. Money as integer paise or `Decimal`, never `float`. Times timezone-aware UTC. Every endpoint has a test; every contract model has a parity test (D34). Settings only from environment (`pydantic-settings`).
 
 ## 9. Definition of done (every task)
 - [ ] Acceptance checks in the task file all pass
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check` pass
+- [ ] Backend tasks: `docker compose run --rm backend-check` passes (ruff, format, mypy, pytest)
 - [ ] Stories added/updated and checked at 360px and desktop, dark and light
 - [ ] Maps updated (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) if touched
 - [ ] Handoff note written in the task file; board status updated
 
 ## 10. Never
-- Never place, modify or cancel real orders (no order code exists before Stage B, and live trading is Phase 5).
-- Never call real Zerodha or other APIs in Stage A.
+- Never place, modify or cancel real orders. No order code exists in Phase 1; live trading is Phase 3.
+- Never call Zerodha or other real APIs outside the broker service, and never from tests (D35).
+- Never put keys, secrets or tokens in code, mocks, fixtures, logs or commits; only in `.env` (git-ignored).
 - Never change another task's files, the design tokens, or the plan without a task for it.
 - Never delete tests to make a build pass.

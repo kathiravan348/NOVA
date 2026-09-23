@@ -34,8 +34,15 @@
 | D28 | 2026-09-23 | `BrokerProfile` contract holds API/plan details and useful links as data; API keys shown as last 4 characters only | Owner wants broker info and doc links in Relay; no secrets on the wire |
 | D29 | 2026-09-23 | ui-core `DataTable` gains optional row selection (checkbox column) and a search box; pickers are built from it, not new list components | One accessible, mobile-ready list for symbol pickers and future bulk actions |
 | D30 | 2026-09-23 | Checks: library packages have no build step (used from `src`); `tsc` runs only in `typecheck`; ESLint, Prettier and `tsc` cache under `node_modules/.cache` (tsbuildinfo git-ignored); Vitest uses the `threads` pool; `review:check` runs format, lint, typecheck, test, then build, one after another (parallel was slower on the owner PC: tests 309 s vs 103 s). While working, agents run only the checks for the packages they touch | The full check took about 6 min on Windows, mostly repeated or uncached work |
+| D31 | 2026-09-23 | Scope freeze: Owner accepted Stage A round 2 with no changes. Screens, flows and contracts on `main` after NOVA-042 are the Phase 1 scope; changing them needs a decision entry and a task. Stage B starts | The backend is built against a fixed target |
+| D32 | 2026-09-23 | Pagination (closes D21): lists that grow without bound (`/backtests`, `/backtests/{id}/trades`, `/data-jobs`, `/audit`) return `{ items, nextCursor }` (`nextCursor` opaque string or `null`) and take `?limit=` (1–200, default 50) and `?cursor=`. `/backtests` also takes `?strategyId=`. Bounded lists stay bare arrays (strategies, stats, accounts, rate limits, profiles, instruments = cash + F&O underlyings). Candles get a required date range with NOVA Atlas | Cursor pages stay stable while new rows arrive; small lists need no envelope |
+| D33 | 2026-09-23 | Backend tooling: Python 3.12 runs only in Docker (host needs Docker Desktop, no Python). `backend/` is a uv workspace: `libs/*` (shared) and `services/*` (one package per service). FastAPI, Pydantic v2, pydantic-settings; SQLAlchemy 2 + Alembic from NOVA-047; ruff (lint + format), mypy `--strict`, pytest. Exact pins via `uv.lock`. One Compose file at the repo root; `docker compose run --rm backend-check` runs all backend checks | Same environment on the Owner's Windows PC and later the VPS; one command for checks |
+| D34 | 2026-09-23 | Contract parity: Zod in `@nova/contracts` stays the source of truth. It emits JSON Schema per contract into `frontend/packages/contracts/schema/` (Vitest file snapshots, so stale files fail). Backend Pydantic models live in `backend/libs/nova_contracts`; its tests parse every mock JSON with the model and validate model output against the JSON Schema | One definition; both sides are checked against the same mocks and schema |
+| D35 | 2026-09-23 | Kite access in Stage B: only the broker service calls Kite; API key and secret come from `.env` (git-ignored) only; access tokens are encrypted at rest; tests never call Kite (fake HTTP). No order-placement client code exists in Phase 1 | Keeps secrets and real-money paths out of everything except one audited service |
 
 ## Pending
-- Options historical data vendor (needed before options backtests).
-- Family roles and permissions.
-- Domain and trademark check for NOVA naming.
+- Options historical data vendor (needed before the options engine, after NOVA-059).
+- Kite daily reset time for per-day limits (mocks assume 00:00 IST) — verify in NOVA-050.
+- Job queue library for backtests and data jobs — decide in NOVA-051.
+- Family roles and permissions — after Phase 1 (D12 keeps a single super-admin).
+- Domain and trademark check for NOVA naming (Owner; not blocking).

@@ -10,8 +10,8 @@
 | 5 | More assets: mutual funds, IPO, gold, currency, crypto; more countries | later |
 
 ## Phase 1 — stages
-**Stage A — Prototype (current).** Frontend only, static mocks. Output: clickable prototype for review, run locally.
-**Stage B — Real backend.** Starts only after Stage A feedback is applied and scope is frozen (NOVA-022).
+**Stage A — Prototype (done, scope frozen 2026-09-23, D31).** Frontend only, static mocks. Output: clickable prototype for review, run locally.
+**Stage B — Real backend (current).** Builds the backend behind the frozen screens and contracts. A scope change needs a decision entry and a task.
 
 ### Stage A order
 1. Repo, tooling, theme tokens, Storybook (NOVA-001 → 003)
@@ -61,8 +61,27 @@ console, forum, charges, Python client. Links come from data, not code. Account 
 limits summary and the time left on its session.
 Mock session expiry corrected to 06:00 IST the next day (was 00:00 IST).
 
-### Stage B order (planned after freeze)
+### Scope freeze (NOVA-022, 2026-09-23)
+Owner reviewed round 2 (R1–R4 and the open round 1 items) and accepted it with no changes. The screens,
+flows and contracts on `main` after NOVA-042 are the Phase 1 scope (D31). Open items were closed in
+D32–D35 (pagination, backend tooling, contract parity, Kite access); still pending: see `DECISIONS.md`.
+
+### Stage B order
 Database design → NOVA Core (gateway + auth) → Broker service (Kite login, tokens, rate limiter) → NOVA Atlas (data download, tick recorder, archive) → NOVA Ledger (charges engine) → Strategy service → Backtest engine → switch screens from mock to real, one at a time.
+
+| Step | Tasks | What exists after |
+|---|---|---|
+| 1. Foundation | 043 backend skeleton · 044 contract parity · 045–046 pagination (frontend) | Compose stack, checks, contracts checked on both sides |
+| 2. Database | 047 schema v1 + migrations | All Phase 1 tables, candles as a hypertable |
+| 3. NOVA Core | 048 auth + gateway | Super-admin sign-in, `/me`, routing to services, audit writes |
+| 4. Broker | 049 Kite login + tokens · 050 rate limiter | Daily Kite login, encrypted tokens, limits enforced |
+| 5. NOVA Atlas | 051 instruments + candle downloads · 052 tick recorder + archive | Market data from Kite; ticks recorded from go-live |
+| 6. NOVA Ledger | 053 charges engine | Charges per trade from dated rate tables |
+| 7. Strategies | 054 strategy service | Strategy CRUD, versions, stats summary |
+| 8. Backtests | 055 engine v1 (delivery) · 056 intraday · 057 Python mode | Real backtest runs, results, trades |
+| 9. Real mode | 058 Relay + login · 059 Orbit | Screens on the real API (`VITE_DATA_MODE=real`) |
+
+Futures and options engines come after 059; options wait for the data vendor decision.
 
 ### Segment order for engines (Stage B)
 Equity delivery → equity intraday → futures → options. The data model supports all four from day one.

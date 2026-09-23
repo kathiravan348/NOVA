@@ -14,7 +14,7 @@ packages/contracts (types + Zod) ────────┘─ services/backtes
 
 - **Frontends** only talk to NOVA Core (the gateway). Security is enforced in the backend, never only in the UI.
 - **packages/services** is the only place that fetches data. `DATA_MODE=mock` reads MSW-served mocks; `DATA_MODE=real` calls NOVA Core. Screens never change when switching.
-- **packages/contracts** defines every request/response shape (TypeScript + Zod). Stage B's FastAPI models mirror these (generated OpenAPI is checked against them).
+- **packages/contracts** defines every request/response shape (TypeScript + Zod) and emits JSON Schema. Backend Pydantic models (`backend/libs/nova_contracts`) mirror them and are tested against the same mocks and schema (D34).
 
 ## Strategies
 Two authoring modes, one format:
