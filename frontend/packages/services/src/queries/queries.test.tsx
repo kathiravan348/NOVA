@@ -13,11 +13,12 @@ import {
   mockDataJobs,
   mockRateLimits,
   mockStrategies,
+  mockStrategyStats,
   mockUser,
 } from "@nova/mocks";
 import { ApiRequestError } from "../http";
 import { queryKeys } from "./keys";
-import { useBacktestResults, useMe, useStrategies, useStrategy } from "./orbit";
+import { useBacktestResults, useMe, useStrategies, useStrategy, useStrategyStats } from "./orbit";
 import { createQueryClient, shouldRetry } from "./queryClient";
 import {
   useAuditEntries,
@@ -52,6 +53,12 @@ describe("query hooks", () => {
     const { result } = renderHook(() => useStrategies(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(mockStrategies);
+  });
+
+  it("useStrategyStats resolves to the mock", async () => {
+    const { result } = renderHook(() => useStrategyStats(), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(mockStrategyStats);
   });
 
   it("useMe and relay list hooks resolve to their mocks", async () => {

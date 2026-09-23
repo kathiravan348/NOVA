@@ -5,6 +5,9 @@ export const emptyHandlers = [
   http.get(apiPath("/strategies"), () => {
     return HttpResponse.json([]);
   }),
+  http.get(apiPath("/strategies/stats"), () => {
+    return HttpResponse.json([]);
+  }),
   http.get(apiPath("/backtests"), () => {
     return HttpResponse.json([]);
   }),
@@ -45,6 +48,9 @@ export const errorHandlers = [
     return internalError();
   }),
   http.get(apiPath("/strategies"), () => {
+    return internalError();
+  }),
+  http.get(apiPath("/strategies/stats"), () => {
     return internalError();
   }),
   http.get(apiPath("/strategies/:id"), () => {

@@ -5,6 +5,7 @@ import {
   BacktestResultSchema,
   BacktestRunSchema,
   StrategySchema,
+  StrategyStatsSchema,
   TradeSchema,
   UserSchema,
 } from "@nova/contracts";
@@ -12,6 +13,7 @@ import {
   mockBacktestResults,
   mockBacktestRuns,
   mockStrategies,
+  mockStrategyStats,
   mockTrades,
   mockUser,
 } from "../data";
@@ -44,6 +46,12 @@ describe("Orbit MSW handlers", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(StrategySchema.array().parse(data)).toEqual(mockStrategies);
+  });
+
+  it("GET /api/v1/strategies/stats returns one summary per strategy", async () => {
+    const res = await fetch("http://localhost/api/v1/strategies/stats");
+    expect(res.status).toBe(200);
+    expect(StrategyStatsSchema.array().parse(await res.json())).toEqual(mockStrategyStats);
   });
 
   it("GET /api/v1/strategies/:id returns single strategy for valid id", async () => {

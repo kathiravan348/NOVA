@@ -1,0 +1,47 @@
+[
+  {
+    "strategyId": "stg_001",
+    "runsTotal": 3,
+    "runsCompleted": 2,
+    "runsFailed": 0,
+    "runsInProgress": 1,
+    "lastRunAt": "2026-09-21T06:20:00Z",
+    "bestReturnPercent": 0.5,
+    "worstReturnPercent": 0.46,
+    "winRateMinPercent": 75,
+    "winRateMaxPercent": 75,
+    "worstDrawdownPercent": -0.11,
+    "bestNetPnl": {
+      "runId": "run_001",
+      "netPnlPaise": 499474
+    }
+  },
+  {
+    "strategyId": "stg_002",
+    "runsTotal": 1,
+    "runsCompleted": 0,
+    "runsFailed": 0,
+    "runsInProgress": 1,
+    "lastRunAt": "2026-09-21T06:15:00Z",
+    "bestReturnPercent": null,
+    "worstReturnPercent": null,
+    "winRateMinPercent": null,
+    "winRateMaxPercent": null,
+    "worstDrawdownPercent": null,
+    "bestNetPnl": null
+  },
+  {
+    "strategyId": "stg_003",
+    "runsTotal": 1,
+    "runsCompleted": 0,
+    "runsFailed": 1,
+    "runsInProgress": 0,
+    "lastRunAt": "2026-05-02T05:00:00Z",
+    "bestReturnPercent": null,
+    "worstReturnPercent": null,
+    "winRateMinPercent": null,
+    "winRateMaxPercent": null,
+    "worstDrawdownPercent": null,
+    "bestNetPnl": null
+  }
+]

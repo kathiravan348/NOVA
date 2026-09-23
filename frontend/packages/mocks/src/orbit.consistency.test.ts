@@ -1,5 +1,51 @@
 import { describe, expect, it } from "vitest";
-import { mockBacktestResults, mockBacktestRuns, mockStrategies, mockTrades } from "./data";
+import {
+  mockBacktestResults,
+  mockBacktestRuns,
+  mockStrategies,
+  mockStrategyStats,
+  mockTrades,
+} from "./data";
+
+describe("Strategy stats match the runs and results (D26)", () => {
+  it("has one entry per strategy", () => {
+    expect(mockStrategyStats.map((s) => s.strategyId).sort()).toEqual(
+      mockStrategies.map((s) => s.id).sort(),
+    );
+  });
+
+  it("counts, last run and result stats agree with the mocks", () => {
+    for (const stats of mockStrategyStats) {
+      const runs = mockBacktestRuns.filter((r) => r.strategyId === stats.strategyId);
+      const done = runs.filter((r) => r.status === "completed");
+      expect(stats.runsTotal).toBe(runs.length);
+      expect(stats.runsCompleted).toBe(done.length);
+      expect(stats.runsFailed).toBe(runs.filter((r) => r.status === "failed").length);
+      expect(stats.lastRunAt).toBe(
+        runs
+          .map((r) => r.createdAt)
+          .sort()
+          .at(-1) ?? null,
+      );
+      const metrics = done.map((r) => ({
+        runId: r.id,
+        m: mockBacktestResults.find((x) => x.runId === r.id)!.metrics,
+      }));
+      if (metrics.length === 0) continue;
+      const returns = metrics.map((x) => x.m.returnPercent);
+      const winRates = metrics.map((x) => x.m.winRatePercent);
+      expect(stats.bestReturnPercent).toBe(Math.max(...returns));
+      expect(stats.worstReturnPercent).toBe(Math.min(...returns));
+      expect(stats.winRateMinPercent).toBe(Math.min(...winRates));
+      expect(stats.winRateMaxPercent).toBe(Math.max(...winRates));
+      expect(stats.worstDrawdownPercent).toBe(
+        Math.min(...metrics.map((x) => x.m.maxDrawdownPercent)),
+      );
+      const best = [...metrics].sort((a, b) => b.m.netPnlPaise - a.m.netPnlPaise)[0]!;
+      expect(stats.bestNetPnl).toEqual({ runId: best.runId, netPnlPaise: best.m.netPnlPaise });
+    }
+  });
+});
 
 describe("Orbit consistency rules", () => {
   it("ensures run strategyVersion exists in its strategy", () => {

@@ -2,6 +2,7 @@ export const queryKeys = {
   me: ["me"] as const,
   strategies: {
     all: ["strategies"] as const,
+    stats: ["strategies", "stats"] as const,
     detail: (id: string) => ["strategies", id] as const,
   },
   backtests: {

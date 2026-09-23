@@ -8,6 +8,7 @@
 | User | `GET /api/v1/me` | `data/user.json` | Core, Orbit, Relay |
 | Strategy (rules only, no universe: D25) | `GET /api/v1/strategies`, `GET /api/v1/strategies/{id}` | `data/strategies.json` | Orbit |
 | BacktestRun (with `universe`: symbols or index) | `GET /api/v1/backtests`, `GET /api/v1/backtests/{id}` | `data/backtestRuns.json` | Orbit |
+| StrategyStats (runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L) | `GET /api/v1/strategies/stats` | `data/strategyStats.json` | Orbit |
 | BacktestResult | `GET /api/v1/backtests/{id}/result` | `data/backtestResults.json` | Orbit |
 | Trade | `GET /api/v1/backtests/{id}/trades` | `data/trades.json` | Orbit |
 | Charges | — | `data/trades.json` (inside each trade) | Ledger, Orbit, ui-trading |

@@ -13,6 +13,7 @@ import {
   mockInstruments,
   mockRateLimits,
   mockStrategies,
+  mockStrategyStats,
   mockTrades,
   mockUser,
 } from "@nova/mocks";
@@ -24,6 +25,7 @@ import {
   listBacktests,
   listBacktestTrades,
   listStrategies,
+  listStrategyStats,
 } from "./orbit";
 import {
   getBrokerAccount,
@@ -54,6 +56,7 @@ describe("Orbit api", () => {
   it("returns the mock for every endpoint", async () => {
     await expect(getMe()).resolves.toEqual(mockUser);
     await expect(listStrategies()).resolves.toEqual(mockStrategies);
+    await expect(listStrategyStats()).resolves.toEqual(mockStrategyStats);
     await expect(getStrategy(strategy.id)).resolves.toEqual(strategy);
     await expect(listBacktests()).resolves.toEqual(mockBacktestRuns);
     await expect(getBacktest(run.id)).resolves.toEqual(run);

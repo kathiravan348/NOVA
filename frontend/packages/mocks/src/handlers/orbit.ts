@@ -3,6 +3,7 @@ import {
   mockBacktestResults,
   mockBacktestRuns,
   mockStrategies,
+  mockStrategyStats,
   mockTrades,
   mockUser,
 } from "../data";
@@ -15,6 +16,11 @@ export const orbitHandlers = [
 
   http.get(apiPath("/strategies"), () => {
     return HttpResponse.json(mockStrategies);
+  }),
+
+  // Registered before `/strategies/:id` so "stats" is not read as an id.
+  http.get(apiPath("/strategies/stats"), () => {
+    return HttpResponse.json(mockStrategyStats);
   }),
 
   http.get(apiPath("/strategies/:id"), ({ params }) => {

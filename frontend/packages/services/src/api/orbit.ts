@@ -2,11 +2,13 @@ import {
   BacktestResultSchema,
   BacktestRunSchema,
   StrategySchema,
+  StrategyStatsSchema,
   TradeSchema,
   UserSchema,
   type BacktestResult,
   type BacktestRun,
   type Strategy,
+  type StrategyStats,
   type Trade,
   type User,
 } from "@nova/contracts";
@@ -20,6 +22,11 @@ export function getMe(init?: RequestOptions): Promise<User> {
 
 export function listStrategies(init?: RequestOptions): Promise<Strategy[]> {
   return apiGet("/strategies", StrategySchema.array(), init);
+}
+
+/** Backtest summary per strategy (D26). */
+export function listStrategyStats(init?: RequestOptions): Promise<StrategyStats[]> {
+  return apiGet("/strategies/stats", StrategyStatsSchema.array(), init);
 }
 
 export function getStrategy(strategyId: string, init?: RequestOptions): Promise<Strategy> {

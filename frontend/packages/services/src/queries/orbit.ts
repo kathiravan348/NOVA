@@ -7,6 +7,7 @@ import {
   listBacktests,
   listBacktestTrades,
   listStrategies,
+  listStrategyStats,
 } from "../api/orbit";
 import { queryKeys } from "./keys";
 
@@ -18,6 +19,14 @@ export function useStrategies() {
   return useQuery({
     queryKey: queryKeys.strategies.all,
     queryFn: ({ signal }) => listStrategies({ signal }),
+  });
+}
+
+/** Backtest summary for every strategy (D26). */
+export function useStrategyStats() {
+  return useQuery({
+    queryKey: queryKeys.strategies.stats,
+    queryFn: ({ signal }) => listStrategyStats({ signal }),
   });
 }
 
