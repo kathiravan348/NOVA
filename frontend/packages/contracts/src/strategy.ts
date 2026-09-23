@@ -127,11 +127,11 @@ export const RiskSchema = z.strictObject({
 });
 export type Risk = z.infer<typeof RiskSchema>;
 
+/** A strategy is rules only (D25); symbols are chosen per backtest run (`BacktestRun.universe`). */
 const baseSpecFields = {
   segment: SegmentSchema,
   exchange: ExchangeSchema,
   timeframe: TimeframeSchema,
-  universe: UniverseSchema,
   sizing: SizingSchema,
   risk: RiskSchema,
 };

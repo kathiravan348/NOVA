@@ -6,6 +6,7 @@ import { EquityCurve, formatInr } from "@nova/ui-trading";
 import { useBacktest, useBacktestResult, useBacktestTrades, useStrategy } from "@nova/services";
 import { QueryError, QueryState } from "../../components/QueryState";
 import { formatIstDateTime, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
+import { describeUniverse } from "../../lib/strategyText";
 import { MetricsGrid } from "./MetricsGrid";
 import { TradesTable } from "./TradesTable";
 
@@ -40,6 +41,7 @@ function RunHeader({ run }: { run: BacktestRun }) {
                 </Link>
               ),
             },
+            { label: "Symbols", value: describeUniverse(run.universe) },
             { label: "Period", value: formatPeriod(run.from, run.to) },
             {
               label: "Initial capital",

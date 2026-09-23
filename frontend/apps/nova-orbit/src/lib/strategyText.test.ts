@@ -6,6 +6,7 @@ import {
   describeRuleGroup,
   describeSizing,
   describeUniverse,
+  summarizeUniverse,
 } from "./strategyText";
 import { formatCalendarDate, formatIstDate, formatIstDateTime } from "./format";
 
@@ -52,6 +53,9 @@ describe("strategyText", () => {
   it("describes universe, sizing and risk", () => {
     expect(describeUniverse({ type: "symbols", symbols: ["TCS", "INFY"] })).toBe("TCS, INFY");
     expect(describeUniverse({ type: "index", index: "NIFTY 50" })).toBe("NIFTY 50 stocks");
+    expect(summarizeUniverse({ type: "index", index: "NIFTY BANK" })).toBe("NIFTY BANK");
+    expect(summarizeUniverse({ type: "symbols", symbols: ["TCS", "INFY"] })).toBe("TCS, INFY");
+    expect(summarizeUniverse({ type: "symbols", symbols: ["A", "B", "C", "D"] })).toBe("4 symbols");
     expect(describeSizing({ type: "fixed_qty", qty: 50 })).toBe("50 shares per trade");
     expect(describeSizing({ type: "fixed_amount", amountPaise: 1_00_000_00 })).toBe(
       "₹1,00,000 per trade",

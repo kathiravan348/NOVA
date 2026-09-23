@@ -36,25 +36,23 @@ describe("Strategy editor", () => {
     renderApp("/strategies/new");
     fireEvent.click(await screen.findByRole("button", { name: "Save draft" }));
     expect(await screen.findByText("Name is required")).toBeInTheDocument();
-    expect(screen.getByText("Enter at least one symbol")).toBeInTheDocument();
     expect(screen.queryByText("Draft saved")).not.toBeInTheDocument();
   });
 
   it("saves a valid form with a demo toast", async () => {
     renderApp("/strategies/new");
     fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: "My test" } });
-    fireEvent.change(screen.getByLabelText(/^Symbols/), { target: { value: "sbin" } });
     fireEvent.change(screen.getByLabelText(/^Quantity/), { target: { value: "5" } });
     fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
     expect(await screen.findByText("Draft saved")).toBeInTheDocument();
-    expect(screen.getByLabelText("Strategy spec JSON").textContent).toContain('"SBIN"');
+    expect(screen.getByLabelText("Strategy spec JSON").textContent).not.toContain("universe");
   });
 
   it("prefills an existing visual strategy", async () => {
     renderApp("/strategies/stg_001/edit");
     expect(await screen.findByDisplayValue("VWAP Momentum Intraday")).toBeInTheDocument();
     await waitFor(() => expect(rows("Entry rules")).toHaveLength(2));
-    expect(screen.getByLabelText("Strategy spec JSON").textContent).toContain('"NIFTY 50"');
+    expect(screen.getByLabelText("Strategy spec JSON").textContent).toContain('"vwap"');
   });
 
   it("opens a python strategy in python mode with its code", async () => {

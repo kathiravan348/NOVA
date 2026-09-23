@@ -36,7 +36,7 @@
 | NOVA-028 | ui-trading: CandlestickChart (Lightweight Charts), theme-aware, responsive | done | Claude | 011 |
 | NOVA-029 | Market data: Instrument + Candle contracts, mocks, handlers, services, Orbit market data browser (split from 018) | done | Claude | 028, 013 |
 | NOVA-030 | Instrument info: sector, indices, last close, change, 52w range, volume, lot size; 24 mock instruments (R2) | done | Claude | 029 |
-| NOVA-031 | Universe moves from strategy to backtest run: contracts, mocks, editor, detail, run list, compare (R2, D25) | draft | — | 030 |
+| NOVA-031 | Universe moves from strategy to backtest run: contracts, mocks, editor, detail, run list, compare (R2, D25) | done | Claude | 030 |
 | NOVA-032 | StrategyStats contract + `/strategies/stats` mock, handler, service (R1, D26) | draft | — | 031 |
 | NOVA-033 | ui-core DataTable: row selection (checkbox column, select all shown) + search box (D29) | done | Claude | 009 |
 | NOVA-034 | ui-trading StrategyCard + Orbit strategies card grid (filter, sort) + detail stats and Backtests tab (R1) | draft | — | 032 |

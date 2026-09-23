@@ -4,6 +4,7 @@ import { Card, EmptyState, Skeleton } from "@nova/ui-core";
 import { EquityCurve } from "@nova/ui-trading";
 import { useBacktestResults, useBacktests } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
+import { summarizeUniverse } from "../../lib/strategyText";
 import { parseRunIds, toSearch } from "./compareMetrics";
 import { MetricsComparison, type ComparedRun } from "./MetricsComparison";
 import { RunPicker } from "./RunPicker";
@@ -58,12 +59,20 @@ export function ComparePage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {compared.map((run, i) => {
               const data = results[i]!.data!;
-              const initial = completed.find((r) => r.id === run.id)!.initialCapitalPaise;
+              const source = completed.find((r) => r.id === run.id)!;
               return (
-                <Card key={run.id} title={run.name}>
+                <Card
+                  key={run.id}
+                  title={run.name}
+                  actions={
+                    <span className="text-body-sm text-text-muted">
+                      {summarizeUniverse(source.universe)}
+                    </span>
+                  }
+                >
                   <EquityCurve
                     points={data.equityCurve}
-                    initialCapitalPaise={initial}
+                    initialCapitalPaise={source.initialCapitalPaise}
                     height={220}
                     ariaLabel={`Equity curve for ${run.name}`}
                   />

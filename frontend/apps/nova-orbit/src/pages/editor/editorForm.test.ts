@@ -10,7 +10,6 @@ const issuesOf = (form: EditorForm) => {
 const validForm = (): EditorForm => ({
   ...emptyForm(),
   name: "Test",
-  symbols: "reliance, tcs ,",
   qty: "10",
 });
 
@@ -37,14 +36,14 @@ describe("editorForm", () => {
     });
   });
 
-  it("cleans symbols and maps empty risk to null", () => {
+  it("maps empty risk to null and has no universe (D25)", () => {
     const spec = toSpec(validForm());
-    expect(spec.universe).toEqual({ type: "symbols", symbols: ["RELIANCE", "TCS"] });
+    expect(spec).not.toHaveProperty("universe");
     expect(spec.risk).toEqual({ stopLossPercent: null, targetPercent: null });
   });
 
   it("reports invalid fields", () => {
-    expect(issuesOf(emptyForm())).toEqual(expect.arrayContaining(["name", "symbols", "qty"]));
+    expect(issuesOf(emptyForm())).toEqual(expect.arrayContaining(["name", "qty"]));
     const bad = validForm();
     bad.sizingType = "percent_equity";
     bad.percent = "120";

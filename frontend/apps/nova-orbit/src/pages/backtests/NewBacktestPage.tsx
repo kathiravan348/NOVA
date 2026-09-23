@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import type { Strategy } from "@nova/contracts";
+import { IndexNameSchema, type Strategy } from "@nova/contracts";
 import {
   Button,
   Card,
@@ -15,7 +15,13 @@ import {
 } from "@nova/ui-core";
 import { useStrategies } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
-import { BacktestFormSchema, defaultsFor, todayIst, type BacktestForm } from "./backtestForm";
+import {
+  BacktestFormSchema,
+  defaultsFor,
+  splitSymbols,
+  todayIst,
+  type BacktestForm,
+} from "./backtestForm";
 
 function BacktestFormView({
   strategies,
@@ -34,6 +40,7 @@ function BacktestFormView({
   const { errors } = formState;
   const strategyId = watch("strategyId");
   const strategy = strategies.find((s) => s.id === strategyId);
+  const universeType = watch("universeType");
 
   // A new strategy starts on its latest version and a matching name.
   useEffect(() => {
@@ -80,6 +87,40 @@ function BacktestFormView({
             error={errors.name?.message}
             {...register("name")}
           />
+        </div>
+      </Card>
+      <Card title="Symbols">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select
+            label="Test on"
+            options={[
+              { value: "symbols", label: "Chosen symbols" },
+              { value: "index", label: "A whole index" },
+            ]}
+            {...register("universeType")}
+          />
+          {universeType === "index" ? (
+            <Select
+              label="Index"
+              options={IndexNameSchema.options.map((v) => ({ value: v, label: v }))}
+              {...register("index")}
+            />
+          ) : (
+            <Controller
+              control={control}
+              name="symbols"
+              render={({ field }) => (
+                <Input
+                  label="Symbols"
+                  description="Comma separated, e.g. RELIANCE, TCS"
+                  defaultValue={field.value.join(", ")}
+                  onChange={(e) => field.onChange(splitSymbols(e.target.value))}
+                  onBlur={field.onBlur}
+                  error={errors.symbols?.message}
+                />
+              )}
+            />
+          )}
         </div>
       </Card>
       <Card title="Period and capital">

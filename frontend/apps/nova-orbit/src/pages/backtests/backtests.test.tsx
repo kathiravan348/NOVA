@@ -23,6 +23,8 @@ describe("Backtests list", () => {
     for (const label of ["Completed", "Running", "Queued", "Failed"]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
+    expect(screen.getAllByText("12 symbols").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("NIFTY 50").length).toBeGreaterThan(0);
   });
 });
 
@@ -35,6 +37,7 @@ describe("Backtest result", () => {
     expect(await screen.findByText(/From 1 Jun 2026 to .*, equity/)).toBeInTheDocument();
     expect((await screen.findAllByText("RELIANCE")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("TCS").length).toBeGreaterThan(0);
+    expect(screen.getByText("RELIANCE, TCS, INFY")).toBeInTheDocument();
   });
 
   it("opens the charges breakdown for a trade", async () => {
@@ -82,6 +85,9 @@ describe("New backtest form", () => {
   it("queues a valid run (demo) and returns to the list", async () => {
     const { router } = renderApp("/backtests/new?strategy=stg_001");
     fireEvent.click(await screen.findByRole("button", { name: "Queue backtest" }));
+    expect(await screen.findByText("Choose at least one symbol")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/^Symbols/), { target: { value: "tcs, infy" } });
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
     expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.pathname).toBe("/backtests"));
   });

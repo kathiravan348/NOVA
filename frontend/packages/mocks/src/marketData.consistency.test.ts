@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mockCandles, mockInstruments, mockStrategies } from "./data";
+import { mockBacktestRuns, mockCandles, mockInstruments, mockTrades } from "./data";
 
 describe("Market data consistency rules", () => {
   it("every candle series belongs to a known instrument and timeframe", () => {
@@ -65,18 +65,28 @@ describe("Market data consistency rules", () => {
     }
   });
 
-  it("every symbol used in strategies.json universes exists in instruments.json", () => {
+  it("every symbol in a backtest run universe or trade exists in instruments.json", () => {
     const symbols = new Set(mockInstruments.map((i) => i.symbol));
-    for (const strategy of mockStrategies) {
-      for (const version of strategy.versions) {
-        if (version.spec.universe.type === "symbols") {
-          for (const s of version.spec.universe.symbols) {
-            expect(symbols.has(s), `Strategy ${strategy.id} v${version.version} symbol ${s}`).toBe(
-              true,
-            );
-          }
+    for (const run of mockBacktestRuns) {
+      if (run.universe.type === "symbols") {
+        for (const s of run.universe.symbols) {
+          expect(symbols.has(s), `Run ${run.id} symbol ${s}`).toBe(true);
         }
       }
+    }
+    for (const t of mockTrades) expect(symbols.has(t.symbol), `Trade ${t.id}`).toBe(true);
+  });
+
+  it("every trade symbol belongs to its run's universe", () => {
+    for (const t of mockTrades) {
+      const run = mockBacktestRuns.find((r) => r.id === t.runId)!;
+      const inUniverse =
+        run.universe.type === "symbols"
+          ? run.universe.symbols.includes(t.symbol)
+          : mockInstruments
+              .find((i) => i.symbol === t.symbol)!
+              .indices.includes(run.universe.index);
+      expect(inUniverse, `Trade ${t.id} ${t.symbol} in ${run.id}`).toBe(true);
     }
   });
 

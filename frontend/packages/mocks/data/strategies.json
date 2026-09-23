@@ -15,17 +15,13 @@
           "segment": "equity_intraday",
           "exchange": "NSE",
           "timeframe": "5m",
-          "universe": {
-            "type": "symbols",
-            "symbols": ["RELIANCE", "TCS", "INFY"]
-          },
           "sizing": {
             "type": "fixed_qty",
             "qty": 50
           },
           "risk": {
             "stopLossPercent": 1.5,
-            "targetPercent": 3.0
+            "targetPercent": 3
           },
           "entry": {
             "combinator": "all",
@@ -72,16 +68,12 @@
           "segment": "equity_intraday",
           "exchange": "NSE",
           "timeframe": "5m",
-          "universe": {
-            "type": "index",
-            "index": "NIFTY 50"
-          },
           "sizing": {
             "type": "percent_equity",
             "percent": 20
           },
           "risk": {
-            "stopLossPercent": 1.0,
+            "stopLossPercent": 1,
             "targetPercent": 2.5
           },
           "entry": {
@@ -156,17 +148,13 @@
           "segment": "equity_delivery",
           "exchange": "NSE",
           "timeframe": "1d",
-          "universe": {
-            "type": "symbols",
-            "symbols": ["HDFCBANK", "ICICIBANK"]
-          },
           "sizing": {
             "type": "fixed_amount",
             "amountPaise": 10000000
           },
           "risk": {
-            "stopLossPercent": 5.0,
-            "targetPercent": 10.0
+            "stopLossPercent": 5,
+            "targetPercent": 10
           },
           "code": "def on_candle(candle):\n    if candle.close < candle.sma(20):\n        return Order.buy()\n"
         }
@@ -191,10 +179,6 @@
           "segment": "equity_intraday",
           "exchange": "NSE",
           "timeframe": "5m",
-          "universe": {
-            "type": "symbols",
-            "symbols": ["SBIN"]
-          },
           "sizing": {
             "type": "fixed_qty",
             "qty": 100

@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   ConditionOpSchema,
   ExchangeSchema,
-  IndexNameSchema,
   IndicatorNameSchema,
   PriceFieldSchema,
   RuleGroupCombinatorSchema,
@@ -60,9 +59,6 @@ export const EditorFormSchema = z
     segment: SegmentSchema,
     exchange: ExchangeSchema,
     timeframe: TimeframeSchema,
-    universeType: z.enum(["symbols", "index"]),
-    symbols: z.string(),
-    index: IndexNameSchema,
     sizingType: z.enum(["fixed_qty", "fixed_amount", "percent_equity"]),
     qty: z.string(),
     amountRupees: z.string(),
@@ -76,9 +72,6 @@ export const EditorFormSchema = z
   .superRefine((f, ctx) => {
     const issue = (path: (string | number)[], message: string) =>
       ctx.addIssue({ code: "custom", path, message });
-    if (f.universeType === "symbols" && splitSymbols(f.symbols).length === 0) {
-      issue(["symbols"], "Enter at least one symbol");
-    }
     if (f.sizingType === "fixed_qty" && !isPositiveInt(f.qty)) {
       issue(["qty"], "Whole number above 0");
     }
@@ -113,13 +106,6 @@ export const EditorFormSchema = z
   });
 export type EditorForm = z.infer<typeof EditorFormSchema>;
 
-export function splitSymbols(text: string): string[] {
-  return text
-    .split(",")
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
-}
-
 export const emptyOperand = (kind: OperandForm["kind"]): OperandForm => ({
   kind,
   field: "close",
@@ -141,9 +127,6 @@ export const emptyForm = (): EditorForm => ({
   segment: "equity_intraday",
   exchange: "NSE",
   timeframe: "5m",
-  universeType: "symbols",
-  symbols: "",
-  index: "NIFTY 50",
   sizingType: "fixed_qty",
   qty: "",
   amountRupees: "",
@@ -200,9 +183,6 @@ export function fromSpec(name: string, description: string, spec: StrategySpec):
     segment: spec.segment,
     exchange: spec.exchange,
     timeframe: spec.timeframe,
-    universeType: spec.universe.type,
-    symbols: spec.universe.type === "symbols" ? spec.universe.symbols.join(", ") : "",
-    index: spec.universe.type === "index" ? spec.universe.index : form.index,
     sizingType: spec.sizing.type,
     qty: spec.sizing.type === "fixed_qty" ? String(spec.sizing.qty) : "",
     amountRupees: spec.sizing.type === "fixed_amount" ? String(spec.sizing.amountPaise / 100) : "",
@@ -223,10 +203,6 @@ export function toSpec(form: EditorForm): StrategySpec {
     segment: form.segment,
     exchange: form.exchange,
     timeframe: form.timeframe,
-    universe:
-      form.universeType === "index"
-        ? { type: "index", index: form.index }
-        : { type: "symbols", symbols: splitSymbols(form.symbols) },
     sizing:
       form.sizingType === "fixed_qty"
         ? { type: "fixed_qty", qty: Number(form.qty) }

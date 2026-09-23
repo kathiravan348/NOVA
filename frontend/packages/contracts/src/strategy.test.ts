@@ -19,10 +19,6 @@ describe("Strategy schemas", () => {
     segment: "equity_delivery",
     exchange: "NSE",
     timeframe: "15m",
-    universe: {
-      type: "symbols",
-      symbols: ["RELIANCE", "TCS"],
-    },
     sizing: {
       type: "percent_equity",
       percent: 10,
@@ -147,7 +143,6 @@ describe("Strategy schemas", () => {
       segment: "futures",
       exchange: "NFO",
       timeframe: "5m",
-      universe: { type: "index", index: "NIFTY BANK" },
       sizing: { type: "fixed_qty", qty: 25 },
       risk: { stopLossPercent: null, targetPercent: null },
       code: "class MyStrategy:\n    pass\n",

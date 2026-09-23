@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { formatInTimeZone } from "date-fns-tz";
-import type { Strategy } from "@nova/contracts";
+import { IndexNameSchema, type Strategy, type Universe } from "@nova/contracts";
 
 const MIN_CAPITAL_RUPEES = 10_000;
 
@@ -13,12 +13,18 @@ export const BacktestFormSchema = z
     strategyId: z.string().min(1, "Choose a strategy"),
     version: z.string().min(1, "Choose a version"),
     name: z.string().trim().min(1, "Name is required"),
+    universeType: z.enum(["symbols", "index"]),
+    symbols: z.array(z.string()),
+    index: IndexNameSchema,
     from: z.string().min(1, "Start date is required"),
     to: z.string().min(1, "End date is required"),
     capitalRupees: z.string(),
     benchmark: z.boolean(),
   })
   .superRefine((f, ctx) => {
+    if (f.universeType === "symbols" && f.symbols.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["symbols"], message: "Choose at least one symbol" });
+    }
     if (f.from && f.to && f.from > f.to) {
       ctx.addIssue({ code: "custom", path: ["from"], message: "Start must be on or before end" });
     }
@@ -47,9 +53,30 @@ export function defaultsFor(strategy: Strategy | undefined, today = todayIst()):
     strategyId: strategy?.id ?? "",
     version: strategy ? String(strategy.latestVersion) : "",
     name: strategy ? `${strategy.name} backtest` : "",
+    universeType: "symbols",
+    symbols: [],
+    index: "NIFTY 50",
     from: monthsBefore(today, 3),
     to: today,
     capitalRupees: "1000000",
     benchmark: true,
   };
+}
+
+/** The run's universe (D25): chosen symbols or a whole index. */
+export function toUniverse(form: BacktestForm): Universe {
+  return form.universeType === "index"
+    ? { type: "index", index: form.index }
+    : { type: "symbols", symbols: form.symbols };
+}
+
+export function splitSymbols(text: string): string[] {
+  return [
+    ...new Set(
+      text
+        .split(",")
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  ];
 }

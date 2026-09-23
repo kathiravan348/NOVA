@@ -70,6 +70,13 @@ export function describeUniverse(universe: Universe): string {
   return universe.type === "index" ? `${universe.index} stocks` : universe.symbols.join(", ");
 }
 
+/** Short form for lists: `NIFTY BANK`, `TCS, INFY` (up to 3 names) or `12 symbols`. */
+export function summarizeUniverse(universe: Universe): string {
+  if (universe.type === "index") return universe.index;
+  const { symbols } = universe;
+  return symbols.length <= 3 ? symbols.join(", ") : `${symbols.length} symbols`;
+}
+
 export function describeSizing(sizing: Sizing): string {
   switch (sizing.type) {
     case "fixed_qty":

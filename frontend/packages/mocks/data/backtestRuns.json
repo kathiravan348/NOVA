@@ -4,6 +4,10 @@
     "strategyId": "stg_001",
     "strategyVersion": 1,
     "name": "VWAP Intraday v1 Backtest",
+    "universe": {
+      "type": "symbols",
+      "symbols": ["RELIANCE", "TCS", "INFY"]
+    },
     "status": "completed",
     "from": "2026-06-01",
     "to": "2026-06-15",
@@ -19,6 +23,10 @@
     "strategyId": "stg_001",
     "strategyVersion": 2,
     "name": "VWAP Intraday v2 Backtest",
+    "universe": {
+      "type": "index",
+      "index": "NIFTY 50"
+    },
     "status": "completed",
     "from": "2026-08-14",
     "to": "2026-08-31",
@@ -34,6 +42,10 @@
     "strategyId": "stg_002",
     "strategyVersion": 1,
     "name": "Delivery Mean Reversion Test",
+    "universe": {
+      "type": "symbols",
+      "symbols": ["HDFCBANK", "ICICIBANK"]
+    },
     "status": "running",
     "from": "2026-01-01",
     "to": "2026-06-30",
@@ -49,6 +61,23 @@
     "strategyId": "stg_001",
     "strategyVersion": 2,
     "name": "VWAP September Dry Run",
+    "universe": {
+      "type": "symbols",
+      "symbols": [
+        "RELIANCE",
+        "TCS",
+        "INFY",
+        "HDFCBANK",
+        "ICICIBANK",
+        "SBIN",
+        "ITC",
+        "LT",
+        "BHARTIARTL",
+        "WIPRO",
+        "HCLTECH",
+        "NTPC"
+      ]
+    },
     "status": "queued",
     "from": "2026-09-01",
     "to": "2026-09-18",
@@ -64,6 +93,10 @@
     "strategyId": "stg_003",
     "strategyVersion": 1,
     "name": "SMA Breakout Legacy Run",
+    "universe": {
+      "type": "symbols",
+      "symbols": ["SBIN"]
+    },
     "status": "failed",
     "from": "2026-04-01",
     "to": "2026-04-30",

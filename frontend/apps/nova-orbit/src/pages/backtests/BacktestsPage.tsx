@@ -7,6 +7,7 @@ import { formatInr } from "@nova/ui-trading";
 import { useBacktests, useStrategies } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { formatIstDate, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
+import { describeUniverse, summarizeUniverse } from "../../lib/strategyText";
 
 function useColumns(): ColumnDef<BacktestRun, unknown>[] {
   const strategies = useStrategies();
@@ -36,6 +37,16 @@ function useColumns(): ColumnDef<BacktestRun, unknown>[] {
             {nameOf(row.original.strategyId)}
           </Link>{" "}
           <span className="text-text-muted">v{row.original.strategyVersion}</span>
+        </span>
+      ),
+    },
+    {
+      id: "universe",
+      header: "Symbols",
+      accessorFn: (r) => summarizeUniverse(r.universe),
+      cell: ({ row }) => (
+        <span title={describeUniverse(row.original.universe)}>
+          {summarizeUniverse(row.original.universe)}
         </span>
       ),
     },

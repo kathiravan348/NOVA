@@ -16,6 +16,7 @@ describe("Backtest schemas", () => {
     strategyId: "strat-001",
     strategyVersion: 1,
     name: "NIFTY 50 1-Year Backtest",
+    universe: { type: "index", index: "NIFTY 50" },
     status: "completed",
     from: "2025-01-01",
     to: "2025-12-31",
@@ -65,6 +66,22 @@ describe("Backtest schemas", () => {
         error: "Insufficient historical data for symbol",
       };
       expect(BacktestRunSchema.safeParse(failedRun).success).toBe(true);
+    });
+
+    it("requires a universe with at least one symbol", () => {
+      const noUniverse: Partial<BacktestRun> = { ...validRun };
+      delete noUniverse.universe;
+      expect(BacktestRunSchema.safeParse(noUniverse).success).toBe(false);
+      expect(
+        BacktestRunSchema.safeParse({ ...validRun, universe: { type: "symbols", symbols: [] } })
+          .success,
+      ).toBe(false);
+      expect(
+        BacktestRunSchema.safeParse({
+          ...validRun,
+          universe: { type: "symbols", symbols: ["TCS", "INFY"] },
+        }).success,
+      ).toBe(true);
     });
 
     it("rejects when from date is after to date", () => {

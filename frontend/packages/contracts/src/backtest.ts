@@ -6,6 +6,7 @@ import {
   PaiseSchema,
   UtcDateTimeSchema,
 } from "./common";
+import { UniverseSchema } from "./strategy";
 
 export const BacktestRunStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
 export type BacktestRunStatus = z.infer<typeof BacktestRunStatusSchema>;
@@ -19,6 +20,7 @@ export const BacktestRunSchema = z
     strategyId: IdSchema,
     strategyVersion: z.number().int().min(1),
     name: z.string().min(1),
+    universe: UniverseSchema,
     status: BacktestRunStatusSchema,
     from: IsoDateSchema,
     to: IsoDateSchema,

@@ -6,15 +6,9 @@ import type { EditorForm } from "./editorForm";
 const toOptions = (labels: Record<string, string>): SelectOption[] =>
   Object.entries(labels).map(([value, label]) => ({ value, label }));
 
-const indexOptions: SelectOption[] = ["NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50"].map((v) => ({
-  value: v,
-  label: v,
-}));
-
 export function BasicsFields() {
   const { register, watch, formState } = useFormContext<EditorForm>();
   const { errors } = formState;
-  const universeType = watch("universeType");
   const sizingType = watch("sizingType");
 
   return (
@@ -48,29 +42,6 @@ export function BasicsFields() {
       </Card>
 
       <div className="flex flex-col gap-6">
-        <Card title="Universe">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Universe type"
-              options={[
-                { value: "symbols", label: "Symbols" },
-                { value: "index", label: "Index" },
-              ]}
-              {...register("universeType")}
-            />
-            {universeType === "symbols" ? (
-              <Input
-                label="Symbols"
-                description="Comma separated, e.g. RELIANCE, TCS"
-                error={errors.symbols?.message}
-                {...register("symbols")}
-              />
-            ) : (
-              <Select label="Index" options={indexOptions} {...register("index")} />
-            )}
-          </div>
-        </Card>
-
         <Card title="Sizing and risk">
           <div className="grid gap-4 sm:grid-cols-2">
             <Select

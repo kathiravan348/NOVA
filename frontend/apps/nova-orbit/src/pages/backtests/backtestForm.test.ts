@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { mockStrategies } from "@nova/mocks";
-import { BacktestFormSchema, defaultsFor, todayIst, type BacktestForm } from "./backtestForm";
+import {
+  BacktestFormSchema,
+  defaultsFor,
+  todayIst,
+  toUniverse,
+  type BacktestForm,
+} from "./backtestForm";
 import { formatPeriod } from "../../lib/format";
 
 const issues = (form: BacktestForm) => {
@@ -9,7 +15,7 @@ const issues = (form: BacktestForm) => {
 };
 
 describe("backtestForm", () => {
-  const valid = defaultsFor(mockStrategies[0], "2026-09-21");
+  const valid: BacktestForm = { ...defaultsFor(mockStrategies[0], "2026-09-21"), symbols: ["TCS"] };
 
   it("builds defaults from a strategy", () => {
     expect(valid).toMatchObject({
@@ -20,16 +26,29 @@ describe("backtestForm", () => {
       to: "2026-09-21",
       capitalRupees: "1000000",
       benchmark: true,
+      universeType: "symbols",
+      symbols: ["TCS"],
     });
     expect(issues(valid)).toEqual([]);
   });
 
-  it("requires strategy, version and name", () => {
+  it("requires strategy, version, name and symbols", () => {
     expect(issues(defaultsFor(undefined, "2026-09-21"))).toEqual([
       "strategyId: Choose a strategy",
       "version: Choose a version",
       "name: Name is required",
+      "symbols: Choose at least one symbol",
     ]);
+  });
+
+  it("needs at least one symbol unless an index is chosen", () => {
+    expect(issues({ ...valid, symbols: [] })).toEqual(["symbols: Choose at least one symbol"]);
+    expect(issues({ ...valid, symbols: [], universeType: "index" })).toEqual([]);
+    expect(toUniverse(valid)).toEqual({ type: "symbols", symbols: ["TCS"] });
+    expect(toUniverse({ ...valid, universeType: "index", index: "NIFTY BANK" })).toEqual({
+      type: "index",
+      index: "NIFTY BANK",
+    });
   });
 
   it("checks the date range and capital", () => {

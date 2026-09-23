@@ -1,6 +1,7 @@
 import type { BacktestRun } from "@nova/contracts";
 import { Card, Checkbox } from "@nova/ui-core";
 import { formatPeriod } from "../../lib/format";
+import { summarizeUniverse } from "../../lib/strategyText";
 import { MAX_RUNS } from "./compareMetrics";
 
 export interface RunPickerProps {
@@ -25,7 +26,7 @@ export function RunPicker({ runs, selected, onChange }: RunPickerProps) {
             <Checkbox
               key={run.id}
               label={run.name}
-              description={formatPeriod(run.from, run.to)}
+              description={`${formatPeriod(run.from, run.to)} · ${summarizeUniverse(run.universe)}`}
               checked={checked}
               disabled={!checked && full}
               onCheckedChange={(value) => toggle(run.id, value === true)}
