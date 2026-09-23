@@ -207,6 +207,17 @@ describe("DataTable", () => {
       expect(screen.getByText("selected")).toHaveTextContent("1 selected");
     });
 
+    it("keeps the same checkbox node and focus after toggling", () => {
+      render(<Harness />);
+      const box = rowBox("file-1");
+      box.focus();
+      fireEvent.click(box);
+      expect(rowBox("file-1")).toBe(box);
+      expect(document.activeElement).toBe(box);
+      fireEvent.click(rowBox("file-2"));
+      expect(selectedText()).toBe("file-1,file-2");
+    });
+
     it("header is indeterminate when some shown rows are selected", () => {
       render(<Harness initial={["file-3"]} />);
       expect(allBox()).toHaveAttribute("data-state", "indeterminate");

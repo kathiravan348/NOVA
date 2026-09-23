@@ -1,62 +1,76 @@
 import * as React from "react";
-import type { ColumnDef, Row } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { Checkbox } from "../Checkbox/Checkbox";
 import "./columnMeta";
 
-export interface SelectionOptions<TData> {
-  selectedIds: string[];
-  onSelectedIdsChange: (ids: string[]) => void;
-  isRowSelectable?: (row: TData) => boolean;
+interface SelectionState {
+  selected: Set<string>;
+  isSelectable: (row: unknown) => boolean;
+  onChange: (ids: string[]) => void;
+  /** Latest selection at click time. */
+  current: () => string[];
+}
+
+/**
+ * The column below is created once per table. Its cells read the selection from this context,
+ * so a selection change re-renders them instead of remounting them (keeps keyboard focus).
+ */
+export const SelectionContext = React.createContext<SelectionState | null>(null);
+
+function useSelection(): SelectionState {
+  const state = React.useContext(SelectionContext);
+  if (!state) throw new Error("Selection cells need a SelectionContext provider");
+  return state;
+}
+
+function SelectAllCell<TData, TValue>({ table }: HeaderContext<TData, TValue>) {
+  const s = useSelection();
+  const shownIds = table
+    .getFilteredRowModel()
+    .rows.filter((r) => s.isSelectable(r.original))
+    .map((r) => r.id);
+  const count = shownIds.filter((id) => s.selected.has(id)).length;
+  const all = shownIds.length > 0 && count === shownIds.length;
+  return (
+    <Checkbox
+      label={<span className="sr-only">Select all shown</span>}
+      checked={all ? true : count > 0 ? "indeterminate" : false}
+      disabled={shownIds.length === 0}
+      onCheckedChange={() => {
+        const current = s.current();
+        if (all) {
+          const shown = new Set(shownIds);
+          s.onChange(current.filter((id) => !shown.has(id)));
+        } else {
+          s.onChange([...new Set([...current, ...shownIds])]);
+        }
+      }}
+    />
+  );
+}
+
+function SelectRowCell<TData, TValue>({ row }: CellContext<TData, TValue>) {
+  const s = useSelection();
+  return (
+    <Checkbox
+      label={<span className="sr-only">{`Select ${row.id}`}</span>}
+      checked={s.selected.has(row.id)}
+      disabled={!s.isSelectable(row.original)}
+      onCheckedChange={(value) => {
+        const current = s.current().filter((id) => id !== row.id);
+        s.onChange(value === true ? [...current, row.id] : current);
+      }}
+    />
+  );
 }
 
 /** Leading checkbox column. Selection is keyed by row id, so it survives sorting, paging and search. */
-export function selectionColumn<TData, TValue>({
-  selectedIds,
-  onSelectedIdsChange,
-  isRowSelectable,
-}: SelectionOptions<TData>): ColumnDef<TData, TValue> {
-  const selected = new Set(selectedIds);
-  const canSelect = (row: Row<TData>): boolean => isRowSelectable?.(row.original) ?? true;
-
+export function selectionColumn<TData, TValue>(): ColumnDef<TData, TValue> {
   return {
     id: "__select",
     enableSorting: false,
     meta: { selection: true },
-    header: ({ table }) => {
-      const shownIds = table
-        .getFilteredRowModel()
-        .rows.filter(canSelect)
-        .map((r) => r.id);
-      const count = shownIds.filter((id) => selected.has(id)).length;
-      const all = shownIds.length > 0 && count === shownIds.length;
-      const checked = all ? true : count > 0 ? "indeterminate" : false;
-      return (
-        <Checkbox
-          label={<span className="sr-only">Select all shown</span>}
-          checked={checked}
-          disabled={shownIds.length === 0}
-          onCheckedChange={() => {
-            if (all) {
-              const shown = new Set(shownIds);
-              onSelectedIdsChange(selectedIds.filter((id) => !shown.has(id)));
-            } else {
-              onSelectedIdsChange([...new Set([...selectedIds, ...shownIds])]);
-            }
-          }}
-        />
-      );
-    },
-    cell: ({ row }) => (
-      <Checkbox
-        label={<span className="sr-only">{`Select ${row.id}`}</span>}
-        checked={selected.has(row.id)}
-        disabled={!canSelect(row)}
-        onCheckedChange={(value) => {
-          onSelectedIdsChange(
-            value === true ? [...selectedIds, row.id] : selectedIds.filter((id) => id !== row.id),
-          );
-        }}
-      />
-    ),
+    header: SelectAllCell,
+    cell: SelectRowCell,
   };
 }

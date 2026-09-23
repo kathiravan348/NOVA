@@ -86,9 +86,37 @@ describe("New backtest form", () => {
     const { router } = renderApp("/backtests/new?strategy=stg_001");
     fireEvent.click(await screen.findByRole("button", { name: "Queue backtest" }));
     expect(await screen.findByText("Choose at least one symbol")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/^Symbols/), { target: { value: "tcs, infy" } });
+    fireEvent.click((await screen.findAllByRole("checkbox", { name: "Select TCS" }))[0]!);
+    fireEvent.click((await screen.findAllByRole("checkbox", { name: "Select INFY" }))[0]!);
+    expect(screen.getByText("selected")).toHaveTextContent("2 selected");
     fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
     expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.pathname).toBe("/backtests"));
+  });
+
+  it("filters the picker and asks to drop symbols without data for the period", async () => {
+    renderApp("/backtests/new?strategy=stg_001");
+    expect(await screen.findByLabelText(/^From/)).toHaveValue("2026-07-18");
+    fireEvent.change(screen.getByLabelText("Search"), { target: { value: "dabur" } });
+    expect(screen.getAllByText("Partial data").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole("checkbox", { name: "Select DABUR" })[0]!);
+    fireEvent.change(screen.getByLabelText("Search"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Index"), { target: { value: "NIFTY BANK" } });
+    expect(screen.queryAllByRole("checkbox", { name: "Select TCS" })).toHaveLength(0);
+    fireEvent.click(screen.getAllByRole("checkbox", { name: "Select SBIN" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("DABUR");
+    expect(dialog).not.toHaveTextContent("SBIN");
+    fireEvent.click(screen.getByRole("button", { name: "Drop and queue" }));
+    expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
+  });
+
+  it("can test a whole index instead of chosen symbols", async () => {
+    renderApp("/backtests/new?strategy=stg_001");
+    fireEvent.change(await screen.findByLabelText("Test on"), { target: { value: "index" } });
+    expect(screen.queryByLabelText("Search")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
   });
 });

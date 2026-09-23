@@ -48,7 +48,16 @@ function monthsBefore(isoDate: string, months: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function defaultsFor(strategy: Strategy | undefined, today = todayIst()): BacktestForm {
+/**
+ * Defaults: the two months up to the latest date with market data (never after today), so a fresh
+ * form does not flag every symbol as missing data.
+ */
+export function defaultsFor(
+  strategy: Strategy | undefined,
+  today = todayIst(),
+  latestData?: string,
+): BacktestForm {
+  const to = latestData && latestData < today ? latestData : today;
   return {
     strategyId: strategy?.id ?? "",
     version: strategy ? String(strategy.latestVersion) : "",
@@ -56,8 +65,8 @@ export function defaultsFor(strategy: Strategy | undefined, today = todayIst()):
     universeType: "symbols",
     symbols: [],
     index: "NIFTY 50",
-    from: monthsBefore(today, 3),
-    to: today,
+    from: monthsBefore(to, 2),
+    to,
     capitalRupees: "1000000",
     benchmark: true,
   };
@@ -68,15 +77,4 @@ export function toUniverse(form: BacktestForm): Universe {
   return form.universeType === "index"
     ? { type: "index", index: form.index }
     : { type: "symbols", symbols: form.symbols };
-}
-
-export function splitSymbols(text: string): string[] {
-  return [
-    ...new Set(
-      text
-        .split(",")
-        .map((s) => s.trim().toUpperCase())
-        .filter(Boolean),
-    ),
-  ];
 }

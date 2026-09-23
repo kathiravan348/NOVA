@@ -22,7 +22,7 @@ describe("backtestForm", () => {
       strategyId: "stg_001",
       version: "2",
       name: "VWAP Momentum Intraday backtest",
-      from: "2026-06-21",
+      from: "2026-07-21",
       to: "2026-09-21",
       capitalRupees: "1000000",
       benchmark: true,
@@ -30,6 +30,14 @@ describe("backtestForm", () => {
       symbols: ["TCS"],
     });
     expect(issues(valid)).toEqual([]);
+  });
+
+  it("ends the default period on the latest data date, never after today", () => {
+    expect(defaultsFor(undefined, "2026-09-21", "2026-09-18")).toMatchObject({
+      from: "2026-07-18",
+      to: "2026-09-18",
+    });
+    expect(defaultsFor(undefined, "2026-09-21", "2026-12-31").to).toBe("2026-09-21");
   });
 
   it("requires strategy, version, name and symbols", () => {
