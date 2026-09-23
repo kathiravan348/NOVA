@@ -9,7 +9,9 @@
     "test": "vitest run",
     "storybook": "pnpm --filter @nova/ui-storybook dev",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "review": "pnpm --filter nova-orbit --filter nova-relay --filter @nova/ui-storybook --parallel run dev",
+    "review:check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm format:check"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

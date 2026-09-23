@@ -26,7 +26,7 @@
 | NOVA-018 | Orbit: compare runs (market data split to 029) | done | Claude | 017 |
 | NOVA-019 | Relay: overview + broker accounts (session status, daily login prompt) | done | Claude | 009, 013, 026 |
 | NOVA-020 | Relay: rate limits, data jobs, audit log | done | Claude | 019 |
-| NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | planned | — | 018, 020, 029 |
+| NOVA-021 | Review build: one-command local run, demo walkthrough doc, feedback checklist | done | Claude | 018, 020, 029 |
 | NOVA-022 | Scope freeze (Claude + Owner): apply feedback to docs, plan Stage B | draft | — | 021 |
 | NOVA-023 | Contracts (Relay): broker account, rate limit, data job, audit entry | done | Claude | 004 |
 | NOVA-024 | MSW: handlers for every contract endpoint serving `@nova/mocks` + ApiError contract + handler tests | done | Claude | 005 |
