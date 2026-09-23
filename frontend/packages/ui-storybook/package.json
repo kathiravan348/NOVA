@@ -7,7 +7,7 @@
     "dev": "storybook dev -p 6006",
     "build": "storybook build -o storybook-static --quiet",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint -c ../../eslint.config.js ."
+    "lint": "eslint -c ../../eslint.config.js --cache --cache-location node_modules/.cache/eslint/ ."
   },
   "dependencies": {
     "@nova/ui-core": "workspace:*",

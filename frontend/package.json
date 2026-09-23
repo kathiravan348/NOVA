@@ -8,10 +8,14 @@
     "lint": "pnpm -r run lint",
     "test": "vitest run",
     "storybook": "pnpm --filter @nova/ui-storybook dev",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write --cache .",
+    "format:check": "prettier --check --cache .",
+    "check:lint": "pnpm -r run lint",
+    "check:typecheck": "pnpm -r run typecheck",
+    "check:test": "vitest run",
+    "check:format": "prettier --check --cache .",
     "review": "pnpm --filter nova-orbit --filter nova-relay --filter @nova/ui-storybook --parallel run dev",
-    "review:check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm format:check"
+    "review:check": "pnpm check:format && pnpm check:lint && pnpm check:typecheck && pnpm check:test && pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

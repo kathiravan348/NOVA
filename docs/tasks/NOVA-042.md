@@ -1,6 +1,6 @@
 # NOVA-042 — Faster checks
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-042 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-042 · **Depends on:** —
 
 ## Goal
 `pnpm review:check` runs in under half its current time (baseline ≈ 6 min on the owner's PC) with the same
@@ -51,7 +51,12 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Built by Claude directly on `main` (Gemini offline; Owner request 2026-09-23).
+**Files changed:** `frontend/package.json` (check:* scripts, prettier `--cache`), all package/app `package.json` (no library `build`, apps `vite build`, eslint `--cache`), `tsconfig.base.json` (`incremental`), `vitest.config.ts` (`pool: "threads"`), `.gitignore` (`*.tsbuildinfo`).
+**Times (owner PC):** before 365 s; cold 226 s; warm 209 s (tests alone 103 s).
+**Deviation:** step 8 parallel run was measured and dropped: running lint, typecheck and tests together made tests 309 s and the whole check 445 s. `review:check` runs format, lint, typecheck, test, build in sequence. The 50% target is not met; remaining time is mostly jsdom tests and the Storybook build (both out of scope). D30 updated.
+**Checked:** `review:check` passes (510 tests); `git status` clean of `.tsbuildinfo`.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (self-built; no separate review).
+**Follow-up tasks created:** none. Option for later: happy-dom and a Storybook-free `review:check` (owner decision).

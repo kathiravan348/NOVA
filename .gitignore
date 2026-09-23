@@ -8,3 +8,4 @@ storybook-static
 *.log
 .DS_Store
 Thumbs.db
+*.tsbuildinfo

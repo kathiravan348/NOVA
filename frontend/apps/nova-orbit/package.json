@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "lint": "eslint -c ../../eslint.config.js ."
+    "lint": "eslint -c ../../eslint.config.js --cache --cache-location node_modules/.cache/eslint/ ."
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",

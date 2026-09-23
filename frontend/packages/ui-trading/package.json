@@ -6,9 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint -c ../../eslint.config.js . && node ../ui-core/scripts/check-classes.ts .",
+    "lint": "eslint -c ../../eslint.config.js --cache --cache-location node_modules/.cache/eslint/ . && node ../ui-core/scripts/check-classes.ts .",
     "test": "vitest run"
   },
   "dependencies": {

@@ -6,9 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "node scripts/build-tokens.ts --check && eslint -c ../../eslint.config.js . && node scripts/check-classes.ts .",
+    "lint": "node scripts/build-tokens.ts --check && eslint -c ../../eslint.config.js --cache --cache-location node_modules/.cache/eslint/ . && node scripts/check-classes.ts .",
     "tokens": "node scripts/build-tokens.ts",
     "test": "vitest run"
   },
