@@ -1,6 +1,6 @@
 # NOVA-030 — Instrument info + 24 mock instruments
 
-**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-030 · **Depends on:** NOVA-029
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-030 · **Depends on:** NOVA-029
 
 ## Goal
 `Instrument` carries the facts a person needs to pick symbols for a backtest (PLAN R2), and the mock
@@ -59,3 +59,10 @@ Modify:
 **Known gaps:** none.
 
 ## Review
+**Result:** done
+**Fixed directly (review: commits):**
+- `instruments.json`: `changePercent` of RELIANCE/TCS/INFY did not match their last two `1d` candles (AGENTS §7 consistent numbers); now 2.84 / −1.01 / 2.81.
+- `marketData.consistency.test.ts`: new test that `changePercent` and the 52w range of RELIANCE/TCS/INFY agree with their `1d` candles.
+**Change requests:** none.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

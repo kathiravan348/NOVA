@@ -53,6 +53,18 @@ describe("Market data consistency rules", () => {
     }
   });
 
+  it("changePercent and 52w range agree with the 1d candles", () => {
+    for (const symbol of ["RELIANCE", "TCS", "INFY"]) {
+      const inst = mockInstruments.find((i) => i.symbol === symbol)!;
+      const bars = mockCandles[`${symbol}:1d`]!;
+      const last = bars[bars.length - 1]!.closePaise;
+      const prev = bars[bars.length - 2]!.closePaise;
+      expect(inst.changePercent).toBeCloseTo(((last - prev) / prev) * 100, 2);
+      expect(inst.low52wPaise).toBeLessThanOrEqual(Math.min(...bars.map((b) => b.lowPaise)));
+      expect(inst.high52wPaise).toBeGreaterThanOrEqual(Math.max(...bars.map((b) => b.highPaise)));
+    }
+  });
+
   it("every symbol used in strategies.json universes exists in instruments.json", () => {
     const symbols = new Set(mockInstruments.map((i) => i.symbol));
     for (const strategy of mockStrategies) {
