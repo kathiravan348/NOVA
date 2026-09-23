@@ -1,6 +1,6 @@
 # NOVA-030 — Instrument info + 24 mock instruments
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-030 · **Depends on:** NOVA-029
+**Status:** ready-for-review · **Owner:** Gemini · **Branch:** task/NOVA-030 · **Depends on:** NOVA-029
 
 ## Goal
 `Instrument` carries the facts a person needs to pick symbols for a backtest (PLAN R2), and the mock
@@ -33,9 +33,9 @@ Modify:
    every symbol used in `strategies.json` universes exists in `instruments.json`; symbols unique.
 
 ## Acceptance checks
-- [ ] `pnpm test` passes the new schema and consistency tests; mocks parse in `data.ts` unchanged.
-- [ ] `/market-data` still works (the select now lists 24; symbols without candles show the chart's empty state).
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] `pnpm test` passes the new schema and consistency tests; mocks parse in `data.ts` unchanged.
+- [x] `/market-data` still works (the select now lists 24; symbols without candles show the chart's empty state).
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Any screen change, handler query params, candles for new symbols, index constituents endpoint.
@@ -44,5 +44,18 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** Added Instrument info fields to InstrumentSchema and expanded mock instruments list to 24 NSE equities with schema & consistency tests.
+**Files changed:**
+- `frontend/packages/contracts/src/marketData.ts`
+- `frontend/packages/contracts/src/marketData.test.ts`
+- `frontend/packages/mocks/data/instruments.json`
+- `frontend/packages/mocks/src/marketData.consistency.test.ts`
+- `docs/CONTRACTS.md`
+**Commands run:** `pnpm run review:check` (lint, typecheck, test, build, format:check) → all pass (yes).
+**Checked:** headless contract/mock data task (no UI component modified; market data page smoke tests pass).
+**New dependencies:** none.
+**Maps updated:** CONTRACTS.
+**Deviations from task:** none.
+**Known gaps:** none.
 
 ## Review

@@ -6,6 +6,7 @@ import {
   TimeframeSchema,
   UtcDateTimeSchema,
 } from "./common";
+import { IndexNameSchema } from "./strategy";
 
 export const InstrumentSchema = z
   .strictObject({
@@ -13,6 +14,14 @@ export const InstrumentSchema = z
     name: z.string().min(1),
     exchange: ExchangeSchema,
     segment: SegmentSchema,
+    sector: z.string().min(1),
+    indices: z.array(IndexNameSchema),
+    lastClosePaise: z.number().int().positive(),
+    high52wPaise: z.number().int().positive(),
+    low52wPaise: z.number().int().positive(),
+    changePercent: z.number(),
+    avgDailyVolume: z.number().int().min(0),
+    lotSize: z.number().int().positive().nullable(),
     timeframes: z.array(TimeframeSchema).min(1),
     dataFrom: IsoDateSchema,
     dataTo: IsoDateSchema,
@@ -24,6 +33,14 @@ export const InstrumentSchema = z
   .refine((i) => i.dataFrom <= i.dataTo, {
     message: "dataFrom must be on or before dataTo",
     path: ["dataFrom"],
+  })
+  .refine((i) => new Set(i.indices).size === i.indices.length, {
+    message: "indices must be unique",
+    path: ["indices"],
+  })
+  .refine((i) => i.low52wPaise <= i.lastClosePaise && i.lastClosePaise <= i.high52wPaise, {
+    message: "lastClosePaise must be between low52wPaise and high52wPaise",
+    path: ["lastClosePaise"],
   });
 export type Instrument = z.infer<typeof InstrumentSchema>;
 

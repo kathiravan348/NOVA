@@ -6,6 +6,14 @@ const instrument = {
   name: "Reliance Industries",
   exchange: "NSE",
   segment: "equity_delivery",
+  sector: "Energy",
+  indices: ["NIFTY 50"],
+  lastClosePaise: 250_000,
+  high52wPaise: 300_000,
+  low52wPaise: 220_000,
+  changePercent: 1.25,
+  avgDailyVolume: 1_250_000,
+  lotSize: 250,
   timeframes: ["1d", "5m"],
   dataFrom: "2026-06-01",
   dataTo: "2026-09-18",
@@ -21,8 +29,34 @@ const candle = {
 };
 
 describe("InstrumentSchema", () => {
-  it("accepts a valid instrument", () => {
+  it("accepts a valid instrument and accepts null lotSize and empty indices", () => {
     expect(InstrumentSchema.parse(instrument)).toEqual(instrument);
+    expect(InstrumentSchema.parse({ ...instrument, lotSize: null }).lotSize).toBeNull();
+    expect(InstrumentSchema.parse({ ...instrument, indices: [] }).indices).toEqual([]);
+  });
+
+  it("rejects duplicate indices", () => {
+    expect(
+      InstrumentSchema.safeParse({
+        ...instrument,
+        indices: ["NIFTY 50", "NIFTY 50"],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects lastClose outside 52w range", () => {
+    expect(
+      InstrumentSchema.safeParse({
+        ...instrument,
+        lastClosePaise: 210_000, // below low52wPaise 220_000
+      }).success,
+    ).toBe(false);
+    expect(
+      InstrumentSchema.safeParse({
+        ...instrument,
+        lastClosePaise: 310_000, // above high52wPaise 300_000
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects duplicate timeframes, reversed dates and extra keys", () => {

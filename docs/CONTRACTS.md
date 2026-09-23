@@ -15,6 +15,6 @@
 | RateLimit | `GET /api/v1/broker/rate-limits` | `data/rateLimits.json` | Relay |
 | DataJob | `GET /api/v1/data-jobs`, `GET /api/v1/data-jobs/{id}` | `data/dataJobs.json` | Relay |
 | AuditEntry | `GET /api/v1/audit` | `data/auditEntries.json` | Relay |
-| Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit |
+| Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range) |
 | Candle | `GET /api/v1/market-data/candles?symbol=&timeframe=` | `data/candles.json` (keyed `SYMBOL:tf`) | Orbit, ui-trading |
 | ApiError | any endpoint (404/500) | — | Core, Orbit, Relay |
