@@ -9,23 +9,93 @@
       "cagrPercent": 13.87,
       "maxDrawdownPercent": -0.11,
       "sharpe": 1.72,
-      "winRatePercent": 75.0,
+      "winRatePercent": 75,
       "tradeCount": 4,
       "winCount": 3,
       "lossCount": 1
     },
     "equityCurve": [
-      { "date": "2026-06-01", "equityPaise": 100000000, "benchmarkPaise": 100000000 },
-      { "date": "2026-06-02", "equityPaise": 100241725, "benchmarkPaise": 100100000 },
-      { "date": "2026-06-03", "equityPaise": 100241725, "benchmarkPaise": 100150000 },
-      { "date": "2026-06-04", "equityPaise": 100241725, "benchmarkPaise": 100050000 },
-      { "date": "2026-06-05", "equityPaise": 100414271, "benchmarkPaise": 100200000 },
-      { "date": "2026-06-08", "equityPaise": 100414271, "benchmarkPaise": 100300000 },
-      { "date": "2026-06-09", "equityPaise": 100307749, "benchmarkPaise": 100250000 },
-      { "date": "2026-06-10", "equityPaise": 100307749, "benchmarkPaise": 100400000 },
-      { "date": "2026-06-11", "equityPaise": 100307749, "benchmarkPaise": 100350000 },
-      { "date": "2026-06-12", "equityPaise": 100499474, "benchmarkPaise": 100500000 },
-      { "date": "2026-06-15", "equityPaise": 100499474, "benchmarkPaise": 100600000 }
+      {
+        "date": "2026-06-01",
+        "equityPaise": 100000000,
+        "benchmarkPaise": 100000000
+      },
+      {
+        "date": "2026-06-02",
+        "equityPaise": 100241725,
+        "benchmarkPaise": 100100000
+      },
+      {
+        "date": "2026-06-03",
+        "equityPaise": 100241725,
+        "benchmarkPaise": 100150000
+      },
+      {
+        "date": "2026-06-04",
+        "equityPaise": 100241725,
+        "benchmarkPaise": 100050000
+      },
+      {
+        "date": "2026-06-05",
+        "equityPaise": 100414271,
+        "benchmarkPaise": 100200000
+      },
+      {
+        "date": "2026-06-08",
+        "equityPaise": 100414271,
+        "benchmarkPaise": 100300000
+      },
+      {
+        "date": "2026-06-09",
+        "equityPaise": 100307749,
+        "benchmarkPaise": 100250000
+      },
+      {
+        "date": "2026-06-10",
+        "equityPaise": 100307749,
+        "benchmarkPaise": 100400000
+      },
+      {
+        "date": "2026-06-11",
+        "equityPaise": 100307749,
+        "benchmarkPaise": 100350000
+      },
+      {
+        "date": "2026-06-12",
+        "equityPaise": 100499474,
+        "benchmarkPaise": 100500000
+      },
+      {
+        "date": "2026-06-15",
+        "equityPaise": 100499474,
+        "benchmarkPaise": 100600000
+      }
+    ],
+    "bySymbol": [
+      {
+        "symbol": "RELIANCE",
+        "tradeCount": 2,
+        "winCount": 2,
+        "lossCount": 0,
+        "winRatePercent": 100,
+        "netPnlPaise": 433450
+      },
+      {
+        "symbol": "TCS",
+        "tradeCount": 1,
+        "winCount": 1,
+        "lossCount": 0,
+        "winRatePercent": 100,
+        "netPnlPaise": 172546
+      },
+      {
+        "symbol": "INFY",
+        "tradeCount": 1,
+        "winCount": 0,
+        "lossCount": 1,
+        "winRatePercent": 0,
+        "netPnlPaise": -106522
+      }
     ]
   },
   {
@@ -38,24 +108,106 @@
       "cagrPercent": 10.39,
       "maxDrawdownPercent": -0.11,
       "sharpe": 1.65,
-      "winRatePercent": 75.0,
+      "winRatePercent": 75,
       "tradeCount": 4,
       "winCount": 3,
       "lossCount": 1
     },
     "equityCurve": [
-      { "date": "2026-08-14", "equityPaise": 100000000, "benchmarkPaise": null },
-      { "date": "2026-08-17", "equityPaise": 100232498, "benchmarkPaise": null },
-      { "date": "2026-08-18", "equityPaise": 100232498, "benchmarkPaise": null },
-      { "date": "2026-08-19", "equityPaise": 100232498, "benchmarkPaise": null },
-      { "date": "2026-08-20", "equityPaise": 100126016, "benchmarkPaise": null },
-      { "date": "2026-08-21", "equityPaise": 100126016, "benchmarkPaise": null },
-      { "date": "2026-08-24", "equityPaise": 100318514, "benchmarkPaise": null },
-      { "date": "2026-08-25", "equityPaise": 100318514, "benchmarkPaise": null },
-      { "date": "2026-08-26", "equityPaise": 100318514, "benchmarkPaise": null },
-      { "date": "2026-08-27", "equityPaise": 100318514, "benchmarkPaise": null },
-      { "date": "2026-08-28", "equityPaise": 100461522, "benchmarkPaise": null },
-      { "date": "2026-08-31", "equityPaise": 100461522, "benchmarkPaise": null }
+      {
+        "date": "2026-08-14",
+        "equityPaise": 100000000,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-17",
+        "equityPaise": 100232498,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-18",
+        "equityPaise": 100232498,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-19",
+        "equityPaise": 100232498,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-20",
+        "equityPaise": 100126016,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-21",
+        "equityPaise": 100126016,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-24",
+        "equityPaise": 100318514,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-25",
+        "equityPaise": 100318514,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-26",
+        "equityPaise": 100318514,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-27",
+        "equityPaise": 100318514,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-28",
+        "equityPaise": 100461522,
+        "benchmarkPaise": null
+      },
+      {
+        "date": "2026-08-31",
+        "equityPaise": 100461522,
+        "benchmarkPaise": null
+      }
+    ],
+    "bySymbol": [
+      {
+        "symbol": "HDFCBANK",
+        "tradeCount": 1,
+        "winCount": 1,
+        "lossCount": 0,
+        "winRatePercent": 100,
+        "netPnlPaise": 232498
+      },
+      {
+        "symbol": "TCS",
+        "tradeCount": 1,
+        "winCount": 1,
+        "lossCount": 0,
+        "winRatePercent": 100,
+        "netPnlPaise": 192498
+      },
+      {
+        "symbol": "INFY",
+        "tradeCount": 1,
+        "winCount": 1,
+        "lossCount": 0,
+        "winRatePercent": 100,
+        "netPnlPaise": 143008
+      },
+      {
+        "symbol": "ICICIBANK",
+        "tradeCount": 1,
+        "winCount": 0,
+        "lossCount": 1,
+        "winRatePercent": 0,
+        "netPnlPaise": -106482
+      }
     ]
   }
 ]

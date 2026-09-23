@@ -52,6 +52,16 @@ describe("Backtest schemas", () => {
     runId: "run-001",
     metrics: validMetrics,
     equityCurve: [validEquityPoint],
+    bySymbol: [
+      {
+        symbol: "TCS",
+        tradeCount: 4,
+        winCount: 3,
+        lossCount: 1,
+        winRatePercent: 75,
+        netPnlPaise: 120000,
+      },
+    ],
   };
 
   describe("BacktestRunSchema", () => {
@@ -150,6 +160,19 @@ describe("Backtest schemas", () => {
   describe("BacktestResultSchema", () => {
     it("accepts a valid backtest result", () => {
       expect(BacktestResultSchema.safeParse(validResult).success).toBe(true);
+    });
+
+    it("rejects duplicate symbols and wins + losses above trades", () => {
+      const row = validResult.bySymbol[0]!;
+      expect(BacktestResultSchema.safeParse({ ...validResult, bySymbol: [row, row] }).success).toBe(
+        false,
+      );
+      expect(
+        BacktestResultSchema.safeParse({
+          ...validResult,
+          bySymbol: [{ ...row, winCount: 4 }],
+        }).success,
+      ).toBe(false);
     });
   });
 });

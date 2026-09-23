@@ -72,9 +72,31 @@ export const EquityPointSchema = z.strictObject({
 });
 export type EquityPoint = z.infer<typeof EquityPointSchema>;
 
-export const BacktestResultSchema = z.strictObject({
-  runId: IdSchema,
-  metrics: BacktestMetricsSchema,
-  equityCurve: z.array(EquityPointSchema),
-});
+/** Results for one symbol of a run (R2); computed by the backend like the run metrics. */
+export const SymbolBreakdownSchema = z
+  .strictObject({
+    symbol: z.string().min(1),
+    tradeCount: z.number().int().min(0),
+    winCount: z.number().int().min(0),
+    lossCount: z.number().int().min(0),
+    winRatePercent: z.number().min(0).max(100),
+    netPnlPaise: PaiseSchema,
+  })
+  .refine((b) => b.winCount + b.lossCount <= b.tradeCount, {
+    message: "winCount + lossCount must not exceed tradeCount",
+    path: ["winCount"],
+  });
+export type SymbolBreakdown = z.infer<typeof SymbolBreakdownSchema>;
+
+export const BacktestResultSchema = z
+  .strictObject({
+    runId: IdSchema,
+    metrics: BacktestMetricsSchema,
+    equityCurve: z.array(EquityPointSchema),
+    bySymbol: z.array(SymbolBreakdownSchema),
+  })
+  .refine((r) => new Set(r.bySymbol.map((b) => b.symbol)).size === r.bySymbol.length, {
+    message: "bySymbol must list each symbol once",
+    path: ["bySymbol"],
+  });
 export type BacktestResult = z.infer<typeof BacktestResultSchema>;

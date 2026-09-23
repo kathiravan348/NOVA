@@ -32,12 +32,27 @@ describe("Backtest result", () => {
   it("shows metrics, the equity curve and trades for a completed run", async () => {
     renderApp("/backtests/run_001");
     expect(await screen.findByRole("heading", { name: "VWAP Intraday v1 Backtest" }));
-    expect(await screen.findByText("Net P&L")).toBeInTheDocument();
+    expect((await screen.findAllByText("Net P&L")).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\+₹4,994\.74/).length).toBeGreaterThan(0);
     expect(await screen.findByText(/From 1 Jun 2026 to .*, equity/)).toBeInTheDocument();
     expect((await screen.findAllByText("RELIANCE")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("TCS").length).toBeGreaterThan(0);
     expect(screen.getByText("RELIANCE, TCS, INFY")).toBeInTheDocument();
+  });
+
+  it("shows results by symbol and filters trades by symbol", async () => {
+    renderApp("/backtests/run_001");
+    const table = await screen.findByRole("table", { name: "Results by symbol" });
+    expect(table).toHaveTextContent("RELIANCE");
+    expect(table).toHaveTextContent("100% (2/2)");
+    expect(table).toHaveTextContent("−₹1,065.22");
+    const trades = await screen.findByRole("table", { name: "Trades" });
+    await waitFor(() => expect(trades.querySelectorAll("tbody tr")).toHaveLength(4));
+    fireEvent.click(screen.getAllByRole("button", { name: "Show INFY trades" })[0]!);
+    expect(screen.getByLabelText("Symbol")).toHaveValue("INFY");
+    expect(trades.querySelectorAll("tbody tr")).toHaveLength(1);
+    fireEvent.change(screen.getByLabelText("Symbol"), { target: { value: "" } });
+    expect(trades.querySelectorAll("tbody tr")).toHaveLength(4);
   });
 
   it("opens the charges breakdown for a trade", async () => {

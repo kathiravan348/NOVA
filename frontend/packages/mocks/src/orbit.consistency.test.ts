@@ -215,6 +215,25 @@ describe("Orbit consistency rules", () => {
     }
   });
 
+  it("ensures bySymbol matches the run's trades and adds up to the run metrics", () => {
+    for (const result of mockBacktestResults) {
+      const runTrades = mockTrades.filter((t) => t.runId === result.runId);
+      const symbols = [...new Set(runTrades.map((t) => t.symbol))].sort();
+      expect(result.bySymbol.map((b) => b.symbol).sort()).toEqual(symbols);
+      for (const b of result.bySymbol) {
+        const own = runTrades.filter((t) => t.symbol === b.symbol);
+        expect(b.tradeCount).toBe(own.length);
+        expect(b.winCount).toBe(own.filter((t) => t.netPnlPaise > 0).length);
+        expect(b.lossCount).toBe(own.filter((t) => t.netPnlPaise < 0).length);
+        expect(b.winRatePercent).toBeCloseTo((b.winCount / b.tradeCount) * 100, 2);
+        expect(b.netPnlPaise).toBe(own.reduce((sum, t) => sum + t.netPnlPaise, 0));
+      }
+      expect(result.bySymbol.reduce((sum, b) => sum + b.netPnlPaise, 0)).toBe(
+        result.metrics.netPnlPaise,
+      );
+    }
+  });
+
   it("ensures backtest metrics tradeCount, winCount, and lossCount match trade outcomes", () => {
     for (const result of mockBacktestResults) {
       const runTrades = mockTrades.filter((t) => t.runId === result.runId);

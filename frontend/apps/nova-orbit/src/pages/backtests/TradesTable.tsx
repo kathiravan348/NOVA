@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Trade } from "@nova/contracts";
-import { Button, DataTable, Modal } from "@nova/ui-core";
+import { Button, DataTable, Modal, Select } from "@nova/ui-core";
 import { ChargesBreakdown, PnLText, PriceText, formatInr } from "@nova/ui-trading";
 import { formatIstDateTime, formatIstShort } from "../../lib/format";
 
@@ -9,10 +9,24 @@ export interface TradesTableProps {
   trades: Trade[];
   loading?: boolean;
   error?: React.ReactNode;
+  /** Symbol filter (R2); empty string = all symbols. */
+  symbol?: string;
+  onSymbolChange?: (symbol: string) => void;
 }
 
-export function TradesTable({ trades, loading, error }: TradesTableProps) {
+export function TradesTable({
+  trades,
+  loading,
+  error,
+  symbol = "",
+  onSymbolChange,
+}: TradesTableProps) {
   const [chargesFor, setChargesFor] = useState<Trade | null>(null);
+  const symbols = useMemo(() => [...new Set(trades.map((t) => t.symbol))].sort(), [trades]);
+  const shown = useMemo(
+    () => (symbol ? trades.filter((t) => t.symbol === symbol) : trades),
+    [trades, symbol],
+  );
 
   const columns: ColumnDef<Trade, unknown>[] = [
     { id: "symbol", header: "Symbol", accessorKey: "symbol", meta: { primary: true } },
@@ -92,8 +106,22 @@ export function TradesTable({ trades, loading, error }: TradesTableProps) {
       <DataTable
         caption="Trades"
         columns={columns}
-        data={trades}
+        data={shown}
         getRowId={(t) => t.id}
+        toolbar={
+          onSymbolChange && symbols.length > 1 ? (
+            <Select
+              label="Symbol"
+              value={symbol}
+              onChange={(e) => onSymbolChange(e.target.value)}
+              options={[
+                { value: "", label: "All symbols" },
+                ...symbols.map((s) => ({ value: s, label: s })),
+              ]}
+              containerClassName="md:w-48"
+            />
+          ) : undefined
+        }
         initialSort={[{ id: "entry", desc: false }]}
         loading={loading}
         error={error}

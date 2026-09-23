@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { AlertTriangle, GitCompare, Hourglass } from "lucide-react";
 import type { BacktestRun } from "@nova/contracts";
@@ -8,6 +9,7 @@ import { QueryError, QueryState } from "../../components/QueryState";
 import { formatIstDateTime, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
 import { describeUniverse } from "../../lib/strategyText";
 import { MetricsGrid } from "./MetricsGrid";
+import { SymbolBreakdown } from "./SymbolBreakdown";
 import { TradesTable } from "./TradesTable";
 
 function RunHeader({ run }: { run: BacktestRun }) {
@@ -64,6 +66,11 @@ function RunHeader({ run }: { run: BacktestRun }) {
 function CompletedRun({ run }: { run: BacktestRun }) {
   const result = useBacktestResult(run.id);
   const trades = useBacktestTrades(run.id);
+  const [symbol, setSymbol] = useState("");
+  const showTrades = (s: string) => {
+    setSymbol(s);
+    document.getElementById("trades")?.scrollIntoView?.({ behavior: "smooth" });
+  };
   return (
     <>
       {result.isPending ? (
@@ -80,12 +87,18 @@ function CompletedRun({ run }: { run: BacktestRun }) {
               ariaLabel={`Equity curve for ${run.name}`}
             />
           </Card>
+          <section className="flex flex-col gap-3">
+            <h3 className="text-section-title text-text-primary">Results by symbol</h3>
+            <SymbolBreakdown rows={result.data.bySymbol} onShowTrades={showTrades} />
+          </section>
         </>
       )}
-      <section className="flex flex-col gap-3">
+      <section id="trades" className="flex flex-col gap-3">
         <h3 className="text-section-title text-text-primary">Trades</h3>
         <TradesTable
           trades={trades.data ?? []}
+          symbol={symbol}
+          onSymbolChange={setSymbol}
           loading={trades.isPending}
           error={
             trades.isError ? (
