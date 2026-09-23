@@ -1,11 +1,18 @@
 import { Link, useParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Play } from "lucide-react";
+import { BarChart3, Pencil, Play } from "lucide-react";
 import type { Strategy, StrategyVersion } from "@nova/contracts";
-import { Button, Card, DataTable, StatusBadge, Tabs } from "@nova/ui-core";
-import { useStrategy } from "@nova/services";
-import { QueryState } from "../../components/QueryState";
-import { formatIstDateTime, strategyStatusLabel, strategyStatusTone } from "../../lib/format";
+import { Button, Card, DataTable, EmptyState, Skeleton, StatusBadge, Tabs } from "@nova/ui-core";
+import { StrategyStatsList } from "@nova/ui-trading";
+import { useBacktests, useStrategy, useStrategyStats } from "@nova/services";
+import { QueryError, QueryState } from "../../components/QueryState";
+import {
+  formatIstDate,
+  formatIstDateTime,
+  strategyStatusLabel,
+  strategyStatusTone,
+} from "../../lib/format";
+import { useRunColumns } from "../backtests/runColumns";
 import { StrategySpecCard } from "./StrategySpecCard";
 
 const versionColumns: ColumnDef<StrategyVersion, unknown>[] = [
@@ -30,6 +37,59 @@ const versionColumns: ColumnDef<StrategyVersion, unknown>[] = [
   },
   { id: "note", header: "Note", accessorKey: "note" },
 ];
+
+function StatsCard({ strategyId }: { strategyId: string }) {
+  const query = useStrategyStats();
+  const stats = query.data?.find((s) => s.strategyId === strategyId);
+  return (
+    <Card title="Backtest stats">
+      {query.isPending ? (
+        <Skeleton className="h-24 w-full" />
+      ) : query.isError ? (
+        <QueryError error={query.error} onRetry={() => void query.refetch()} />
+      ) : stats ? (
+        <StrategyStatsList
+          stats={stats}
+          lastRunLabel={stats.lastRunAt ? formatIstDate(stats.lastRunAt) : undefined}
+          renderBestRun={(content, runId) => (
+            <Link to={`/backtests/${runId}`} className="hover:underline">
+              {content}
+            </Link>
+          )}
+        />
+      ) : (
+        <p className="text-body-sm text-text-muted">No backtests yet.</p>
+      )}
+    </Card>
+  );
+}
+
+function StrategyRuns({ strategyId }: { strategyId: string }) {
+  const query = useBacktests();
+  const columns = useRunColumns({ withStrategy: false });
+  return (
+    <DataTable
+      caption="Backtests of this strategy"
+      columns={columns}
+      data={(query.data ?? []).filter((r) => r.strategyId === strategyId)}
+      getRowId={(r) => r.id}
+      initialSort={[{ id: "createdAt", desc: true }]}
+      loading={query.isPending}
+      error={
+        query.isError ? (
+          <QueryError error={query.error} onRetry={() => void query.refetch()} />
+        ) : undefined
+      }
+      emptyState={
+        <EmptyState
+          icon={<BarChart3 className="h-6 w-6" />}
+          title="No backtests yet"
+          description="Run a backtest to see it here."
+        />
+      }
+    />
+  );
+}
 
 function StrategyDetail({ strategy }: { strategy: Strategy }) {
   const latest = strategy.versions.find((v) => v.version === strategy.latestVersion)!;
@@ -66,6 +126,7 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
           </p>
         </div>
       </Card>
+      <StatsCard strategyId={strategy.id} />
       <Tabs
         ariaLabel="Strategy sections"
         defaultValue="spec"
@@ -74,6 +135,11 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
             value: "spec",
             label: "Specification",
             content: <StrategySpecCard spec={latest.spec} version={latest.version} />,
+          },
+          {
+            value: "backtests",
+            label: "Backtests",
+            content: <StrategyRuns strategyId={strategy.id} />,
           },
           {
             value: "versions",

@@ -39,7 +39,7 @@
 | NOVA-031 | Universe moves from strategy to backtest run: contracts, mocks, editor, detail, run list, compare (R2, D25) | done | Claude | 030 |
 | NOVA-032 | StrategyStats contract + `/strategies/stats` mock, handler, service (R1, D26) | done | Claude | 031 |
 | NOVA-033 | ui-core DataTable: row selection (checkbox column, select all shown) + search box (D29) | done | Claude | 009 |
-| NOVA-034 | ui-trading StrategyCard + Orbit strategies card grid (filter, sort) + detail stats and Backtests tab (R1) | draft | — | 032 |
+| NOVA-034 | ui-trading StrategyCard + Orbit strategies card grid (filter, sort) + detail stats and Backtests tab (R1) | done | Claude | 032 |
 | NOVA-035 | Orbit backtest form: symbol picker (DataTable selection, filters, data-coverage check) (R2) | draft | — | 031, 033 |
 | NOVA-036 | Orbit market data page: instrument list with search and info instead of a select (R2) | draft | — | 030, 033 |
 | NOVA-037 | Backtest result: per-symbol breakdown + trade symbol filter (R2) | draft | — | 031 |

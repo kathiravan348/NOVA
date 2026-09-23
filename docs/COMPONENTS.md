@@ -41,4 +41,6 @@
 | Meter | Accessible progress bar with percentage thresholds (warning, danger) and custom labels | `Trading/Meter` |
 | EquityCurve | Responsive Recharts line of backtest equity with optional dashed NIFTY 50 benchmark | `Trading/EquityCurve` |
 | CandlestickChart | Lightweight Charts OHLC candles + volume, token colours re-read on theme switch, IST times | `Trading/CandlestickChart` |
+| StrategyCard | Strategy card: title/status slots, facts line, run counts and best/worst results from `StrategyStats` (loading, no-results, unavailable) | `Trading/StrategyCard` |
+| StrategyStatsList | The stats block of StrategyCard, also used on the strategy detail page; `renderBestRun` wraps the best P&L in a link | `Trading/StrategyCard` |
 | useThemeColors (hook) | Resolved theme CSS variables for canvas libraries; updates on `data-theme` change | — |

@@ -26,4 +26,9 @@ export {
   type CandlestickChartProps,
 } from "./components/CandlestickChart/CandlestickChart";
 export type { Candle } from "./components/CandlestickChart/types";
+export { StrategyCard, type StrategyCardProps } from "./components/StrategyCard/StrategyCard";
+export {
+  StrategyStatsList,
+  type StrategyStatsListProps,
+} from "./components/StrategyCard/StrategyStatsList";
 export { useThemeColors } from "./lib/useThemeColors";

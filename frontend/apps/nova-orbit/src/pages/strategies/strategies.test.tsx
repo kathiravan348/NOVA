@@ -25,6 +25,36 @@ describe("Strategies list", () => {
     expect(screen.getAllByText("Archived").length).toBeGreaterThan(0);
   });
 
+  it("shows backtest stats on each card and links the best run", async () => {
+    renderApp("/strategies");
+    const list = await screen.findByRole("list", { name: "Strategies" });
+    const vwap = within(list).getByRole("link", { name: "VWAP Momentum Intraday" }).closest("li")!;
+    await within(vwap).findByText("+0.50%");
+    expect(within(vwap).getByText("+0.46%")).toBeInTheDocument();
+    expect(within(vwap).getByRole("link", { name: "+₹4,994.74" })).toHaveAttribute(
+      "href",
+      "/backtests/run_001",
+    );
+    const draft = within(list)
+      .getByRole("link", { name: "Delivery Mean Reversion" })
+      .closest("li")!;
+    expect(within(draft).getByText("No completed runs yet.")).toBeInTheDocument();
+  });
+
+  it("filters by status and sorts by best return", async () => {
+    renderApp("/strategies");
+    const list = await screen.findByRole("list", { name: "Strategies" });
+    await within(list).findByText("+0.50%");
+    fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "best" } });
+    const names = () =>
+      within(list)
+        .getAllByRole("heading")
+        .map((h) => h.textContent);
+    expect(names()[0]).toBe("VWAP Momentum Intraday");
+    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "draft" } });
+    expect(names()).toEqual(["Delivery Mean Reversion"]);
+  });
+
   it("opens the detail page from a name", async () => {
     const { router } = renderApp("/strategies");
     fireEvent.click((await screen.findAllByRole("link", { name: "VWAP Momentum Intraday" }))[0]!);
@@ -58,6 +88,18 @@ describe("Strategy detail", () => {
     expect(versions).toBeInTheDocument();
     const panel = screen.getByRole("tabpanel");
     expect(within(panel).getAllByText("v1").length).toBeGreaterThan(0);
+  });
+
+  it("shows backtest stats and a Backtests tab with this strategy's runs", async () => {
+    renderApp("/strategies/stg_001");
+    expect(await screen.findByText("Backtest stats")).toBeInTheDocument();
+    expect(await screen.findByText("+0.50%")).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Backtests" }));
+    const panel = await screen.findByRole("tabpanel");
+    expect(
+      (await within(panel).findAllByRole("link", { name: "VWAP Intraday v1 Backtest" })).length,
+    ).toBeGreaterThan(0);
+    expect(within(panel).queryByText("Delivery Mean Reversion Test")).not.toBeInTheDocument();
   });
 
   it("explains python strategies", async () => {
