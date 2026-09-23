@@ -47,6 +47,7 @@
 | NOVA-039 | Relay rate limits page v2: per-window usage, reset time, edit NOVA limit modal, 80% warnings (R3) | draft | — | 038 |
 | NOVA-040 | Relay broker page (profile + useful links) and account detail limits/session countdown (R4) | draft | — | 038 |
 | NOVA-041 | Review guide round 2: walkthrough + checklist for round 1 changes | draft | — | 034–040 |
+| NOVA-042 | Faster checks: no duplicate tsc, tool caches, threads pool, parallel `review:check` (D30) | planned | — | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

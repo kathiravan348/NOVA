@@ -43,6 +43,7 @@ Rules:
 - Handoff note ≤ 20 lines (`docs/templates/HANDOFF.md`). Review note ≤ 20 lines (`docs/templates/REVIEW.md`).
 - Claude reviews `git diff main...task/NOVA-###`, not whole files.
 - Prove work with tests and a build, not by re-reading code.
+- While working, run only the checks for the packages you touch (e.g. `pnpm vitest run packages/mocks`, `pnpm --filter @nova/mocks lint`). Run the full `pnpm review:check` once, before `ready-for-review` (Claude: once, before merge).
 - Do not restate the task or this rulebook in replies. Report only: done / changed files / open questions.
 - Update the maps (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) in the same task that changes them.
 
