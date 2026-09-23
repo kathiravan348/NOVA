@@ -19,7 +19,11 @@ export const PnLText = React.forwardRef<HTMLSpanElement, PnLTextProps>(
     return (
       <span
         ref={ref}
-        className={cn("font-mono text-number tabular-nums", colorClass, className)}
+        className={cn(
+          "whitespace-nowrap font-mono text-number tabular-nums",
+          colorClass,
+          className,
+        )}
         {...props}
       >
         {inrText}

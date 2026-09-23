@@ -9,5 +9,7 @@
    - Claude, at the same time: "Plan the next tasks." → it writes NOVA-002 and NOVA-004 (lanes A and B).
 6. When Gemini sets NOVA-001 to `ready-for-review`, tell Claude: "Review ready tasks."
 
+Reviewing Stage A: see `docs/REVIEW-GUIDE.md` (`cd frontend && pnpm review`).
+
 Design reference: NOVA Style design system (tokens already copied to `frontend/packages/ui-core/src/theme/tokens.json`).
 You can delete this file after setup.

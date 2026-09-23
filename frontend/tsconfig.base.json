@@ -20,7 +20,8 @@
       "@nova/ui-trading": ["packages/ui-trading/src/index.ts"],
       "@nova/contracts": ["packages/contracts/src/index.ts"],
       "@nova/services": ["packages/services/src/index.ts"],
-      "@nova/mocks": ["packages/mocks/src/index.ts"]
+      "@nova/mocks": ["packages/mocks/src/index.ts"],
+      "@nova/mocks/browser": ["packages/mocks/src/browser.ts"]
     }
   }
 }

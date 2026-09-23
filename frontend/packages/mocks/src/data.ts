@@ -3,13 +3,18 @@ import {
   BacktestResultSchema,
   BacktestRunSchema,
   BrokerAccountSchema,
+  CandleSchema,
   DataJobSchema,
+  InstrumentSchema,
   RateLimitSchema,
   StrategySchema,
   TradeSchema,
   UserSchema,
+  type Candle,
 } from "@nova/contracts";
 import auditEntriesJson from "../data/auditEntries.json";
+import candlesJson from "../data/candles.json";
+import instrumentsJson from "../data/instruments.json";
 import backtestResultsJson from "../data/backtestResults.json";
 import backtestRunsJson from "../data/backtestRuns.json";
 import brokerAccountsJson from "../data/brokerAccounts.json";
@@ -30,3 +35,8 @@ export const mockBrokerAccounts = BrokerAccountSchema.array().parse(brokerAccoun
 export const mockRateLimits = RateLimitSchema.array().parse(rateLimitsJson);
 export const mockDataJobs = DataJobSchema.array().parse(dataJobsJson);
 export const mockAuditEntries = AuditEntrySchema.array().parse(auditEntriesJson);
+export const mockInstruments = InstrumentSchema.array().parse(instrumentsJson);
+/** Candles keyed by `<SYMBOL>:<timeframe>`, e.g. `RELIANCE:1d`. */
+export const mockCandles: Record<string, Candle[]> = Object.fromEntries(
+  Object.entries(candlesJson).map(([key, bars]) => [key, CandleSchema.array().parse(bars)]),
+);

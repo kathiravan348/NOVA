@@ -8,12 +8,16 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint -c ../../eslint.config.js .",
+    "lint": "eslint -c ../../eslint.config.js . && node ../ui-core/scripts/check-classes.ts .",
     "test": "vitest run"
   },
   "dependencies": {
     "@nova/contracts": "workspace:*",
-    "@nova/ui-core": "workspace:*"
+    "@nova/ui-core": "workspace:*",
+    "date-fns": "4.4.0",
+    "date-fns-tz": "3.2.0",
+    "lightweight-charts": "5.2.1",
+    "recharts": "3.10.1"
   },
   "peerDependencies": {
     "react": "18.3.1",

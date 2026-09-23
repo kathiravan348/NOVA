@@ -8,12 +8,22 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint -c ../../eslint.config.js ."
+    "lint": "eslint -c ../../eslint.config.js .",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@nova/contracts": "workspace:*"
+    "@nova/contracts": "workspace:*",
+    "@tanstack/react-query": "5.103.2",
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "react": "18.3.1"
   },
   "devDependencies": {
-    "typescript": "5.7.3"
+    "@nova/mocks": "workspace:*",
+    "@types/react": "18.3.18",
+    "msw": "2.15.0",
+    "typescript": "5.7.3",
+    "vitest": "3.2.7"
   }
 }

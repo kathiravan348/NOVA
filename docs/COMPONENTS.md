@@ -27,6 +27,9 @@
 | Checkbox | Radix-based accessible checkbox with clickable label wrapped in Field | `Core/Checkbox` |
 | Switch | Radix-based accessible toggle switch with clickable label wrapped in Field | `Core/Switch` |
 | DateTimePicker | Native date/datetime-local picker displaying IST and storing UTC ISO | `Core/DateTimePicker` |
+| CodeEditor | CodeMirror 6 Python editor (line numbers, wrap, history), token-themed, optional read-only | `Core/CodeEditor` |
+| DescriptionList | Label/value `<dl>` rows, optional two columns from `md`, numeric values mono right-aligned | `Core/DescriptionList` |
+| LoginForm | Centred sign-in card (username, password, error alert, submitting state, hint) | `Core/LoginForm` |
 
 ## ui-trading (built on ui-core)
 | Component | Purpose | Story |
@@ -36,3 +39,6 @@
 | PnLCard | StatCard wrapping PnLText with label, caption, and loading skeleton | `Trading/PnLCard` |
 | ChargesBreakdown | Card showing itemized regulatory and brokerage charges with total | `Trading/ChargesBreakdown` |
 | Meter | Accessible progress bar with percentage thresholds (warning, danger) and custom labels | `Trading/Meter` |
+| EquityCurve | Responsive Recharts line of backtest equity with optional dashed NIFTY 50 benchmark | `Trading/EquityCurve` |
+| CandlestickChart | Lightweight Charts OHLC candles + volume, token colours re-read on theme switch, IST times | `Trading/CandlestickChart` |
+| useThemeColors (hook) | Resolved theme CSS variables for canvas libraries; updates on `data-theme` change | — |

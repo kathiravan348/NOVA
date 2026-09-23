@@ -87,3 +87,20 @@ export function formatQuantity(n: number): string {
   const prefix = isNegative && absN !== 0 ? MINUS : "";
   return `${prefix}${formatted}`;
 }
+
+const COMPACT_UNITS: { size: number; suffix: string; decimals: number }[] = [
+  { size: 1_00_00_000, suffix: "Cr", decimals: 2 },
+  { size: 1_00_000, suffix: "L", decimals: 2 },
+  { size: 1_000, suffix: "K", decimals: 1 },
+];
+
+/** Short INR for chart axes: ₹1.23Cr, ₹5.2L, ₹85K, ₹950. */
+export function formatInrCompact(paise: number): string {
+  const rupees = Math.abs(paise) / 100;
+  const unit = COMPACT_UNITS.find((u) => rupees >= u.size);
+  const body = unit
+    ? `${Number((rupees / unit.size).toFixed(unit.decimals))}${unit.suffix}`
+    : `${Math.round(rupees)}`;
+  const prefix = paise < 0 && body !== "0" ? MINUS : "";
+  return `${prefix}₹${body}`;
+}

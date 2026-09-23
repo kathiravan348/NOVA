@@ -90,7 +90,7 @@ export function DataTableCards<TData>({
                       <dd
                         className={cn(
                           "text-text-primary",
-                          meta?.numeric && "font-mono text-number text-right",
+                          meta?.numeric && "whitespace-nowrap font-mono text-number text-right",
                         )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
