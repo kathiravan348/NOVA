@@ -45,4 +45,14 @@ describe("Relay overview", () => {
       "/audit",
     );
   });
+
+  it("warns about rate limits above 80% with a link to the rate limits page", async () => {
+    renderApp("/");
+    const warning = await screen.findByRole("status");
+    expect(warning).toHaveTextContent(/above 80%/);
+    expect(within(warning).getByRole("link", { name: "View rate limits" })).toHaveAttribute(
+      "href",
+      "/rate-limits",
+    );
+  });
 });

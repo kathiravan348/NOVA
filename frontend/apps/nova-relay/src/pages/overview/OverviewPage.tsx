@@ -1,10 +1,11 @@
 import { Link } from "react-router";
 import { CircleCheck } from "lucide-react";
 import { Card, Skeleton, StatCard } from "@nova/ui-core";
-import { useAuditEntries, useBrokerAccounts } from "@nova/services";
+import { useAuditEntries, useBrokerAccounts, useRateLimits } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
 import { needsLogin } from "../../lib/session";
+import { LimitWarnings } from "../rate-limits/LimitWarnings";
 import { LoginPrompt } from "./LoginPrompt";
 
 function RecentActivity() {
@@ -44,6 +45,7 @@ function RecentActivity() {
 
 export function OverviewPage() {
   const accounts = useBrokerAccounts();
+  const limits = useRateLimits();
 
   if (accounts.isPending) return <Skeleton className="h-64 w-full" />;
   if (accounts.isError) {
@@ -79,6 +81,7 @@ export function OverviewPage() {
           </p>
         </Card>
       )}
+      <LimitWarnings limits={limits.data ?? []} accounts={list} withLink />
       <RecentActivity />
     </div>
   );

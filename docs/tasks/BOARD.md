@@ -44,7 +44,7 @@
 | NOVA-036 | Orbit market data page: instrument list with search and info instead of a select (R2) | done | Claude | 030, 033 |
 | NOVA-037 | Backtest result: per-symbol breakdown + trade symbol filter (R2) | done | Claude | 031 |
 | NOVA-038 | Relay contracts: RateLimit v2 (windows, broker/NOVA limits, reset), BrokerProfile, session expiry fix (R3, R4) | done | Claude | 023 |
-| NOVA-039 | Relay rate limits page v2: per-window usage, reset time, edit NOVA limit modal, 80% warnings (R3) | draft | — | 038 |
+| NOVA-039 | Relay rate limits page v2: per-window usage, reset time, edit NOVA limit modal, 80% warnings (R3) | done | Claude | 038 |
 | NOVA-040 | Relay broker page (profile + useful links) and account detail limits/session countdown (R4) | draft | — | 038 |
 | NOVA-041 | Review guide round 2: walkthrough + checklist for round 1 changes | draft | — | 034–040 |
 | NOVA-042 | Faster checks: no duplicate tsc, tool caches, threads pool (D30) | done | Claude | — |
