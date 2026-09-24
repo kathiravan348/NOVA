@@ -26,6 +26,7 @@ from nova_contracts.common import (
 )
 from nova_contracts.data_job import DataJob, DataJobStatus, DataJobType
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
+from nova_contracts.market_data import Candle, IndexName, Instrument
 from nova_contracts.page import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, Page
 from nova_contracts.rate_limit import (
     RateLimit,
@@ -52,7 +53,10 @@ __all__ = [
     "DataJob",
     "DataJobStatus",
     "DataJobType",
+    "Candle",
     "Email",
+    "IndexName",
+    "Instrument",
     "LoginRequest",
     "Page",
     "RateLimit",

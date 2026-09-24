@@ -58,7 +58,7 @@
 | NOVA-049 | Broker: Kite login flow, encrypted token store, session expiry, accounts + profiles endpoints (D35, D39) | done | Claude | 048 |
 | NOVA-050 | Broker: rate limiter (Redis, endpoint × window), rate-limits GET/PATCH + audit; daily reset setting (D40) | done | Claude | 049 |
 | NOVA-051 | Atlas: instrument sync + historical downloads (Postgres job queue, D41), data-jobs endpoints | done | Claude | 050 |
-| NOVA-061 | Atlas: market-data endpoints (instruments with computed stats, candles by date range) | draft | — | 051 |
+| NOVA-061 | Atlas: market-data endpoints (instruments with computed stats, candles by date range) | done | Claude | 051 |
 | NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |
 | NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables | draft | — | 047 |
 | NOVA-054 | Strategy service: strategies CRUD, versions, stats summary | draft | — | 048 |
