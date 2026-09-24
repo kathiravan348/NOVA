@@ -75,7 +75,7 @@ Database design → NOVA Core (gateway + auth) → Broker service (Kite login, t
 | 2. Database | 047 schema v1 + migrations | Domain tables behind the contracts, candles as a hypertable (later tasks add their own tables by migration) |
 | 3. NOVA Core | 048 auth + gateway | Super-admin sign-in, `/me`, routing to services, audit writes |
 | 4. Broker | 049 Kite login + tokens · 050 rate limiter | Daily Kite login, encrypted tokens, limits enforced |
-| 5. NOVA Atlas | 051 instruments + candle downloads · 052 tick recorder + archive | Market data from Kite; ticks recorded from go-live |
+| 5. NOVA Atlas | 051 instrument sync + candle downloads · 061 market-data endpoints · 052 tick recorder + archive | Market data from Kite; ticks recorded from go-live |
 | 6. NOVA Ledger | 053 charges engine | Charges per trade from dated rate tables |
 | 7. Strategies | 054 strategy service | Strategy CRUD, versions, stats summary |
 | 8. Backtests | 055 engine v1 (delivery) · 056 intraday · 057 Python mode | Real backtest runs, results, trades |

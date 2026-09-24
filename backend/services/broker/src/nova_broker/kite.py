@@ -1,4 +1,4 @@
-"""Kite Connect v3 session calls (D35, D39). Session endpoints only: no market data, no orders."""
+"""Kite Connect v3 client (D35, D39, D41): session, instruments, historical candles. No orders."""
 
 import hashlib
 from dataclasses import dataclass
@@ -13,6 +13,10 @@ API_BASE = "https://api.kite.trade"
 LOGIN_BASE = "https://kite.zerodha.com/connect/login"
 IST = ZoneInfo("Asia/Kolkata")
 TIMEOUT_SECONDS = 15.0
+
+
+# Kite historical intervals (D41). Atlas maps NOVA timeframes onto these.
+INTERVALS = ("minute", "3minute", "5minute", "15minute", "30minute", "60minute", "day")
 
 
 class KiteError(Exception):
@@ -74,6 +78,46 @@ class KiteClient:
             "/session/token",
             params={"api_key": self._api_key, "access_token": access_token},
         )
+
+    def instruments(self, exchange: str, access_token: str) -> str:
+        """The instrument dump for one exchange (CSV, a few MB)."""
+        try:
+            response = self._http.get(f"/instruments/{exchange}", headers=self._auth(access_token))
+        except httpx2.HTTPError as exc:
+            raise KiteError("Kite could not be reached") from exc
+        if response.status_code >= 400:
+            raise KiteError(f"Kite answered {response.status_code} for the instrument list")
+        return response.text
+
+    def historical(
+        self,
+        instrument_token: int,
+        interval: str,
+        start: datetime,
+        end: datetime,
+        access_token: str,
+    ) -> list[list[Any]]:
+        """Candles `[time, open, high, low, close, volume]`; Kite sends times with +0530.
+
+        Any: Kite rows mix strings and numbers.
+        """
+        stamp = "%Y-%m-%d %H:%M:%S"
+        data = self._call(
+            "GET",
+            f"/instruments/historical/{instrument_token}/{interval}",
+            params={
+                "from": start.astimezone(IST).strftime(stamp),
+                "to": end.astimezone(IST).strftime(stamp),
+            },
+            headers=self._auth(access_token),
+        )
+        candles = data.get("candles")
+        if not isinstance(candles, list):
+            raise KiteError("Unexpected historical response from Kite")
+        return candles
+
+    def _auth(self, access_token: str) -> dict[str, str]:
+        return {"Authorization": f"token {self._api_key}:{access_token}"}
 
     def _call(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
         """Any: request options and Kite's `data` object are loosely typed JSON."""

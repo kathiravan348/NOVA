@@ -1,0 +1,25 @@
+symbol,name,sector,indices
+RELIANCE,Reliance Industries,Energy,NIFTY 50
+TCS,Tata Consultancy Services,Information Technology,NIFTY 50
+INFY,Infosys,Information Technology,NIFTY 50
+HDFCBANK,HDFC Bank,Financial Services,NIFTY 50|NIFTY BANK
+ICICIBANK,ICICI Bank,Financial Services,NIFTY 50|NIFTY BANK
+SBIN,State Bank of India,Financial Services,NIFTY 50|NIFTY BANK
+KOTAKBANK,Kotak Mahindra Bank,Financial Services,NIFTY 50|NIFTY BANK
+AXISBANK,Axis Bank,Financial Services,NIFTY 50|NIFTY BANK
+ITC,ITC,Consumer Goods,NIFTY 50
+LT,Larsen & Toubro,Construction,NIFTY 50
+BHARTIARTL,Bharti Airtel,Telecommunication,NIFTY 50
+HINDUNILVR,Hindustan Unilever,Consumer Goods,NIFTY 50
+BAJFINANCE,Bajaj Finance,Financial Services,NIFTY 50
+MARUTI,Maruti Suzuki India,Automobile,NIFTY 50
+SUNPHARMA,Sun Pharmaceutical Industries,Healthcare,NIFTY 50
+TITAN,Titan Company,Consumer Goods,NIFTY 50
+ASIANPAINT,Asian Paints,Consumer Goods,NIFTY 50
+WIPRO,Wipro,Information Technology,NIFTY 50
+HCLTECH,HCL Technologies,Information Technology,NIFTY 50
+NTPC,NTPC,Utilities,NIFTY 50
+DMART,Avenue Supermarts (DMart),Consumer Services,NIFTY NEXT 50
+PIDILITIND,Pidilite Industries,Chemicals,NIFTY NEXT 50
+HAVELLS,Havells India,Consumer Goods,NIFTY NEXT 50
+DABUR,Dabur India,Consumer Goods,NIFTY NEXT 50

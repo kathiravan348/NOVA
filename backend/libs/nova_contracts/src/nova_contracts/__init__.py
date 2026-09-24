@@ -24,6 +24,7 @@ from nova_contracts.common import (
     Timeframe,
     UtcDateTime,
 )
+from nova_contracts.data_job import DataJob, DataJobStatus, DataJobType
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.page import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, Page
 from nova_contracts.rate_limit import (
@@ -48,6 +49,9 @@ __all__ = [
     "BrokerProfile",
     "BrokerSession",
     "BrokerSessionStatus",
+    "DataJob",
+    "DataJobStatus",
+    "DataJobType",
     "Email",
     "LoginRequest",
     "Page",

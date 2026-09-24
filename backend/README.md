@@ -17,6 +17,8 @@ docker compose build
 | `docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"` | create the super-admin (asks for the password) |
 | `docker compose exec broker python -m nova_broker add-account --label "Main" --client-id AB1234` | add a Zerodha account |
 | `docker compose run --rm broker python -m nova_broker new-token-key` | a value for `NOVA_BROKER_TOKEN_KEY` |
+| `docker compose exec atlas python -m nova_atlas sync-instruments` | instruments from `universe.csv` + Kite (needs a Kite login) |
+| `docker compose exec atlas python -m nova_atlas download --symbols INFY,TCS --timeframe 1d --from 2025-01-01 --to 2025-12-31` | queue a candle download |
 | `docker compose down` | stop everything (data stays in the `db-data` volume) |
 | `docker compose build` | rebuild the image after `uv.lock` changes |
 

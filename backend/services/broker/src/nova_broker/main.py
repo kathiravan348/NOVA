@@ -1,5 +1,6 @@
 """NOVA broker service (D35, D39). Reached only through NOVA Core; never exposed to the host."""
 
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -11,7 +12,7 @@ from nova_db.models import BrokerAccount
 from redis import Redis
 from sqlalchemy import select
 
-from nova_broker import accounts, profiles, rate_limits
+from nova_broker import accounts, internal, profiles, rate_limits
 from nova_broker.kite import KiteClient
 from nova_broker.limiter import RateLimiter
 from nova_broker.limits import ensure_rules
@@ -60,6 +61,7 @@ def create_app(
     app.state.session_factory = session_factory
     app.state.kite = kite
     app.state.limiter = RateLimiter(redis, settings.kite_daily_reset)
+    app.state.sleep = time.sleep
     install_error_handlers(app)
 
     router = APIRouter(prefix=API_PREFIX)
@@ -72,6 +74,8 @@ def create_app(
     router.include_router(profiles.router)
     router.include_router(rate_limits.router)
     app.include_router(router)
+    # Service-to-service only (D41): outside /api/v1, so NOVA Core never forwards it.
+    app.include_router(internal.router)
     return app
 
 

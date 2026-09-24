@@ -57,15 +57,16 @@
 | NOVA-048 | NOVA Core: super-admin auth (session cookie), `/me`, gateway routing, audit writes (D38) | done | Claude | 044, 047 |
 | NOVA-049 | Broker: Kite login flow, encrypted token store, session expiry, accounts + profiles endpoints (D35, D39) | done | Claude | 048 |
 | NOVA-050 | Broker: rate limiter (Redis, endpoint × window), rate-limits GET/PATCH + audit; daily reset setting (D40) | done | Claude | 049 |
-| NOVA-051 | Atlas: instrument master + historical candle downloads, data-jobs and market-data endpoints; job queue | draft | — | 050 |
+| NOVA-051 | Atlas: instrument sync + historical downloads (Postgres job queue, D41), data-jobs endpoints | done | Claude | 050 |
+| NOVA-061 | Atlas: market-data endpoints (instruments with computed stats, candles by date range) | draft | — | 051 |
 | NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |
 | NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables | draft | — | 047 |
 | NOVA-054 | Strategy service: strategies CRUD, versions, stats summary | draft | — | 048 |
-| NOVA-055 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 051, 053, 054 |
+| NOVA-055 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 053, 054, 061 |
 | NOVA-056 | Backtest engine: equity intraday | draft | — | 055 |
 | NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox | draft | — | 055 |
 | NOVA-058 | Real mode: login + Relay screens on the real API | draft | — | 046, 050, 051 |
-| NOVA-059 | Real mode: Orbit screens on the real API | draft | — | 055, 058 |
+| NOVA-059 | Real mode: Orbit screens on the real API | draft | — | 055, 058, 061 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
