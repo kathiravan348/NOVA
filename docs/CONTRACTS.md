@@ -3,9 +3,11 @@
 > One line per contract. Update in the same task that adds or changes a contract.
 > Source: `frontend/packages/contracts/src/`. Mock: `frontend/packages/mocks/data/`. Handlers live in `mocks/src/handlers/`.
 > JSON Schema (generated, D34): `frontend/packages/contracts/schema/<Contract>.json` — `pnpm --filter @nova/contracts schema:update`.
+> Browser navigations, not JSON (D39): `GET /api/v1/broker/accounts/{id}/login` → 302 to Kite;
+> `GET /api/v1/broker/kite/callback` → 302 back to Relay `/accounts/{id}?kite=connected|failed`.
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount, BrokerProfile), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|

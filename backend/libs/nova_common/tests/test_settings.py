@@ -21,3 +21,11 @@ def test_missing_required_values_fail(monkeypatch: pytest.MonkeyPatch) -> None:
 
     with pytest.raises(ValidationError):
         Settings()
+
+
+def test_empty_values_count_as_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NOVA_DATABASE_URL", "postgresql://u:p@db:5432/nova")
+    monkeypatch.setenv("NOVA_REDIS_URL", "redis://redis:6379/0")
+    monkeypatch.setenv("NOVA_LOG_LEVEL", "")
+
+    assert Settings().log_level == "info"

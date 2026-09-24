@@ -51,10 +51,40 @@ services:
         condition: service_healthy
     mem_limit: 256m
 
+  # The only service that calls Kite (D35, D39). No host port: reached through NOVA Core only.
+  broker:
+    <<: *backend
+    command: ["uvicorn", "--factory", "nova_broker.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
+      NOVA_REDIS_URL: redis://redis:6379/0
+      NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
+      NOVA_INTERNAL_TOKEN: ${NOVA_INTERNAL_TOKEN:?set in .env}
+      NOVA_KITE_API_KEY: ${NOVA_KITE_API_KEY:-}
+      NOVA_KITE_API_SECRET: ${NOVA_KITE_API_SECRET:-}
+      NOVA_BROKER_TOKEN_KEY: ${NOVA_BROKER_TOKEN_KEY:-}
+      NOVA_KITE_REDIRECT_URL: ${NOVA_KITE_REDIRECT_URL:-http://localhost:3001/api/v1/broker/kite/callback}
+      NOVA_KITE_RENEWS_ON: ${NOVA_KITE_RENEWS_ON:-}
+      NOVA_KITE_STATIC_IP: ${NOVA_KITE_STATIC_IP:-}
+      NOVA_RELAY_URL: ${NOVA_RELAY_URL:-http://localhost:3001}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    mem_limit: 384m
+
   core:
     <<: *backend
     ports:
       - "127.0.0.1:${NOVA_CORE_PORT:-8000}:8000"
+    environment:
+      NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
+      NOVA_REDIS_URL: redis://redis:6379/0
+      NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
+      NOVA_INTERNAL_TOKEN: ${NOVA_INTERNAL_TOKEN:?set in .env}
+      NOVA_COOKIE_SECURE: ${NOVA_COOKIE_SECURE:-false}
+      NOVA_BROKER_URL: http://broker:8000
     depends_on:
       migrate:
         condition: service_completed_successfully

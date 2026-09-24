@@ -58,9 +58,12 @@ async def forward(request: Request, user: SignedIn, settings: AppSettings) -> Re
         )
     except httpx2.HTTPError as exc:
         raise ApiException(502, "internal", f"The {prefix} service did not answer") from exc
+    # Redirects (Kite login, D39) must keep their target.
+    passed = {name: upstream.headers[name] for name in ("location",) if name in upstream.headers}
     return Response(
         content=upstream.content,
         status_code=upstream.status_code,
+        headers=passed,
         media_type=upstream.headers.get("content-type"),
     )
 

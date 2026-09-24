@@ -37,7 +37,7 @@
 │  └─ apps/             each: public/mockServiceWorker.js, src/routes.tsx, layout/, pages/
 │     ├─ nova-orbit/    strategy builder + backtesting (port 3000)
 │     └─ nova-relay/    API config + limits (port 3001)
-├─ compose.yaml         db (TimescaleDB), redis, migrate, core, backend-check (profile tools)
+├─ compose.yaml         db (TimescaleDB), redis, migrate, broker, core, backend-check (profile tools)
 ├─ .env.example         every variable with dummy values (copy to .env)
 └─ backend/             uv workspace (D33, D36); Dockerfile = one image for all services
    ├─ scripts/check.sh  ruff, format, mypy per package, pytest
@@ -45,7 +45,8 @@
    │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
    │  ├─ nova_db/       SQLAlchemy models, Alembic migrations (`python -m nova_db upgrade|check`) (D37)
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
-   │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` fixtures (throwaway database)
+   │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` fixtures, `kite.FakeKite`
    └─ services/
-      └─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; `python -m nova_core create-admin`
+      ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; `python -m nova_core create-admin`
+      └─ broker/        the only Kite caller (D35): accounts, profile, daily login; `python -m nova_broker add-account`
 ```

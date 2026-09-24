@@ -2,6 +2,15 @@
 
 from nova_contracts.audit import AuditAction, AuditEntry, AuditTargetType
 from nova_contracts.auth import LoginRequest
+from nova_contracts.broker import (
+    Broker,
+    BrokerAccount,
+    BrokerLink,
+    BrokerLinkKind,
+    BrokerProfile,
+    BrokerSession,
+    BrokerSessionStatus,
+)
 from nova_contracts.common import (
     Contract,
     Email,
@@ -25,6 +34,13 @@ __all__ = [
     "AuditAction",
     "AuditEntry",
     "AuditTargetType",
+    "Broker",
+    "BrokerAccount",
+    "BrokerLink",
+    "BrokerLinkKind",
+    "BrokerProfile",
+    "BrokerSession",
+    "BrokerSessionStatus",
     "Email",
     "LoginRequest",
     "Page",

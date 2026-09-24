@@ -10,7 +10,10 @@ LogLevel = Literal["debug", "info", "warning", "error"]
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="NOVA_", extra="forbid", frozen=True)
+    # Empty variables (Compose passes "" for unset optional values) count as unset.
+    model_config = SettingsConfigDict(
+        env_prefix="NOVA_", extra="forbid", frozen=True, env_ignore_empty=True
+    )
 
     database_url: SecretStr
     redis_url: SecretStr

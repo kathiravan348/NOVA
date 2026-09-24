@@ -55,7 +55,7 @@
 | NOVA-046 | Load more on backtests, trades, data jobs, audit; strategy detail uses `strategyId` filter | done | Claude | 045 |
 | NOVA-047 | Database schema v1 + Alembic migrations (domain tables, candles hypertable) (D37) | done | Claude | 043 |
 | NOVA-048 | NOVA Core: super-admin auth (session cookie), `/me`, gateway routing, audit writes (D38) | done | Claude | 044, 047 |
-| NOVA-049 | Broker: Kite login flow, encrypted token store, session expiry, accounts + profiles endpoints (D35) | draft | — | 048 |
+| NOVA-049 | Broker: Kite login flow, encrypted token store, session expiry, accounts + profiles endpoints (D35, D39) | done | Claude | 048 |
 | NOVA-050 | Broker: rate limiter (Redis, endpoint × window), rate-limits GET/PATCH + audit; verify daily reset | draft | — | 049 |
 | NOVA-051 | Atlas: instrument master + historical candle downloads, data-jobs and market-data endpoints; job queue | draft | — | 050 |
 | NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |

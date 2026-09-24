@@ -19,6 +19,10 @@ class Upstream:
         if self.fail:
             raise httpx2.ConnectError("refused", request=request)
         self.requests.append(request)
+        if request.url.path.endswith("/login"):
+            return httpx2.Response(
+                302, headers={"location": "https://kite.zerodha.com/connect/login"}
+            )
         return httpx2.Response(201, json={"echo": request.url.path})
 
 
@@ -83,3 +87,10 @@ def test_unreachable_service_is_bad_gateway(gateway: TestClient, upstream: Upstr
 
     assert response.status_code == 502
     assert response.json()["error"]["code"] == "internal"
+
+
+def test_redirects_keep_their_location(gateway: TestClient) -> None:
+    response = gateway.get("/api/v1/broker/accounts/brk_1/login", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert response.headers["location"] == "https://kite.zerodha.com/connect/login"

@@ -15,6 +15,8 @@ docker compose build
 | `docker compose run --rm migrate python -m nova_db check` | models vs database: exit 1 on drift |
 | `docker compose run --rm backend-check` | ruff, format check, mypy strict, pytest (the gate) |
 | `docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"` | create the super-admin (asks for the password) |
+| `docker compose exec broker python -m nova_broker add-account --label "Main" --client-id AB1234` | add a Zerodha account |
+| `docker compose run --rm broker python -m nova_broker new-token-key` | a value for `NOVA_BROKER_TOKEN_KEY` |
 | `docker compose down` | stop everything (data stays in the `db-data` volume) |
 | `docker compose build` | rebuild the image after `uv.lock` changes |
 
