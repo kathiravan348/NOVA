@@ -411,16 +411,20 @@ version = "0.0.1"
 source = { editable = "services/core" }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx2" },
     { name = "nova-common" },
     { name = "nova-contracts" },
+    { name = "nova-db" },
     { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = "==0.141.1" },
+    { name = "httpx2", specifier = "==2.13.1" },
     { name = "nova-common", editable = "libs/nova_common" },
     { name = "nova-contracts", editable = "libs/nova_contracts" },
+    { name = "nova-db", editable = "libs/nova_db" },
     { name = "uvicorn", specifier = "==0.53.0" },
 ]
 
@@ -447,10 +451,14 @@ version = "0.0.1"
 source = { editable = "libs/nova_testing" }
 dependencies = [
     { name = "jsonschema" },
+    { name = "nova-db" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "jsonschema", specifier = "==4.26.0" }]
+requires-dist = [
+    { name = "jsonschema", specifier = "==4.26.0" },
+    { name = "nova-db", editable = "libs/nova_db" },
+]
 
 [[package]]
 name = "packaging"

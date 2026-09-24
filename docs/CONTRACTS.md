@@ -5,11 +5,12 @@
 > JSON Schema (generated, D34): `frontend/packages/contracts/schema/<Contract>.json` — `pnpm --filter @nova/contracts schema:update`.
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
-| User | `GET /api/v1/me` | `data/user.json` | Core, Orbit, Relay |
+| User | `GET /api/v1/me`; response of `POST /api/v1/auth/login` | `data/user.json` | Core, Orbit, Relay |
+| LoginRequest | `POST /api/v1/auth/login` body → `User` + session cookie; `POST /api/v1/auth/logout` → 204 (D38) | — | Core |
 | Strategy (rules only, no universe: D25) | `GET /api/v1/strategies`, `GET /api/v1/strategies/{id}` | `data/strategies.json` | Orbit |
 | BacktestRun (with `universe`: symbols or index) | `GET /api/v1/backtests?strategyId=&limit=&cursor=` → `Page<BacktestRun>`, `GET /api/v1/backtests/{id}` | `data/backtestRuns.json` | Orbit |
 | StrategyStats (runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L) | `GET /api/v1/strategies/stats` | `data/strategyStats.json` | Orbit |
@@ -24,4 +25,4 @@
 | AuditEntry | `GET /api/v1/audit?limit=&cursor=` → `Page<AuditEntry>` | `data/auditEntries.json` | Relay |
 | Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range) |
 | Candle | `GET /api/v1/market-data/candles?symbol=&timeframe=` | `data/candles.json` (keyed `SYMBOL:tf`) | Orbit, ui-trading |
-| ApiError | any endpoint (400/404/500; codes `invalid_request`, `not_found`, `internal`) | — | Core, Orbit, Relay |
+| ApiError | any endpoint (400/401/404/5xx; codes `invalid_request`, `unauthorized`, `not_found`, `internal`) | — | Core, Orbit, Relay |

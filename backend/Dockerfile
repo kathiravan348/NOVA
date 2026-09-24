@@ -25,4 +25,4 @@ USER nova
 RUN uv sync --frozen && rm -rf /tmp/uv-cache
 
 EXPOSE 8000
-CMD ["uvicorn", "nova_core.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "--factory", "nova_core.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]

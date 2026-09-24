@@ -6,10 +6,11 @@ from fastapi.testclient import TestClient
 from nova_common import ApiException
 from nova_contracts import ApiError
 from nova_core.main import API_PREFIX, create_app
+from nova_core.settings import CoreSettings
 
 
-def _app_with_test_routes() -> FastAPI:
-    app = create_app()
+def _app_with_test_routes(settings: CoreSettings) -> FastAPI:
+    app = create_app(settings)
 
     @app.get(f"{API_PREFIX}/_test/raise")
     def raise_api_exception() -> None:
@@ -27,8 +28,8 @@ def _app_with_test_routes() -> FastAPI:
 
 
 @pytest.fixture
-def client() -> TestClient:
-    return TestClient(_app_with_test_routes(), raise_server_exceptions=False)
+def client(dummy_settings: CoreSettings) -> TestClient:
+    return TestClient(_app_with_test_routes(dummy_settings), raise_server_exceptions=False)
 
 
 def _assert_api_error(body: Any, code: str) -> None:

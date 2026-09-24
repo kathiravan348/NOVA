@@ -5,8 +5,12 @@ description = "Test helpers shared by NOVA packages (contract parity kit, D34)"
 requires-python = "==3.12.*"
 dependencies = [
     "jsonschema==4.26.0",
+    "nova-db",
 ]
 
 [build-system]
 requires = ["uv_build==0.12.18"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+nova-db = { workspace = true }

@@ -5,8 +5,10 @@ description = "NOVA Core gateway"
 requires-python = "==3.12.*"
 dependencies = [
     "fastapi==0.141.1",
+    "httpx2==2.13.1",
     "nova-common",
     "nova-contracts",
+    "nova-db",
     "uvicorn==0.53.0",
 ]
 
@@ -17,3 +19,4 @@ build-backend = "uv_build"
 [tool.uv.sources]
 nova-common = { workspace = true }
 nova-contracts = { workspace = true }
+nova-db = { workspace = true }

@@ -1,7 +1,10 @@
 """Pydantic models mirroring `@nova/contracts` (D34)."""
 
+from nova_contracts.audit import AuditAction, AuditEntry, AuditTargetType
+from nova_contracts.auth import LoginRequest
 from nova_contracts.common import (
     Contract,
+    Email,
     Exchange,
     Id,
     IsoDate,
@@ -13,9 +16,18 @@ from nova_contracts.common import (
     UtcDateTime,
 )
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
+from nova_contracts.page import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, Page
 from nova_contracts.user import User, UserRole
 
 __all__ = [
+    "PAGE_LIMIT_DEFAULT",
+    "PAGE_LIMIT_MAX",
+    "AuditAction",
+    "AuditEntry",
+    "AuditTargetType",
+    "Email",
+    "LoginRequest",
+    "Page",
     "ApiError",
     "ApiErrorBody",
     "ApiErrorCode",

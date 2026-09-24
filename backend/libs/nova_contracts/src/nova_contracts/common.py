@@ -47,6 +47,7 @@ def _format_utc(value: datetime) -> str:
 
 
 Id = Annotated[str, Field(min_length=1)]
+Email = Annotated[str, Field(pattern=r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$")]
 UtcDateTime = Annotated[
     AwareDatetime,
     BeforeValidator(_parse_utc_string),

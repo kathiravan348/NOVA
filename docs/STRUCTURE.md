@@ -45,7 +45,7 @@
    │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
    │  ├─ nova_db/       SQLAlchemy models, Alembic migrations (`python -m nova_db upgrade|check`) (D37)
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
-   │  └─ nova_testing/  shared test helpers: `parity.Parity` (mock JSON + JSON Schema checks)
+   │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` fixtures (throwaway database)
    └─ services/
-      └─ core/          NOVA Core gateway (FastAPI, /api/v1)
+      └─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; `python -m nova_core create-admin`
 ```

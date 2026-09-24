@@ -10,6 +10,7 @@
           "enum": [
             "not_found",
             "invalid_request",
+            "unauthorized",
             "internal"
           ]
         },

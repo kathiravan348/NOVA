@@ -20,6 +20,11 @@ describe("ApiError contract", () => {
     expect(ApiErrorSchema.safeParse(internal).success).toBe(true);
   });
 
+  it("accepts unauthorized (D38)", () => {
+    const body = { error: { code: "unauthorized", message: "Sign in required" } };
+    expect(ApiErrorSchema.safeParse(body).success).toBe(true);
+  });
+
   it("fails for unknown code", () => {
     const unknownCode = {
       error: {

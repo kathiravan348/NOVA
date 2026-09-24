@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-ApiErrorCode = Literal["not_found", "invalid_request", "internal"]
+ApiErrorCode = Literal["not_found", "invalid_request", "unauthorized", "internal"]
 
 
 class ApiErrorBody(BaseModel):

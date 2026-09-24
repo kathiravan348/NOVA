@@ -9,6 +9,8 @@ x-backend: &backend
     NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
     NOVA_REDIS_URL: redis://redis:6379/0
     NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
+    NOVA_INTERNAL_TOKEN: ${NOVA_INTERNAL_TOKEN:?set in .env}
+    NOVA_COOKIE_SECURE: ${NOVA_COOKIE_SECURE:-false}
 
 services:
   db:

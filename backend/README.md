@@ -14,6 +14,7 @@ docker compose build
 | `docker compose up -d` | db (TimescaleDB), redis, `migrate` (runs once), core on http://127.0.0.1:8000/api/v1/health |
 | `docker compose run --rm migrate python -m nova_db check` | models vs database: exit 1 on drift |
 | `docker compose run --rm backend-check` | ruff, format check, mypy strict, pytest (the gate) |
+| `docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"` | create the super-admin (asks for the password) |
 | `docker compose down` | stop everything (data stays in the `db-data` volume) |
 | `docker compose build` | rebuild the image after `uv.lock` changes |
 

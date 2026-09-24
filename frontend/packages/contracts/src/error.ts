@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const ApiErrorCodeSchema = z.enum(["not_found", "invalid_request", "internal"]);
+/** `unauthorized` (401): no live session, or wrong email or password (D38). */
+export const ApiErrorCodeSchema = z.enum([
+  "not_found",
+  "invalid_request",
+  "unauthorized",
+  "internal",
+]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;
 
 export const ApiErrorSchema = z.strictObject({

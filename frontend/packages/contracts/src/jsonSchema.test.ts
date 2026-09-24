@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ApiErrorSchema } from "./error";
+import { LoginRequestSchema } from "./auth";
 import { AuditEntrySchema } from "./audit";
 import { BacktestResultSchema, BacktestRunSchema } from "./backtest";
 import { BrokerAccountSchema, BrokerProfileSchema } from "./broker";
@@ -24,6 +25,7 @@ const contracts: Record<string, z.ZodType> = {
   Candle: CandleSchema,
   DataJob: DataJobSchema,
   Instrument: InstrumentSchema,
+  LoginRequest: LoginRequestSchema,
   RateLimit: RateLimitSchema,
   RateLimitUpdate: RateLimitUpdateSchema,
   Strategy: StrategySchema,
