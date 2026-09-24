@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ScrollText } from "lucide-react";
 import type { AuditEntry } from "@nova/contracts";
-import { DataTable, EmptyState, Select } from "@nova/ui-core";
+import { DataTable, EmptyState, Select, LoadMore } from "@nova/ui-core";
 import { useAuditEntries } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
@@ -85,6 +85,12 @@ export function AuditPage() {
             description={group ? "Nothing in this group yet." : "Actions will be recorded here."}
           />
         }
+      />
+      <LoadMore
+        hasMore={query.hasNextPage}
+        loading={query.isFetchingNextPage}
+        onLoadMore={() => void query.fetchNextPage()}
+        label="Load older entries"
       />
     </div>
   );

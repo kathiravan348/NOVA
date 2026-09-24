@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { BarChart3, Play } from "lucide-react";
-import { Button, DataTable, EmptyState } from "@nova/ui-core";
+import { Button, DataTable, EmptyState, LoadMore } from "@nova/ui-core";
 import { useBacktests } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { useRunColumns } from "./runColumns";
@@ -37,6 +37,11 @@ export function BacktestsPage() {
             description="Runs you start will appear here."
           />
         }
+      />
+      <LoadMore
+        hasMore={query.hasNextPage}
+        loading={query.isFetchingNextPage}
+        onLoadMore={() => void query.fetchNextPage()}
       />
     </div>
   );

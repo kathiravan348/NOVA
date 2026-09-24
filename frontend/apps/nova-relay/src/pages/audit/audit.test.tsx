@@ -1,7 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { http } from "msw";
 import { setupServer } from "msw/node";
-import { handlers, mockAuditEntries } from "@nova/mocks";
+import { handlers, mockAuditEntries, paginate } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -20,6 +21,27 @@ const bodyRows = () =>
     .slice(1);
 
 describe("Audit log", () => {
+  it("loads older entries with Load more when the server pages the list", async () => {
+    server.use(
+      http.get("*/api/v1/audit", ({ request }) => {
+        const url = new URL(request.url);
+        url.searchParams.set("limit", "4");
+        return paginate(mockAuditEntries, url.toString());
+      }),
+    );
+    renderApp("/audit");
+    const more = await screen.findByRole("button", { name: "Load older entries" });
+    await waitFor(() => expect(bodyRows()).toHaveLength(4));
+    fireEvent.click(more);
+    await waitFor(() => expect(bodyRows()).toHaveLength(8));
+  });
+
+  it("shows no Load more button when every entry fits in one page", async () => {
+    renderApp("/audit");
+    await screen.findAllByText("Queued backtest VWAP September Dry Run");
+    expect(screen.queryByRole("button", { name: "Load older entries" })).not.toBeInTheDocument();
+  });
+
   it("shows the first page of entries, newest first", async () => {
     renderApp("/audit");
     await screen.findAllByText("Queued backtest VWAP September Dry Run");

@@ -2,7 +2,15 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { AlertTriangle, GitCompare, Hourglass } from "lucide-react";
 import type { BacktestRun } from "@nova/contracts";
-import { Button, Card, DescriptionList, EmptyState, Skeleton, StatusBadge } from "@nova/ui-core";
+import {
+  Button,
+  Card,
+  DescriptionList,
+  EmptyState,
+  Skeleton,
+  StatusBadge,
+  LoadMore,
+} from "@nova/ui-core";
 import { EquityCurve, formatInr } from "@nova/ui-trading";
 import { useBacktest, useBacktestResult, useBacktestTrades, useStrategy } from "@nova/services";
 import { QueryError, QueryState } from "../../components/QueryState";
@@ -105,6 +113,12 @@ function CompletedRun({ run }: { run: BacktestRun }) {
               <QueryError error={trades.error} onRetry={() => void trades.refetch()} />
             ) : undefined
           }
+        />
+        <LoadMore
+          hasMore={trades.hasNextPage}
+          loading={trades.isFetchingNextPage}
+          onLoadMore={() => void trades.fetchNextPage()}
+          label="Load more trades"
         />
       </section>
     </>

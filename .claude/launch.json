@@ -35,8 +35,12 @@
     },
     {
       "name": "storybook",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "fnm",
       "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
         "--dir",
         "frontend",
         "storybook",
@@ -47,8 +51,12 @@
     },
     {
       "name": "storybook-review",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "fnm",
       "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
         "--dir",
         "../Nova-review/frontend/packages/ui-storybook",
         "exec",
@@ -63,8 +71,12 @@
     },
     {
       "name": "orbit-review",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "fnm",
       "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
         "--dir",
         "../Nova-review/frontend/apps/nova-orbit",
         "dev"
@@ -73,8 +85,12 @@
     },
     {
       "name": "relay-review",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "fnm",
       "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
         "--dir",
         "../Nova-review/frontend/apps/nova-relay",
         "dev"

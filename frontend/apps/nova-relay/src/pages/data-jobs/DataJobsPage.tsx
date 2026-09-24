@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Database } from "lucide-react";
 import type { DataJob } from "@nova/contracts";
-import { DataTable, EmptyState, StatusBadge } from "@nova/ui-core";
+import { DataTable, EmptyState, StatusBadge, LoadMore } from "@nova/ui-core";
 import { formatPercent, formatQuantity } from "@nova/ui-trading";
 import { useDataJobs } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
@@ -99,6 +99,11 @@ export function DataJobsPage() {
             description="Download and recording jobs will appear here."
           />
         }
+      />
+      <LoadMore
+        hasMore={query.hasNextPage}
+        loading={query.isFetchingNextPage}
+        onLoadMore={() => void query.fetchNextPage()}
       />
     </div>
   );

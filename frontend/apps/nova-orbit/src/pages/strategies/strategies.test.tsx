@@ -102,6 +102,19 @@ describe("Strategy detail", () => {
     expect(within(panel).queryByText("Delivery Mean Reversion Test")).not.toBeInTheDocument();
   });
 
+  it("asks the server for this strategy's runs only (D32)", async () => {
+    const searches: string[] = [];
+    server.events.on("request:start", ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/v1/backtests") searches.push(url.search);
+    });
+    renderApp("/strategies/stg_001");
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: "Backtests" }));
+    await screen.findAllByRole("link", { name: "VWAP Intraday v1 Backtest" });
+    expect(searches).toContain("?strategyId=stg_001");
+    server.events.removeAllListeners();
+  });
+
   it("explains python strategies", async () => {
     renderApp("/strategies/stg_002");
     expect(await screen.findByText(/Python strategy/)).toBeInTheDocument();

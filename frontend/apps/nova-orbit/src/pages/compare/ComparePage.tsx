@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router";
 import { GitCompare } from "lucide-react";
-import { Card, EmptyState, Skeleton } from "@nova/ui-core";
+import { Card, EmptyState, LoadMore, Skeleton } from "@nova/ui-core";
 import { EquityCurve } from "@nova/ui-trading";
 import { useBacktestResults, useBacktests } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
@@ -38,6 +38,12 @@ export function ComparePage() {
   return (
     <div className="flex flex-col gap-6">
       <RunPicker runs={completed} selected={selected} onChange={setSelected} />
+      <LoadMore
+        hasMore={runsQuery.hasNextPage}
+        loading={runsQuery.isFetchingNextPage}
+        onLoadMore={() => void runsQuery.fetchNextPage()}
+        label="Load more runs"
+      />
       {ignored.length > 0 && (
         <p className="text-body-sm text-text-muted">
           Skipped (not a completed run): {ignored.join(", ")}

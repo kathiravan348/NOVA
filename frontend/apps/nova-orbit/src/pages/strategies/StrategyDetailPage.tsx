@@ -2,7 +2,16 @@ import { Link, useParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { BarChart3, Pencil, Play } from "lucide-react";
 import type { Strategy, StrategyVersion } from "@nova/contracts";
-import { Button, Card, DataTable, EmptyState, Skeleton, StatusBadge, Tabs } from "@nova/ui-core";
+import {
+  Button,
+  Card,
+  DataTable,
+  EmptyState,
+  Skeleton,
+  StatusBadge,
+  Tabs,
+  LoadMore,
+} from "@nova/ui-core";
 import { StrategyStatsList } from "@nova/ui-trading";
 import { useBacktests, useStrategy, useStrategyStats } from "@nova/services";
 import { QueryError, QueryState } from "../../components/QueryState";
@@ -65,29 +74,36 @@ function StatsCard({ strategyId }: { strategyId: string }) {
 }
 
 function StrategyRuns({ strategyId }: { strategyId: string }) {
-  const query = useBacktests();
+  const query = useBacktests({ strategyId });
   const columns = useRunColumns({ withStrategy: false });
   return (
-    <DataTable
-      caption="Backtests of this strategy"
-      columns={columns}
-      data={(query.data ?? []).filter((r) => r.strategyId === strategyId)}
-      getRowId={(r) => r.id}
-      initialSort={[{ id: "createdAt", desc: true }]}
-      loading={query.isPending}
-      error={
-        query.isError ? (
-          <QueryError error={query.error} onRetry={() => void query.refetch()} />
-        ) : undefined
-      }
-      emptyState={
-        <EmptyState
-          icon={<BarChart3 className="h-6 w-6" />}
-          title="No backtests yet"
-          description="Run a backtest to see it here."
-        />
-      }
-    />
+    <div className="flex flex-col gap-4">
+      <DataTable
+        caption="Backtests of this strategy"
+        columns={columns}
+        data={query.data ?? []}
+        getRowId={(r) => r.id}
+        initialSort={[{ id: "createdAt", desc: true }]}
+        loading={query.isPending}
+        error={
+          query.isError ? (
+            <QueryError error={query.error} onRetry={() => void query.refetch()} />
+          ) : undefined
+        }
+        emptyState={
+          <EmptyState
+            icon={<BarChart3 className="h-6 w-6" />}
+            title="No backtests yet"
+            description="Run a backtest to see it here."
+          />
+        }
+      />
+      <LoadMore
+        hasMore={query.hasNextPage}
+        loading={query.isFetchingNextPage}
+        onLoadMore={() => void query.fetchNextPage()}
+      />
+    </div>
   );
 }
 
