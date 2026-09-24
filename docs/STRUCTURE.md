@@ -25,6 +25,7 @@
 │  │  │  ├─ .storybook/ Storybook config (main, preview)
 │  │  │  └─ src/foundations/ Tokens stories
 │  │  ├─ contracts/     API types + Zod schemas
+│  │  │  └─ schema/     generated JSON Schema per wire contract (D34; do not edit)
 │  │  ├─ services/      data layer (mock | real)
 │  │  │  ├─ src/api/    one fetch function per endpoint (validated by contract schema)
 │  │  │  ├─ src/queries/ TanStack Query keys, hooks, createQueryClient
@@ -42,7 +43,8 @@
    ├─ scripts/check.sh  ruff, format, mypy per package, pytest
    ├─ libs/
    │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
-   │  └─ nova_contracts/ Pydantic models mirroring @nova/contracts (D34)
+   │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
+   │  └─ nova_testing/  shared test helpers: `parity.Parity` (mock JSON + JSON Schema checks)
    └─ services/
       └─ core/          NOVA Core gateway (FastAPI, /api/v1)
 ```

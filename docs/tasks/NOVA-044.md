@@ -1,6 +1,6 @@
 # NOVA-044 — Contract parity: JSON Schema from Zod, Pydantic models checked against mocks
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-044 · **Depends on:** NOVA-043
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-044 · **Depends on:** NOVA-043
 
 ## Goal
 Every contract has a committed JSON Schema generated from Zod, and the backend has a parity test kit that
@@ -14,7 +14,8 @@ Proven on `User` and `ApiError`; later service tasks add their own models with t
 ## Files
 Create: contracts `src/jsonSchema.test.ts`, `schema/*.json` (generated, one per exported `*Schema` object
 schema), `backend/libs/nova_contracts/src/nova_contracts/{common.py,user.py}`,
-`backend/libs/nova_contracts/tests/{conftest.py,parity.py,test_user.py,test_error.py}`
+`backend/libs/nova_contracts/tests/{conftest.py,test_user.py,test_error.py}`,
+`backend/libs/nova_testing/{pyproject.toml,src/nova_testing/{__init__.py,parity.py,py.typed}}`
 Modify: contracts `package.json` (script `schema:update`), `backend/libs/nova_contracts/{pyproject.toml,src/nova_contracts/__init__.py}`,
 `backend/pyproject.toml` (dev dep `jsonschema` pinned), `compose.yaml` (only if the check service needs env for paths),
 `docs/CONTRACTS.md` (header line: where schemas live), `docs/STRUCTURE.md`
@@ -33,9 +34,9 @@ Modify: contracts `package.json` (script `schema:update`), `backend/libs/nova_co
    `ApiError` using a literal example per error code.
 
 ## Acceptance checks
-- [ ] `pnpm --filter @nova/contracts test` passes; changing a Zod schema without `schema:update` fails it.
-- [ ] `docker compose run --rm backend-check` passes, including the parity tests.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] `pnpm --filter @nova/contracts test` passes; changing a Zod schema without `schema:update` fails it.
+- [x] `docker compose run --rm backend-check` passes, including the parity tests.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Pydantic models for other contracts (added by the service task that serves them).
@@ -46,7 +47,17 @@ Modify: contracts `package.json` (script `schema:update`), `backend/libs/nova_co
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Built by Claude on Owner request (2026-09-24). 15 wire contracts exported to `schema/*.json`; `User` and
+`ApiError` Pydantic models with parity tests.
+**Commands run:** contracts tests 147 pass; stale check proven (edited `user.ts` → 1 failure, reverted);
+`backend-check` pass (19 tests). **New dependencies:** jsonschema 4.26.0 (in `nova_testing`), types-jsonschema (dev).
+**Deviations:** the kit is a workspace lib `nova_testing.parity` (fixture in `conftest.py`) instead of `tests/parity.py`:
+pytest importlib mode cannot import sibling test modules, and later services reuse it. Paths resolve from the
+file, not a `/repo` constant, so host and Docker both work. `schema/` is in `.prettierignore` (generated).
+**Known gaps:** JSON Schema carries no Zod `.refine` rules; Pydantic models must add those as validators.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Fixed directly:** `it.each` over schema objects ran Node out of memory (titles pretty-print Zod graphs) → iterate
+names; strict mode never turns str into datetime → `UtcDateTime` parses the `Z` string in its before-validator.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

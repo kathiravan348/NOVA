@@ -2,6 +2,8 @@
 
 > One line per contract. Update in the same task that adds or changes a contract.
 > Source: `frontend/packages/contracts/src/`. Mock: `frontend/packages/mocks/data/`. Handlers live in `mocks/src/handlers/`.
+> JSON Schema (generated, D34): `frontend/packages/contracts/schema/<Contract>.json` — `pnpm --filter @nova/contracts schema:update`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|

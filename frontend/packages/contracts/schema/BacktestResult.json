@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "grossPnlPaise": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "chargesPaise": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "netPnlPaise": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "returnPercent": {
+          "type": "number"
+        },
+        "cagrPercent": {
+          "type": "number"
+        },
+        "maxDrawdownPercent": {
+          "type": "number",
+          "maximum": 0
+        },
+        "sharpe": {
+          "type": "number"
+        },
+        "winRatePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "tradeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "winCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lossCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "grossPnlPaise",
+        "chargesPaise",
+        "netPnlPaise",
+        "returnPercent",
+        "cagrPercent",
+        "maxDrawdownPercent",
+        "sharpe",
+        "winRatePercent",
+        "tradeCount",
+        "winCount",
+        "lossCount"
+      ],
+      "additionalProperties": false
+    },
+    "equityCurve": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "equityPaise": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "benchmarkPaise": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "date",
+          "equityPaise",
+          "benchmarkPaise"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "bySymbol": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tradeCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "winCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lossCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "winRatePercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "netPnlPaise": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "symbol",
+          "tradeCount",
+          "winCount",
+          "lossCount",
+          "winRatePercent",
+          "netPnlPaise"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "runId",
+    "metrics",
+    "equityCurve",
+    "bySymbol"
+  ],
+  "additionalProperties": false
+}

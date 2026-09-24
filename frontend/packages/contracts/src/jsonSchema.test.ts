@@ -1,0 +1,43 @@
+import { describe, expect, it } from "vitest";
+import { z } from "zod";
+import { ApiErrorSchema } from "./error";
+import { AuditEntrySchema } from "./audit";
+import { BacktestResultSchema, BacktestRunSchema } from "./backtest";
+import { BrokerAccountSchema, BrokerProfileSchema } from "./broker";
+import { DataJobSchema } from "./dataJob";
+import { CandleSchema, InstrumentSchema } from "./marketData";
+import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
+import { StrategySchema } from "./strategy";
+import { StrategyStatsSchema } from "./strategyStats";
+import { TradeSchema } from "./trade";
+import { UserSchema } from "./user";
+
+// Wire contracts (request/response bodies) exported as JSON Schema for backend parity tests (D34).
+// Regenerate with `pnpm --filter @nova/contracts schema:update`. Refinements are not part of JSON Schema.
+const contracts: Record<string, z.ZodType> = {
+  ApiError: ApiErrorSchema,
+  AuditEntry: AuditEntrySchema,
+  BacktestResult: BacktestResultSchema,
+  BacktestRun: BacktestRunSchema,
+  BrokerAccount: BrokerAccountSchema,
+  BrokerProfile: BrokerProfileSchema,
+  Candle: CandleSchema,
+  DataJob: DataJobSchema,
+  Instrument: InstrumentSchema,
+  RateLimit: RateLimitSchema,
+  RateLimitUpdate: RateLimitUpdateSchema,
+  Strategy: StrategySchema,
+  StrategyStats: StrategyStatsSchema,
+  Trade: TradeSchema,
+  User: UserSchema,
+};
+
+describe("JSON Schema export", () => {
+  // Iterate names only: printing a Zod schema into a test title runs out of memory.
+  it.each(Object.keys(contracts))("%s matches its schema file", async (name) => {
+    const json = z.toJSONSchema(contracts[name]!, { io: "input" });
+    await expect(JSON.stringify(json, null, 2) + "\n").toMatchFileSnapshot(
+      `../schema/${name}.json`,
+    );
+  });
+});

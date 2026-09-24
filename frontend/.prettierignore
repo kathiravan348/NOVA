@@ -6,3 +6,4 @@ pnpm-lock.yaml
 packages/ui-core/src/theme/tokens.json
 packages/ui-core/src/theme/tokens.css
 **/public/mockServiceWorker.js
+packages/contracts/schema

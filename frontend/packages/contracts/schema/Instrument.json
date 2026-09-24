@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "exchange": {
+      "type": "string",
+      "enum": [
+        "NSE",
+        "NFO"
+      ]
+    },
+    "segment": {
+      "type": "string",
+      "enum": [
+        "equity_delivery",
+        "equity_intraday",
+        "futures",
+        "options"
+      ]
+    },
+    "sector": {
+      "type": "string",
+      "minLength": 1
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "NIFTY 50",
+          "NIFTY BANK",
+          "NIFTY NEXT 50"
+        ]
+      }
+    },
+    "lastClosePaise": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "high52wPaise": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "low52wPaise": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "changePercent": {
+      "type": "number"
+    },
+    "avgDailyVolume": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "lotSize": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "timeframes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "1m",
+          "3m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "1d"
+        ]
+      }
+    },
+    "dataFrom": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+    },
+    "dataTo": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+    }
+  },
+  "required": [
+    "symbol",
+    "name",
+    "exchange",
+    "segment",
+    "sector",
+    "indices",
+    "lastClosePaise",
+    "high52wPaise",
+    "low52wPaise",
+    "changePercent",
+    "avgDailyVolume",
+    "lotSize",
+    "timeframes",
+    "dataFrom",
+    "dataTo"
+  ],
+  "additionalProperties": false
+}
