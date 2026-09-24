@@ -1,5 +1,6 @@
 """Shared wire types, matching `frontend/packages/contracts/src/common.ts` and D17."""
 
+import re
 from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 
@@ -13,6 +14,8 @@ from pydantic import (
     PlainSerializer,
 )
 from pydantic.alias_generators import to_camel
+
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
 class Contract(BaseModel):
@@ -38,6 +41,15 @@ def _parse_utc_string(value: object) -> object:
     return datetime.fromisoformat(value)
 
 
+def _parse_iso_date(value: object) -> object:
+    # Strict mode never coerces str -> date (request bodies are validated in Python mode).
+    if not isinstance(value, str):
+        return value
+    if not _ISO_DATE.fullmatch(value):
+        raise ValueError("date must be YYYY-MM-DD")
+    return date.fromisoformat(value)
+
+
 def _to_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
@@ -54,7 +66,7 @@ UtcDateTime = Annotated[
     AfterValidator(_to_utc),
     PlainSerializer(_format_utc, return_type=str, when_used="json"),
 ]
-IsoDate = date
+IsoDate = Annotated[date, BeforeValidator(_parse_iso_date)]
 Paise = int
 NonNegPaise = Annotated[int, Field(ge=0)]
 

@@ -7,7 +7,7 @@
 > `GET /api/v1/broker/kite/callback` → 302 back to Relay `/accounts/{id}?kite=connected|failed`.
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount, BrokerProfile, RateLimit, RateLimitUpdate, DataJob, Instrument, Candle, Charges, Strategy (+ spec tree, write bodies), StrategyStats), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount, BrokerProfile, RateLimit, RateLimitUpdate, DataJob, Instrument, Candle, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
@@ -16,6 +16,7 @@
 | Strategy (rules only, no universe: D25) | `GET /api/v1/strategies`, `GET /api/v1/strategies/{id}`; response of the writes below | `data/strategies.json` | Orbit |
 | StrategyCreate / StrategyVersionCreate / StrategyUpdate (D43) | `POST /api/v1/strategies` (201), `POST /api/v1/strategies/{id}/versions` (201), `PATCH /api/v1/strategies/{id}` | — (handlers answer from the body) | Orbit |
 | BacktestRun (with `universe`: symbols or index) | `GET /api/v1/backtests?strategyId=&limit=&cursor=` → `Page<BacktestRun>`, `GET /api/v1/backtests/{id}` | `data/backtestRuns.json` | Orbit |
+| BacktestRunCreate (D44) | `POST /api/v1/backtests` → 201 `BacktestRun` (`queued`) | — (handler answers from the body) | Orbit |
 | StrategyStats (runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L) | `GET /api/v1/strategies/stats` | `data/strategyStats.json` | Orbit |
 | BacktestResult (metrics, equity curve, `bySymbol` breakdown) | `GET /api/v1/backtests/{id}/result` | `data/backtestResults.json` | Orbit |
 | Trade | `GET /api/v1/backtests/{id}/trades?limit=&cursor=` → `Page<Trade>` | `data/trades.json` | Orbit |

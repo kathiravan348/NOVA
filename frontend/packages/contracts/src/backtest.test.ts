@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BacktestRunCreateSchema,
   BacktestMetrics,
   BacktestMetricsSchema,
   BacktestResult,
@@ -174,5 +175,31 @@ describe("Backtest schemas", () => {
         }).success,
       ).toBe(false);
     });
+  });
+});
+
+describe("BacktestRunCreateSchema (D44)", () => {
+  const body = {
+    strategyId: "stg_001",
+    strategyVersion: 2,
+    name: "Bank basket",
+    universe: { type: "index" as const, index: "NIFTY BANK" as const },
+    from: "2025-01-01",
+    to: "2025-12-31",
+    initialCapitalPaise: 50_000_000,
+    benchmark: "NIFTY 50" as const,
+  };
+
+  it("accepts a run request", () => {
+    expect(BacktestRunCreateSchema.safeParse(body).success).toBe(true);
+    expect(BacktestRunCreateSchema.safeParse({ ...body, benchmark: null }).success).toBe(true);
+  });
+
+  it("rejects a reversed period, no capital or server-owned fields", () => {
+    expect(BacktestRunCreateSchema.safeParse({ ...body, from: "2026-01-01" }).success).toBe(false);
+    expect(BacktestRunCreateSchema.safeParse({ ...body, initialCapitalPaise: 0 }).success).toBe(
+      false,
+    );
+    expect(BacktestRunCreateSchema.safeParse({ ...body, status: "queued" }).success).toBe(false);
   });
 });

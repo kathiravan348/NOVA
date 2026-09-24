@@ -1,0 +1,61 @@
+"""The backtest worker (D41, D44): one process, claims queued runs, runs them one at a time."""
+
+import logging
+import threading
+from collections.abc import Callable
+from datetime import UTC, datetime
+
+from nova_db.models import BacktestRun
+from nova_db.queue import claim_next, requeue_running
+from sqlalchemy.orm import Session, sessionmaker
+
+from nova_backtest.engine import BacktestEngine, EngineError
+
+logger = logging.getLogger("nova.backtest.worker")
+ERROR_LENGTH = 300
+
+
+def fail_run(db: Session, run_id: str, message: str) -> None:
+    run = db.get(BacktestRun, run_id)
+    if run is not None:
+        run.status = "failed"
+        run.error = message[:ERROR_LENGTH]
+        run.finished_at = datetime.now(UTC)
+        db.commit()
+
+
+def run_one(db: Session, run_id: str, engine: BacktestEngine) -> None:
+    """Runs one claimed run; any failure ends as a `failed` run, never a crashed worker."""
+    try:
+        engine.run(db, run_id)
+    except EngineError as exc:
+        db.rollback()
+        fail_run(db, run_id, str(exc))
+    except Exception:
+        logger.exception("Backtest %s crashed", run_id)
+        db.rollback()
+        fail_run(db, run_id, "Unexpected error; see the worker log")
+
+
+def run_worker(
+    session_factory: sessionmaker[Session],
+    engine: BacktestEngine,
+    stop: threading.Event,
+    poll_seconds: float,
+    on_idle: Callable[[], None] | None = None,
+) -> None:
+    """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there)."""
+    with session_factory() as db:
+        requeued = requeue_running(db, BacktestRun)
+    if requeued:
+        logger.info("Requeued %s interrupted run(s)", requeued)
+    while not stop.is_set():
+        with session_factory() as db:
+            run_id = claim_next(db, BacktestRun)
+            if run_id is not None:
+                logger.info("Running backtest %s", run_id)
+                run_one(db, run_id, engine)
+                continue
+        if on_idle is not None:
+            on_idle()
+        stop.wait(poll_seconds)

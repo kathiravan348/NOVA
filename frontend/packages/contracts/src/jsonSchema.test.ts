@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ApiErrorSchema } from "./error";
 import { LoginRequestSchema } from "./auth";
 import { AuditEntrySchema } from "./audit";
-import { BacktestResultSchema, BacktestRunSchema } from "./backtest";
+import { BacktestResultSchema, BacktestRunCreateSchema, BacktestRunSchema } from "./backtest";
 import { BrokerAccountSchema, BrokerProfileSchema } from "./broker";
 import { DataJobSchema } from "./dataJob";
 import { CandleSchema, InstrumentSchema } from "./marketData";
@@ -25,6 +25,7 @@ const contracts: Record<string, z.ZodType> = {
   AuditEntry: AuditEntrySchema,
   BacktestResult: BacktestResultSchema,
   BacktestRun: BacktestRunSchema,
+  BacktestRunCreate: BacktestRunCreateSchema,
   BrokerAccount: BrokerAccountSchema,
   BrokerProfile: BrokerProfileSchema,
   Candle: CandleSchema,

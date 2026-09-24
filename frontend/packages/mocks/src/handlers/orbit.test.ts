@@ -220,4 +220,31 @@ describe("Orbit MSW handlers", () => {
     });
     expect(missing.status).toBe(404);
   });
+
+  it("POST /api/v1/backtests answers a queued run (D44)", async () => {
+    const body = {
+      strategyId: "stg_001",
+      strategyVersion: 2,
+      name: "Queued",
+      universe: { type: "symbols", symbols: ["INFY"] },
+      from: "2025-01-01",
+      to: "2025-06-30",
+      initialCapitalPaise: 10_000_000,
+      benchmark: null,
+    };
+    const res = await fetch("http://localhost/api/v1/backtests", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    expect(res.status).toBe(201);
+    expect(BacktestRunSchema.parse(await res.json())).toMatchObject({
+      status: "queued",
+      name: "Queued",
+    });
+    const bad = await fetch("http://localhost/api/v1/backtests", {
+      method: "POST",
+      body: JSON.stringify({ ...body, strategyId: "nope" }),
+    });
+    expect(bad.status).toBe(404);
+  });
 });

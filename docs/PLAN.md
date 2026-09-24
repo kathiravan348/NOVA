@@ -78,7 +78,7 @@ Database design → NOVA Core (gateway + auth) → Broker service (Kite login, t
 | 5. NOVA Atlas | 051 instrument sync + candle downloads · 061 market-data endpoints · 052 tick recorder + archive | Market data from Kite; ticks recorded from go-live |
 | 6. NOVA Ledger | 053 charges engine | Charges per trade from dated rate tables |
 | 7. Strategies | 054 strategy service | Strategy CRUD, versions, stats summary |
-| 8. Backtests | 055 engine v1 (delivery) · 056 intraday · 057 Python mode | Real backtest runs, results, trades |
+| 8. Backtests | 055 service + worker · 062 engine v1 (delivery) · 056 intraday · 057 Python mode | Real backtest runs, results, trades |
 | 9. Real mode | 058 Relay + login · 059 Orbit | Screens on the real API (`VITE_DATA_MODE=real`) |
 
 Futures and options engines come after 059; options wait for the data vendor decision.

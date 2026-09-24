@@ -4,11 +4,12 @@ import logging
 import threading
 from collections.abc import Callable
 
+from nova_db.models import DataJob
+from nova_db.queue import claim_next, requeue_running
 from sqlalchemy.orm import Session, sessionmaker
 
 from nova_atlas.broker_client import BrokerData
 from nova_atlas.download import fail_job, run_download
-from nova_atlas.queue import claim_next, requeue_running
 
 logger = logging.getLogger("nova.atlas.worker")
 
@@ -22,12 +23,12 @@ def run_worker(
 ) -> None:
     """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there)."""
     with session_factory() as db:
-        requeued = requeue_running(db)
+        requeued = requeue_running(db, DataJob)
     if requeued:
         logger.info("Requeued %s interrupted job(s)", requeued)
     while not stop.is_set():
         with session_factory() as db:
-            job_id = claim_next(db)
+            job_id = claim_next(db, DataJob)
             if job_id is not None:
                 logger.info("Running data job %s", job_id)
                 try:

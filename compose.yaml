@@ -84,6 +84,25 @@ services:
         condition: service_completed_successfully
     mem_limit: 256m
 
+  # Backtest runs, results and trades (D44). No host port.
+  backtest:
+    <<: *backend
+    command: ["uvicorn", "--factory", "nova_backtest.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 256m
+
+  # Runs queued backtests from the Postgres queue (D41, D44).
+  backtest-worker:
+    <<: *backend
+    command: ["python", "-m", "nova_backtest", "worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+    mem_limit: 512m
+
   # NOVA Atlas API: data jobs and market data. No host port.
   atlas:
     <<: *backend
@@ -124,6 +143,7 @@ services:
       NOVA_BROKER_URL: http://broker:8000
       NOVA_ATLAS_URL: http://atlas:8000
       NOVA_STRATEGY_URL: http://strategy:8000
+      NOVA_BACKTEST_URL: http://backtest:8000
     depends_on:
       migrate:
         condition: service_completed_successfully

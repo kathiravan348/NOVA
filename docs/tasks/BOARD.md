@@ -62,11 +62,12 @@
 | NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |
 | NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables (D42) | done | Claude | 047 |
 | NOVA-054 | Strategy service: strategies CRUD, versions, stats summary (D43) | done | Claude | 048 |
-| NOVA-055 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 053, 054, 061 |
-| NOVA-056 | Backtest engine: equity intraday | draft | — | 055 |
-| NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox | draft | — | 055 |
+| NOVA-055 | Backtest service: queue runs (D44), runs/results/trades API, worker | done | Claude | 053, 054, 061 |
+| NOVA-062 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 055 |
+| NOVA-056 | Backtest engine: equity intraday | draft | — | 062 |
+| NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox | draft | — | 062 |
 | NOVA-058 | Real mode: login + Relay screens on the real API | draft | — | 046, 050, 051 |
-| NOVA-059 | Real mode: Orbit screens on the real API | draft | — | 055, 058, 061 |
+| NOVA-059 | Real mode: Orbit screens on the real API | draft | — | 058, 061, 062 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

@@ -5,6 +5,7 @@ description = "NOVA backend workspace (not a package)"
 requires-python = "==3.12.*"
 dependencies = [
     "nova-atlas",
+    "nova-backtest",
     "nova-broker",
     "nova-common",
     "nova-contracts",
@@ -40,6 +41,7 @@ nova-broker = { workspace = true }
 nova-atlas = { workspace = true }
 nova-ledger = { workspace = true }
 nova-strategy = { workspace = true }
+nova-backtest = { workspace = true }
 
 [tool.ruff]
 line-length = 100

@@ -3,10 +3,10 @@ from datetime import date
 
 from nova_atlas.broker_client import BrokerData
 from nova_atlas.cli import queue_download
-from nova_atlas.queue import claim_next, lock_next, requeue_running
 from nova_atlas.universe import sync_instruments
 from nova_atlas.worker import run_worker
 from nova_db.models import DataJob
+from nova_db.queue import claim_next, lock_next, requeue_running
 from sqlalchemy import Engine, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -32,9 +32,9 @@ def test_claims_the_oldest_job_first(clean: Engine) -> None:
     first, second = _queue(clean, 2)
 
     with Session(clean) as db:
-        assert claim_next(db) == first
-        assert claim_next(db) == second
-        assert claim_next(db) is None
+        assert claim_next(db, DataJob) == first
+        assert claim_next(db, DataJob) == second
+        assert claim_next(db, DataJob) is None
         job = db.get(DataJob, first)
         assert job is not None and job.status == "running" and job.started_at is not None
 
@@ -43,16 +43,18 @@ def test_two_workers_never_claim_the_same_job(clean: Engine) -> None:
     first, second = _queue(clean, 2)
 
     with Session(clean) as holder, Session(clean) as other:
-        locked = lock_next(holder)  # a worker is claiming `first` and has not committed yet
+        locked = lock_next(
+            holder, DataJob
+        )  # a worker is claiming `first` and has not committed yet
         assert locked is not None and locked.id == first
-        assert claim_next(other) == second
+        assert claim_next(other, DataJob) == second
 
 
 def test_interrupted_jobs_are_requeued(clean: Engine) -> None:
     (job_id,) = _queue(clean, 1)
     with Session(clean) as db:
-        claim_next(db)
-        assert requeue_running(db) == 1
+        claim_next(db, DataJob)
+        assert requeue_running(db, DataJob) == 1
         job = db.get(DataJob, job_id)
         assert job is not None and job.status == "queued" and job.started_at is None
 

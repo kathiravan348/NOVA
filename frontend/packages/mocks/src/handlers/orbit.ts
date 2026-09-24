@@ -1,8 +1,10 @@
 import { http, HttpResponse } from "msw";
 import {
+  BacktestRunCreateSchema,
   StrategyCreateSchema,
   StrategyUpdateSchema,
   StrategyVersionCreateSchema,
+  type BacktestRun,
   type Strategy,
 } from "@nova/contracts";
 import {
@@ -89,6 +91,23 @@ export const orbitHandlers = [
       ? mockBacktestRuns.filter((r) => r.strategyId === strategyId)
       : mockBacktestRuns;
     return paginate(runs, request.url);
+  }),
+
+  http.post(apiPath("/backtests"), async ({ request }) => {
+    const parsed = BacktestRunCreateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) return badRequest("Body must be a valid BacktestRunCreate");
+    const strategy = mockStrategies.find((s) => s.id === parsed.data.strategyId);
+    if (!strategy) return notFound(`Strategy ${parsed.data.strategyId} not found`);
+    const queued: BacktestRun = {
+      id: "run_new",
+      ...parsed.data,
+      status: "queued",
+      createdAt: MOCK_NOW,
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+    };
+    return HttpResponse.json(queued, { status: 201 });
   }),
 
   http.get(apiPath("/backtests/:id"), ({ params }) => {

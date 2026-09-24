@@ -100,3 +100,21 @@ export const BacktestResultSchema = z
     path: ["bySymbol"],
   });
 export type BacktestResult = z.infer<typeof BacktestResultSchema>;
+
+/** Body of `POST /backtests` (D44): queues a run of one strategy version on a universe. */
+export const BacktestRunCreateSchema = z
+  .strictObject({
+    strategyId: IdSchema,
+    strategyVersion: z.number().int().min(1),
+    name: z.string().min(1),
+    universe: UniverseSchema,
+    from: IsoDateSchema,
+    to: IsoDateSchema,
+    initialCapitalPaise: z.number().int().positive(),
+    benchmark: BacktestBenchmarkSchema.nullable(),
+  })
+  .refine((data) => data.from <= data.to, {
+    message: "from date must be less than or equal to to date",
+    path: ["from"],
+  });
+export type BacktestRunCreate = z.infer<typeof BacktestRunCreateSchema>;

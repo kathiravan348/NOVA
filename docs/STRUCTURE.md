@@ -37,13 +37,13 @@
 │  └─ apps/             each: public/mockServiceWorker.js, src/routes.tsx, layout/, pages/
 │     ├─ nova-orbit/    strategy builder + backtesting (port 3000)
 │     └─ nova-relay/    API config + limits (port 3001)
-├─ compose.yaml         db, redis, migrate, broker, strategy, atlas, atlas-worker, core, backend-check (tools)
+├─ compose.yaml         db, redis, migrate, broker, strategy, backtest(+worker), atlas(+worker), core, backend-check
 ├─ .env.example         every variable with dummy values (copy to .env)
 └─ backend/             uv workspace (D33, D36); Dockerfile = one image for all services
    ├─ scripts/check.sh  ruff, format, mypy per package, pytest
    ├─ libs/
    │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
-   │  ├─ nova_db/       SQLAlchemy models, Alembic migrations (`python -m nova_db upgrade|check`) (D37)
+   │  ├─ nova_db/       models, migrations (`python -m nova_db upgrade|check`), queue + paging helpers (D37, D41)
    │  ├─ nova_ledger/   charges per trade from dated `charge_rates` rows (D42)
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
    │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` + `redis` fixtures, `kite.FakeKite`, `broker.FakeBroker`
@@ -52,6 +52,7 @@
       ├─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40),
       │                 `/internal/kite/*` data for other services (D41); `python -m nova_broker add-account`
       ├─ strategy/      strategies, immutable versions, stats summary in SQL (D26, D43)
+      ├─ backtest/      queue runs (D44), runs/results/trades API, worker (engine: NOVA-062)
       └─ atlas/         NOVA Atlas: `data/universe.csv`, instrument sync, data jobs + worker (Postgres queue, D41);
                         `python -m nova_atlas sync-instruments | download | worker`
 ```

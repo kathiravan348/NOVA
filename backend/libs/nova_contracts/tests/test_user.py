@@ -35,3 +35,21 @@ def test_numbers_are_not_coerced_to_strings(parity: Parity) -> None:
 
     with pytest.raises(ValidationError):
         User.model_validate_json(json.dumps(data))
+
+
+def test_dates_parse_from_strings_in_python_mode_but_only_as_yyyy_mm_dd() -> None:
+    from nova_contracts import BacktestRunCreate
+
+    body = {
+        "strategy_id": "stg_1",
+        "strategy_version": 1,
+        "name": "x",
+        "universe": {"type": "index", "index": "NIFTY 50"},
+        "from": "2025-01-01",
+        "to": "2025-02-01",
+        "initial_capital_paise": 1,
+        "benchmark": None,
+    }
+    assert BacktestRunCreate.model_validate(body).from_.isoformat() == "2025-01-01"
+    with pytest.raises(ValidationError):
+        BacktestRunCreate.model_validate(body | {"to": "2025-2-1"})

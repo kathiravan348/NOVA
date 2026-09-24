@@ -2,6 +2,16 @@
 
 from nova_contracts.audit import AuditAction, AuditEntry, AuditTargetType
 from nova_contracts.auth import LoginRequest
+from nova_contracts.backtest import (
+    BacktestMetrics,
+    BacktestResult,
+    BacktestRun,
+    BacktestRunCreate,
+    BacktestRunStatus,
+    EquityPoint,
+    SymbolBreakdown,
+    Universe,
+)
 from nova_contracts.broker import (
     Broker,
     BrokerAccount,
@@ -52,6 +62,7 @@ from nova_contracts.strategy import (
     StrategyVersionCreate,
 )
 from nova_contracts.strategy_stats import BestNetPnl, StrategyStats
+from nova_contracts.trade import Trade
 from nova_contracts.user import User, UserRole
 
 __all__ = [
@@ -60,6 +71,11 @@ __all__ = [
     "AuditAction",
     "AuditEntry",
     "AuditTargetType",
+    "BacktestMetrics",
+    "BacktestResult",
+    "BacktestRun",
+    "BacktestRunCreate",
+    "BacktestRunStatus",
     "BestNetPnl",
     "Broker",
     "BrokerAccount",
@@ -75,6 +91,7 @@ __all__ = [
     "Charges",
     "Condition",
     "Email",
+    "EquityPoint",
     "IndexName",
     "Instrument",
     "LoginRequest",
@@ -107,8 +124,11 @@ __all__ = [
     "StrategyUpdate",
     "StrategyVersion",
     "StrategyVersionCreate",
+    "SymbolBreakdown",
     "Side",
     "Timeframe",
+    "Trade",
+    "Universe",
     "User",
     "UserRole",
     "UtcDateTime",

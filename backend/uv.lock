@@ -6,6 +6,7 @@ requires-python = "==3.12.*"
 members = [
     "nova-atlas",
     "nova-backend",
+    "nova-backtest",
     "nova-broker",
     "nova-common",
     "nova-contracts",
@@ -431,6 +432,7 @@ version = "0.0.1"
 source = { virtual = "." }
 dependencies = [
     { name = "nova-atlas" },
+    { name = "nova-backtest" },
     { name = "nova-broker" },
     { name = "nova-common" },
     { name = "nova-contracts" },
@@ -453,6 +455,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "nova-atlas", editable = "services/atlas" },
+    { name = "nova-backtest", editable = "services/backtest" },
     { name = "nova-broker", editable = "services/broker" },
     { name = "nova-common", editable = "libs/nova_common" },
     { name = "nova-contracts", editable = "libs/nova_contracts" },
@@ -470,6 +473,29 @@ dev = [
     { name = "pytest", specifier = "==9.1.1" },
     { name = "ruff", specifier = "==0.16.8" },
     { name = "types-jsonschema", specifier = "==4.26.0.20260518" },
+]
+
+[[package]]
+name = "nova-backtest"
+version = "0.0.1"
+source = { editable = "services/backtest" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "nova-common" },
+    { name = "nova-contracts" },
+    { name = "nova-db" },
+    { name = "nova-ledger" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = "==0.141.1" },
+    { name = "nova-common", editable = "libs/nova_common" },
+    { name = "nova-contracts", editable = "libs/nova_contracts" },
+    { name = "nova-db", editable = "libs/nova_db" },
+    { name = "nova-ledger", editable = "libs/nova_ledger" },
+    { name = "uvicorn", specifier = "==0.53.0" },
 ]
 
 [[package]]
