@@ -1,0 +1,64 @@
+# NOVA local stack (D33, D36). Copy .env.example to .env first.
+# Every port binds to 127.0.0.1; memory limits keep the stack within the WSL cap.
+name: nova
+
+x-backend: &backend
+  build: ./backend
+  image: nova-backend:dev
+  environment:
+    NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
+    NOVA_REDIS_URL: redis://redis:6379/0
+    NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
+
+services:
+  db:
+    image: timescale/timescaledb:2.30.1-pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${NOVA_DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 2g
+
+  redis:
+    image: redis:8.10.2-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:${NOVA_REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 256m
+
+  core:
+    <<: *backend
+    ports:
+      - "127.0.0.1:${NOVA_CORE_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 512m
+
+  backend-check:
+    <<: *backend
+    profiles: ["tools"]
+    volumes:
+      - .:/repo:ro
+    working_dir: /repo/backend
+    command: ["sh", "scripts/check.sh"]
+    mem_limit: 1536m
+
+volumes:
+  db-data:

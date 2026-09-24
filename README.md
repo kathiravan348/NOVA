@@ -27,6 +27,16 @@ pnpm review
 `pnpm review` starts both apps and Storybook together. Sign in with any username and password (demo sign-in).
 For a guided tour and the feedback checklist, see [`docs/REVIEW-GUIDE.md`](docs/REVIEW-GUIDE.md).
 
+## Backend (Stage B)
+
+```bash
+cp .env.example .env
+docker compose up -d
+docker compose run --rm backend-check
+```
+
+NOVA Core answers on http://127.0.0.1:8000/api/v1/health. Details: [`backend/README.md`](backend/README.md).
+
 ## Common commands (run in `frontend/`)
 
 | Command                                                             | Does                                       |

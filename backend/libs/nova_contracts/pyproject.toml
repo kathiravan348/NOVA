@@ -1,0 +1,12 @@
+[project]
+name = "nova-contracts"
+version = "0.0.1"
+description = "Pydantic models mirroring @nova/contracts (D34)"
+requires-python = "==3.12.*"
+dependencies = [
+    "pydantic==2.13.5",
+]
+
+[build-system]
+requires = ["uv_build==0.12.18"]
+build-backend = "uv_build"
