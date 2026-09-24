@@ -24,14 +24,14 @@ The backtest engine accepts only Strategy Specs. Results always include charges 
 
 ## Data (Stage B)
 - PostgreSQL (`backend/libs/nova_db`, D37): users, roles, strategies + versions, backtest runs/results/trades (charges per trade),
-  broker accounts/sessions/profiles, rate-limit rules, data jobs, audit log, instruments; fee-rate tables (NOVA-053).
+  broker accounts/sessions/profiles, rate-limit rules, data jobs, audit log, instruments; `charge_rates` (dated, D42).
 - TimescaleDB: candles (1m and up) and recorded ticks (recent window).
 - Parquet files: archive of ticks and old candles, partitioned by date/segment/symbol.
 - Redis: rate limiter, job queue.
 - Money as integer paise or `Decimal`, never float. Times in UTC.
 
 ## Fees and taxes
-NOVA Ledger computes brokerage, STT/CTT, exchange transaction, SEBI fee, stamp duty, GST, DP charges per trade, using rate tables with effective dates (never hardcoded). Every buy lot is stored (date, price, qty, charges) so tax (STCG/LTCG, intraday as speculative) can be computed later.
+NOVA Ledger (`backend/libs/nova_ledger`, a library, D42) computes brokerage, STT/CTT, exchange transaction, SEBI fee, stamp duty, GST, DP charges per trade, using rate tables with effective dates (never hardcoded). Every buy lot is stored (date, price, qty, charges) so tax (STCG/LTCG, intraday as speculative) can be computed later.
 
 ## Runtime
 Development: Windows + Docker Desktop (WSL2), pnpm. Later: VPS in India with static IP (required for live trading).

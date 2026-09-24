@@ -11,6 +11,7 @@ from nova_contracts.broker import (
     BrokerSession,
     BrokerSessionStatus,
 )
+from nova_contracts.charges import Charges
 from nova_contracts.common import (
     Contract,
     Email,
@@ -54,6 +55,7 @@ __all__ = [
     "DataJobStatus",
     "DataJobType",
     "Candle",
+    "Charges",
     "Email",
     "IndexName",
     "Instrument",

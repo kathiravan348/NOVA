@@ -11,6 +11,7 @@ members = [
     "nova-contracts",
     "nova-core",
     "nova-db",
+    "nova-ledger",
     "nova-testing",
 ]
 
@@ -434,6 +435,7 @@ dependencies = [
     { name = "nova-contracts" },
     { name = "nova-core" },
     { name = "nova-db" },
+    { name = "nova-ledger" },
 ]
 
 [package.dev-dependencies]
@@ -454,6 +456,7 @@ requires-dist = [
     { name = "nova-contracts", editable = "libs/nova_contracts" },
     { name = "nova-core", editable = "services/core" },
     { name = "nova-db", editable = "libs/nova_db" },
+    { name = "nova-ledger", editable = "libs/nova_ledger" },
 ]
 
 [package.metadata.requires-dev]
@@ -561,6 +564,23 @@ requires-dist = [
     { name = "nova-common", editable = "libs/nova_common" },
     { name = "psycopg", extras = ["binary"], specifier = "==3.3.6" },
     { name = "sqlalchemy", specifier = "==2.0.54" },
+]
+
+[[package]]
+name = "nova-ledger"
+version = "0.0.1"
+source = { editable = "libs/nova_ledger" }
+dependencies = [
+    { name = "nova-contracts" },
+    { name = "nova-db" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nova-contracts", editable = "libs/nova_contracts" },
+    { name = "nova-db", editable = "libs/nova_db" },
+    { name = "pydantic", specifier = "==2.13.5" },
 ]
 
 [[package]]

@@ -60,7 +60,7 @@
 | NOVA-051 | Atlas: instrument sync + historical downloads (Postgres job queue, D41), data-jobs endpoints | done | Claude | 050 |
 | NOVA-061 | Atlas: market-data endpoints (instruments with computed stats, candles by date range) | done | Claude | 051 |
 | NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |
-| NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables | draft | — | 047 |
+| NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables (D42) | done | Claude | 047 |
 | NOVA-054 | Strategy service: strategies CRUD, versions, stats summary | draft | — | 048 |
 | NOVA-055 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 053, 054, 061 |
 | NOVA-056 | Backtest engine: equity intraday | draft | — | 055 |

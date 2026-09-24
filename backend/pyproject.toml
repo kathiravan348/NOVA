@@ -10,6 +10,7 @@ dependencies = [
     "nova-contracts",
     "nova-core",
     "nova-db",
+    "nova-ledger",
 ]
 
 [dependency-groups]
@@ -36,6 +37,7 @@ nova-testing = { workspace = true }
 nova-db = { workspace = true }
 nova-broker = { workspace = true }
 nova-atlas = { workspace = true }
+nova-ledger = { workspace = true }
 
 [tool.ruff]
 line-length = 100

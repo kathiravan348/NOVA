@@ -1,0 +1,18 @@
+[project]
+name = "nova-ledger"
+version = "0.0.1"
+description = "NOVA Ledger: charges from dated rate tables (D42)"
+requires-python = "==3.12.*"
+dependencies = [
+    "nova-contracts",
+    "nova-db",
+    "pydantic==2.13.5",
+]
+
+[build-system]
+requires = ["uv_build==0.12.18"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+nova-contracts = { workspace = true }
+nova-db = { workspace = true }

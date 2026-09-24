@@ -3,7 +3,15 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Index, Integer, Numeric
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nova_db.enums import (
@@ -16,7 +24,7 @@ from nova_db.enums import (
     TIMEFRAMES,
     sql_in,
 )
-from nova_db.models.base import Base, check_in, created_at_column
+from nova_db.models.base import Base, Json, check_in, created_at_column
 
 
 class DataJob(Base):
@@ -139,3 +147,20 @@ class Candle(Base):
     low_paise: Mapped[int] = mapped_column(BigInteger)
     close_paise: Mapped[int] = mapped_column(BigInteger)
     volume: Mapped[int] = mapped_column(BigInteger)
+
+
+class ChargeRate(Base):
+    """Broker and statutory charge rates for a segment from a date on (NOVA Ledger, D42)."""
+
+    __tablename__ = "charge_rates"
+    __table_args__ = (
+        check_in("segment", "segment", SEGMENTS),
+        UniqueConstraint("segment", "effective_from"),
+    )
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    segment: Mapped[str]
+    effective_from: Mapped[date]
+    rates: Mapped[Json]
+    source: Mapped[str]
+    created_at: Mapped[datetime] = created_at_column()

@@ -44,6 +44,7 @@
    ├─ libs/
    │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
    │  ├─ nova_db/       SQLAlchemy models, Alembic migrations (`python -m nova_db upgrade|check`) (D37)
+   │  ├─ nova_ledger/   charges per trade from dated `charge_rates` rows (D42)
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
    │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` + `redis` fixtures, `kite.FakeKite`, `broker.FakeBroker`
    └─ services/

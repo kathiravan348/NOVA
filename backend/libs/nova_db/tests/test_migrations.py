@@ -20,6 +20,7 @@ EXPECTED_TABLES = {
     "instruments",
     "candles",
     "auth_sessions",
+    "charge_rates",
 }
 
 
