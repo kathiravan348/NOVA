@@ -40,13 +40,22 @@ services:
       retries: 20
     mem_limit: 256m
 
+  # Applies database migrations (D37), then exits; services start after it succeeds.
+  migrate:
+    <<: *backend
+    command: ["python", "-m", "nova_db", "upgrade"]
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 256m
+
   core:
     <<: *backend
     ports:
       - "127.0.0.1:${NOVA_CORE_PORT:-8000}:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     mem_limit: 512m
@@ -54,6 +63,14 @@ services:
   backend-check:
     <<: *backend
     profiles: ["tools"]
+    environment:
+      NOVA_DATABASE_URL: postgresql+psycopg://unused@localhost/unused
+      NOVA_REDIS_URL: redis://unused:6379/0
+      # Maintenance database: tests create and drop their own throwaway database (D37).
+      NOVA_TEST_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/postgres
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - .:/repo:ro
     working_dir: /repo/backend

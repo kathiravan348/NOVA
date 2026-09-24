@@ -23,7 +23,8 @@ Two authoring modes, one format:
 The backtest engine accepts only Strategy Specs. Results always include charges from NOVA Ledger.
 
 ## Data (Stage B)
-- PostgreSQL: users, roles, strategies, backtest runs, trades, charges, audit log, fee-rate tables (with effective dates).
+- PostgreSQL (`backend/libs/nova_db`, D37): users, roles, strategies + versions, backtest runs/results/trades (charges per trade),
+  broker accounts/sessions/profiles, rate-limit rules, data jobs, audit log, instruments; fee-rate tables (NOVA-053).
 - TimescaleDB: candles (1m and up) and recorded ticks (recent window).
 - Parquet files: archive of ticks and old candles, partitioned by date/segment/symbol.
 - Redis: rate limiter, job queue.

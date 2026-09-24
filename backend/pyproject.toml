@@ -3,7 +3,12 @@ name = "nova-backend"
 version = "0.0.1"
 description = "NOVA backend workspace (not a package)"
 requires-python = "==3.12.*"
-dependencies = ["nova-common", "nova-contracts", "nova-core"]
+dependencies = [
+    "nova-common",
+    "nova-contracts",
+    "nova-core",
+    "nova-db",
+]
 
 [dependency-groups]
 dev = [
@@ -26,6 +31,7 @@ nova-common = { workspace = true }
 nova-contracts = { workspace = true }
 nova-core = { workspace = true }
 nova-testing = { workspace = true }
+nova-db = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -33,6 +39,10 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# Migrations list DDL one column per line; long constraint strings stay readable unwrapped.
+"**/migrations/versions/*.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

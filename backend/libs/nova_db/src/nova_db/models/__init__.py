@@ -1,0 +1,28 @@
+"""All tables of schema v1 (D37). Import from here so `Base.metadata` is complete."""
+
+from nova_db.models.auth import Role, User, UserRole
+from nova_db.models.backtest import BacktestResult, BacktestRun, Trade
+from nova_db.models.base import Base
+from nova_db.models.broker import BrokerAccount, BrokerProfile, BrokerSession, RateLimitRule
+from nova_db.models.data import AuditEntry, Candle, DataJob, Instrument
+from nova_db.models.strategy import Strategy, StrategyVersion
+
+__all__ = [
+    "AuditEntry",
+    "BacktestResult",
+    "BacktestRun",
+    "Base",
+    "BrokerAccount",
+    "BrokerProfile",
+    "BrokerSession",
+    "Candle",
+    "DataJob",
+    "Instrument",
+    "RateLimitRule",
+    "Role",
+    "Strategy",
+    "StrategyVersion",
+    "Trade",
+    "User",
+    "UserRole",
+]
