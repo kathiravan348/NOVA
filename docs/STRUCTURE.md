@@ -45,8 +45,9 @@
    │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
    │  ├─ nova_db/       SQLAlchemy models, Alembic migrations (`python -m nova_db upgrade|check`) (D37)
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
-   │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` fixtures, `kite.FakeKite`
+   │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` + `redis` fixtures, `kite.FakeKite`
    └─ services/
       ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; `python -m nova_core create-admin`
-      └─ broker/        the only Kite caller (D35): accounts, profile, daily login; `python -m nova_broker add-account`
+      └─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40);
+                        `python -m nova_broker add-account`
 ```

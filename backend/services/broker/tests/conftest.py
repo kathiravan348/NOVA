@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 import httpx2
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from nova_broker.cli import add_account
 from nova_broker.crypto import new_key
@@ -13,10 +14,12 @@ from nova_db.models import User
 from nova_testing.db import database_url, engine, session
 from nova_testing.kite import API_KEY, API_SECRET, FakeKite
 from nova_testing.parity import Parity
+from nova_testing.redis import redis_client
+from redis import Redis
 from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
-__all__ = ["database_url", "engine", "session"]
+__all__ = ["database_url", "engine", "redis_client", "session"]
 
 TOKEN = "internal-test-token"
 
@@ -65,15 +68,26 @@ def settings(database_url: str, clean: Engine) -> BrokerSettings:
     return make_settings(database_url)
 
 
-@pytest.fixture
-def client(settings: BrokerSettings, kite: FakeKite) -> Iterator[TestClient]:
-    app = create_app(settings, kite_transport=httpx2.MockTransport(kite.handle))
-    headers = {
+@pytest.fixture(scope="session")
+def caller_headers() -> dict[str, str]:
+    """What NOVA Core sends for the signed-in owner (D38)."""
+    return {
         "x-nova-internal-token": TOKEN,
         "x-nova-user-id": "usr_owner",
         "x-nova-user-name": "Aarav%20Sharma",
     }
-    with TestClient(app, headers=headers, follow_redirects=False) as test_client:
+
+
+@pytest.fixture
+def app(settings: BrokerSettings, kite: FakeKite, redis_client: Redis) -> FastAPI:
+    return create_app(
+        settings, kite_transport=httpx2.MockTransport(kite.handle), redis=redis_client
+    )
+
+
+@pytest.fixture
+def client(app: FastAPI, caller_headers: dict[str, str]) -> Iterator[TestClient]:
+    with TestClient(app, headers=caller_headers, follow_redirects=False) as test_client:
         yield test_client
 
 

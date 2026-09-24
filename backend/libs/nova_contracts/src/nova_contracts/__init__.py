@@ -26,6 +26,13 @@ from nova_contracts.common import (
 )
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.page import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, Page
+from nova_contracts.rate_limit import (
+    RateLimit,
+    RateLimitEndpoint,
+    RateLimitRule,
+    RateLimitUpdate,
+    RateLimitWindow,
+)
 from nova_contracts.user import User, UserRole
 
 __all__ = [
@@ -44,6 +51,11 @@ __all__ = [
     "Email",
     "LoginRequest",
     "Page",
+    "RateLimit",
+    "RateLimitEndpoint",
+    "RateLimitRule",
+    "RateLimitUpdate",
+    "RateLimitWindow",
     "ApiError",
     "ApiErrorBody",
     "ApiErrorCode",

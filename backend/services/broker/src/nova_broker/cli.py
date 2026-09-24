@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from nova_broker.crypto import new_key
+from nova_broker.limits import ensure_rules
 from nova_broker.settings import get_broker_settings
 
 CLIENT_ID = re.compile(r"^[A-Za-z0-9]{4,12}$")
@@ -29,6 +30,8 @@ def add_account(db: Session, *, label: str, client_id: str) -> BrokerAccount:
         id=new_id("brk"), broker="zerodha", label=label.strip(), client_id=client_id.upper()
     )
     db.add(account)
+    db.flush()
+    ensure_rules(db, account.id)
     return account
 
 

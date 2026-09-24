@@ -1,6 +1,6 @@
 """Broker service settings (`NOVA_*`). Kite values are optional: the service starts without them."""
 
-from datetime import date
+from datetime import date, time
 from functools import lru_cache
 
 from nova_common import Settings
@@ -22,6 +22,8 @@ class BrokerSettings(Settings):
     kite_static_ip: str | None = None
     # Where the browser returns after the Kite login.
     relay_url: str = "http://localhost:3001"
+    # When Kite's per-day limits reset (IST). Not documented by Kite: 00:00 until confirmed (D40).
+    kite_daily_reset: time = time(0, 0)
 
 
 @lru_cache(maxsize=1)

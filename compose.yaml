@@ -67,6 +67,7 @@ services:
       NOVA_KITE_RENEWS_ON: ${NOVA_KITE_RENEWS_ON:-}
       NOVA_KITE_STATIC_IP: ${NOVA_KITE_STATIC_IP:-}
       NOVA_RELAY_URL: ${NOVA_RELAY_URL:-http://localhost:3001}
+      NOVA_KITE_DAILY_RESET: ${NOVA_KITE_DAILY_RESET:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -100,8 +101,12 @@ services:
       NOVA_REDIS_URL: redis://unused:6379/0
       # Maintenance database: tests create and drop their own throwaway database (D37).
       NOVA_TEST_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/postgres
+      # Redis tests use db 15 and flush it (D40).
+      NOVA_TEST_REDIS_URL: redis://redis:6379/15
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - .:/repo:ro
