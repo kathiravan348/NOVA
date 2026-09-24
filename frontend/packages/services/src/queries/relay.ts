@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { RateLimitEndpoint, RateLimitUpdate } from "@nova/contracts";
 import {
   getBrokerAccount,
@@ -12,6 +12,7 @@ import {
   listRateLimits,
 } from "../api/relay";
 import { queryKeys } from "./keys";
+import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
 
 export function useBrokerAccounts() {
   return useQuery({
@@ -64,10 +65,13 @@ export function useBrokerProfile(broker: string) {
   });
 }
 
+/** Data jobs, one page at a time; `fetchNextPage` loads more. */
 export function useDataJobs() {
-  return useQuery({
-    queryKey: queryKeys.dataJobs.all,
-    queryFn: ({ signal }) => listDataJobs({ signal }),
+  return useInfiniteQuery({
+    queryKey: queryKeys.dataJobs.list,
+    queryFn: ({ signal, pageParam }) => listDataJobs(cursorQuery(pageParam), { signal }),
+    ...pagedListOptions,
+    select: flattenPages,
   });
 }
 
@@ -79,9 +83,12 @@ export function useDataJob(id: string) {
   });
 }
 
+/** Audit entries, one page at a time; `fetchNextPage` loads more. */
 export function useAuditEntries() {
-  return useQuery({
-    queryKey: queryKeys.auditEntries.all,
-    queryFn: ({ signal }) => listAuditEntries({ signal }),
+  return useInfiniteQuery({
+    queryKey: queryKeys.auditEntries.list,
+    queryFn: ({ signal, pageParam }) => listAuditEntries(cursorQuery(pageParam), { signal }),
+    ...pagedListOptions,
+    select: flattenPages,
   });
 }

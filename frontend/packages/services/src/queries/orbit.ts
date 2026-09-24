@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
 import {
   getBacktest,
   getBacktestResult,
@@ -8,8 +8,10 @@ import {
   listBacktestTrades,
   listStrategies,
   listStrategyStats,
+  type BacktestFilter,
 } from "../api/orbit";
 import { queryKeys } from "./keys";
+import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
 
 export function useMe() {
   return useQuery({ queryKey: queryKeys.me, queryFn: ({ signal }) => getMe({ signal }) });
@@ -38,10 +40,14 @@ export function useStrategy(id: string) {
   });
 }
 
-export function useBacktests() {
-  return useQuery({
-    queryKey: queryKeys.backtests.all,
-    queryFn: ({ signal }) => listBacktests({ signal }),
+/** Backtest runs, one page at a time; `fetchNextPage` loads more. */
+export function useBacktests(filter: BacktestFilter = {}) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.backtests.list(filter),
+    queryFn: ({ signal, pageParam }) =>
+      listBacktests({ ...filter, ...cursorQuery(pageParam) }, { signal }),
+    ...pagedListOptions,
+    select: flattenPages,
   });
 }
 
@@ -61,10 +67,13 @@ export function useBacktestResult(id: string) {
   });
 }
 
+/** A run's trades, one page at a time; `fetchNextPage` loads more. */
 export function useBacktestTrades(id: string) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.backtests.trades(id),
-    queryFn: ({ signal }) => listBacktestTrades(id, { signal }),
+    queryFn: ({ signal, pageParam }) => listBacktestTrades(id, cursorQuery(pageParam), { signal }),
+    ...pagedListOptions,
+    select: flattenPages,
     enabled: Boolean(id),
   });
 }

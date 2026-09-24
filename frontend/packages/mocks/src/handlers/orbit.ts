@@ -7,7 +7,7 @@ import {
   mockTrades,
   mockUser,
 } from "../data";
-import { apiPath, notFound } from "./api";
+import { apiPath, notFound, paginate } from "./api";
 
 export const orbitHandlers = [
   http.get(apiPath("/me"), () => {
@@ -32,8 +32,12 @@ export const orbitHandlers = [
     return HttpResponse.json(strategy);
   }),
 
-  http.get(apiPath("/backtests"), () => {
-    return HttpResponse.json(mockBacktestRuns);
+  http.get(apiPath("/backtests"), ({ request }) => {
+    const strategyId = new URL(request.url).searchParams.get("strategyId");
+    const runs = strategyId
+      ? mockBacktestRuns.filter((r) => r.strategyId === strategyId)
+      : mockBacktestRuns;
+    return paginate(runs, request.url);
   }),
 
   http.get(apiPath("/backtests/:id"), ({ params }) => {
@@ -58,13 +62,13 @@ export const orbitHandlers = [
     return HttpResponse.json(result);
   }),
 
-  http.get(apiPath("/backtests/:id/trades"), ({ params }) => {
+  http.get(apiPath("/backtests/:id/trades"), ({ params, request }) => {
     const id = params["id"] as string;
     const run = mockBacktestRuns.find((r) => r.id === id);
     if (!run) {
       return notFound(`Backtest run ${id} not found`);
     }
     const trades = mockTrades.filter((t) => t.runId === id);
-    return HttpResponse.json(trades);
+    return paginate(trades, request.url);
   }),
 ];

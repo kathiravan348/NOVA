@@ -7,6 +7,7 @@ import {
   BrokerProfileSchema,
   DataJobSchema,
   RateLimitSchema,
+  pageSchema,
 } from "@nova/contracts";
 import {
   mockAuditEntries,
@@ -67,7 +68,24 @@ describe("Relay MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/data-jobs");
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(DataJobSchema.array().parse(data)).toEqual(mockDataJobs);
+    expect(pageSchema(DataJobSchema).parse(data)).toEqual({
+      items: mockDataJobs,
+      nextCursor: null,
+    });
+  });
+
+  it("GET /api/v1/data-jobs?limit=2 returns the first page and a cursor to the rest", async () => {
+    const first = pageSchema(DataJobSchema).parse(
+      await (await fetch("http://localhost/api/v1/data-jobs?limit=2")).json(),
+    );
+    expect(first.items).toEqual(mockDataJobs.slice(0, 2));
+    expect(first.nextCursor).not.toBeNull();
+    const rest = pageSchema(DataJobSchema).parse(
+      await (
+        await fetch(`http://localhost/api/v1/data-jobs?limit=200&cursor=${first.nextCursor!}`)
+      ).json(),
+    );
+    expect(rest).toEqual({ items: mockDataJobs.slice(2), nextCursor: null });
   });
 
   it("GET /api/v1/data-jobs/:id returns single data job for valid id", async () => {
@@ -132,6 +150,14 @@ describe("Relay MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/audit");
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(AuditEntrySchema.array().parse(data)).toEqual(mockAuditEntries);
+    expect(pageSchema(AuditEntrySchema).parse(data)).toEqual({
+      items: mockAuditEntries,
+      nextCursor: null,
+    });
+  });
+
+  it("GET /api/v1/audit?limit=500 answers 400 invalid_request", async () => {
+    const res = await fetch("http://localhost/api/v1/audit?limit=500");
+    expect(res.status).toBe(400);
   });
 });

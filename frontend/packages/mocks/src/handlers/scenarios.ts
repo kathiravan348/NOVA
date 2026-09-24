@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { apiPath, internalError } from "./api";
+import { apiPath, emptyPage, internalError } from "./api";
 
 export const emptyHandlers = [
   http.get(apiPath("/strategies"), () => {
@@ -9,10 +9,10 @@ export const emptyHandlers = [
     return HttpResponse.json([]);
   }),
   http.get(apiPath("/backtests"), () => {
-    return HttpResponse.json([]);
+    return emptyPage();
   }),
   http.get(apiPath("/backtests/:id/trades"), () => {
-    return HttpResponse.json([]);
+    return emptyPage();
   }),
   http.get(apiPath("/broker/accounts"), () => {
     return HttpResponse.json([]);
@@ -24,10 +24,10 @@ export const emptyHandlers = [
     return HttpResponse.json([]);
   }),
   http.get(apiPath("/data-jobs"), () => {
-    return HttpResponse.json([]);
+    return emptyPage();
   }),
   http.get(apiPath("/audit"), () => {
-    return HttpResponse.json([]);
+    return emptyPage();
   }),
   http.get(apiPath("/market-data/instruments"), () => {
     return HttpResponse.json([]);

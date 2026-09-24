@@ -7,7 +7,7 @@ import {
   mockDataJobs,
   mockRateLimits,
 } from "../data";
-import { apiPath, badRequest, notFound } from "./api";
+import { apiPath, badRequest, notFound, paginate } from "./api";
 
 export const relayHandlers = [
   http.get(apiPath("/broker/accounts"), () => {
@@ -62,8 +62,8 @@ export const relayHandlers = [
     return HttpResponse.json(profile);
   }),
 
-  http.get(apiPath("/data-jobs"), () => {
-    return HttpResponse.json(mockDataJobs);
+  http.get(apiPath("/data-jobs"), ({ request }) => {
+    return paginate(mockDataJobs, request.url);
   }),
 
   http.get(apiPath("/data-jobs/:id"), ({ params }) => {
@@ -75,7 +75,7 @@ export const relayHandlers = [
     return HttpResponse.json(job);
   }),
 
-  http.get(apiPath("/audit"), () => {
-    return HttpResponse.json(mockAuditEntries);
+  http.get(apiPath("/audit"), ({ request }) => {
+    return paginate(mockAuditEntries, request.url);
   }),
 ];

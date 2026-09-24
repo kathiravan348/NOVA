@@ -22,6 +22,19 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+/** Appends defined query values to a path: `withQuery("/audit", { limit: 10 })` → `/audit?limit=10`. */
+export function withQuery(
+  path: string,
+  query: Record<string, string | number | undefined>,
+): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) params.set(key, String(value));
+  }
+  const text = params.toString();
+  return text ? `${path}?${text}` : path;
+}
+
 export async function apiGet<T>(
   path: string,
   schema: z.ZodType<T>,

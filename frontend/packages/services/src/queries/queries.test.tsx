@@ -2,12 +2,15 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
+import { http } from "msw";
 import { setupServer } from "msw/node";
 import {
   errorHandlers,
   handlers,
   mockAuditEntries,
   mockBacktestResults,
+  mockBacktestRuns,
+  paginate,
   mockBrokerAccounts,
   mockBrokerProfiles,
   mockDataJobs,
@@ -18,7 +21,14 @@ import {
 } from "@nova/mocks";
 import { ApiRequestError } from "../http";
 import { queryKeys } from "./keys";
-import { useBacktestResults, useMe, useStrategies, useStrategy, useStrategyStats } from "./orbit";
+import {
+  useBacktestResults,
+  useBacktests,
+  useMe,
+  useStrategies,
+  useStrategy,
+  useStrategyStats,
+} from "./orbit";
 import { createQueryClient, shouldRetry } from "./queryClient";
 import {
   useAuditEntries,
@@ -80,6 +90,34 @@ describe("query hooks", () => {
     expect(result.current.limits.data).toEqual(mockRateLimits);
     expect(result.current.jobs.data).toEqual(mockDataJobs);
     expect(result.current.audit.data).toEqual(mockAuditEntries);
+  });
+
+  it("paged hooks load the next page and keep data flat", async () => {
+    // Serve two runs per page so the mock list spans more than one page.
+    server.use(
+      http.get("*/api/v1/backtests", ({ request }) => {
+        const url = new URL(request.url);
+        if (!url.searchParams.has("limit")) url.searchParams.set("limit", "2");
+        return paginate(mockBacktestRuns, url.toString());
+      }),
+    );
+    const { result } = renderHook(() => useBacktests(), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(mockBacktestRuns.slice(0, 2));
+    expect(result.current.hasNextPage).toBe(true);
+
+    await result.current.fetchNextPage();
+    await waitFor(() => expect(result.current.data).toEqual(mockBacktestRuns.slice(0, 4)));
+  });
+
+  it("useBacktests({ strategyId }) sends the filter", async () => {
+    const strategyId = mockBacktestRuns[0]!.strategyId;
+    const { result } = renderHook(() => useBacktests({ strategyId }), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(
+      mockBacktestRuns.filter((r) => r.strategyId === strategyId),
+    );
+    expect(result.current.hasNextPage).toBe(false);
   });
 
   it("useBacktestResults resolves one result per id", async () => {
@@ -150,5 +188,10 @@ describe("shouldRetry and keys", () => {
   it("builds nested keys", () => {
     expect(queryKeys.backtests.result("run_001")).toEqual(["backtests", "run_001", "result"]);
     expect(queryKeys.strategies.detail("s1")).toEqual(["strategies", "s1"]);
+    expect(queryKeys.backtests.list({ strategyId: "s1" })).toEqual([
+      "backtests",
+      "list",
+      { strategyId: "s1" },
+    ]);
   });
 });

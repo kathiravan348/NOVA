@@ -4,15 +4,18 @@ import {
   BrokerProfileSchema,
   DataJobSchema,
   RateLimitSchema,
+  pageSchema,
   type AuditEntry,
   type BrokerAccount,
   type BrokerProfile,
   type DataJob,
+  type Page,
+  type PageQuery,
   type RateLimit,
   type RateLimitEndpoint,
   type RateLimitUpdate,
 } from "@nova/contracts";
-import { apiGet, apiSend, type RequestOptions } from "../http";
+import { apiGet, apiSend, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
 
@@ -46,14 +49,19 @@ export function getBrokerProfile(broker: string, init?: RequestOptions): Promise
   return apiGet(`/broker/profiles/${id(broker)}`, BrokerProfileSchema, init);
 }
 
-export function listDataJobs(init?: RequestOptions): Promise<DataJob[]> {
-  return apiGet("/data-jobs", DataJobSchema.array(), init);
+/** One page of data jobs (D32). */
+export function listDataJobs(query: PageQuery = {}, init?: RequestOptions): Promise<Page<DataJob>> {
+  return apiGet(withQuery("/data-jobs", { ...query }), pageSchema(DataJobSchema), init);
 }
 
 export function getDataJob(jobId: string, init?: RequestOptions): Promise<DataJob> {
   return apiGet(`/data-jobs/${id(jobId)}`, DataJobSchema, init);
 }
 
-export function listAuditEntries(init?: RequestOptions): Promise<AuditEntry[]> {
-  return apiGet("/audit", AuditEntrySchema.array(), init);
+/** One page of audit entries (D32). */
+export function listAuditEntries(
+  query: PageQuery = {},
+  init?: RequestOptions,
+): Promise<Page<AuditEntry>> {
+  return apiGet(withQuery("/audit", { ...query }), pageSchema(AuditEntrySchema), init);
 }

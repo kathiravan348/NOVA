@@ -51,7 +51,7 @@
 | NOVA-060 | Dev machine rules: fnm + pnpm, uv, Docker Desktop limits (D36) | done | Claude | — |
 | NOVA-043 | Backend skeleton: Compose (TimescaleDB, Redis), uv workspace, NOVA Core health, backend-check (D33) | done | Claude | 022 |
 | NOVA-044 | Contract parity: JSON Schema from Zod, Pydantic models + parity tests (User, ApiError) (D34) | done | Claude | 043 |
-| NOVA-045 | Pagination envelope: contracts, mock handlers, services (screens unchanged) (D32) | planned | — | 022 |
+| NOVA-045 | Pagination envelope: contracts, mock handlers, services (screens unchanged) (D32) | done | Claude | 022 |
 | NOVA-046 | Load more on backtests, trades, data jobs, audit; strategy detail uses `strategyId` filter | draft | — | 045 |
 | NOVA-047 | Database schema v1 + Alembic migrations (all Phase 1 tables, candles hypertable) | draft | — | 043 |
 | NOVA-048 | NOVA Core: super-admin auth (session cookie), `/me`, gateway routing, audit writes | draft | — | 044, 047 |

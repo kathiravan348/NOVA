@@ -8,6 +8,7 @@ import {
   StrategyStatsSchema,
   TradeSchema,
   UserSchema,
+  pageSchema,
 } from "@nova/contracts";
 import {
   mockBacktestResults,
@@ -75,8 +76,45 @@ describe("Orbit MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/backtests");
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(BacktestRunSchema.array().parse(data)).toEqual(mockBacktestRuns);
+    expect(pageSchema(BacktestRunSchema).parse(data)).toEqual({
+      items: mockBacktestRuns,
+      nextCursor: null,
+    });
   });
+
+  it("GET /api/v1/backtests with limit 1 walks every run exactly once", async () => {
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    let pages = 0;
+    do {
+      const query: string = cursor ? `&cursor=${encodeURIComponent(cursor)}` : "";
+      const res = await fetch(`http://localhost/api/v1/backtests?limit=1${query}`);
+      expect(res.status).toBe(200);
+      const page = pageSchema(BacktestRunSchema).parse(await res.json());
+      expect(page.items).toHaveLength(1);
+      seen.push(...page.items.map((r) => r.id));
+      cursor = page.nextCursor;
+      pages += 1;
+    } while (cursor !== null && pages < 100);
+    expect(seen).toEqual(mockBacktestRuns.map((r) => r.id));
+  });
+
+  it("GET /api/v1/backtests?strategyId= returns only that strategy's runs", async () => {
+    const strategyId = mockBacktestRuns[0]!.strategyId;
+    const res = await fetch(`http://localhost/api/v1/backtests?strategyId=${strategyId}`);
+    const page = pageSchema(BacktestRunSchema).parse(await res.json());
+    expect(page.items).toEqual(mockBacktestRuns.filter((r) => r.strategyId === strategyId));
+    expect(page.items.length).toBeLessThan(mockBacktestRuns.length);
+  });
+
+  it.each(["limit=0", "limit=201", "limit=abc", "limit=1.5", "cursor=nope", "cursor=b2Zmc2V0Ojk5"])(
+    "GET /api/v1/backtests?%s answers 400 invalid_request",
+    async (query) => {
+      const res = await fetch(`http://localhost/api/v1/backtests?${query}`);
+      expect(res.status).toBe(400);
+      expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("invalid_request");
+    },
+  );
 
   it("GET /api/v1/backtests/:id returns single backtest run for valid id", async () => {
     const target = mockBacktestRuns[0]!;
@@ -125,7 +163,7 @@ describe("Orbit MSW handlers", () => {
     const res = await fetch(`http://localhost/api/v1/backtests/${runId}/trades`);
     expect(res.status).toBe(200);
     const data = await res.json();
-    const trades = TradeSchema.array().parse(data);
+    const trades = pageSchema(TradeSchema).parse(data).items;
     expect(trades.length).toBeGreaterThan(0);
     expect(trades.every((t) => t.runId === runId)).toBe(true);
     expect(trades).toEqual(mockTrades.filter((t) => t.runId === runId));
@@ -136,8 +174,7 @@ describe("Orbit MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/backtests/run_003/trades");
     expect(res.status).toBe(200);
     const data = await res.json();
-    const trades = TradeSchema.array().parse(data);
-    expect(trades).toEqual([]);
+    expect(pageSchema(TradeSchema).parse(data)).toEqual({ items: [], nextCursor: null });
   });
 
   it("GET /api/v1/backtests/:id/trades returns 404 ApiError for unknown run id", async () => {

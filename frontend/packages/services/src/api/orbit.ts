@@ -5,14 +5,17 @@ import {
   StrategyStatsSchema,
   TradeSchema,
   UserSchema,
+  pageSchema,
   type BacktestResult,
   type BacktestRun,
   type Strategy,
   type StrategyStats,
   type Trade,
+  type Page,
+  type PageQuery,
   type User,
 } from "@nova/contracts";
-import { apiGet, type RequestOptions } from "../http";
+import { apiGet, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
 
@@ -33,8 +36,16 @@ export function getStrategy(strategyId: string, init?: RequestOptions): Promise<
   return apiGet(`/strategies/${id(strategyId)}`, StrategySchema, init);
 }
 
-export function listBacktests(init?: RequestOptions): Promise<BacktestRun[]> {
-  return apiGet("/backtests", BacktestRunSchema.array(), init);
+export interface BacktestFilter {
+  strategyId?: string;
+}
+
+/** One page of backtest runs, optionally for one strategy (D32). */
+export function listBacktests(
+  query: BacktestFilter & PageQuery = {},
+  init?: RequestOptions,
+): Promise<Page<BacktestRun>> {
+  return apiGet(withQuery("/backtests", { ...query }), pageSchema(BacktestRunSchema), init);
 }
 
 export function getBacktest(runId: string, init?: RequestOptions): Promise<BacktestRun> {
@@ -45,6 +56,15 @@ export function getBacktestResult(runId: string, init?: RequestOptions): Promise
   return apiGet(`/backtests/${id(runId)}/result`, BacktestResultSchema, init);
 }
 
-export function listBacktestTrades(runId: string, init?: RequestOptions): Promise<Trade[]> {
-  return apiGet(`/backtests/${id(runId)}/trades`, TradeSchema.array(), init);
+/** One page of a run's trades (D32). */
+export function listBacktestTrades(
+  runId: string,
+  query: PageQuery = {},
+  init?: RequestOptions,
+): Promise<Page<Trade>> {
+  return apiGet(
+    withQuery(`/backtests/${id(runId)}/trades`, { ...query }),
+    pageSchema(TradeSchema),
+    init,
+  );
 }

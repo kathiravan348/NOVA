@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
   errorHandlers,
@@ -58,12 +59,33 @@ describe("Orbit api", () => {
     await expect(listStrategies()).resolves.toEqual(mockStrategies);
     await expect(listStrategyStats()).resolves.toEqual(mockStrategyStats);
     await expect(getStrategy(strategy.id)).resolves.toEqual(strategy);
-    await expect(listBacktests()).resolves.toEqual(mockBacktestRuns);
+    await expect(listBacktests()).resolves.toEqual({ items: mockBacktestRuns, nextCursor: null });
     await expect(getBacktest(run.id)).resolves.toEqual(run);
     await expect(getBacktestResult(result.runId)).resolves.toEqual(result);
-    await expect(listBacktestTrades(result.runId)).resolves.toEqual(
-      mockTrades.filter((t) => t.runId === result.runId),
-    );
+    await expect(listBacktestTrades(result.runId)).resolves.toEqual({
+      items: mockTrades.filter((t) => t.runId === result.runId),
+      nextCursor: null,
+    });
+  });
+
+  it("sends strategyId, limit and cursor as query parameters", async () => {
+    const strategyId = run.strategyId;
+    const first = await listBacktests({ strategyId, limit: 1 });
+    expect(first.items).toEqual([mockBacktestRuns.find((r) => r.strategyId === strategyId)]);
+    const all = mockBacktestRuns.filter((r) => r.strategyId === strategyId);
+    if (all.length > 1) {
+      const next = await listBacktests({ strategyId, limit: 1, cursor: first.nextCursor! });
+      expect(next.items).toEqual([all[1]]);
+    }
+    await expect(listBacktests({ limit: 0 })).rejects.toMatchObject({
+      status: 400,
+      code: "invalid_request",
+    });
+  });
+
+  it("rejects a bare array where a page is expected", async () => {
+    server.use(http.get("*/api/v1/audit", () => HttpResponse.json(mockAuditEntries)));
+    await expect(listAuditEntries()).rejects.toMatchObject({ code: "invalid_response" });
   });
 
   it("maps an unknown id to a 404 not_found error", async () => {
@@ -85,9 +107,12 @@ describe("Relay api", () => {
     await expect(listBrokerAccounts()).resolves.toEqual(mockBrokerAccounts);
     await expect(getBrokerAccount(account.id)).resolves.toEqual(account);
     await expect(listRateLimits()).resolves.toEqual(mockRateLimits);
-    await expect(listDataJobs()).resolves.toEqual(mockDataJobs);
+    await expect(listDataJobs()).resolves.toEqual({ items: mockDataJobs, nextCursor: null });
     await expect(getDataJob(job.id)).resolves.toEqual(job);
-    await expect(listAuditEntries()).resolves.toEqual(mockAuditEntries);
+    await expect(listAuditEntries()).resolves.toEqual({
+      items: mockAuditEntries,
+      nextCursor: null,
+    });
   });
 
   it("maps an unknown id to a 404 not_found error", async () => {

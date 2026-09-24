@@ -1,6 +1,6 @@
 # NOVA-045 — Pagination envelope: contracts, mock handlers, services
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-045 · **Depends on:** NOVA-022
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-045 · **Depends on:** NOVA-022
 
 ## Goal
 The four growing lists return `{ items, nextCursor }` pages with `limit`/`cursor` (D32), mocks serve real
@@ -12,7 +12,7 @@ pages, and the services hooks load pages while still giving screens a flat array
 
 ## Files
 Modify: contracts `src/{common.ts,common.test.ts}`; mocks `src/handlers/{api.ts,orbit.ts,orbit.test.ts,relay.ts,relay.test.ts,scenarios.ts,scenarios.test.ts}`;
-services `src/api/{orbit.ts,relay.ts,api.test.ts}`, `src/queries/{orbit.ts,relay.ts,keys.ts,queries.test.tsx}`, `src/index.ts`;
+services `src/api/{orbit.ts,relay.ts,api.test.ts}`, `src/queries/{orbit.ts,relay.ts,keys.ts,paging.ts,queries.test.tsx}`, `src/http.ts`, `src/index.ts`;
 `docs/CONTRACTS.md`
 
 ## Build
@@ -34,10 +34,10 @@ services `src/api/{orbit.ts,relay.ts,api.test.ts}`, `src/queries/{orbit.ts,relay
 5. `CONTRACTS.md`: mark the four endpoints as `Page<…>` with the query parameters.
 
 ## Acceptance checks
-- [ ] Mocks, services and contracts tests pass; `git diff main --stat` shows no file under `frontend/apps/`.
-- [ ] Orbit and Relay app tests pass unchanged; both apps render the same lists as before (default limit 50
+- [x] Mocks, services and contracts tests pass; `git diff main --stat` shows no file under `frontend/apps/`.
+- [x] Orbit and Relay app tests pass unchanged; both apps render the same lists as before (default limit 50
       covers every mock row).
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - "Load more" buttons and the strategy detail switching to `strategyId` (NOVA-046).
@@ -47,7 +47,14 @@ services `src/api/{orbit.ts,relay.ts,api.test.ts}`, `src/queries/{orbit.ts,relay
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Built by Claude on Owner request (2026-09-24). Four lists return `Page<T>`; hooks are infinite queries with flat `data`.
+**Files changed:** as listed, plus `services/src/queries/paging.ts` (shared `pagedListOptions`, `flattenPages`,
+`cursorQuery`) and `services/src/http.ts` (`withQuery`). No file under `frontend/apps/` changed.
+**Commands run:** `pnpm review:check` pass (90 test files); Relay data-jobs page checked in the browser (5 jobs, mock mode).
+**New dependencies:** none. **Maps updated:** CONTRACTS.
+**Deviations:** a cursor pointing at or past the end is rejected as unknown (never issued by the server).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Fixed directly:** paging helpers moved to their own module (orbit and relay hooks share them); `it.each` titles use strings only.
+**Rulebook issues found:** none. **Follow-up tasks created:** none (046 adds "Load more" and the `strategyId` filter in screens).

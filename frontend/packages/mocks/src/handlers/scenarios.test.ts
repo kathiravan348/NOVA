@@ -25,12 +25,8 @@ describe("Scenario MSW handlers", () => {
 
       const listEndpoints = [
         "http://localhost/api/v1/strategies",
-        "http://localhost/api/v1/backtests",
-        "http://localhost/api/v1/backtests/run_001/trades",
         "http://localhost/api/v1/broker/accounts",
         "http://localhost/api/v1/broker/rate-limits",
-        "http://localhost/api/v1/data-jobs",
-        "http://localhost/api/v1/audit",
       ];
 
       for (const endpoint of listEndpoints) {
@@ -39,6 +35,26 @@ describe("Scenario MSW handlers", () => {
         const data = await res.json();
         expect(Array.isArray(data), `is array for ${endpoint}`).toBe(true);
         expect(data, `is empty array for ${endpoint}`).toEqual([]);
+      }
+    });
+
+    it("returns an empty page for the paginated lists (D32)", async () => {
+      server.use(...emptyHandlers);
+
+      const pagedEndpoints = [
+        "http://localhost/api/v1/backtests",
+        "http://localhost/api/v1/backtests/run_001/trades",
+        "http://localhost/api/v1/data-jobs",
+        "http://localhost/api/v1/audit",
+      ];
+
+      for (const endpoint of pagedEndpoints) {
+        const res = await fetch(endpoint);
+        expect(res.status, `status 200 for ${endpoint}`).toBe(200);
+        expect(await res.json(), `empty page for ${endpoint}`).toEqual({
+          items: [],
+          nextCursor: null,
+        });
       }
     });
   });

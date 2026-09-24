@@ -7,6 +7,7 @@ export const queryKeys = {
   },
   backtests: {
     all: ["backtests"] as const,
+    list: (filter: { strategyId?: string }) => ["backtests", "list", filter] as const,
     detail: (id: string) => ["backtests", id] as const,
     result: (id: string) => ["backtests", id, "result"] as const,
     trades: (id: string) => ["backtests", id, "trades"] as const,
@@ -24,10 +25,12 @@ export const queryKeys = {
   },
   dataJobs: {
     all: ["data-jobs"] as const,
+    list: ["data-jobs", "list"] as const,
     detail: (id: string) => ["data-jobs", id] as const,
   },
   auditEntries: {
     all: ["audit-entries"] as const,
+    list: ["audit-entries", "list"] as const,
   },
   marketData: {
     instruments: ["market-data", "instruments"] as const,

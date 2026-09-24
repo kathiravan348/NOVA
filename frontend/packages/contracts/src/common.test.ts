@@ -4,7 +4,10 @@ import {
   IdSchema,
   IsoDateSchema,
   NonNegPaiseSchema,
+  PAGE_LIMIT_MAX,
+  PageLimitSchema,
   PaiseSchema,
+  pageSchema,
   SegmentSchema,
   SideSchema,
   TimeframeSchema,
@@ -56,6 +59,21 @@ describe("common schemas", () => {
   it("validates TimeframeSchema", () => {
     expect(TimeframeSchema.safeParse("15m").success).toBe(true);
     expect(TimeframeSchema.safeParse("2h").success).toBe(false);
+  });
+
+  it("validates pageSchema and PageLimitSchema", () => {
+    const page = pageSchema(IdSchema);
+    expect(page.safeParse({ items: ["a"], nextCursor: "b2Zmc2V0OjE" }).success).toBe(true);
+    expect(page.safeParse({ items: [], nextCursor: null }).success).toBe(true);
+    expect(page.safeParse(["a"]).success).toBe(false);
+    expect(page.safeParse({ items: [""], nextCursor: null }).success).toBe(false);
+    expect(page.safeParse({ items: [], nextCursor: "" }).success).toBe(false);
+    expect(page.safeParse({ items: [], nextCursor: null, total: 0 }).success).toBe(false);
+    expect(PageLimitSchema.safeParse(1).success).toBe(true);
+    expect(PageLimitSchema.safeParse(PAGE_LIMIT_MAX).success).toBe(true);
+    expect(PageLimitSchema.safeParse(0).success).toBe(false);
+    expect(PageLimitSchema.safeParse(PAGE_LIMIT_MAX + 1).success).toBe(false);
+    expect(PageLimitSchema.safeParse(1.5).success).toBe(false);
   });
 
   it("validates SideSchema", () => {
