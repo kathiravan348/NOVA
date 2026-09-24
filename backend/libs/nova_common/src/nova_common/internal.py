@@ -2,9 +2,10 @@
 
 import hmac
 from dataclasses import dataclass
+from typing import Annotated
 from urllib.parse import unquote
 
-from fastapi import Request
+from fastapi import Depends, Request
 from pydantic import SecretStr
 
 from nova_common.errors import ApiException
@@ -29,3 +30,12 @@ def internal_caller(request: Request, token: SecretStr) -> Caller:
         raise ApiException(401, "unauthorized", "Signed-in user missing")
     forwarded = request.headers.get("x-forwarded-for")
     return Caller(id=user_id, name=name, ip=forwarded.split(",")[0].strip() if forwarded else None)
+
+
+def app_caller(request: Request) -> Caller:
+    """Dependency for services that keep their settings (with `internal_token`) on `app.state`."""
+    token: SecretStr = request.app.state.settings.internal_token
+    return internal_caller(request, token)
+
+
+CallerDep = Annotated[Caller, Depends(app_caller)]

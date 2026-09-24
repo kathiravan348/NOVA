@@ -190,3 +190,28 @@ export const StrategySchema = z
     },
   );
 export type Strategy = z.infer<typeof StrategySchema>;
+
+/** Body of `POST /strategies` (D43): creates version 1 of a `draft` strategy. */
+export const StrategyCreateSchema = z.strictObject({
+  name: z.string().min(1),
+  description: z.string(),
+  spec: StrategySpecSchema,
+});
+export type StrategyCreate = z.infer<typeof StrategyCreateSchema>;
+
+/** Body of `POST /strategies/{id}/versions` (D43): versions are immutable; this adds latest + 1. */
+export const StrategyVersionCreateSchema = z.strictObject({
+  note: z.string(),
+  spec: StrategySpecSchema,
+});
+export type StrategyVersionCreate = z.infer<typeof StrategyVersionCreateSchema>;
+
+/** Body of `PATCH /strategies/{id}` (D43): at least one field. */
+export const StrategyUpdateSchema = z
+  .strictObject({
+    name: z.string().min(1).optional(),
+    description: z.string().optional(),
+    status: StrategyStatusSchema.optional(),
+  })
+  .refine((u) => Object.keys(u).length > 0, { message: "Change at least one field" });
+export type StrategyUpdate = z.infer<typeof StrategyUpdateSchema>;

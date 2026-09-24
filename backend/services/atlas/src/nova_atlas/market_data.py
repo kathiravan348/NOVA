@@ -8,14 +8,13 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
+from nova_common.internal import CallerDep
 from nova_contracts import Candle as CandleContract
 from nova_contracts import Instrument as InstrumentContract
 from nova_db.enums import TIMEFRAMES
 from nova_db.models import Candle, Instrument
 from nova_db.web import Db
 from sqlalchemy import select, text
-
-from nova_atlas.jobs import CallerDep
 
 router = APIRouter(prefix="/market-data")
 

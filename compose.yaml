@@ -75,7 +75,16 @@ services:
         condition: service_healthy
     mem_limit: 384m
 
-  # NOVA Atlas API (data jobs; market data from NOVA-061). No host port.
+  # Strategies, versions and stats (D26, D43). No host port.
+  strategy:
+    <<: *backend
+    command: ["uvicorn", "--factory", "nova_strategy.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 256m
+
+  # NOVA Atlas API: data jobs and market data. No host port.
   atlas:
     <<: *backend
     command: ["uvicorn", "--factory", "nova_atlas.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
@@ -114,6 +123,7 @@ services:
       NOVA_COOKIE_SECURE: ${NOVA_COOKIE_SECURE:-false}
       NOVA_BROKER_URL: http://broker:8000
       NOVA_ATLAS_URL: http://atlas:8000
+      NOVA_STRATEGY_URL: http://strategy:8000
     depends_on:
       migrate:
         condition: service_completed_successfully

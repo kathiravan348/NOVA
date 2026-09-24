@@ -5,11 +5,14 @@ import {
   RuleGroupSchema,
   SizingSchema,
   Strategy,
+  StrategyCreateSchema,
   StrategySchema,
   StrategySpecPython,
   StrategySpecPythonSchema,
   StrategySpecVisual,
   StrategySpecVisualSchema,
+  StrategyUpdateSchema,
+  StrategyVersionCreateSchema,
   UniverseSchema,
 } from "./strategy";
 
@@ -163,5 +166,36 @@ describe("Strategy schemas", () => {
   it("rejects an invalid strategy status enum", () => {
     const invalid = { ...validStrategy, status: "deleted" };
     expect(StrategySchema.safeParse(invalid).success).toBe(false);
+  });
+});
+
+describe("strategy write bodies (D43)", () => {
+  const spec = {
+    mode: "python" as const,
+    segment: "equity_delivery" as const,
+    exchange: "NSE" as const,
+    timeframe: "1d" as const,
+    sizing: { type: "fixed_qty" as const, qty: 10 },
+    risk: { stopLossPercent: null, targetPercent: null },
+    code: "class Strategy: ...",
+  };
+
+  it("accepts a create and a new version", () => {
+    expect(StrategyCreateSchema.safeParse({ name: "S", description: "", spec }).success).toBe(true);
+    expect(StrategyVersionCreateSchema.safeParse({ note: "v2", spec }).success).toBe(true);
+  });
+
+  it("rejects a create without a name or with extra fields", () => {
+    expect(StrategyCreateSchema.safeParse({ name: "", description: "", spec }).success).toBe(false);
+    expect(
+      StrategyCreateSchema.safeParse({ name: "S", description: "", spec, status: "active" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("needs at least one known field in an update", () => {
+    expect(StrategyUpdateSchema.safeParse({ status: "archived" }).success).toBe(true);
+    expect(StrategyUpdateSchema.safeParse({}).success).toBe(false);
+    expect(StrategyUpdateSchema.safeParse({ status: "deleted" }).success).toBe(false);
   });
 });

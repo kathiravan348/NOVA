@@ -1,5 +1,11 @@
 import { http, HttpResponse } from "msw";
 import {
+  StrategyCreateSchema,
+  StrategyUpdateSchema,
+  StrategyVersionCreateSchema,
+  type Strategy,
+} from "@nova/contracts";
+import {
   mockBacktestResults,
   mockBacktestRuns,
   mockStrategies,
@@ -7,7 +13,10 @@ import {
   mockTrades,
   mockUser,
 } from "../data";
-import { apiPath, notFound, paginate } from "./api";
+import { apiPath, badRequest, notFound, paginate } from "./api";
+
+/** Mock writes (D43) answer with the resulting strategy; nothing is stored. */
+const MOCK_NOW = "2026-09-22T04:30:00Z";
 
 export const orbitHandlers = [
   http.get(apiPath("/me"), () => {
@@ -30,6 +39,48 @@ export const orbitHandlers = [
       return notFound(`Strategy ${id} not found`);
     }
     return HttpResponse.json(strategy);
+  }),
+
+  http.post(apiPath("/strategies"), async ({ request }) => {
+    const parsed = StrategyCreateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) return badRequest("Body must be { name, description, spec }");
+    const { name, description, spec } = parsed.data;
+    const created: Strategy = {
+      id: "stg_new",
+      name,
+      description,
+      status: "draft",
+      latestVersion: 1,
+      versions: [{ version: 1, createdAt: MOCK_NOW, note: "First version", spec }],
+      createdAt: MOCK_NOW,
+      updatedAt: MOCK_NOW,
+    };
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.post(apiPath("/strategies/:id/versions"), async ({ params, request }) => {
+    const strategy = mockStrategies.find((s) => s.id === (params["id"] as string));
+    if (!strategy) return notFound(`Strategy ${params["id"] as string} not found`);
+    const parsed = StrategyVersionCreateSchema.safeParse(
+      await request.json().catch(() => undefined),
+    );
+    if (!parsed.success) return badRequest("Body must be { note, spec }");
+    const version = strategy.latestVersion + 1;
+    const updated: Strategy = {
+      ...strategy,
+      latestVersion: version,
+      versions: [...strategy.versions, { version, createdAt: MOCK_NOW, ...parsed.data }],
+      updatedAt: MOCK_NOW,
+    };
+    return HttpResponse.json(updated, { status: 201 });
+  }),
+
+  http.patch(apiPath("/strategies/:id"), async ({ params, request }) => {
+    const strategy = mockStrategies.find((s) => s.id === (params["id"] as string));
+    if (!strategy) return notFound(`Strategy ${params["id"] as string} not found`);
+    const parsed = StrategyUpdateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) return badRequest("Change at least one of name, description, status");
+    return HttpResponse.json({ ...strategy, ...parsed.data, updatedAt: MOCK_NOW });
   }),
 
   http.get(apiPath("/backtests"), ({ request }) => {

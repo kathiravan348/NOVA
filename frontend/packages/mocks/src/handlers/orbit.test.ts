@@ -184,4 +184,40 @@ describe("Orbit MSW handlers", () => {
     const parsed = ApiErrorSchema.parse(data);
     expect(parsed.error.code).toBe("not_found");
   });
+
+  it("POST /api/v1/strategies answers with a draft version 1 (D43)", async () => {
+    const spec = mockStrategies[0]!.versions[0]!.spec;
+    const res = await fetch("http://localhost/api/v1/strategies", {
+      method: "POST",
+      body: JSON.stringify({ name: "New", description: "", spec }),
+    });
+    expect(res.status).toBe(201);
+    const created = StrategySchema.parse(await res.json());
+    expect(created).toMatchObject({ name: "New", status: "draft", latestVersion: 1 });
+  });
+
+  it("POST /api/v1/strategies/:id/versions adds latest + 1", async () => {
+    const target = mockStrategies[0]!;
+    const res = await fetch(`http://localhost/api/v1/strategies/${target.id}/versions`, {
+      method: "POST",
+      body: JSON.stringify({ note: "Tweak", spec: target.versions[0]!.spec }),
+    });
+    const updated = StrategySchema.parse(await res.json());
+    expect(updated.latestVersion).toBe(target.latestVersion + 1);
+    expect(updated.versions).toHaveLength(target.versions.length + 1);
+  });
+
+  it("PATCH /api/v1/strategies/:id changes the status; bad bodies are 400", async () => {
+    const target = mockStrategies[0]!;
+    const url = `http://localhost/api/v1/strategies/${target.id}`;
+    const ok = await fetch(url, { method: "PATCH", body: JSON.stringify({ status: "archived" }) });
+    expect(StrategySchema.parse(await ok.json()).status).toBe("archived");
+    const bad = await fetch(url, { method: "PATCH", body: JSON.stringify({}) });
+    expect(bad.status).toBe(400);
+    const missing = await fetch("http://localhost/api/v1/strategies/nope", {
+      method: "PATCH",
+      body: JSON.stringify({ status: "active" }),
+    });
+    expect(missing.status).toBe(404);
+  });
 });

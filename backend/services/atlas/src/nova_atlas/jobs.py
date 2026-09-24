@@ -2,10 +2,10 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
-from nova_common.internal import Caller, internal_caller
+from nova_common.internal import CallerDep
 from nova_contracts import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, Page
 from nova_contracts import DataJob as DataJobContract
 from nova_db.models import DataJob
@@ -13,13 +13,6 @@ from nova_db.paging import newest_first
 from nova_db.web import Db
 
 router = APIRouter()
-
-
-def require_caller(request: Request) -> Caller:
-    return internal_caller(request, request.app.state.settings.internal_token)
-
-
-CallerDep = Annotated[Caller, Depends(require_caller)]
 
 
 def to_contract(job: DataJob) -> DataJobContract:

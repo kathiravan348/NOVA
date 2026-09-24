@@ -37,7 +37,7 @@
 │  └─ apps/             each: public/mockServiceWorker.js, src/routes.tsx, layout/, pages/
 │     ├─ nova-orbit/    strategy builder + backtesting (port 3000)
 │     └─ nova-relay/    API config + limits (port 3001)
-├─ compose.yaml         db (TimescaleDB), redis, migrate, broker, atlas, atlas-worker, core, backend-check (tools)
+├─ compose.yaml         db, redis, migrate, broker, strategy, atlas, atlas-worker, core, backend-check (tools)
 ├─ .env.example         every variable with dummy values (copy to .env)
 └─ backend/             uv workspace (D33, D36); Dockerfile = one image for all services
    ├─ scripts/check.sh  ruff, format, mypy per package, pytest
@@ -51,6 +51,7 @@
       ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; `python -m nova_core create-admin`
       ├─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40),
       │                 `/internal/kite/*` data for other services (D41); `python -m nova_broker add-account`
+      ├─ strategy/      strategies, immutable versions, stats summary in SQL (D26, D43)
       └─ atlas/         NOVA Atlas: `data/universe.csv`, instrument sync, data jobs + worker (Postgres queue, D41);
                         `python -m nova_atlas sync-instruments | download | worker`
 ```

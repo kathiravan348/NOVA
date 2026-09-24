@@ -8,7 +8,12 @@ import { BrokerAccountSchema, BrokerProfileSchema } from "./broker";
 import { DataJobSchema } from "./dataJob";
 import { CandleSchema, InstrumentSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
-import { StrategySchema } from "./strategy";
+import {
+  StrategyCreateSchema,
+  StrategySchema,
+  StrategyUpdateSchema,
+  StrategyVersionCreateSchema,
+} from "./strategy";
 import { StrategyStatsSchema } from "./strategyStats";
 import { TradeSchema } from "./trade";
 import { UserSchema } from "./user";
@@ -29,6 +34,9 @@ const contracts: Record<string, z.ZodType> = {
   RateLimit: RateLimitSchema,
   RateLimitUpdate: RateLimitUpdateSchema,
   Strategy: StrategySchema,
+  StrategyCreate: StrategyCreateSchema,
+  StrategyUpdate: StrategyUpdateSchema,
+  StrategyVersionCreate: StrategyVersionCreateSchema,
   StrategyStats: StrategyStatsSchema,
   Trade: TradeSchema,
   User: UserSchema,

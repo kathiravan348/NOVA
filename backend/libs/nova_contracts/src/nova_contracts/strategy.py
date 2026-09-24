@@ -1,0 +1,137 @@
+"""Strategy contracts: mirror `frontend/packages/contracts/src/strategy.ts` (D9, D25, D43)."""
+
+from typing import Annotated, Literal, Self
+
+from pydantic import Field, model_validator
+
+from nova_contracts.common import Contract, Exchange, Id, Segment, Timeframe, UtcDateTime
+
+PriceField = Literal["open", "high", "low", "close", "volume"]
+IndicatorName = Literal["sma", "ema", "rsi", "macd", "vwap", "atr", "bb_upper", "bb_lower"]
+ConditionOp = Literal["crosses_above", "crosses_below", "gt", "gte", "lt", "lte", "eq"]
+StrategyStatus = Literal["draft", "active", "archived"]
+NonEmpty = Annotated[str, Field(min_length=1)]
+
+
+class OperandPrice(Contract):
+    kind: Literal["price"]
+    field: PriceField
+
+
+class OperandIndicator(Contract):
+    kind: Literal["indicator"]
+    name: IndicatorName
+    params: dict[str, float]
+
+
+class OperandNumber(Contract):
+    kind: Literal["number"]
+    value: float
+
+
+Operand = Annotated[OperandPrice | OperandIndicator | OperandNumber, Field(discriminator="kind")]
+
+
+class Condition(Contract):
+    left: Operand
+    op: ConditionOp
+    right: Operand
+
+
+class RuleGroup(Contract):
+    combinator: Literal["all", "any"]
+    conditions: Annotated[list[Condition], Field(min_length=1)]
+
+
+class SizingFixedQty(Contract):
+    type: Literal["fixed_qty"]
+    qty: Annotated[int, Field(gt=0)]
+
+
+class SizingFixedAmount(Contract):
+    type: Literal["fixed_amount"]
+    amount_paise: Annotated[int, Field(gt=0)]
+
+
+class SizingPercentEquity(Contract):
+    type: Literal["percent_equity"]
+    percent: Annotated[float, Field(gt=0, le=100)]
+
+
+Sizing = Annotated[
+    SizingFixedQty | SizingFixedAmount | SizingPercentEquity, Field(discriminator="type")
+]
+
+
+class Risk(Contract):
+    stop_loss_percent: Annotated[float, Field(gt=0)] | None
+    target_percent: Annotated[float, Field(gt=0)] | None
+
+
+class _SpecBase(Contract):
+    segment: Segment
+    exchange: Exchange
+    timeframe: Timeframe
+    sizing: Sizing
+    risk: Risk
+
+
+class StrategySpecVisual(_SpecBase):
+    mode: Literal["visual"]
+    entry: RuleGroup
+    exit: RuleGroup
+
+
+class StrategySpecPython(_SpecBase):
+    mode: Literal["python"]
+    code: NonEmpty
+
+
+StrategySpec = Annotated[StrategySpecVisual | StrategySpecPython, Field(discriminator="mode")]
+
+
+class StrategyVersion(Contract):
+    version: Annotated[int, Field(ge=1)]
+    created_at: UtcDateTime
+    note: str
+    spec: StrategySpec
+
+
+class Strategy(Contract):
+    id: Id
+    name: NonEmpty
+    description: str
+    status: StrategyStatus
+    latest_version: Annotated[int, Field(ge=1)]
+    versions: Annotated[list[StrategyVersion], Field(min_length=1)]
+    created_at: UtcDateTime
+    updated_at: UtcDateTime
+
+    @model_validator(mode="after")
+    def _latest(self) -> Self:
+        if self.latest_version != max(v.version for v in self.versions):
+            raise ValueError("latestVersion must equal the maximum version in versions")
+        return self
+
+
+class StrategyCreate(Contract):
+    name: NonEmpty
+    description: str
+    spec: StrategySpec
+
+
+class StrategyVersionCreate(Contract):
+    note: str
+    spec: StrategySpec
+
+
+class StrategyUpdate(Contract):
+    name: NonEmpty | None = None
+    description: str | None = None
+    status: StrategyStatus | None = None
+
+    @model_validator(mode="after")
+    def _something(self) -> Self:
+        if not self.model_fields_set:
+            raise ValueError("Change at least one field")
+        return self

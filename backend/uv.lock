@@ -12,6 +12,7 @@ members = [
     "nova-core",
     "nova-db",
     "nova-ledger",
+    "nova-strategy",
     "nova-testing",
 ]
 
@@ -436,6 +437,7 @@ dependencies = [
     { name = "nova-core" },
     { name = "nova-db" },
     { name = "nova-ledger" },
+    { name = "nova-strategy" },
 ]
 
 [package.dev-dependencies]
@@ -457,6 +459,7 @@ requires-dist = [
     { name = "nova-core", editable = "services/core" },
     { name = "nova-db", editable = "libs/nova_db" },
     { name = "nova-ledger", editable = "libs/nova_ledger" },
+    { name = "nova-strategy", editable = "services/strategy" },
 ]
 
 [package.metadata.requires-dev]
@@ -581,6 +584,27 @@ requires-dist = [
     { name = "nova-contracts", editable = "libs/nova_contracts" },
     { name = "nova-db", editable = "libs/nova_db" },
     { name = "pydantic", specifier = "==2.13.5" },
+]
+
+[[package]]
+name = "nova-strategy"
+version = "0.0.1"
+source = { editable = "services/strategy" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "nova-common" },
+    { name = "nova-contracts" },
+    { name = "nova-db" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = "==0.141.1" },
+    { name = "nova-common", editable = "libs/nova_common" },
+    { name = "nova-contracts", editable = "libs/nova_contracts" },
+    { name = "nova-db", editable = "libs/nova_db" },
+    { name = "uvicorn", specifier = "==0.53.0" },
 ]
 
 [[package]]

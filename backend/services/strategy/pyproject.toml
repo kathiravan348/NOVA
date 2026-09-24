@@ -1,0 +1,21 @@
+[project]
+name = "nova-strategy"
+version = "0.0.1"
+description = "NOVA strategy service: strategies, immutable versions, stats (D26, D43)"
+requires-python = "==3.12.*"
+dependencies = [
+    "fastapi==0.141.1",
+    "nova-common",
+    "nova-contracts",
+    "nova-db",
+    "uvicorn==0.53.0",
+]
+
+[build-system]
+requires = ["uv_build==0.12.18"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+nova-common = { workspace = true }
+nova-contracts = { workspace = true }
+nova-db = { workspace = true }
