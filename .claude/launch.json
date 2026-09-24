@@ -2,9 +2,47 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "nova-orbit",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "--filter",
+        "nova-orbit",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "nova-relay",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "--filter",
+        "nova-relay",
+        "dev"
+      ],
+      "port": 3001
+    },
+    {
       "name": "storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "frontend", "storybook", "--no-open", "--ci"],
+      "runtimeArgs": [
+        "--dir",
+        "frontend",
+        "storybook",
+        "--no-open",
+        "--ci"
+      ],
       "port": 6006
     },
     {
@@ -26,13 +64,21 @@
     {
       "name": "orbit-review",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "../Nova-review/frontend/apps/nova-orbit", "dev"],
+      "runtimeArgs": [
+        "--dir",
+        "../Nova-review/frontend/apps/nova-orbit",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "relay-review",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "../Nova-review/frontend/apps/nova-relay", "dev"],
+      "runtimeArgs": [
+        "--dir",
+        "../Nova-review/frontend/apps/nova-relay",
+        "dev"
+      ],
       "port": 3001
     }
   ]

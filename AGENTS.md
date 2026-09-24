@@ -50,9 +50,24 @@ Rules:
 
 ## 5. Tech stack (do not add others without a task saying so)
 Frontend: React 18, TypeScript (strict), Vite, pnpm workspaces, Tailwind CSS, shadcn/ui (Radix), TanStack Table, TanStack Query, React Hook Form + Zod, date-fns + date-fns-tz, Recharts, TradingView Lightweight Charts, lucide-react, React Router, MSW, Storybook, Vitest + Testing Library.
-Backend (D33): Python 3.12 in Docker only, uv workspace, FastAPI, Pydantic v2, pydantic-settings, SQLAlchemy 2 + Alembic, PostgreSQL + TimescaleDB, Redis, Parquet, Docker Compose; ruff, mypy `--strict`, pytest.
+Backend (D33, D36): Python 3.12 (Docker; host only via uv), uv workspace, FastAPI, Pydantic v2, pydantic-settings, SQLAlchemy 2 + Alembic, PostgreSQL + TimescaleDB, Redis, Parquet, Docker Compose; ruff, mypy `--strict`, pytest.
 Pin exact versions in every `package.json` (no `^` or `~`) and in `pyproject.toml` (`==`), locked in `backend/uv.lock`.
 New dependency = note it in the handoff and in `docs/DECISIONS.md` request section. Never add a library that duplicates one above.
+
+## 5a. Dev machine and tools (Owner PC, D36)
+Windows 11, 24 cores, 32 GB RAM. WSL2/Docker is capped at 12 GB RAM + 12 CPUs (`%UserProfile%\.wslconfig`).
+Caches live on the Dev Drive `E:` (`E:\caches\pnpm-store`, `E:\caches\uv`); Docker's disk is on `D:`.
+- **Node:** fnm, version from `.nvmrc` (24). Non-interactive shells have no `node` on PATH: prefix commands with
+  `fnm exec --using=24 --` (e.g. `fnm exec --using=24 -- pnpm --dir frontend test`). Never use a nodejs.org install path.
+- **JS packages: pnpm only** (12.x). Never `npm`, `npx` or `yarn`: use `pnpm add -E`, `pnpm dlx`.
+- **Python: uv only.** Never `pip`, `python -m venv` or `uv pip install --system`. Add backend deps with
+  `uv add` / `uv add --dev` inside `backend/` (updates `uv.lock`); one-off tools with `uvx`. The host's Python 3.13
+  is not used by NOVA: uv provides 3.12 from `backend/.python-version`.
+- **Backend checks:** Docker is the gate (`docker compose run --rm backend-check`). While working, fast checks on
+  the host are allowed: `uv run --directory backend pytest <package>` (same pins, same `uv.lock`).
+- **Docker:** every port binds to `127.0.0.1`; every Compose service has a `mem_limit` (whole stack ≤ 4 GB);
+  run `docker compose down` when finished. Never prune images/volumes or change Docker/WSL settings (Owner only).
+- PowerShell 5.1 is the default shell: no `&&` there; `package.json` scripts stay shell-neutral (§8).
 
 ## 6. UI rules
 - Apps import UI only from `@nova/ui-core` and `@nova/ui-trading`. No one-off styled components inside apps.

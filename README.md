@@ -15,7 +15,8 @@
 
 ## Quick start
 
-Prerequisites: Node.js 24 and pnpm 12 (`npm i -g pnpm`).
+Prerequisites (Windows, via winget): fnm with Node 24 (`fnm install 24`), pnpm 12 (`winget install pnpm.pnpm`),
+and for the backend Docker Desktop (WSL2) and uv (`winget install astral-sh.uv`). Use pnpm and uv only (no npm, no pip).
 
 ```bash
 cd frontend

@@ -48,6 +48,7 @@
 | NOVA-040 | Relay broker page (profile + useful links) and account detail limits/session countdown (R4) | done | Claude | 038 |
 | NOVA-041 | Review guide round 2: walkthrough + checklist for round 1 changes | done | Claude | 034–040 |
 | NOVA-042 | Faster checks: no duplicate tsc, tool caches, threads pool (D30) | done | Claude | — |
+| NOVA-060 | Dev machine rules: fnm + pnpm, uv, Docker Desktop limits (D36) | done | Claude | — |
 | NOVA-043 | Backend skeleton: Compose (TimescaleDB, Redis), uv workspace, NOVA Core health, backend-check (D33) | planned | — | 022 |
 | NOVA-044 | Contract parity: JSON Schema from Zod, Pydantic models + parity tests (User, ApiError) (D34) | planned | — | 043 |
 | NOVA-045 | Pagination envelope: contracts, mock handlers, services (screens unchanged) (D32) | planned | — | 022 |

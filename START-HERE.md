@@ -1,7 +1,7 @@
 # NOVA starter pack — how to begin
 
 1. Create a private GitHub repo named `nova` and copy this whole folder into it. Commit to `main`.
-2. Install on Windows: Git, Node.js LTS, pnpm (`npm i -g pnpm`), Docker Desktop (WSL2) — Docker is needed only from Stage B.
+2. Install on Windows (winget): Git, fnm + Node 24, pnpm, uv, Docker Desktop (WSL2). Tool rules: `AGENTS.md` §5a.
 3. **Claude Code:** open the repo folder. It reads `CLAUDE.md` automatically (which points to `AGENTS.md`).
 4. **Antigravity:** open the same repo folder and add a workspace rule that says: "Follow `GEMINI.md` and `AGENTS.md` in the repo root." (If your Antigravity version reads `GEMINI.md` or `AGENTS.md` automatically, this step is already covered.)
 5. First run:
