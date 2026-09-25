@@ -1,6 +1,6 @@
 # NOVA-076 — Broker: always-on tick recorder with an on/off setting
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-076 · **Depends on:** NOVA-074
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-076 · **Depends on:** NOVA-074
 
 ## Goal
 The tick recorder container runs all the time. A `recorder_settings` row (on/off + symbols), changed over
@@ -52,5 +52,18 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Migration 0007 `recorder_settings` (one row, off); contracts `RecorderSettings(+Update)` + schemas.
+- `recorder_settings.py`: GET/PUT `/broker/recorder` (audit `settings.update`, target `settings`/`recorder`).
+- `recorder_loop.py`: `RecorderLoop` (injectable clock + record); `tick_symbols` moved here from `cli.py`;
+  cancelling a running `tick_record` job in Relay stops it and turns the switch off; a failure waits 5 min.
+- Not listed but needed: `nova_db/queue.py` takes an optional `condition`; the Atlas worker only requeues
+  and claims `historical_download` (else it would grab the recorder's jobs). Atlas test for that; the
+  broken-job test now breaks `run_download` with monkeypatch instead of an `archive` row.
+- Compose: `tick-recorder` has no profile, runs `recorder`, `restart: unless-stopped`.
+- Checks: `pnpm review:check` green (687); backend lint/types clean, pytest per package green (505).
+- Guides: API, DATABASE (0007), CONTRACTS, STRUCTURE, both READMEs.
 
 ## Review
+Self-reviewed. Note: Compose mem limits already add up to more than the 4 GB of AGENTS.md §5a
+(5.1 GB before, 5.4 GB with the always-on recorder); flagged to the Owner, not changed here.

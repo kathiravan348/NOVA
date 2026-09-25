@@ -9,6 +9,7 @@ import { DataJobCreateSchema, DataJobSchema } from "./dataJob";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
+import { RecorderSettingsSchema, RecorderSettingsUpdateSchema } from "./recorder";
 import {
   StrategyCreateSchema,
   StrategySchema,
@@ -43,6 +44,8 @@ const contracts: Record<string, z.ZodType> = {
   LoginRequest: LoginRequestSchema,
   RateLimit: RateLimitSchema,
   RateLimitUpdate: RateLimitUpdateSchema,
+  RecorderSettings: RecorderSettingsSchema,
+  RecorderSettingsUpdate: RecorderSettingsUpdateSchema,
   Strategy: StrategySchema,
   StrategyCreate: StrategyCreateSchema,
   StrategyUpdate: StrategyUpdateSchema,

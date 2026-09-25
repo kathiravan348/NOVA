@@ -52,7 +52,7 @@
       ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services, API docs when NOVA_API_DOCS (D50); `python -m nova_core create-admin`
       ├─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40),
       │                 `/internal/kite/*` data for other services (D41); live tick recorder (D49);
-      │                 `python -m nova_broker add-account | new-token-key | record-ticks`
+      │                 `python -m nova_broker add-account | new-token-key | record-ticks | recorder` (always-on, D54)
       ├─ strategy/      strategies, immutable versions, stats summary in SQL (D26, D43)
       ├─ backtest/      queue runs (D44), runs/results/trades API, worker; strategy engine (visual + Python
       │                 sandbox, delivery + intraday, D45–D47)

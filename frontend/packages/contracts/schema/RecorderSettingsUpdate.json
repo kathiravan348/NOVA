@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean"
+    },
+    "symbols": {
+      "maxItems": 3000,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z0-9&-]{1,20}$"
+      }
+    }
+  },
+  "required": [
+    "enabled",
+    "symbols"
+  ],
+  "additionalProperties": false
+}

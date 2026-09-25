@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, LargeBinary, func
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, LargeBinary, SmallInteger, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nova_db.enums import BROKERS, RATE_LIMIT_ENDPOINTS, RATE_LIMIT_WINDOWS
@@ -84,3 +84,18 @@ class RateLimitRule(Base):
     broker_limit: Mapped[int] = mapped_column(Integer)
     nova_limit: Mapped[int] = mapped_column(Integer)
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class RecorderSetting(Base):
+    """The one row (id 1) that switches live tick recording on or off (D54).
+
+    `symbols` empty = every instrument with a Kite token.
+    """
+
+    __tablename__ = "recorder_settings"
+    __table_args__ = (CheckConstraint("id = 1", name="single_row"),)
+
+    id: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
+    enabled: Mapped[bool] = mapped_column(server_default="false")
+    symbols: Mapped[list[str]] = mapped_column(server_default="{}")
+    updated_at: Mapped[datetime] = created_at_column()

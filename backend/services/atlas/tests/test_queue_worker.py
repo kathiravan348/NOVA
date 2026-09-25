@@ -1,6 +1,7 @@
 import threading
-from datetime import date
+from datetime import UTC, date, datetime
 
+import pytest
 from nova_atlas.broker_client import BrokerData
 from nova_atlas.jobs import queue_download
 from nova_atlas.universe import sync_instruments
@@ -78,12 +79,17 @@ def test_worker_runs_queued_jobs_until_stopped(
 
 
 def test_worker_survives_a_broken_job(
-    factory: sessionmaker[Session], clean: Engine, broker: BrokerData
+    factory: sessionmaker[Session],
+    clean: Engine,
+    broker: BrokerData,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     (job_id,) = _queue(clean, 1)
-    with Session(clean) as db:  # not runnable: a download without a timeframe
-        db.execute(update(DataJob).values(type="archive", timeframe=None))
-        db.commit()
+
+    def crash(*_: object) -> None:
+        raise RuntimeError("bug")
+
+    monkeypatch.setattr("nova_atlas.worker.run_download", crash)
     stop = threading.Event()
 
     run_worker(factory, broker, stop, poll_seconds=0, on_idle=stop.set)
@@ -92,3 +98,28 @@ def test_worker_survives_a_broken_job(
         job = db.get(DataJob, job_id)
     assert job is not None and job.status == "failed"
     assert job.error == "Unexpected error; see the worker log"
+
+
+def test_worker_leaves_tick_recordings_to_the_broker(
+    factory: sessionmaker[Session], clean: Engine, broker: BrokerData
+) -> None:
+    with Session(clean) as db:
+        db.add(
+            DataJob(
+                id="job_ticks",
+                type="tick_record",
+                status="running",
+                exchange="NSE",
+                segment="equity_delivery",
+                symbols=["INFY"],
+                started_at=datetime.now(UTC),
+            )
+        )
+        db.commit()
+    stop = threading.Event()
+
+    run_worker(factory, broker, stop, poll_seconds=0, on_idle=stop.set)
+
+    with Session(clean) as db:
+        job = db.get(DataJob, "job_ticks")
+    assert job is not None and job.status == "running"

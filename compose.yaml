@@ -144,13 +144,12 @@ services:
     stop_grace_period: 30s
     mem_limit: 384m
 
-  # Live ticks from Kite's WebSocket until 15:30 IST (D49). Start on market days:
-  # `docker compose --profile market up -d tick-recorder`.
+  # Always on (D54): sleeps, and records live ticks 09:15-15:30 IST on weekdays while the switch in
+  # `recorder_settings` (PUT /broker/recorder) is on. Each session is a `tick_record` data job.
   tick-recorder:
     <<: *backend
     container_name: nova-tick-recorder
-    profiles: ["market"]
-    command: ["python", "-m", "nova_broker", "record-ticks"]
+    command: ["python", "-m", "nova_broker", "recorder"]
     environment:
       NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
       NOVA_REDIS_URL: redis://redis:6379/0
@@ -161,7 +160,7 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-    restart: "no"
+    restart: unless-stopped
     stop_grace_period: 15s
     mem_limit: 256m
 

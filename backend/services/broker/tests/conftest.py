@@ -1,18 +1,19 @@
 """Broker test fixtures. Kite is always fake (D35): `nova_testing.kite.FakeKite`."""
 
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 
 import httpx2
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from nova_broker.accounts import add_account
-from nova_broker.crypto import new_key
+from nova_broker.crypto import TokenCipher, new_key
 from nova_broker.main import create_app
 from nova_broker.settings import BrokerSettings
-from nova_db.models import User
+from nova_db.models import BrokerSession, Instrument, User
 from nova_testing.db import database_url, engine, session
-from nova_testing.kite import API_KEY, API_SECRET, FakeKite
+from nova_testing.kite import ACCESS_TOKEN, API_KEY, API_SECRET, FakeKite
 from nova_testing.parity import Parity
 from nova_testing.redis import redis_client
 from redis import Redis
@@ -94,3 +95,48 @@ def client(app: FastAPI, caller_headers: dict[str, str]) -> Iterator[TestClient]
 @pytest.fixture(scope="session")
 def parity() -> Parity:
     return Parity()
+
+
+SYNCED = {"INFY": 408065, "TCS": 2953217}
+
+
+@pytest.fixture
+def synced(clean: Engine) -> Engine:
+    """Recorder tests: two instruments with a Kite token (+ one without), no jobs or ticks, the
+    recording switch off (as migration 0007 leaves it)."""
+    with clean.begin() as connection:
+        connection.execute(text("TRUNCATE instruments, data_jobs, ticks"))
+        connection.execute(text("UPDATE recorder_settings SET enabled = false, symbols = '{}'"))
+    with Session(clean) as db:
+        for symbol, token in [*SYNCED.items(), ("NOTOKEN", None)]:
+            db.add(
+                Instrument(
+                    exchange="NSE",
+                    symbol=symbol,
+                    name=symbol,
+                    segment="equity_delivery",
+                    sector="IT",
+                    instrument_token=token,
+                )
+            )
+        db.commit()
+    return clean
+
+
+@pytest.fixture
+def kite_session(synced: Engine, account_id: str, settings: BrokerSettings) -> str:
+    """A live Kite session for the account; returns the account id."""
+    assert settings.broker_token_key is not None
+    cipher = TokenCipher(settings.broker_token_key.get_secret_value())
+    now = datetime.now(UTC)
+    with Session(synced) as db:
+        db.add(
+            BrokerSession(
+                account_id=account_id,
+                access_token_encrypted=cipher.encrypt(ACCESS_TOKEN),
+                logged_in_at=now - timedelta(hours=1),
+                expires_at=now + timedelta(hours=8),
+            )
+        )
+        db.commit()
+    return account_id

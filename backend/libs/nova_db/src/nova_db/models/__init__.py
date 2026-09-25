@@ -3,7 +3,13 @@
 from nova_db.models.auth import AuthSession, Role, User, UserRole
 from nova_db.models.backtest import BacktestResult, BacktestRun, Trade
 from nova_db.models.base import Base
-from nova_db.models.broker import BrokerAccount, BrokerProfile, BrokerSession, RateLimitRule
+from nova_db.models.broker import (
+    BrokerAccount,
+    BrokerProfile,
+    BrokerSession,
+    RateLimitRule,
+    RecorderSetting,
+)
 from nova_db.models.data import (
     AuditEntry,
     Candle,
@@ -29,6 +35,7 @@ __all__ = [
     "DataJob",
     "Instrument",
     "RateLimitRule",
+    "RecorderSetting",
     "Role",
     "Strategy",
     "StrategyVersion",

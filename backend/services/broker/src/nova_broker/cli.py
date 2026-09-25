@@ -1,4 +1,4 @@
-"""`python -m nova_broker add-account --label --client-id`, `new-token-key` and `record-ticks`."""
+"""`python -m nova_broker add-account | new-token-key | record-ticks | recorder`."""
 
 import argparse
 import asyncio
@@ -6,14 +6,12 @@ import logging
 import signal
 import sys
 import threading
-from datetime import UTC, datetime, time
+from datetime import UTC, datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from nova_common import ApiException
 from nova_db import create_db_engine, create_session_factory
-from nova_db.models import Instrument, Tick
-from sqlalchemy import select
+from nova_db.models import Tick
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, sessionmaker
 from websockets.asyncio.client import connect
@@ -22,35 +20,21 @@ from nova_broker.accounts import add_account
 from nova_broker.crypto import TokenCipher, new_key
 from nova_broker.internal import active_session
 from nova_broker.recorder import Recorder, kite_url
+from nova_broker.recorder_loop import IST, MARKET_CLOSE, RecorderLoop, tick_symbols
 from nova_broker.settings import BrokerSettings, get_broker_settings
 
-IST = ZoneInfo("Asia/Kolkata")
-MARKET_CLOSE = time(15, 30)
-MAX_TOKENS = 3000  # Kite's limit per WebSocket connection
 
-
-def tick_symbols(db: Session, symbols: list[str]) -> dict[int, str]:
-    """Instrument token → symbol for NSE instruments with a token (all of them when none given)."""
-    query = select(Instrument.instrument_token, Instrument.symbol).where(
-        Instrument.exchange == "NSE", Instrument.instrument_token.is_not(None)
-    )
-    if symbols:
-        query = query.where(Instrument.symbol.in_(symbols))
-    found = {int(token): symbol for token, symbol in db.execute(query).tuples() if token}
-    missing = sorted(set(symbols) - set(found.values()))
-    if missing:
-        raise ValueError(f"No instrument token (run sync-instruments): {', '.join(missing)}")
-    if not found:
-        raise ValueError("No instruments with a token: run `python -m nova_atlas sync-instruments`")
-    if len(found) > MAX_TOKENS:
-        raise ValueError(f"Kite allows {MAX_TOKENS} symbols per socket; give --symbols")
-    return found
+def _stop_on_signals() -> threading.Event:
+    stop = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stop.set())
+    signal.signal(signal.SIGINT, lambda *_: stop.set())
+    return stop
 
 
 def record_ticks(
     settings: BrokerSettings, factory: sessionmaker[Session], symbols: list[str]
 ) -> None:
-    """Records until 15:30 IST, SIGTERM or Ctrl+C (D49)."""
+    """Records now, until 15:30 IST, SIGTERM or Ctrl+C (D49); no data job, no switch."""
     if settings.kite_api_key is None or settings.broker_token_key is None:
         raise ValueError("Set NOVA_KITE_API_KEY and NOVA_BROKER_TOKEN_KEY first")
     with factory() as db:
@@ -64,9 +48,7 @@ def record_ticks(
             db.execute(insert(Tick).on_conflict_do_nothing(), rows)
             db.commit()
 
-    stop = threading.Event()
-    signal.signal(signal.SIGTERM, lambda *_: stop.set())
-    signal.signal(signal.SIGINT, lambda *_: stop.set())
+    stop = _stop_on_signals()
 
     def should_stop() -> bool:
         return stop.is_set() or datetime.now(IST).time() >= MARKET_CLOSE
@@ -82,6 +64,18 @@ def record_ticks(
     asyncio.run(recorder.run())
 
 
+def run_recorder(settings: BrokerSettings, factory: sessionmaker[Session]) -> None:
+    """The always-on recorder (D54): follows Relay's switch until SIGTERM."""
+    api_key = settings.kite_api_key.get_secret_value() if settings.kite_api_key else None
+    token_key = settings.broker_token_key
+    cipher = TokenCipher(token_key.get_secret_value()) if token_key else None
+    if api_key is None or cipher is None:
+        logging.getLogger("nova.broker").warning(
+            "NOVA_KITE_API_KEY or NOVA_BROKER_TOKEN_KEY is not set: the recorder only waits"
+        )
+    RecorderLoop(factory=factory, api_key=api_key, cipher=cipher, stop=_stop_on_signals()).run()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m nova_broker")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -89,8 +83,9 @@ def main(argv: list[str] | None = None) -> int:
     add.add_argument("--label", required=True)
     add.add_argument("--client-id", required=True)
     commands.add_parser("new-token-key", help="print a new NOVA_BROKER_TOKEN_KEY")
-    record = commands.add_parser("record-ticks", help="record live ticks until 15:30 IST")
+    record = commands.add_parser("record-ticks", help="record live ticks now, until 15:30 IST")
     record.add_argument("--symbols", default="", help="comma-separated; default: all with a token")
+    commands.add_parser("recorder", help="always-on recorder that follows Relay's switch")
     args = parser.parse_args(argv)
 
     if args.command == "new-token-key":
@@ -99,11 +94,15 @@ def main(argv: list[str] | None = None) -> int:
 
     settings = get_broker_settings()
     engine = create_db_engine(settings.database_url.get_secret_value())
-    if args.command == "record-ticks":
+    if args.command in ("record-ticks", "recorder"):
         logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
-        symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
+        factory = create_session_factory(engine)
         try:
-            record_ticks(settings, create_session_factory(engine), symbols)
+            if args.command == "recorder":
+                run_recorder(settings, factory)
+            else:
+                symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
+                record_ticks(settings, factory, symbols)
         except (ValueError, ApiException) as exc:
             print(exc, file=sys.stderr)
             return 1

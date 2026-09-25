@@ -12,7 +12,7 @@ from nova_db.models import BrokerAccount
 from redis import Redis
 from sqlalchemy import select
 
-from nova_broker import accounts, internal, profiles, rate_limits
+from nova_broker import accounts, internal, profiles, rate_limits, recorder_settings
 from nova_broker.kite import KiteClient
 from nova_broker.limiter import RateLimiter
 from nova_broker.limits import ensure_rules
@@ -77,6 +77,7 @@ def create_app(
     router.include_router(accounts.router)
     router.include_router(profiles.router)
     router.include_router(rate_limits.router)
+    router.include_router(recorder_settings.router)
     app.include_router(router)
     # Service-to-service only (D41): outside /api/v1, so NOVA Core never forwards it.
     app.include_router(internal.router)

@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 25 Sep 2026 (NOVA-074). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 25 Sep 2026 (NOVA-076). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -55,6 +55,8 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | `GET /broker/profiles/{broker}` | One profile (`zerodha`). | path | `BrokerProfile`; 404 |
 | `GET /broker/rate-limits` | For each account × endpoint (`quote`, `historical`, `orders`, `other`): one rule per window (`second`, `minute`, `day`) with `brokerLimit`, `novaLimit`, `used` (live from Redis), `resetsAt` (day window), plus `throttledToday`. | — | `RateLimit[]` |
 | `PATCH /broker/rate-limits/{accountId}/{endpoint}` | Changes NOVA's own limit for one window. Must be ≥ 1 and ≤ the broker limit. Audit: `broker.rate_limit_update` ("orders per day: 4,500 → 4,200"). | `RateLimitUpdate {window, novaLimit}` | 204; 400 above broker limit; 404 |
+| `GET /broker/recorder` | The live tick recording switch: `enabled`, chosen `symbols` (empty = every stock synced with Kite) and `state`: `off`; `waiting` (outside 09:15–15:30 IST on weekdays); `recording` (`jobId` = the running `tick_record` job); `no_login` (market hours but no live Kite session). | — | `RecorderSettings` |
+| `PUT /broker/recorder` | Turns recording on or off and sets its stocks (sorted, duplicates dropped). Turning on needs every chosen stock synced with Kite (or at least one synced stock when none are chosen). The always-on recorder picks the change up within 30 s. Audit: `settings.update` ("Tick recording on: 2 stock(s)" / "Tick recording off"), target `settings` / `recorder`. | `RecorderSettingsUpdate {enabled, symbols (≤ 3,000)}` | `RecorderSettings`; 400 stock not synced |
 
 **Internal only (not under `/api/v1`, never forwarded by Core; only NOVA services with the internal token):**
 
@@ -116,7 +118,7 @@ No delete in Phase 1 (runs refer to versions).
 | `GET /data-jobs` | Background jobs, newest first, paged: type (`historical_download`, `tick_record`, `archive`), status, symbols, timeframe, period, progress %, rows written, error. | `limit`, `cursor` | `Page<DataJob>` |
 | `GET /data-jobs/{id}` | One job. | path | `DataJob`; 404 |
 | `POST /data-jobs` | Queues a historical candle download for the Atlas worker, like the `download` command. Symbols are upper-cased and must be in the stock list. Audit: `data_job.create` ("Queued 1d download of 2 symbol(s), 2025-01-01 to 2025-12-31"). | `DataJobCreate {symbols (1–200), timeframe, from, to, segment? (default `equity_delivery`)}` | 201 `DataJob` (`queued`); 400 bad body or unknown symbol |
-| `POST /data-jobs/{id}/cancel` | Cancels a `queued` job at once, or a `running` one: the worker stops before its next chunk (rows already saved stay). Audit: `data_job.cancel` ("Cancelled 1d download of 2 symbol(s)"). | path | `DataJob` (`cancelled`); 400 "Job is already …" (completed, failed or cancelled); 404 |
+| `POST /data-jobs/{id}/cancel` | Cancels a `queued` job at once, or a `running` one: the worker stops before its next chunk (rows already saved stay). Cancelling a running `tick_record` job stops the recording and turns the recorder switch off. Audit: `data_job.cancel` ("Cancelled 1d download of 2 symbol(s)"). | path | `DataJob` (`cancelled`); 400 "Job is already …" (completed, failed or cancelled); 404 |
 
 ---
 
@@ -127,7 +129,8 @@ No delete in Phase 1 (runs refer to versions).
 | `python -m nova_core create-admin` | Creates the super-admin user (asks for the password). |
 | `python -m nova_broker add-account` | Adds a Zerodha account (+ its default rate-limit rules). |
 | `python -m nova_broker new-token-key` | Makes the key used to encrypt Kite tokens. |
-| `python -m nova_broker record-ticks` | Records live ticks until 15:30 IST (Compose profile `market`). |
+| `python -m nova_broker record-ticks` | Records live ticks now, by hand, until 15:30 IST (no data job). |
+| `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session. |
 | `python -m nova_atlas sync-instruments` | Loads instruments from the stock list (`universe` table) + Kite, like `POST /market-data/instruments/sync`. |
 | `python -m nova_atlas download` | Queues a historical candle download job. |
 | `python -m nova_atlas archive-ticks` | Moves old ticks to Parquet files and deletes them from the database. |

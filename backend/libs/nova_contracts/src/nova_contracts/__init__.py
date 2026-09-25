@@ -54,6 +54,12 @@ from nova_contracts.rate_limit import (
     RateLimitUpdate,
     RateLimitWindow,
 )
+from nova_contracts.recorder import (
+    MAX_RECORDER_SYMBOLS,
+    RecorderSettings,
+    RecorderSettingsUpdate,
+    RecorderState,
+)
 from nova_contracts.strategy import (
     Condition,
     Operand,
@@ -77,6 +83,7 @@ from nova_contracts.user import User, UserRole
 __all__ = [
     "INDICATORS",
     "MAX_DOWNLOAD_SYMBOLS",
+    "MAX_RECORDER_SYMBOLS",
     "PAGE_LIMIT_DEFAULT",
     "PAGE_LIMIT_MAX",
     "AuditAction",
@@ -118,6 +125,9 @@ __all__ = [
     "RateLimitRule",
     "RateLimitUpdate",
     "RateLimitWindow",
+    "RecorderSettings",
+    "RecorderSettingsUpdate",
+    "RecorderState",
     "ApiError",
     "ApiErrorBody",
     "ApiErrorCode",

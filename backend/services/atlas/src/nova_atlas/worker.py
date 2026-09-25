@@ -13,6 +13,10 @@ from nova_atlas.download import fail_job, run_download
 
 logger = logging.getLogger("nova.atlas.worker")
 
+# Job types this worker runs; `tick_record` jobs belong to the broker's recorder (D54).
+WORKER_TYPES = ("historical_download",)
+OWNED = DataJob.type.in_(WORKER_TYPES)
+
 
 def run_worker(
     session_factory: sessionmaker[Session],
@@ -23,12 +27,12 @@ def run_worker(
 ) -> None:
     """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there)."""
     with session_factory() as db:
-        requeued = requeue_running(db, DataJob)
+        requeued = requeue_running(db, DataJob, OWNED)
     if requeued:
         logger.info("Requeued %s interrupted job(s)", requeued)
     while not stop.is_set():
         with session_factory() as db:
-            job_id = claim_next(db, DataJob)
+            job_id = claim_next(db, DataJob, OWNED)
             if job_id is not None:
                 logger.info("Running data job %s", job_id)
                 try:

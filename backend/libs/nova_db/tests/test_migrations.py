@@ -23,6 +23,7 @@ EXPECTED_TABLES = {
     "charge_rates",
     "ticks",
     "universe",
+    "recorder_settings",
 }
 
 
@@ -68,3 +69,10 @@ def test_the_stock_list_is_seeded(engine: Engine) -> None:
         symbols = list(connection.execute(text("SELECT symbol FROM universe")).scalars())
 
     assert len(symbols) == 24 and {"INFY", "TCS", "DABUR"} <= set(symbols)
+
+
+def test_tick_recording_starts_switched_off(engine: Engine) -> None:
+    with engine.connect() as connection:
+        rows = connection.execute(text("SELECT id, enabled, symbols FROM recorder_settings")).all()
+
+    assert [tuple(row) for row in rows] == [(1, False, [])]

@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 25 Sep 2026 (migrations `0001`–`0006`, NOVA-074). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 25 Sep 2026 (migrations `0001`–`0007`, NOVA-076). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -48,6 +48,7 @@ universe ─ instruments   candles (hypertable)   ticks (hypertable)   data_jobs
 | **broker_sessions** | The current Kite login of each account (one row per account). Status is derived: no token = not logged in; past `expires_at` = expired. The access token is **encrypted** with `NOVA_BROKER_TOKEN_KEY`. | `account_id` (PK), `access_token_encrypted`, `logged_in_at`, `expires_at` (next 06:00 IST) |
 | **broker_profiles** | Facts about the Zerodha setup shown on Relay's Broker page, refreshed at broker start-up from settings + `data/zerodha.json`. Only the **last 4** characters of the API key are stored; the secret never is. | `broker` (PK), `name`, `api`, `plan`, `subscription_renews_on`, `api_key_last4`, `redirect_url`, `postback_url`, `static_ip`, `session_rule`, `links` (JSON) |
 | **rate_limit_rules** | The request limits per account × endpoint (`quote`, `historical`, `orders`, `other`) × window (`second`, `minute`, `day`). `nova_limit` must be > 0 and ≤ `broker_limit` (default 90% of it). Live usage is **not** here: it is in Redis. | PK (`account_id`, `endpoint`, `rate_window`), `broker_limit`, `nova_limit`, `updated_at` |
+| **recorder_settings** | The one row (id 1) that switches live tick recording on or off (D54), set with `PUT /broker/recorder`. The always-on recorder reads it every 30 s. Starts off. | `id` (always 1), `enabled`, `symbols` (text[]; empty = every stock synced with Kite), `updated_at` |
 
 ## 3. Strategies and backtests
 
@@ -70,7 +71,7 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 | **instruments** | Master list of shares/contracts (from the `universe` stock list + Kite, by sync). Prices and stats are **not** stored here; the API computes them from candles. | PK (`exchange`, `symbol`), `name`, `segment`, `sector`, `indices` (text[]), `lot_size`, `instrument_token` (Kite's id, unique), `updated_at` |
 | **candles** | Price bars (OHLCV). **TimescaleDB hypertable** on `ts`, 30-day chunks. Daily bars are stored at 00:00 IST. DB check: high ≥ open/close ≥ low > 0. | PK (`exchange`, `symbol`, `timeframe`, `ts`), `open_paise`, `high_paise`, `low_paise`, `close_paise`, `volume`; `timeframe` ∈ `1m 3m 5m 15m 30m 1h 1d` |
 | **ticks** | Live price updates recorded from Kite's WebSocket during market hours. **Hypertable** on `received_at`, 1-day chunks. Older days are moved to Parquet by `archive-ticks` and then deleted here. | PK (`exchange`, `symbol`, `received_at`), `exchange_ts`, `last_price_paise`, `last_qty`, `volume`, `oi` |
-| **data_jobs** | Background data work **and the job queue** for the Atlas worker. Types: `historical_download`, `tick_record`, `archive`. Checks: downloads need timeframe + period; completed = 100%; errors only when failed. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error` |
+| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` jobs only). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`. Checks: downloads need timeframe + period; completed = 100%; errors only when failed. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error` |
 
 ## 5. Audit
 
@@ -84,4 +85,4 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 |---|---|
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
-| **alembic_version** (table) | The migration the database is on (currently `0006`). Managed by Alembic only. |
+| **alembic_version** (table) | The migration the database is on (currently `0007`). Managed by Alembic only. |
