@@ -18,55 +18,67 @@
 Prerequisites (Windows, via winget): fnm with Node 24 (`fnm install 24`), pnpm 12 (`winget install pnpm.pnpm`),
 and for the backend Docker Desktop (WSL2) and uv (`winget install astral-sh.uv`). Use pnpm and uv only (no npm, no pip).
 
-There are two ways to run NOVA:
+All commands run in `frontend/`. There are two ways to run NOVA, each with one command:
 
-| Mode          | Backend needed? | Sign-in                             | Use it for                          |
-| ------------- | --------------- | ----------------------------------- | ----------------------------------- |
-| **Mock mode** | No              | Any username and password (demo)    | Looking at screens, UI work, review |
-| **Real mode** | Yes (Docker)    | Your super-admin email and password | Real data, backtests, Kite login    |
+| Mode          | First time only   | Every day     | Stop                            | Sign-in                             |
+| ------------- | ----------------- | ------------- | ------------------------------- | ----------------------------------- |
+| **Mock mode** | `pnpm install`    | `pnpm review` | `Ctrl+C`                        | Any username and password (demo)    |
+| **Real mode** | `pnpm real:setup` | `pnpm real`   | `Ctrl+C`, then `pnpm real:stop` | Your super-admin email and password |
+
+Mock mode needs no backend and uses sample data: good for looking at screens and UI work.
+Real mode runs the backend in Docker (start Docker Desktop first) and uses real data, backtests and the Kite login.
 
 ### Option A: UI only (mock mode)
 
 ```bash
 cd frontend
-pnpm install
+pnpm install      # first time only
 pnpm review
 ```
 
 This starts Orbit (http://localhost:3000), Relay (http://localhost:3001) and Storybook (http://localhost:6006).
-The data comes from static mocks. For a guided tour see [`docs/REVIEW-GUIDE.md`](docs/REVIEW-GUIDE.md).
+For a guided tour see [`docs/REVIEW-GUIDE.md`](docs/REVIEW-GUIDE.md).
 
 ### Option B: backend + UI (real mode)
 
-**1. Start the backend (repo root, Docker Desktop running)**
+**First time only:**
 
 ```bash
-cp .env.example .env              # first time only: then change the password and NOVA_INTERNAL_TOKEN
-docker compose build              # first time, and again after backend dependency changes
-docker compose up -d              # start the stack
+cd frontend
+pnpm real:setup
 ```
 
-Check it: http://127.0.0.1:8000/api/v1/health should answer.
+This does everything in order:
 
-**2. Create your sign-in (first time only)**
+1. creates `.env` from `.env.example` with random secrets (an existing `.env` is kept)
+2. installs the frontend packages
+3. builds the backend image
+4. fills `NOVA_BROKER_TOKEN_KEY`
+5. starts the backend and waits for NOVA Core
+6. asks for your email, name and password to create the super-admin
+
+The super-admin is the account you sign in with. If you skip it, run `pnpm real:admin` later.
+
+**Every day:**
 
 ```bash
-docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"
+cd frontend
+pnpm real
 ```
 
-It asks for a password. This is the email and password you sign in with.
+This starts the backend (`docker compose up -d`) and waits until NOVA Core answers. Then it starts Orbit
+(http://localhost:3000) and Relay (http://localhost:3001) against it. The apps send `/api` to NOVA Core on port 8000
+(D48). If port 3000 or 3001 is already taken, for example by `pnpm review`, it stops and tells you.
 
-**3. Start the UI against the backend (two terminals, in `frontend/`)**
-
-```bash
-pnpm --filter nova-orbit dev:real    # Orbit  → http://localhost:3000
-pnpm --filter nova-relay dev:real    # Relay  → http://localhost:3001
-```
-
-The apps send `/api` to NOVA Core on port 8000 (D48). Set `NOVA_API_URL` to point them somewhere else.
-
-**Stop:** `Ctrl+C` in the UI terminals, then `docker compose down` in the repo root. Your data stays in the
+**Stop:** `Ctrl+C` stops the apps. `pnpm real:stop` stops the backend (`docker compose down`). Your data stays in the
 Docker volumes (`db-data`, `tick-archive`). Only `docker compose down -v` deletes it.
+
+| Command           | Does                                               |
+| ----------------- | -------------------------------------------------- |
+| `pnpm real:setup` | First-time setup (safe to run again: keeps `.env`) |
+| `pnpm real`       | Start backend + Orbit + Relay in real mode         |
+| `pnpm real:admin` | Create the super-admin (backend must be running)   |
+| `pnpm real:stop`  | Stop the backend                                   |
 
 ### Backend containers (Docker Desktop → `nova`)
 
@@ -107,6 +119,7 @@ What is built today, kept up to date with every task: [user guide](docs/guides/U
 | Command                                                             | Does                                       |
 | ------------------------------------------------------------------- | ------------------------------------------ |
 | `pnpm review`                                                       | Run Orbit, Relay and Storybook in parallel |
+| `pnpm real` / `pnpm real:setup`                                     | Real mode: backend + Orbit + Relay         |
 | `pnpm --filter nova-orbit dev`                                      | Run one app                                |
 | `pnpm storybook`                                                    | Run Storybook only                         |
 | `pnpm test`                                                         | All unit and page tests (Vitest)           |

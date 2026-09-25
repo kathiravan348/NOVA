@@ -15,6 +15,10 @@
     "check:test": "vitest run",
     "check:format": "prettier --check --cache .",
     "review": "pnpm --filter nova-orbit --filter nova-relay --filter @nova/ui-storybook --parallel run dev",
+    "real": "node scripts/real.mjs start",
+    "real:setup": "node scripts/real.mjs setup",
+    "real:admin": "node scripts/real.mjs admin",
+    "real:stop": "node scripts/real.mjs stop",
     "review:check": "pnpm check:format && pnpm check:lint && pnpm check:typecheck && pnpm check:test && pnpm build"
   },
   "devDependencies": {
