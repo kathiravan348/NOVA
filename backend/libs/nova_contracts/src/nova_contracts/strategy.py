@@ -72,12 +72,21 @@ class Risk(Contract):
     target_percent: Annotated[float, Field(gt=0)] | None
 
 
+class Averaging(Contract):
+    """Cost averaging (D53): buy again each `drop_percent` fall below the last buy."""
+
+    drop_percent: Annotated[float, Field(gt=0, le=50)]
+    max_adds: Annotated[int, Field(ge=1, le=10)]
+
+
 class _SpecBase(Contract):
     segment: Segment
     exchange: Exchange
     timeframe: Timeframe
     sizing: Sizing
     risk: Risk
+    # Absent = off, and never written when off, so older specs stay identical (D53).
+    averaging: Annotated[Averaging | None, Field(exclude_if=lambda v: v is None)] = None
 
 
 class StrategySpecVisual(_SpecBase):

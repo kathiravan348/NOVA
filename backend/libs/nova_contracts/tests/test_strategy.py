@@ -141,3 +141,34 @@ def test_bad_offset_is_rejected(offset: float) -> None:
     for left in lefts:
         with pytest.raises(ValidationError):
             StrategySpecVisual.model_validate_json(json.dumps(_visual(left)))
+
+
+@pytest.mark.parametrize(
+    ("averaging", "ok"),
+    [
+        ({"dropPercent": 5, "maxAdds": 3}, True),
+        ({"dropPercent": 50, "maxAdds": 10}, True),
+        ({"dropPercent": 0, "maxAdds": 3}, False),
+        ({"dropPercent": 51, "maxAdds": 3}, False),
+        ({"dropPercent": 5, "maxAdds": 0}, False),
+        ({"dropPercent": 5, "maxAdds": 11}, False),
+        ({"dropPercent": 5, "maxAdds": 1.5}, False),
+    ],
+)
+def test_averaging_is_checked_and_round_trips(averaging: dict[str, object], ok: bool) -> None:
+    spec = _visual({"kind": "price", "field": "close"}) | {"averaging": averaging}
+
+    if not ok:
+        with pytest.raises(ValidationError):
+            StrategySpecVisual.model_validate_json(json.dumps(spec))
+        return
+    dumped = StrategySpecVisual.model_validate_json(json.dumps(spec)).model_dump(mode="json")
+    assert dumped["averaging"] == averaging
+
+
+def test_absent_averaging_is_not_written() -> None:
+    spec = _visual({"kind": "price", "field": "close"})
+
+    dumped = StrategySpecVisual.model_validate_json(json.dumps(spec)).model_dump(mode="json")
+
+    assert "averaging" not in dumped

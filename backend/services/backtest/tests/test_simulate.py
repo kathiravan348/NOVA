@@ -7,7 +7,7 @@ from nova_backtest.bars import IST, Bar
 from nova_backtest.rules import RuleSignals
 from nova_backtest.simulate import Simulation, simulate
 from nova_contracts import Charges, RuleGroup, Sizing
-from nova_contracts.strategy import Risk
+from nova_contracts.strategy import Averaging, Risk
 from pydantic import TypeAdapter
 
 DAY0 = datetime.combine(datetime(2026, 9, 1).date(), time(0), tzinfo=IST)
@@ -233,3 +233,75 @@ def test_a_day_without_late_bars_closes_at_the_last_price_seen() -> None:
 
     assert trade.exit_price == 10_700  # the 15:05 close, not the next morning's open
     assert trade.exit_at == datetime(2026, 9, 1, 15, 5, tzinfo=IST)
+
+
+class _EnterOnce:
+    """Enter at the close of bar 0, never exit: the position lives until the end."""
+
+    def enter(self, symbol: str, i: int) -> bool:
+        return i == 0
+
+    def exit(self, symbol: str, i: int) -> bool:
+        return False
+
+
+def _average(
+    bars: list[Bar], averaging: Averaging, risk: Risk = NO_RISK, cash: int = 10_000_000
+) -> Simulation:
+    return simulate(
+        {"INFY": bars}, _EnterOnce(), TEN, risk, cash, DAY0, lambda *_: _charges(0), None, averaging
+    )
+
+
+FALLING = (
+    (100, 101, 99, 100),  # day 0: enter signal
+    (100, 101, 95, 96),  # day 1: buy 10 @ 100; next add at 100 × 0.9 = 90, low 95 → no add
+    (95, 96, 89, 90),  # day 2: low 89 → add 10 @ 90; average 95; next add at 81
+    (80, 82, 79, 81),  # day 3: gap below 81 → add 10 @ open 80; average 90; 2 adds = max
+    (70, 71, 69, 70),  # day 4: no more adds; closed at the end @ 70
+)
+
+
+def test_cost_averaging_adds_on_each_fall_and_keeps_one_trade() -> None:
+    result = _average(_bars(*FALLING), Averaging(drop_percent=10, max_adds=2))
+
+    (trade,) = result.trades
+    assert (trade.qty, trade.entry_price, trade.entry_at) == (30, 9_000, DAY0 + timedelta(days=1))
+    assert trade.cost == 10 * 10_000 + 10 * 9_000 + 10 * 8_000  # 2,70,000 paise
+    assert trade.gross == 30 * 7_000 - 270_000  # −60,000
+    assert result.equity[-1][1] == 10_000_000 - 60_000  # cash and trade agree
+
+
+def test_stop_follows_the_average_price() -> None:
+    # stop 12%: from 100 it is 88; after the add (average 95) it is 83.60
+    risk = Risk(stop_loss_percent=12, target_percent=None)
+    bars = _bars(*FALLING[:3], (85, 86, 83, 84))
+
+    (with_adds,) = _average(bars, Averaging(drop_percent=10, max_adds=3), risk).trades
+    (without,) = simulate(
+        {"INFY": bars}, _EnterOnce(), TEN, risk, 10_000_000, DAY0, lambda *_: _charges(0)
+    ).trades
+
+    # day 3: next add at 81 is below the stop 83.60, so the stop fills first @ 83.60
+    assert (with_adds.qty, with_adds.entry_price, with_adds.exit_price) == (20, 9_500, 8_360)
+    assert (without.qty, without.exit_price) == (10, 8_500)  # stop 88, gap open 85
+
+
+def test_a_stop_above_the_trigger_closes_without_adding() -> None:
+    # stop 5% = 95 is above the add trigger 90: the price reaches the stop first
+    risk = Risk(stop_loss_percent=5, target_percent=None)
+
+    (trade,) = _average(
+        _bars(*FALLING[:2], (97, 97, 89, 91)), Averaging(drop_percent=10, max_adds=3), risk
+    ).trades
+
+    assert (trade.qty, trade.exit_price) == (10, 9_500)
+
+
+def test_no_add_without_enough_cash() -> None:
+    # ₹1,500: the first buy costs ₹1,000, the add would cost ₹900
+    (trade,) = _average(
+        _bars(*FALLING), Averaging(drop_percent=10, max_adds=2), cash=150_000
+    ).trades
+
+    assert (trade.qty, trade.entry_price) == (10, 10_000)

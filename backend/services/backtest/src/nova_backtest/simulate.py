@@ -2,6 +2,8 @@
 
 Long only, one position per symbol, whole shares. Amounts are integer paise throughout.
 With `square_off` (intraday, D46) nothing is held past that IST time or overnight.
+With `averaging` (D53) a held position buys again each X% fall below its last buy, up to N times;
+stop and target then follow the average price, and the position stays one trade.
 """
 
 from collections.abc import Callable
@@ -11,7 +13,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Protocol
 
 from nova_contracts import Charges, Sizing
-from nova_contracts.strategy import Risk, SizingFixedAmount, SizingFixedQty
+from nova_contracts.strategy import Averaging, Risk, SizingFixedAmount, SizingFixedQty
 
 from nova_backtest.bars import IST, Bar
 
@@ -36,10 +38,12 @@ class ClosedTrade:
     exit_at: datetime
     exit_price: int
     charges: Charges
+    cost: int | None = None  # exact paise paid for all buys; None = qty × entry price (D53)
 
     @property
     def gross(self) -> int:
-        return (self.exit_price - self.entry_price) * self.qty
+        paid = self.cost if self.cost is not None else self.entry_price * self.qty
+        return self.exit_price * self.qty - paid
 
     @property
     def net(self) -> int:
@@ -50,7 +54,20 @@ class ClosedTrade:
 class _Position:
     qty: int
     entry_at: datetime
-    entry_price: int
+    cost: int  # exact paise paid for every buy
+    last_buy: int  # price of the latest buy: the next add triggers below it (D53)
+    adds: int = 0
+
+    @property
+    def average(self) -> int:
+        """Average buy price, half-up paise."""
+        value = Decimal(self.cost) / self.qty
+        return int(value.quantize(Decimal(1), rounding=ROUND_HALF_UP))
+
+    def buy(self, qty: int, price: int) -> None:
+        self.qty += qty
+        self.cost += qty * price
+        self.last_buy = price
 
 
 @dataclass(frozen=True)
@@ -81,6 +98,7 @@ def simulate(
     start: datetime,
     charges: ChargesFn,
     square_off: time | None = None,
+    averaging: Averaging | None = None,
 ) -> Simulation:
     events = sorted(
         ((bar.ts, symbol, i) for symbol, series in bars.items() for i, bar in enumerate(series)),
@@ -98,13 +116,35 @@ def simulate(
     def close(symbol: str, at: datetime, price: int) -> None:
         nonlocal cash
         position = positions.pop(symbol)
-        cost = charges(position.qty, position.entry_price, price, position.entry_at)
+        entry = position.average
+        cost = charges(position.qty, entry, price, position.entry_at)
         trades.append(
             ClosedTrade(
-                symbol, position.qty, position.entry_at, position.entry_price, at, price, cost
+                symbol, position.qty, position.entry_at, entry, at, price, cost, position.cost
             )
         )
         cash += position.qty * price - cost.total_paise
+
+    def stop_price_of(position: _Position) -> int | None:
+        stop = risk.stop_loss_percent
+        return _percent_of(position.average, 100 - stop) if stop else None
+
+    def average_down(symbol: str, bar: Bar) -> None:
+        """Resting buys below the last buy (D53); a stop at or above the trigger fills first."""
+        nonlocal cash
+        position = positions[symbol]
+        while averaging is not None and position.adds < averaging.max_adds:
+            trigger = _percent_of(position.last_buy, 100 - averaging.drop_percent)
+            stop_price = stop_price_of(position)
+            if bar.low > trigger or (stop_price is not None and stop_price >= trigger):
+                return
+            fill = min(bar.open, trigger)
+            qty = shares(sizing, worth(), fill)
+            if qty < 1 or qty * fill > cash:
+                return
+            position.buy(qty, fill)
+            position.adds += 1
+            cash -= qty * fill
 
     day: date | None = None
     for ts, symbol, i in events:
@@ -135,15 +175,15 @@ def simulate(
         elif order == "enter" and symbol not in positions:
             qty = shares(sizing, worth(), bar.open)
             if qty >= 1 and qty * bar.open <= cash:
-                positions[symbol] = _Position(qty, ts, bar.open)
+                positions[symbol] = _Position(qty, ts, qty * bar.open, bar.open)
                 cash -= qty * bar.open
 
         position = positions.get(symbol)
         if position is not None:
-            stop = risk.stop_loss_percent
+            average_down(symbol, bar)
             target = risk.target_percent
-            stop_price = _percent_of(position.entry_price, 100 - stop) if stop else None
-            target_price = _percent_of(position.entry_price, 100 + target) if target else None
+            stop_price = stop_price_of(position)
+            target_price = _percent_of(position.average, 100 + target) if target else None
             if stop_price is not None and bar.low <= stop_price:
                 close(symbol, ts, min(bar.open, stop_price))
             elif target_price is not None and bar.high >= target_price:

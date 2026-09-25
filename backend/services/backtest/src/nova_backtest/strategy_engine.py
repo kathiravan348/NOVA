@@ -120,6 +120,7 @@ class StrategyEngine:
             start,
             charges,
             square_off=SQUARE_OFF if spec.segment == "equity_intraday" else None,
+            averaging=spec.averaging,
         )
         summary = summarize(
             result.trades,

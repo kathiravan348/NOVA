@@ -122,6 +122,13 @@ export const RiskSchema = z.strictObject({
 });
 export type Risk = z.infer<typeof RiskSchema>;
 
+/** Cost averaging (D53): buy again each `dropPercent` fall below the last buy, up to `maxAdds` times. */
+export const AveragingSchema = z.strictObject({
+  dropPercent: z.number().gt(0).lte(50),
+  maxAdds: z.number().int().min(1).max(10),
+});
+export type Averaging = z.infer<typeof AveragingSchema>;
+
 /** A strategy is rules only (D25); symbols are chosen per backtest run (`BacktestRun.universe`). */
 const baseSpecFields = {
   segment: SegmentSchema,
@@ -129,6 +136,8 @@ const baseSpecFields = {
   timeframe: TimeframeSchema,
   sizing: SizingSchema,
   risk: RiskSchema,
+  /** Absent = off (D53). */
+  averaging: AveragingSchema.optional(),
 };
 
 export const StrategySpecVisualSchema = z.strictObject({

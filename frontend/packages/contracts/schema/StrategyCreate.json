@@ -139,6 +139,26 @@
               ],
               "additionalProperties": false
             },
+            "averaging": {
+              "type": "object",
+              "properties": {
+                "dropPercent": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 50
+                },
+                "maxAdds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                }
+              },
+              "required": [
+                "dropPercent",
+                "maxAdds"
+              ],
+              "additionalProperties": false
+            },
             "entry": {
               "type": "object",
               "properties": {
@@ -853,6 +873,26 @@
               "required": [
                 "stopLossPercent",
                 "targetPercent"
+              ],
+              "additionalProperties": false
+            },
+            "averaging": {
+              "type": "object",
+              "properties": {
+                "dropPercent": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 50
+                },
+                "maxAdds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                }
+              },
+              "required": [
+                "dropPercent",
+                "maxAdds"
               ],
               "additionalProperties": false
             },

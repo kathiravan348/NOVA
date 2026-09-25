@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 25 Sep 2026 (NOVA-064). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 25 Sep 2026 (NOVA-069). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -82,6 +82,11 @@ name, label, group, params with default and whole-number flag). Price and indica
 `offset` (bars ago, 0–500; absent = 0, and 0 is never written back). Both write bodies refuse unknown settings,
 whole-number settings below 1 or with decimals, decimal settings ≤ 0, and `fast ≥ slow` → 400 `invalid_request`.
 Reads stay tolerant, so strategies saved before the catalog still load.
+
+Cost averaging (D53): optional `averaging {dropPercent (> 0, ≤ 50), maxAdds (whole 1–10)}` on both spec modes;
+absent = off, and it is never written when off. The backtest then buys again (normal sizing) each time the
+price falls `dropPercent` below the last buy, up to `maxAdds` times; stop-loss/target use the average price and
+the whole position is one `Trade` (qty = all shares, `entryPricePaise` = average, gross from the exact cost).
 
 `spec` holds: mode (`visual` rules or `python` code), segment, exchange, timeframe, entry/exit rule groups
 (`all`/`any` of conditions *operand · op · operand*), sizing (fixed qty / fixed amount / percentage), stop-loss %, target %.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  AveragingSchema,
   ConditionSchema,
   OperandSchema,
   RuleGroupSchema,
@@ -246,6 +247,22 @@ describe("indicator params and offset (D51)", () => {
       expect(
         OperandSchema.safeParse({ kind: "indicator", name: "sma", params: {}, offset }).success,
       ).toBe(false);
+    }
+  });
+});
+
+describe("AveragingSchema (D53)", () => {
+  it("accepts a drop up to 50% and 1–10 whole adds", () => {
+    expect(AveragingSchema.safeParse({ dropPercent: 5, maxAdds: 3 }).success).toBe(true);
+    expect(AveragingSchema.safeParse({ dropPercent: 50, maxAdds: 10 }).success).toBe(true);
+    for (const bad of [
+      { dropPercent: 0, maxAdds: 3 },
+      { dropPercent: 51, maxAdds: 3 },
+      { dropPercent: 5, maxAdds: 0 },
+      { dropPercent: 5, maxAdds: 11 },
+      { dropPercent: 5, maxAdds: 1.5 },
+    ]) {
+      expect(AveragingSchema.safeParse(bad).success).toBe(false);
     }
   });
 });
