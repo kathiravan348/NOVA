@@ -31,7 +31,7 @@ Rules:
 1. Change the status on the board **before** starting work, and set yourself as owner.
 2. Never edit files of a task you do not own.
 3. Two tasks whose `Files` lists overlap may not be `in-progress` and `in-review` at the same time. Exception: `frontend/pnpm-lock.yaml` is generated. On a conflict, rebase and re-run `pnpm install`. Never hand-edit it.
-   Shared list files do not count as overlap either: `frontend/packages/*/package.json` (dependency lines), `frontend/packages/*/src/index.ts` (export lines), `docs/COMPONENTS.md`, `docs/CONTRACTS.md`, `docs/STRUCTURE.md`. Only add lines to them; on a conflict, rebase and keep both sides.
+   Shared list files do not count as overlap either: `frontend/packages/*/package.json` (dependency lines), `frontend/packages/*/src/index.ts` (export lines), `docs/COMPONENTS.md`, `docs/CONTRACTS.md`, `docs/STRUCTURE.md`, `docs/guides/*.md`. Only add or edit your own lines/sections in them; on a conflict, rebase and keep both sides.
 4. One branch per task: `task/NOVA-###`. Commit all work (`NOVA-###: …`) on it before setting `ready-for-review`. Claude's review fixes are committed on the same branch with prefix `review:`.
 5. Claude priority: review `ready-for-review` tasks first, then plan. Keep 1–2 tasks `planned` ahead so Gemini is never idle.
 6. Claude fixes small/medium issues directly. If the fix means rewriting most of the task, write a precise change request and set `changes-requested`.
@@ -46,7 +46,8 @@ Rules:
 - Prove work with tests and a build, not by re-reading code.
 - While working, run only the checks for the packages you touch (e.g. `pnpm vitest run packages/mocks`, `pnpm --filter @nova/mocks lint`). Run the full `pnpm review:check` once, before `ready-for-review` (Claude: once, before merge). Backend: `docker compose run --rm backend-check` once, before `ready-for-review`, when the task touches `backend/`.
 - Do not restate the task or this rulebook in replies. Report only: done / changed files / open questions.
-- Update the maps (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) in the same task that changes them.
+- Update the maps (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) and the guides (`docs/guides/`, §7a) in the same task that changes them.
+  Read only the guide section you change.
 
 ## 5. Tech stack (do not add others without a task saying so)
 Frontend: React 18, TypeScript (strict), Vite, pnpm workspaces, Tailwind CSS, shadcn/ui (Radix), TanStack Table, TanStack Query, React Hook Form + Zod, date-fns + date-fns-tz, Recharts, TradingView Lightweight Charts, lucide-react, React Router, MSW, Storybook, Vitest + Testing Library.
@@ -86,6 +87,26 @@ Caches live on the Dev Drive `E:` (`E:\caches\pnpm-store`, `E:\caches\uv`); Dock
 - Store time in UTC, display in IST (`Asia/Kolkata`). Money in INR with Indian grouping: `₹5,00,000`. Signs explicit: `+₹98,244`, `−₹14,236` (real minus sign).
 - Numbers render in the mono font and are right-aligned in tables.
 
+## 7a. Living guides (keep them true)
+`docs/guides/` explains what is built today: `USER-GUIDE.md` (screens, plain language for the family), `API.md`
+(every endpoint), `DATABASE.md` (every table). Update them **in the same task** as the change, never later:
+
+| The task changes… | Update |
+|---|---|
+| A screen, route, menu item, button/field label, user flow, demo vs real behaviour, or a known limit | `USER-GUIDE.md` (the step, the "not there yet" list, the "what do I do if" table) |
+| An endpoint (new, removed, path, method, input, output, errors, paging, audit action) or a CLI command | `API.md` |
+| A migration: table, column, constraint, enum value, seed row; or Redis keys / Parquet layout | `DATABASE.md` (and the migration number in its header) |
+
+Rules:
+1. Describe only what is merged and works, not plans. If a feature is partly done, say what works and what does not.
+2. `USER-GUIDE.md` is for non-technical readers: short sentences, the exact words shown on screen in **bold**,
+   no code names, no file paths. Explain any trading word the first time it appears.
+3. `API.md` and `DATABASE.md` follow the code: copy names exactly (paths, fields, table and column names).
+4. Change the "State as of" line (date + last task) at the top of every guide you touch.
+5. Keep each guide one page per topic: replace outdated text, do not append history. Git keeps history.
+6. A task that triggers a row above lists that guide under `Files → Modify`. If nothing changes for users,
+   API or database, write `Guides: none` in the handoff.
+
 ## 8. Code rules
 - TypeScript strict, no `any`. Named exports. One component per file. Files ≤ 300 lines.
 - Tests: every component has a render test; every contract has a schema test against its mock.
@@ -99,6 +120,7 @@ Caches live on the Dev Drive `E:` (`E:\caches\pnpm-store`, `E:\caches\uv`); Dock
 - [ ] Backend tasks: `docker compose run --rm backend-check` passes (ruff, format, mypy, pytest)
 - [ ] Stories added/updated and checked at 360px and desktop, dark and light
 - [ ] Maps updated (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) if touched
+- [ ] Guides updated (`docs/guides/USER-GUIDE.md`, `API.md`, `DATABASE.md`) per §7a, or handoff says `Guides: none`
 - [ ] Handoff note written in the task file; board status updated
 
 ## 10. Never

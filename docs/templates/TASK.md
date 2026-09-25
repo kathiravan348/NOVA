@@ -14,6 +14,7 @@ Create:
 - `path/to/new/file`
 Modify:
 - `path/to/existing/file`
+- `docs/guides/<USER-GUIDE|API|DATABASE>.md` when the task changes screens, endpoints or tables (`AGENTS.md` §7a)
 
 ## Build
 1. Concrete step.

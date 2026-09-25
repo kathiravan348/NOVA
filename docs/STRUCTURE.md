@@ -11,6 +11,7 @@
 ├─ docs/
 │  ├─ PLAN.md  ARCHITECTURE.md  STRUCTURE.md  CONTRACTS.md  COMPONENTS.md  DECISIONS.md
 │  ├─ REVIEW-GUIDE.md   Stage A: how to run (`pnpm review`), walkthrough, feedback checklist
+│  ├─ guides/           USER-GUIDE.md (plain-language UI walkthrough), API.md (every endpoint), DATABASE.md (every table)
 │  ├─ tasks/            BOARD.md + one file per task (NOVA-###.md)
 │  └─ templates/        TASK.md, HANDOFF.md, REVIEW.md
 ├─ frontend/            (created by NOVA-001)

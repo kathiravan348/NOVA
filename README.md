@@ -27,6 +27,9 @@ pnpm review
 `pnpm review` starts both apps and Storybook together. Sign in with any username and password (demo sign-in).
 For a guided tour and the feedback checklist, see [`docs/REVIEW-GUIDE.md`](docs/REVIEW-GUIDE.md).
 
+What is built today, kept up to date with every task: [user guide](docs/guides/USER-GUIDE.md) (plain language),
+[API reference](docs/guides/API.md), [database tables](docs/guides/DATABASE.md).
+
 ## Real mode (Stage B)
 
 With the backend running (below) and a super-admin created:
