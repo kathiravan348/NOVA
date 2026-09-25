@@ -45,7 +45,9 @@ describe("Orbit routes", () => {
     renderAt("/login");
     fireEvent.change(await screen.findByLabelText(/Username/), { target: { value: "aarav" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Enter a username and password.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Enter your sign-in details and password.",
+    );
   });
 
   it("signs in, lands on next and shows the nav", async () => {

@@ -34,6 +34,22 @@
       "port": 3001
     },
     {
+      "name": "nova-relay-real",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "--filter",
+        "nova-relay",
+        "dev:real"
+      ],
+      "port": 3001
+    },
+    {
       "name": "storybook",
       "runtimeExecutable": "fnm",
       "runtimeArgs": [

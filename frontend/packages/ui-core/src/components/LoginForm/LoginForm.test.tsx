@@ -31,4 +31,17 @@ describe("LoginForm", () => {
     expect(screen.getByText("Sub")).toBeInTheDocument();
     expect(screen.getByText("Any password")).toBeInTheDocument();
   });
+
+  it("can ask for an email instead of a username", () => {
+    render(
+      <LoginForm
+        title="Sign in"
+        identifierLabel="Email"
+        identifierType="email"
+        onSubmit={() => {}}
+      />,
+    );
+
+    expect(screen.getByLabelText(/Email/)).toHaveAttribute("type", "email");
+  });
 });

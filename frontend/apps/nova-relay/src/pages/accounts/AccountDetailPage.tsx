@@ -1,5 +1,6 @@
-import { Link, useParams } from "react-router";
-import { Badge, Card, DescriptionList } from "@nova/ui-core";
+import { useEffect, useRef } from "react";
+import { Link, useParams, useSearchParams } from "react-router";
+import { Badge, Card, DescriptionList, useToast } from "@nova/ui-core";
 import { useBrokerAccount, useRateLimits } from "@nova/services";
 import { QueryState } from "../../components/QueryState";
 import { formatIstDate } from "../../lib/format";
@@ -22,9 +23,33 @@ function AccountLimits({ accountId }: { accountId: string }) {
   );
 }
 
+/** Shows the outcome of a Kite login once (`?kite=connected|failed`, D39) and removes it from the URL. */
+function useKiteResult(): void {
+  const [params, setParams] = useSearchParams();
+  const toast = useToast();
+  const result = params.get("kite");
+  // Showing a toast changes the toast context; without this guard the effect would repeat forever.
+  const shown = useRef<string | null>(null);
+  useEffect(() => {
+    if ((result !== "connected" && result !== "failed") || shown.current === result) return;
+    shown.current = result;
+    toast.show(
+      result === "connected"
+        ? { title: "Kite connected", description: "Today's session is active.", tone: "success" }
+        : {
+            title: "Kite login failed",
+            description: "See the audit log for the reason.",
+            tone: "danger",
+          },
+    );
+    setParams({}, { replace: true });
+  }, [result, setParams, toast]);
+}
+
 export function AccountDetailPage() {
   const { id = "" } = useParams();
   const query = useBrokerAccount(id);
+  useKiteResult();
   return (
     <QueryState query={query} back={{ to: "/accounts", label: "Back to accounts" }}>
       {(account) => (

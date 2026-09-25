@@ -27,6 +27,18 @@ pnpm review
 `pnpm review` starts both apps and Storybook together. Sign in with any username and password (demo sign-in).
 For a guided tour and the feedback checklist, see [`docs/REVIEW-GUIDE.md`](docs/REVIEW-GUIDE.md).
 
+## Real mode (Stage B)
+
+With the backend running (below) and a super-admin created:
+
+```bash
+cd frontend
+pnpm --filter nova-relay dev:real
+```
+
+Relay then signs in with your email and password against NOVA Core (`/api` is proxied; D48). Orbit's screens
+switch to real in NOVA-059.
+
 ## Backend (Stage B)
 
 ```bash

@@ -22,6 +22,13 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+let unauthorizedHandler: (() => void) | undefined;
+
+/** Called on every 401 (session expired or signed out elsewhere); the session module registers it. */
+export function onUnauthorized(handler: () => void): void {
+  unauthorizedHandler = handler;
+}
+
 /** Appends defined query values to a path: `withQuery("/audit", { limit: 10 })` → `/audit?limit=10`. */
 export function withQuery(
   path: string,
@@ -62,6 +69,7 @@ export async function apiGet<T>(
 }
 
 function toApiError(status: number, body: unknown, what: string): ApiRequestError {
+  if (status === 401) unauthorizedHandler?.();
   const parsed = ApiErrorSchema.safeParse(body);
   if (parsed.success) {
     return new ApiRequestError(status, parsed.data.error.code, parsed.data.error.message);
@@ -95,4 +103,35 @@ export async function apiSend(
     const errorBody: unknown = await res.json().catch(() => undefined);
     throw toApiError(res.status, errorBody, `${method} ${path}`);
   }
+}
+
+/** Sends a JSON body and validates the JSON answer with `schema` (e.g. sign-in). */
+export async function apiPost<T>(
+  path: string,
+  body: unknown,
+  schema: z.ZodType<T>,
+  init?: RequestOptions,
+): Promise<T> {
+  const url = new URL(API_PREFIX + path, getApiBaseUrl());
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      signal: init?.signal,
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new ApiRequestError(0, "network", `Network error for POST ${path}`);
+  }
+
+  const answer: unknown = await res.json().catch(() => undefined);
+  if (!res.ok) throw toApiError(res.status, answer, `POST ${path}`);
+  const parsed = schema.safeParse(answer);
+  if (!parsed.success) {
+    throw new ApiRequestError(res.status, "invalid_response", `Invalid response for POST ${path}`);
+  }
+  return parsed.data;
 }

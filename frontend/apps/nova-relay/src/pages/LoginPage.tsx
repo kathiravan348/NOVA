@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
 import { brand } from "@nova/brand";
 import { DemoBanner, LoginForm, type LoginCredentials } from "@nova/ui-core";
-import { signIn, useSession } from "@nova/services";
+import { getDataMode, signIn, useSession } from "@nova/services";
 
 const product = brand.products.relay;
 
@@ -18,6 +18,7 @@ export function LoginPage() {
   const next = safeNext(params.get("next"));
   const [error, setError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
+  const real = getDataMode() === "real";
 
   if (session) return <Navigate to={next} replace />;
 
@@ -35,12 +36,14 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-ground">
-      <DemoBanner />
+      {!real && <DemoBanner />}
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <LoginForm
           title={product.name}
           subtitle={product.description}
-          hint="Demo mode: any username and password work."
+          hint={real ? undefined : "Demo mode: any username and password work."}
+          identifierLabel={real ? "Email" : "Username"}
+          identifierType={real ? "email" : "text"}
           error={error}
           submitting={submitting}
           onSubmit={(credentials) => void handleSubmit(credentials)}

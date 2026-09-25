@@ -37,3 +37,8 @@ export const Narrow: Story = {
     </div>
   ),
 };
+
+/** Real sign-in (Stage B): the first field is an email address and there is no demo hint. */
+export const EmailSignIn: Story = {
+  args: { identifierLabel: "Email", identifierType: "email", hint: undefined },
+};

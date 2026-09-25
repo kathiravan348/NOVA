@@ -4,7 +4,7 @@ import { setupServer } from "msw/node";
 import { UserSchema } from "@nova/contracts";
 import { apiPath, handlers, mockUser } from "@nova/mocks";
 import { getApiBaseUrl, getDataMode } from "./config";
-import { apiGet, ApiRequestError } from "./http";
+import { apiGet, apiPost, ApiRequestError } from "./http";
 
 const server = setupServer(...handlers);
 
@@ -22,10 +22,10 @@ describe("config", () => {
     expect(getApiBaseUrl()).toBe(globalThis.location.origin);
   });
 
-  it("refuses real mode in Stage A", () => {
+  it("uses the same origin in real mode (D48)", () => {
     vi.stubEnv("VITE_DATA_MODE", "real");
     expect(getDataMode()).toBe("real");
-    expect(() => getApiBaseUrl()).toThrow("DATA_MODE=real is not available in Stage A");
+    expect(getApiBaseUrl()).toBe(globalThis.location.origin);
   });
 
   it("throws on an unknown mode", () => {
@@ -62,8 +62,17 @@ describe("apiGet", () => {
     expect(err).toMatchObject({ status: 0, code: "network" });
   });
 
-  it("throws before fetching in real mode", async () => {
+  it("fetches the same endpoint in real mode", async () => {
     vi.stubEnv("VITE_DATA_MODE", "real");
-    await expect(apiGet("/me", UserSchema)).rejects.toThrow("not available in Stage A");
+    await expect(apiGet("/me", UserSchema)).resolves.toEqual(mockUser);
+  });
+
+  it("apiPost validates the JSON answer", async () => {
+    const body = { email: "a@b.co", password: "pw" };
+    await expect(apiPost("/auth/login", body, UserSchema)).resolves.toEqual(mockUser);
+    await expect(apiPost("/auth/login", {}, UserSchema)).rejects.toMatchObject({
+      status: 400,
+      code: "invalid_request",
+    });
   });
 });

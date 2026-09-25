@@ -14,6 +14,9 @@ export interface LoginFormProps {
   subtitle?: React.ReactNode;
   /** Small helper text under the button, e.g. how demo sign-in works. */
   hint?: React.ReactNode;
+  /** Label of the first field; "Email" when users sign in with an email address. */
+  identifierLabel?: string;
+  identifierType?: "text" | "email";
   error?: string;
   submitting?: boolean;
   onSubmit: (credentials: LoginCredentials) => void;
@@ -24,6 +27,8 @@ export function LoginForm({
   title,
   subtitle,
   hint,
+  identifierLabel = "Username",
+  identifierType = "text",
   error,
   submitting = false,
   onSubmit,
@@ -45,9 +50,10 @@ export function LoginForm({
           {subtitle && <p className="text-body-sm text-text-secondary">{subtitle}</p>}
         </div>
         <Input
-          label="Username"
+          label={identifierLabel}
           name="username"
-          autoComplete="username"
+          type={identifierType}
+          autoComplete={identifierType === "email" ? "email" : "username"}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required

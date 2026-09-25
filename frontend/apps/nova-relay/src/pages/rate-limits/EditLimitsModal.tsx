@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { RateLimit } from "@nova/contracts";
 import { Button, Input, Modal, useToast } from "@nova/ui-core";
 import { formatQuantity } from "@nova/ui-trading";
-import { useUpdateRateLimit } from "@nova/services";
+import { getDataMode, useUpdateRateLimit } from "@nova/services";
 import { endpointLabel } from "../../lib/labels";
 import { OWN_LIMIT_LABEL, windowLabel } from "../../lib/rateLimits";
 
@@ -58,11 +58,14 @@ function LimitsForm({ limit, onDone }: { limit: RateLimit; onDone: () => void })
       setFailed(err instanceof Error ? err.message : "Could not save the limits");
       return;
     }
+    const demo = getDataMode() === "mock";
     toast.show({
-      title: changed.length > 0 ? "Limits saved (demo)" : "No changes",
+      title: changed.length > 0 ? (demo ? "Limits saved (demo)" : "Limits saved") : "No changes",
       description:
         changed.length > 0
-          ? "Stage A does not store them; Stage B records this in the audit log."
+          ? demo
+            ? "Mock mode does not store them; real mode records this in the audit log."
+            : "Recorded in the audit log."
           : undefined,
       tone: changed.length > 0 ? "success" : "neutral",
     });

@@ -1,5 +1,5 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { emptyHandlers, handlers, mockBrokerAccounts } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
@@ -11,6 +11,8 @@ afterEach(() => {
   cleanup();
   server.resetHandlers();
   sessionStorage.clear();
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 afterAll(() => server.close());
 
@@ -56,5 +58,23 @@ describe("Broker accounts", () => {
   it("shows Not found for an unknown account", async () => {
     renderApp("/accounts/nope");
     expect(await screen.findByText("Not found")).toBeInTheDocument();
+  });
+
+  it("starts the Kite login in real mode (D48)", async () => {
+    vi.stubEnv("VITE_DATA_MODE", "real");
+    const assign = vi.fn();
+    vi.spyOn(window, "location", "get").mockReturnValue({ ...window.location, assign });
+    renderApp("/accounts/brk_002");
+
+    fireEvent.click(await screen.findByRole("button", { name: "Log in to Kite" }));
+
+    expect(assign).toHaveBeenCalledWith("/api/v1/broker/accounts/brk_002/login");
+  });
+
+  it("reports the Kite login result once and clears it from the address", async () => {
+    const { router } = renderApp("/accounts/brk_001?kite=connected");
+
+    expect(await screen.findByText("Kite connected")).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.search).toBe(""));
   });
 });

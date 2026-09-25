@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import {
   BacktestRunCreateSchema,
+  LoginRequestSchema,
   StrategyCreateSchema,
   StrategyUpdateSchema,
   StrategyVersionCreateSchema,
@@ -24,6 +25,15 @@ export const orbitHandlers = [
   http.get(apiPath("/me"), () => {
     return HttpResponse.json(mockUser);
   }),
+
+  // Mock sign-in (D38 shape): any valid email and password signs in as the mock user.
+  http.post(apiPath("/auth/login"), async ({ request }) => {
+    const parsed = LoginRequestSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) return badRequest("Body must be { email, password }");
+    return HttpResponse.json(mockUser);
+  }),
+
+  http.post(apiPath("/auth/logout"), () => new HttpResponse(null, { status: 204 })),
 
   http.get(apiPath("/strategies"), () => {
     return HttpResponse.json(mockStrategies);

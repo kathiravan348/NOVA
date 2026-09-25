@@ -41,6 +41,11 @@ export function updateRateLimit(
   return apiSend("PATCH", `/broker/rate-limits/${id(accountId)}/${id(endpoint)}`, body, init);
 }
 
+/** Page that starts the daily Kite login (a browser navigation, not a fetch; D39). */
+export function brokerLoginUrl(accountId: string): string {
+  return `/api/v1/broker/accounts/${id(accountId)}/login`;
+}
+
 export function listBrokerProfiles(init?: RequestOptions): Promise<BrokerProfile[]> {
   return apiGet("/broker/profiles", BrokerProfileSchema.array(), init);
 }

@@ -1,9 +1,13 @@
 import { useSyncExternalStore } from "react";
+import { LoginRequestSchema, UserSchema } from "@nova/contracts";
 import { getMe } from "./api/orbit";
-import { getApiBaseUrl } from "./config";
-import { ApiRequestError } from "./http";
+import { getDataMode } from "./config";
+import { ApiRequestError, apiPost, apiSend, onUnauthorized } from "./http";
 
-/** Stage A mock session (D23). Stage B replaces this with NOVA Core auth. */
+/**
+ * Who is signed in, for the UI. Mock mode (D23): any credentials. Real mode (D48): NOVA Core's HttpOnly
+ * cookie is the real session; this hint is cleared on sign-out and on any 401.
+ */
 export interface Session {
   userId: string;
   displayName: string;
@@ -46,29 +50,59 @@ export function getSession(): Session | null {
   return cachedSession;
 }
 
-export async function signIn(username: string, password: string): Promise<Session> {
-  getApiBaseUrl(); // throws in real mode (Stage A)
-  if (!username.trim() || !password.trim()) {
-    throw new ApiRequestError(401, "unauthorized", "Enter a username and password.");
-  }
-  const me = await getMe();
-  const session: Session = { userId: me.id, displayName: me.name };
+function store(session: Session): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   } catch {
     // storage unavailable: session lasts until reload
   }
   notify();
-  return session;
 }
 
-export function signOut(): void {
+function clear(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
   } catch {
     // ignore
   }
   notify();
+}
+
+onUnauthorized(() => {
+  if (getSession()) clear();
+});
+
+/** `identifier` is an email address in real mode and any name in mock mode. */
+export async function signIn(identifier: string, password: string): Promise<Session> {
+  if (!identifier.trim() || !password.trim()) {
+    throw new ApiRequestError(401, "unauthorized", "Enter your sign-in details and password.");
+  }
+  if (getDataMode() === "real") {
+    const body = LoginRequestSchema.safeParse({ email: identifier.trim(), password });
+    if (!body.success) {
+      throw new ApiRequestError(400, "invalid_request", "Enter a valid email address.");
+    }
+    const user = await apiPost("/auth/login", body.data, UserSchema);
+    const session: Session = { userId: user.id, displayName: user.name };
+    store(session);
+    return session;
+  }
+  const me = await getMe();
+  const session: Session = { userId: me.id, displayName: me.name };
+  store(session);
+  return session;
+}
+
+/** Signs out locally even if the server call fails (the cookie then simply expires). */
+export async function signOut(): Promise<void> {
+  if (getDataMode() === "real") {
+    try {
+      await apiSend("POST", "/auth/logout", {});
+    } catch {
+      // already signed out on the server, or offline
+    }
+  }
+  clear();
 }
 
 function subscribe(listener: () => void): () => void {

@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useMatches, useNavigate } from "react-router
 import { BarChart3, CandlestickChart, GitCompare, LogOut, Workflow } from "lucide-react";
 import { brand } from "@nova/brand";
 import { AppShell, DemoBanner, IconButton, NavItem, ThemeToggle } from "@nova/ui-core";
-import { signOut, useSession } from "@nova/services";
+import { getDataMode, signOut, useSession } from "@nova/services";
 
 const product = brand.products.orbit;
 
@@ -34,14 +34,13 @@ export function AppLayout() {
   const { pathname } = useLocation();
 
   const handleSignOut = () => {
-    signOut();
-    navigate("/login", { replace: true });
+    void signOut().then(() => navigate("/login", { replace: true }));
   };
 
   return (
     <AppShell
       brand={<span className="text-card-title text-text-primary">{product.name}</span>}
-      banner={<DemoBanner />}
+      banner={getDataMode() === "mock" ? <DemoBanner /> : undefined}
       title={<h1 className="text-section-title">{title}</h1>}
       nav={navItems.map((item) => (
         <NavItem
