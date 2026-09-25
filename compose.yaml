@@ -15,6 +15,7 @@ x-backend: &backend
 
 services:
   db:
+    container_name: nova-postgres
     image: timescale/timescaledb:2.30.1-pg17
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?set in .env}
@@ -32,6 +33,7 @@ services:
     mem_limit: 2g
 
   redis:
+    container_name: nova-redis
     image: redis:8.10.2-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
@@ -46,6 +48,7 @@ services:
   # Applies database migrations (D37), then exits; services start after it succeeds.
   migrate:
     <<: *backend
+    container_name: nova-db-migrate
     command: ["python", "-m", "nova_db", "upgrade"]
     depends_on:
       db:
@@ -55,6 +58,7 @@ services:
   # The only service that calls Kite (D35, D39). No host port: reached through NOVA Core only.
   broker:
     <<: *backend
+    container_name: nova-broker-kite
     command: ["uvicorn", "--factory", "nova_broker.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
@@ -80,6 +84,7 @@ services:
   # Strategies, versions and stats (D26, D43). No host port.
   strategy:
     <<: *backend
+    container_name: nova-strategy-api
     command: ["uvicorn", "--factory", "nova_strategy.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
     depends_on:
       migrate:
@@ -89,6 +94,7 @@ services:
   # Backtest runs, results and trades (D44). No host port.
   backtest:
     <<: *backend
+    container_name: nova-backtest-api
     command: ["uvicorn", "--factory", "nova_backtest.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
     depends_on:
       migrate:
@@ -98,6 +104,7 @@ services:
   # Runs queued backtests from the Postgres queue (D41, D44).
   backtest-worker:
     <<: *backend
+    container_name: nova-backtest-worker
     command: ["python", "-m", "nova_backtest", "worker"]
     depends_on:
       migrate:
@@ -108,6 +115,7 @@ services:
   # NOVA Atlas API: data jobs and market data. No host port.
   atlas:
     <<: *backend
+    container_name: nova-atlas-api
     command: ["uvicorn", "--factory", "nova_atlas.main:app_factory", "--host", "0.0.0.0", "--port", "8000"]
     depends_on:
       migrate:
@@ -117,6 +125,7 @@ services:
   # Runs data jobs from the Postgres queue (D41). Reaches Kite only through the broker.
   atlas-worker:
     <<: *backend
+    container_name: nova-atlas-worker
     command: ["python", "-m", "nova_atlas", "worker"]
     environment:
       NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
@@ -139,6 +148,7 @@ services:
   # `docker compose --profile market up -d tick-recorder`.
   tick-recorder:
     <<: *backend
+    container_name: nova-tick-recorder
     profiles: ["market"]
     command: ["python", "-m", "nova_broker", "record-ticks"]
     environment:
@@ -157,6 +167,7 @@ services:
 
   core:
     <<: *backend
+    container_name: nova-core-api
     ports:
       - "127.0.0.1:${NOVA_CORE_PORT:-8000}:8000"
     environment:
