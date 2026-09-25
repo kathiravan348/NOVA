@@ -63,7 +63,7 @@
 | NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables (D42) | done | Claude | 047 |
 | NOVA-054 | Strategy service: strategies CRUD, versions, stats summary (D43) | done | Claude | 048 |
 | NOVA-055 | Backtest service: queue runs (D44), runs/results/trades API, worker | done | Claude | 053, 054, 061 |
-| NOVA-062 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown | draft | — | 055 |
+| NOVA-062 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown (D45) | done | Claude | 055 |
 | NOVA-056 | Backtest engine: equity intraday | draft | — | 062 |
 | NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox | draft | — | 062 |
 | NOVA-058 | Real mode: login + Relay screens on the real API | draft | — | 046, 050, 051 |
