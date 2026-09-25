@@ -7,14 +7,14 @@ import threading
 
 from nova_db import create_db_engine, create_session_factory
 
-from nova_backtest.delivery import DeliveryEngine
 from nova_backtest.engine import BacktestEngine
 from nova_backtest.settings import get_backtest_settings
+from nova_backtest.visual import VisualEngine
 from nova_backtest.worker import run_worker
 
 
 def default_engine() -> BacktestEngine:
-    return DeliveryEngine()
+    return VisualEngine()
 
 
 def main(argv: list[str] | None = None) -> int:

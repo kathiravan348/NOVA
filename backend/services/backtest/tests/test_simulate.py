@@ -167,3 +167,63 @@ def test_bars_before_the_start_only_warm_up() -> None:
         (DAY0 + timedelta(days=3)).date(),
         (DAY0 + timedelta(days=4)).date(),
     ]
+
+
+def _intraday(day: int, *bars: tuple[str, tuple[float, float, float, float]]) -> list[Bar]:
+    """5-minute bars on 2026-09-0`day` at the given IST clock times."""
+    out = []
+    for clock, (o, h, lo, c) in bars:
+        hour, minute = (int(part) for part in clock.split(":"))
+        ts = datetime(2026, 9, day, hour, minute, tzinfo=IST)
+        out.append(Bar(ts, round(o * 100), round(h * 100), round(lo * 100), round(c * 100), 100))
+    return out
+
+
+def _intraday_run(bars: list[Bar]) -> Simulation:
+    start = datetime(2026, 9, 1, tzinfo=IST)
+    return simulate(
+        {"INFY": bars},
+        ENTRY,
+        EXIT,
+        TEN,
+        NO_RISK,
+        10_000_000,
+        start,
+        lambda *_: _charges(0),
+        square_off=time(15, 20),
+    )
+
+
+FLAT = (104, 104, 104, 104)
+
+
+def test_intraday_positions_square_off_at_1520() -> None:
+    bars = _intraday(
+        1,
+        ("15:05", (104, 106, 103, 106)),  # signal
+        ("15:10", (106, 107, 105, 106)),  # buy @ 106
+        ("15:15", FLAT),
+        ("15:20", (103, 104, 102, 103)),  # square off @ open 103
+        ("15:25", FLAT),
+    )
+
+    (trade,) = _intraday_run(bars).trades
+
+    assert trade.entry_price == 10_600 and trade.exit_price == 10_300
+    assert trade.exit_at == datetime(2026, 9, 1, 15, 20, tzinfo=IST)
+
+
+def test_a_signal_at_the_cut_off_is_dropped() -> None:
+    bars = _intraday(1, ("15:15", (104, 107, 103, 106)), ("15:20", FLAT), ("15:25", FLAT))
+
+    assert _intraday_run(bars).trades == []
+
+
+def test_a_day_without_late_bars_closes_at_the_last_price_seen() -> None:
+    bars = _intraday(1, ("15:00", (104, 106, 103, 106)), ("15:05", (106, 107, 105, 107)))
+    bars += _intraday(2, ("09:15", (110, 111, 109, 110)))
+
+    (trade,) = _intraday_run(bars).trades
+
+    assert trade.exit_price == 10_700  # the 15:05 close, not the next morning's open
+    assert trade.exit_at == datetime(2026, 9, 1, 15, 5, tzinfo=IST)

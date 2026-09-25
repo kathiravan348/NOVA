@@ -1,4 +1,4 @@
-"""Backtest engine v1 (D45): equity delivery, visual strategies."""
+"""Backtest engine for visual strategies (D45, D46): equity delivery and intraday (MIS)."""
 
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
@@ -20,6 +20,8 @@ from nova_backtest.simulate import simulate
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 WARM_UP_DAYS = {"1d": 400}
+# Zerodha squares off MIS equity positions from 15:20 IST (D46).
+SQUARE_OFF = time(15, 20)
 INTRADAY_WARM_UP_DAYS = 30
 
 
@@ -33,10 +35,10 @@ def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual:
         raise EngineError("The stored strategy spec is not valid") from exc
     if spec.mode == "python":
         raise EngineError("Python strategies arrive in NOVA-057")
-    if spec.segment == "equity_intraday":
-        raise EngineError("Intraday backtests arrive in NOVA-056")
-    if spec.segment != "equity_delivery":
+    if spec.segment not in ("equity_delivery", "equity_intraday"):
         raise EngineError(f"{spec.segment} backtests are not supported yet")
+    if spec.segment == "equity_intraday" and spec.timeframe == "1d":
+        raise EngineError("Intraday strategies need an intraday timeframe")
     return spec
 
 
@@ -75,7 +77,7 @@ def _ist_midnight(day: date) -> datetime:
     return datetime.combine(day, time(0, 0), tzinfo=IST).astimezone(UTC)
 
 
-class DeliveryEngine:
+class VisualEngine:
     def run(self, db: Session, run_id: str) -> None:
         run = db.get(BacktestRun, run_id)
         if run is None:
@@ -113,6 +115,7 @@ class DeliveryEngine:
             run.initial_capital_paise,
             start,
             charges,
+            square_off=SQUARE_OFF if spec.segment == "equity_intraday" else None,
         )
         summary = summarize(
             result.trades,

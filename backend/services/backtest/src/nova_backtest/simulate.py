@@ -1,17 +1,18 @@
 """Bar-by-bar simulation (D45): decide at close, fill next open, stop before target, shared cash.
 
 Long only, one position per symbol, whole shares. Amounts are integer paise throughout.
+With `square_off` (intraday, D46) nothing is held past that IST time or overnight.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import ROUND_HALF_UP, Decimal
 
 from nova_contracts import Charges, RuleGroup, Sizing
 from nova_contracts.strategy import Risk, SizingFixedAmount, SizingFixedQty
 
-from nova_backtest.bars import Bar
+from nova_backtest.bars import IST, Bar
 from nova_backtest.rules import SeriesCache, holds
 
 # (qty, entry price, exit price, entry time) → charges of the whole trade.
@@ -72,6 +73,7 @@ def simulate(
     cash: int,
     start: datetime,
     charges: ChargesFn,
+    square_off: time | None = None,
 ) -> Simulation:
     caches = {symbol: SeriesCache(series) for symbol, series in bars.items()}
     events = sorted(
@@ -107,6 +109,19 @@ def simulate(
         if day is not None and bar.ist_date != day:
             equity.append((day, worth()))
         day = bar.ist_date
+
+        if square_off is not None:
+            previous = bars[symbol][i - 1] if i else None
+            if previous is not None and previous.ist_date != bar.ist_date:
+                pending.pop(symbol, None)  # nothing carries over to a new day
+                if symbol in positions:  # late bars were missing: close at the last seen price
+                    close(symbol, previous.ts, previous.close)
+            if bar.ts.astimezone(IST).time() >= square_off:
+                pending.pop(symbol, None)
+                if symbol in positions:
+                    close(symbol, ts, bar.open)
+                last_close[symbol] = bar.close
+                continue
 
         order = pending.pop(symbol, None)
         if order == "exit" and symbol in positions:

@@ -1,4 +1,4 @@
-"""The v1 engine through the worker, on seeded candles and the seeded Zerodha rates (D42, D45)."""
+"""The visual engine through the worker, on seeded candles and Zerodha rates (D42, D45, D46)."""
 
 import threading
 from datetime import date, datetime, time, timedelta
@@ -6,7 +6,7 @@ from datetime import date, datetime, time, timedelta
 import pytest
 from fastapi.testclient import TestClient
 from nova_backtest.bars import IST
-from nova_backtest.delivery import DeliveryEngine
+from nova_backtest.visual import VisualEngine
 from nova_backtest.worker import run_worker
 from nova_db.models import BacktestRun, Candle, StrategyVersion
 from nova_testing.parity import Parity
@@ -96,7 +96,7 @@ def _queue(engine: Engine, version: int = 2, symbols: tuple[str, ...] = ("INFY",
 
 def _drain(factory: sessionmaker[Session]) -> BacktestRun:
     stop = threading.Event()
-    run_worker(factory, DeliveryEngine(), stop, poll_seconds=0, on_idle=stop.set)
+    run_worker(factory, VisualEngine(), stop, poll_seconds=0, on_idle=stop.set)
     with factory() as db:
         run = db.get(BacktestRun, "run_e2e")
         assert run is not None
@@ -148,7 +148,7 @@ def test_rerun_replaces_the_old_result(seeded: Engine, factory: sessionmaker[Ses
     ("spec", "message"),
     [
         (_spec(mode="python", code="x"), "Python strategies arrive in NOVA-057"),
-        (_spec(segment="equity_intraday"), "Intraday backtests arrive in NOVA-056"),
+        (_spec(segment="equity_intraday"), "Intraday strategies need an intraday timeframe"),
         (_spec(timeframe="5m"), "No 5m candles in the period for INFY, TCS"),
     ],
 )
@@ -166,3 +166,44 @@ def test_runs_the_engine_cannot_do_fail_plainly(
     run = _drain(factory)
 
     assert run.status == "failed" and run.error is not None and run.error.startswith(message)
+
+
+def test_an_intraday_run_squares_off_and_pays_intraday_charges(
+    seeded: Engine, factory: sessionmaker[Session], client: TestClient, parity: Parity
+) -> None:
+    clocks = [(15, 5), (15, 10), (15, 15), (15, 20), (15, 25)]
+    prices = [
+        (104, 106, 103, 106),
+        (106, 107, 105, 106),
+        (106, 106, 106, 106),
+        (103, 104, 102, 103),
+    ]
+    prices.append((104, 104, 104, 104))
+    with Session(seeded) as db:
+        for (hour, minute), (o, h, low, c) in zip(clocks, prices, strict=True):
+            db.add(
+                Candle(
+                    exchange="NSE",
+                    symbol="INFY",
+                    timeframe="5m",
+                    ts=datetime(2025, 1, 2, hour, minute, tzinfo=IST),
+                    open_paise=o * 100,
+                    high_paise=h * 100,
+                    low_paise=low * 100,
+                    close_paise=c * 100,
+                    volume=1_000,
+                )
+            )
+        spec = _spec(segment="equity_intraday", timeframe="5m")
+        db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
+        db.commit()
+    _queue(seeded, symbols=("INFY",))
+
+    assert _drain(factory).status == "completed"
+    (trade,) = client.get("/api/v1/backtests/run_e2e/trades").json()["items"]
+    parity.assert_valid(trade, "Trade")
+    assert trade["segment"] == "equity_intraday"
+    assert (trade["entryPricePaise"], trade["exitPricePaise"]) == (10_600, 10_300)
+    assert trade["exitAt"] == "2025-01-02T09:50:00Z"  # 15:20 IST
+    # Intraday: brokerage 0.03% per order (₹0.318 + ₹0.309), no DP, STT 0.025% on ₹1,030 → ₹0.
+    assert trade["charges"]["dpPaise"] == 0 and trade["charges"]["brokeragePaise"] == 63
