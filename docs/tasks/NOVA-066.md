@@ -1,6 +1,6 @@
 # NOVA-066 — Backtest engine: volume, channel and previous-day level indicators (D51)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-066 · **Depends on:** NOVA-065
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-066 · **Depends on:** NOVA-065
 
 ## Goal
 Every one of the 38 catalog indicators works in a visual backtest: the "not available yet" names from 065 are
@@ -42,5 +42,12 @@ Modify: `nova_backtest/indicators.py` (dispatch only). Guides: none (067 describ
 ## Questions
 
 ## Handoff
+Built by Claude (Antigravity offline). All acceptance checks pass.
+- `indicators_volume.py` (OBV, MFI, Volume SMA), `indicators_levels.py` (Donchian, Keltner, previous IST day
+  H/L/C, classic pivots P/R1/S1/R2/S2). Dispatch covers all 38 catalog names; the "not available yet" branch is gone.
+- Levels test: 5-minute bars around IST midnight across three days; daily bars use the previous bar.
+- End-to-end: `close crosses_above pivot_r1` + `mfi lt 20` run completes through the worker with one trade.
+- Checks: Docker pytest backtest + contracts 194 passed; ruff, mypy strict clean. Guides: none (067).
 
 ## Review
+Self-reviewed. Hand-checked OBV, MFI (incl. no negative flow → 100), Volume SMA, Donchian, Keltner, pivots.

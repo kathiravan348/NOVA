@@ -19,6 +19,7 @@ from nova_backtest.indicators_core import (
     sma,
     vwap,
 )
+from nova_backtest.indicators_levels import LEVELS, donchian, keltner, level
 from nova_backtest.indicators_momentum import cci, roc, stoch_d, stoch_k, stoch_rsi, williams_r
 from nova_backtest.indicators_trend import (
     adx,
@@ -30,6 +31,7 @@ from nova_backtest.indicators_trend import (
     supertrend,
     wma,
 )
+from nova_backtest.indicators_volume import mfi, obv, volume_sma
 
 __all__ = ["Series", "atr", "bollinger", "ema", "indicator", "rsi", "sma", "vwap"]
 
@@ -75,7 +77,25 @@ _DISPATCH: dict[str, Compute] = {
     "bb_lower": lambda _, c, s: bollinger(c, s.whole("period"), s.number("stddev"), upper=False),
     "bb_middle": lambda _, c, s: sma(c, s.whole("period")),
     "vwap": lambda b, _, __: vwap(b),
+    "obv": lambda b, _, __: obv(b),
+    "mfi": lambda b, _, s: mfi(b, s.whole("period")),
+    "volume_sma": lambda b, _, s: volume_sma(b, s.whole("period")),
+    "donchian_upper": lambda b, _, s: donchian(b, s.whole("period"), upper=True),
+    "donchian_lower": lambda b, _, s: donchian(b, s.whole("period"), upper=False),
+    "keltner_upper": lambda b, _, s: keltner(
+        b, s.whole("period"), s.number("multiplier"), s.whole("atr_period"), upper=True
+    ),
+    "keltner_lower": lambda b, _, s: keltner(
+        b, s.whole("period"), s.number("multiplier"), s.whole("atr_period"), upper=False
+    ),
 }
+
+
+def _level(name: str) -> Compute:
+    return lambda b, _, __: level(b, name)
+
+
+_DISPATCH |= {name: _level(name) for name in LEVELS}
 
 
 def settings_for(name: str, params: dict[str, float]) -> Settings:
@@ -86,7 +106,4 @@ def settings_for(name: str, params: dict[str, float]) -> Settings:
 
 def indicator(name: str, params: dict[str, float], bars: Sequence[Bar]) -> Series:
     settings = settings_for(name, params)
-    compute = _DISPATCH.get(name)
-    if compute is None:
-        raise ValueError(f"{BY_NAME[name].label} is not available yet")
-    return compute(bars, [bar.close / 100 for bar in bars], settings)
+    return _DISPATCH[name](bars, [bar.close / 100 for bar in bars], settings)
