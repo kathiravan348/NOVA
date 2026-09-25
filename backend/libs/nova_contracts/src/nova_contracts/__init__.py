@@ -36,7 +36,13 @@ from nova_contracts.common import (
     Timeframe,
     UtcDateTime,
 )
-from nova_contracts.data_job import DataJob, DataJobStatus, DataJobType
+from nova_contracts.data_job import (
+    MAX_DOWNLOAD_SYMBOLS,
+    DataJob,
+    DataJobCreate,
+    DataJobStatus,
+    DataJobType,
+)
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.indicators import INDICATORS, Indicator, IndicatorName, check_params
 from nova_contracts.market_data import Candle, IndexName, Instrument
@@ -69,6 +75,7 @@ from nova_contracts.user import User, UserRole
 
 __all__ = [
     "INDICATORS",
+    "MAX_DOWNLOAD_SYMBOLS",
     "PAGE_LIMIT_DEFAULT",
     "PAGE_LIMIT_MAX",
     "AuditAction",
@@ -89,6 +96,7 @@ __all__ = [
     "BrokerSession",
     "BrokerSessionStatus",
     "DataJob",
+    "DataJobCreate",
     "DataJobStatus",
     "DataJobType",
     "Candle",

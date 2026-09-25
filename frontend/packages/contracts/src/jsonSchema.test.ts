@@ -5,7 +5,7 @@ import { LoginRequestSchema } from "./auth";
 import { AuditEntrySchema } from "./audit";
 import { BacktestResultSchema, BacktestRunCreateSchema, BacktestRunSchema } from "./backtest";
 import { BrokerAccountCreateSchema, BrokerAccountSchema, BrokerProfileSchema } from "./broker";
-import { DataJobSchema } from "./dataJob";
+import { DataJobCreateSchema, DataJobSchema } from "./dataJob";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
@@ -32,6 +32,7 @@ const contracts: Record<string, z.ZodType> = {
   BrokerProfile: BrokerProfileSchema,
   Candle: CandleSchema,
   DataJob: DataJobSchema,
+  DataJobCreate: DataJobCreateSchema,
   Instrument: InstrumentSchema,
   LoginRequest: LoginRequestSchema,
   RateLimit: RateLimitSchema,

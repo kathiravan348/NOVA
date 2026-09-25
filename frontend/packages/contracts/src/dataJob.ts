@@ -84,3 +84,23 @@ export const DataJobSchema = z
     },
   );
 export type DataJob = z.infer<typeof DataJobSchema>;
+
+export const MAX_DOWNLOAD_SYMBOLS = 200;
+
+/** Request body for `POST /data-jobs` (D54): queue a historical download. */
+export const DataJobCreateSchema = z
+  .strictObject({
+    symbols: z
+      .array(z.string().min(1))
+      .min(1, "Pick at least one stock")
+      .max(MAX_DOWNLOAD_SYMBOLS, `Pick at most ${MAX_DOWNLOAD_SYMBOLS} stocks`),
+    timeframe: TimeframeSchema,
+    from: IsoDateSchema,
+    to: IsoDateSchema,
+    segment: SegmentSchema.default("equity_delivery"),
+  })
+  .refine((data) => data.from <= data.to, {
+    message: "From must be on or before To",
+    path: ["from"],
+  });
+export type DataJobCreate = z.input<typeof DataJobCreateSchema>;

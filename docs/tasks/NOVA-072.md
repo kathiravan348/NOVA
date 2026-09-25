@@ -1,6 +1,6 @@
 # NOVA-072 — Atlas: queue and cancel data jobs over HTTP
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-072 · **Depends on:** NOVA-061
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-072 · **Depends on:** NOVA-061
 
 ## Goal
 `POST /data-jobs` queues a historical download and `POST /data-jobs/{id}/cancel` cancels a queued or running
@@ -46,5 +46,14 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request ("complete all pending tasks"). All acceptance checks pass.
+- `queue_download` moved to `jobs.py` (actor + ip parameters; trims and upper-cases symbols); the CLI imports it.
+- New: `POST /data-jobs`, `POST /data-jobs/{id}/cancel` (`cancel_job`), contract `DataJobCreate` + schema.
+- `test_download.py` / `test_queue_worker.py` import `queue_download` from `jobs` (one-line change each).
+- Checks: `pnpm review:check` green (645 tests); backend ruff/format/mypy clean, pytest per package all
+  green (460). One `backend-check` run hits "too many clients" only while the whole dev stack runs.
+- Guides: API (two endpoints, removed the "no HTTP endpoint" note); CONTRACTS.
 
 ## Review
+Self-reviewed (no second agent). Error text for dates is now "From must be on or before To" (fits the
+screen as well as the CLI). The mock handler for the new endpoints comes with NOVA-073, as planned.

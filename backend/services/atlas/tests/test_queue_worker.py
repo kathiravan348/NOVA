@@ -2,7 +2,7 @@ import threading
 from datetime import date
 
 from nova_atlas.broker_client import BrokerData
-from nova_atlas.cli import queue_download
+from nova_atlas.jobs import queue_download
 from nova_atlas.universe import sync_instruments
 from nova_atlas.worker import run_worker
 from nova_db.models import DataJob

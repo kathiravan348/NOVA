@@ -7,60 +7,16 @@ import sys
 import threading
 from datetime import date
 
-from nova_db import create_db_engine, create_session_factory, new_id
-from nova_db.audit import record_audit
+from nova_db import create_db_engine, create_session_factory
 from nova_db.enums import SEGMENTS
-from nova_db.models import DataJob
-from sqlalchemy.orm import Session
 
 from nova_atlas.archive import archive_ticks
 from nova_atlas.broker_client import BrokerData, BrokerDataError
 from nova_atlas.download import KITE_INTERVAL
+from nova_atlas.jobs import queue_download
 from nova_atlas.settings import AtlasSettings, get_atlas_settings
-from nova_atlas.universe import load_universe, sync_instruments
+from nova_atlas.universe import sync_instruments
 from nova_atlas.worker import run_worker
-
-MAX_SYMBOLS = 200
-
-
-def queue_download(
-    db: Session, *, symbols: list[str], timeframe: str, first: date, last: date, segment: str
-) -> DataJob:
-    """Adds a `queued` historical download and audits it; the worker picks it up."""
-    if not symbols or len(symbols) > MAX_SYMBOLS:
-        raise ValueError(f"Give 1-{MAX_SYMBOLS} symbols")
-    known = {row.symbol for row in load_universe()}
-    unknown = [s for s in symbols if s not in known]
-    if unknown:
-        raise ValueError(f"Not in universe.csv: {', '.join(unknown)}")
-    if timeframe not in KITE_INTERVAL:
-        raise ValueError(f"Timeframe must be one of {', '.join(KITE_INTERVAL)}")
-    if first > last:
-        raise ValueError("--from must be on or before --to")
-    if segment not in SEGMENTS:
-        raise ValueError(f"Segment must be one of {', '.join(SEGMENTS)}")
-    job = DataJob(
-        id=new_id("job"),
-        type="historical_download",
-        status="queued",
-        exchange="NSE",
-        segment=segment,
-        symbols=symbols,
-        timeframe=timeframe,
-        date_from=first,
-        date_to=last,
-    )
-    db.add(job)
-    record_audit(
-        db,
-        action="data_job.create",
-        actor_id=None,
-        actor_name="Console",
-        summary=f"Queued {timeframe} download of {len(symbols)} symbol(s), {first} to {last}",
-        target_type="data_job",
-        target_id=job.id,
-    )
-    return job
 
 
 def _broker(settings: AtlasSettings) -> BrokerData:

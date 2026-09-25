@@ -2,8 +2,8 @@ from datetime import UTC, date, datetime
 
 import pytest
 from nova_atlas.broker_client import BrokerData
-from nova_atlas.cli import queue_download
 from nova_atlas.download import plan_chunks, run_download, to_paise, to_row
+from nova_atlas.jobs import queue_download
 from nova_atlas.universe import sync_instruments
 from nova_db.models import AuditEntry, Candle, DataJob
 from nova_testing.broker import FakeBroker

@@ -77,7 +77,7 @@
 | NOVA-069 | Cost averaging: spec contract + engine (add every X% fall, average-price risk, one trade; D53) | done | Claude | 066 |
 | NOVA-070 | Relay: add a broker account from the screen (POST /broker/accounts, audit, D52) | done | Claude | 058 |
 | NOVA-071 | Editor: cost averaging fields + detail text + user guide (D53) | done | Claude | 069 |
-| NOVA-072 | Atlas: queue and cancel data jobs over HTTP (D54) | planned | — | 061 |
+| NOVA-072 | Atlas: queue and cancel data jobs over HTTP (D54) | done | Claude | 061 |
 | NOVA-073 | Relay: new download page + real Cancel job (D54) | planned | — | 072, 074 |
 | NOVA-074 | Atlas: universe in the database + sync over HTTP (D54, migration 0006) | planned | — | 072 |
 | NOVA-075 | Relay: Instruments page (stock list + Sync with Kite) (D54) | planned | — | 073, 074 |

@@ -51,3 +51,25 @@ class DataJob(Contract):
         ):
             raise ValueError("queued jobs have no startedAt or finishedAt")
         return self
+
+
+MAX_DOWNLOAD_SYMBOLS = 200
+
+
+class DataJobCreate(Contract):
+    """Body of `POST /data-jobs`: queue a historical download (D54)."""
+
+    symbols: Annotated[
+        list[Annotated[str, Field(min_length=1)]],
+        Field(min_length=1, max_length=MAX_DOWNLOAD_SYMBOLS),
+    ]
+    timeframe: Timeframe
+    from_: IsoDate = Field(alias="from")
+    to: IsoDate = Field(alias="to")
+    segment: Segment = "equity_delivery"
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        if self.from_ > self.to:
+            raise ValueError("from date must be less than or equal to to date")
+        return self

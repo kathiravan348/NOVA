@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DataJob, DataJobSchema, DataJobStatusSchema, DataJobTypeSchema } from "./dataJob";
+import {
+  DataJob,
+  DataJobCreateSchema,
+  DataJobSchema,
+  DataJobStatusSchema,
+  DataJobTypeSchema,
+} from "./dataJob";
 
 describe("DataJob schemas", () => {
   const validCompletedHistoricalJob: DataJob = {
@@ -202,5 +208,24 @@ describe("DataJob schemas", () => {
       const invalid = { ...validCompletedHistoricalJob, extra: 123 };
       expect(DataJobSchema.safeParse(invalid).success).toBe(false);
     });
+  });
+});
+
+describe("DataJobCreateSchema", () => {
+  const body = { symbols: ["INFY", "TCS"], timeframe: "1d", from: "2025-01-01", to: "2025-12-31" };
+
+  it("accepts a download and defaults the segment", () => {
+    const parsed = DataJobCreateSchema.parse(body);
+    expect(parsed.segment).toBe("equity_delivery");
+  });
+
+  it.each([
+    { symbols: [] },
+    { symbols: Array.from({ length: 201 }, (_, i) => `S${i}`) },
+    { from: "2026-01-01", to: "2025-01-01" },
+    { timeframe: "2d" },
+    { extra: true },
+  ])("rejects %o", (change) => {
+    expect(DataJobCreateSchema.safeParse({ ...body, ...change }).success).toBe(false);
   });
 });
