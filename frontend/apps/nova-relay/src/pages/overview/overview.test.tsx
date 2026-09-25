@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { handlers } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
@@ -54,5 +55,29 @@ describe("Relay overview", () => {
       "href",
       "/rate-limits",
     );
+  });
+
+  it("says when live recording waits for the Kite login", async () => {
+    server.use(
+      http.get("*/api/v1/broker/recorder", () =>
+        HttpResponse.json({
+          enabled: true,
+          symbols: [],
+          state: "no_login",
+          jobId: null,
+          updatedAt: "2026-09-22T04:30:00Z",
+        }),
+      ),
+    );
+    renderApp("/");
+    expect(
+      await screen.findByText(/Live price recording is waiting for today/),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing about recording while it is off", async () => {
+    renderApp("/");
+    await screen.findByText("Accounts");
+    expect(screen.queryByText(/Live price recording/)).not.toBeInTheDocument();
   });
 });

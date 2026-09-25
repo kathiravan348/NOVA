@@ -94,7 +94,7 @@ Docker volumes (`db-data`, `tick-archive`). Only `docker compose down -v` delete
 | `nova-backtest-worker` | Runs queued backtests                                                                 |
 | `nova-atlas-api`       | Market data and data jobs                                                             |
 | `nova-atlas-worker`    | Runs data jobs (candle downloads, tick archive)                                       |
-| `nova-tick-recorder`   | Always on: records live ticks on market days while recording is switched on (`PUT /broker/recorder`) |
+| `nova-tick-recorder`   | Always on: records live ticks on market days while **Record live prices** is on in Relay (Data jobs) |
 
 ### Backend commands (repo root)
 

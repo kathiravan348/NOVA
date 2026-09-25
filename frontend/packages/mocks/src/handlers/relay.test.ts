@@ -7,6 +7,7 @@ import {
   BrokerProfileSchema,
   DataJobSchema,
   RateLimitSchema,
+  RecorderSettingsSchema,
   pageSchema,
 } from "@nova/contracts";
 import {
@@ -16,7 +17,7 @@ import {
   mockDataJobs,
   mockRateLimits,
 } from "../data";
-import { relayHandlers } from "./relay";
+import { relayHandlers, resetMockRecorder } from "./relay";
 
 const server = setupServer(...relayHandlers);
 
@@ -235,6 +236,53 @@ describe("Relay MSW handlers", () => {
         "Job is already completed",
       );
       expect((await cancel("job_nope")).status).toBe(404);
+    });
+  });
+
+  describe("POST /api/v1/data-jobs/archive", () => {
+    const post = (body: unknown) =>
+      fetch("http://localhost/api/v1/data-jobs/archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+    it("answers a queued archive job, and 400 for a future date", async () => {
+      const job = DataJobSchema.parse(await (await post({ before: "2026-09-01" })).json());
+      expect(job).toMatchObject({ type: "archive", status: "queued", timeframe: null });
+      expect((await post({ before: "2999-01-01" })).status).toBe(400);
+    });
+  });
+
+  describe("/api/v1/broker/recorder", () => {
+    const put = (body: unknown) =>
+      fetch("http://localhost/api/v1/broker/recorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    const get = async () =>
+      RecorderSettingsSchema.parse(
+        await (await fetch("http://localhost/api/v1/broker/recorder")).json(),
+      );
+
+    it("starts off, remembers a switch-on and can be reset", async () => {
+      resetMockRecorder();
+      expect((await get()).state).toBe("off");
+      const on = RecorderSettingsSchema.parse(
+        await (await put({ enabled: true, symbols: ["TCS", "INFY"] })).json(),
+      );
+      expect(on).toMatchObject({ enabled: true, state: "waiting", symbols: ["INFY", "TCS"] });
+      expect((await get()).enabled).toBe(true);
+      resetMockRecorder();
+      expect((await get()).enabled).toBe(false);
+    });
+
+    it("refuses stocks it does not know", async () => {
+      const res = await put({ enabled: true, symbols: ["NOPE"] });
+      expect(ApiErrorSchema.parse(await res.json()).error.message).toBe(
+        "Not synced with Kite yet: NOPE",
+      );
     });
   });
 });

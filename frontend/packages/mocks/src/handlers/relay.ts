@@ -1,10 +1,13 @@
 import { http, HttpResponse } from "msw";
 import {
   BrokerAccountCreateSchema,
+  ArchiveJobCreateSchema,
   DataJobCreateSchema,
+  RecorderSettingsUpdateSchema,
   RateLimitUpdateSchema,
   type BrokerAccount,
   type DataJob,
+  type RecorderSettings,
 } from "@nova/contracts";
 import {
   mockAuditEntries,
@@ -15,6 +18,20 @@ import {
   mockRateLimits,
 } from "../data";
 import { apiPath, badRequest, notFound, paginate } from "./api";
+
+const RECORDER_OFF: RecorderSettings = {
+  enabled: false,
+  symbols: [],
+  state: "off",
+  jobId: null,
+  updatedAt: "2026-09-22T04:30:00Z",
+};
+let mockRecorder: RecorderSettings = RECORDER_OFF;
+
+/** Puts the demo recording switch back to off (tests). */
+export function resetMockRecorder(): void {
+  mockRecorder = RECORDER_OFF;
+}
 
 export const relayHandlers = [
   http.get(apiPath("/broker/accounts"), () => {
@@ -147,6 +164,62 @@ export const relayHandlers = [
     }
     const finishedAt = job.status === "queued" ? "2026-09-22T04:30:00Z" : null;
     return HttpResponse.json({ ...job, status: "cancelled", finishedAt } satisfies DataJob);
+  }),
+
+  // Demo: queues nothing; validates like the server (a future date is refused).
+  http.post(apiPath("/data-jobs/archive"), async ({ request }) => {
+    const parsed = ArchiveJobCreateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) {
+      return badRequest("Body must be { before } with a date");
+    }
+    if (parsed.data.before > new Date().toISOString().slice(0, 10)) {
+      return badRequest("The date must be today or earlier");
+    }
+    const job: DataJob = {
+      id: "job_archive",
+      type: "archive",
+      status: "queued",
+      exchange: "NSE",
+      segment: "equity_delivery",
+      symbols: ["INFY", "TCS"],
+      timeframe: null,
+      from: "2026-06-01",
+      to: parsed.data.before,
+      progressPercent: 0,
+      rowsWritten: 0,
+      createdAt: "2026-09-22T04:30:00Z",
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+    };
+    return HttpResponse.json(job, { status: 201 });
+  }),
+
+  http.get(apiPath("/broker/recorder"), () => {
+    return HttpResponse.json(mockRecorder);
+  }),
+
+  // Demo: remembered until the page reloads, so the switch can be tried out.
+  http.put(apiPath("/broker/recorder"), async ({ request }) => {
+    const parsed = RecorderSettingsUpdateSchema.safeParse(
+      await request.json().catch(() => undefined),
+    );
+    if (!parsed.success) {
+      return badRequest("Body must be { enabled, symbols }");
+    }
+    const symbols = [...new Set(parsed.data.symbols)].sort();
+    const unknown = symbols.filter((s) => !mockInstruments.some((i) => i.symbol === s));
+    if (parsed.data.enabled && unknown.length > 0) {
+      return badRequest(`Not synced with Kite yet: ${unknown.join(", ")}`);
+    }
+    mockRecorder = {
+      enabled: parsed.data.enabled,
+      symbols,
+      state: parsed.data.enabled ? "waiting" : "off",
+      jobId: null,
+      updatedAt: "2026-09-22T04:30:00Z",
+    };
+    return HttpResponse.json(mockRecorder);
   }),
 
   http.get(apiPath("/audit"), ({ request }) => {

@@ -145,7 +145,7 @@ services:
     mem_limit: 384m
 
   # Always on (D54): sleeps, and records live ticks 09:15-15:30 IST on weekdays while the switch in
-  # `recorder_settings` (PUT /broker/recorder) is on. Each session is a `tick_record` data job.
+  # Relay (Data jobs → Record live prices, `recorder_settings`) is on. Each session is a `tick_record` job.
   tick-recorder:
     <<: *backend
     container_name: nova-tick-recorder

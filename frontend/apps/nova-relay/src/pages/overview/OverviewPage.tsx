@@ -7,6 +7,7 @@ import { formatIstShort } from "../../lib/format";
 import { needsLogin } from "../../lib/session";
 import { LimitWarnings } from "../rate-limits/LimitWarnings";
 import { LoginPrompt } from "./LoginPrompt";
+import { RecorderWaiting } from "./RecorderWaiting";
 
 function RecentActivity() {
   const audit = useAuditEntries();
@@ -67,6 +68,7 @@ export function OverviewPage() {
         <StatCard label="Need login" value={count(needing.length)} />
         <StatCard label="Disabled" value={count(list.filter((a) => !a.enabled).length)} />
       </div>
+      <RecorderWaiting />
       {needing.length > 0 ? (
         <div className="flex flex-col gap-3">
           {needing.map((account) => (

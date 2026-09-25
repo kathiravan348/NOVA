@@ -16,6 +16,7 @@ export const queryKeys = {
     all: ["broker-accounts"] as const,
     detail: (id: string) => ["broker-accounts", id] as const,
   },
+  recorder: ["recorder"] as const,
   rateLimits: {
     all: ["rate-limits"] as const,
   },

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-075). NOVA **never places real orders**: it only
+> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-078). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -185,6 +185,7 @@ Open Relay (http://localhost:3001) and sign in the same way as Orbit. You land o
 ### Step 2 — Overview (check this every morning)
 - Counts: **Accounts**, **Active sessions**, **Need login**, **Disabled**.
 - A **daily Kite login** reminder for any account whose login has expired.
+- A note when live price recording is on but waits for today's Kite login.
 - A warning if we are using more than **80%** of any Zerodha request limit.
 - **Recent activity**: the latest entries from the audit log.
 
@@ -244,11 +245,21 @@ box to find one), then **Queue download**. The job starts within seconds and sho
 *synced* with Kite can be ticked. 1-minute data is large: start with a few stocks.
 
 **To stop a job** that is waiting or running, open it and press **Cancel job**, then confirm. Prices already
-saved stay. Tick recording and archiving are still started by the admin from the command line.
+saved stay.
+
+**Live prices** (the card at the top): turn on **Record live prices** and NOVA records every price change
+(*ticks*) of the chosen stocks every weekday from 09:15 to 15:30, by itself, until you turn it off. Past
+prices can't be recorded later, so leave it on. The badge says what it is doing: **Off**, **Waiting for
+market hours**, **Recording** (with a link to today's recording job) or **Log in to Kite first** (do the
+daily Kite login, Step 3). **Choose stocks** picks which synced stocks to record; with none ticked it
+records all of them. Cancelling a running recording job also turns the switch off.
+
+**Archive old ticks** moves live prices older than a date (default: 30 days ago) out of the database into
+files, to keep the database small. Nothing is lost. It runs as a data job.
 
 ### Step 8 — Audit log
 A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, broker
-accounts added, limit changes, strategies created or saved, backtests queued, downloads queued or cancelled. Each line shows time, who, what, on what, and a
+accounts added, limit changes, stocks added or synced, recording switched on or off, strategies created or saved, backtests queued, downloads queued or cancelled. Each line shows time, who, what, on what, and a
 summary. Use **Show** to filter by kind of activity and **Load older entries** to go back in time.
 
 ---
@@ -256,8 +267,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 ## 6. What is NOT there yet (not bugs)
 
 - **No real buying or selling.** Placing orders is a later phase (NOVA Launch).
-- Broker accounts cannot be renamed, disabled or removed from the screen yet. There are no buttons yet to
-  record live prices or archive them either: the admin does these from the command line.
+- Broker accounts cannot be renamed, disabled or removed from the screen yet.
 - Strategies cannot be deleted (old test results depend on them); set them to *Archived* instead.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
@@ -277,3 +287,4 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |
 | Rate-limit warning above 80% | Wait for the reset time shown, or lower how much you download at once. |
+| **Live prices** says **Log in to Kite first** | Recording is on but today's Kite login is missing. Do the daily login (Step 3); recording starts within a minute. |

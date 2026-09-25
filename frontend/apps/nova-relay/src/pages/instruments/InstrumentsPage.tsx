@@ -27,7 +27,7 @@ export function InstrumentsPage() {
       setLastSync(result);
       const demo = getDataMode() === "mock";
       toast.show({
-        title: `Synced ${result.synced.length} stocks${demo ? " (demo)" : ""}`,
+        title: `Synced ${result.synced.length} ${result.synced.length === 1 ? "stock" : "stocks"}${demo ? " (demo)" : ""}`,
         description: result.missing.length
           ? `${result.missing.length} not found on NSE.`
           : "Every stock is known to Kite.",

@@ -1,19 +1,24 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
+  ArchiveJobCreate,
   BrokerAccountCreate,
   DataJobCreate,
   RateLimitEndpoint,
   RateLimitUpdate,
+  RecorderSettingsUpdate,
 } from "@nova/contracts";
 import {
   cancelDataJob,
   createBrokerAccount,
+  createArchiveJob,
   createDataJob,
   getBrokerAccount,
   getBrokerProfile,
   listBrokerProfiles,
   updateRateLimit,
   getDataJob,
+  getRecorder,
+  updateRecorder,
   listAuditEntries,
   listBrokerAccounts,
   listDataJobs,
@@ -132,5 +137,34 @@ export function useAuditEntries() {
     queryFn: ({ signal, pageParam }) => listAuditEntries(cursorQuery(pageParam), { signal }),
     ...pagedListOptions,
     select: flattenPages,
+  });
+}
+
+/** Queues an archive of old ticks; refreshes the data-jobs list (D54). */
+export function useCreateArchiveJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ArchiveJobCreate) => createArchiveJob(body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.list }),
+  });
+}
+
+/** The recording switch; refreshed every 30 s, like the recorder itself. */
+export function useRecorder() {
+  return useQuery({
+    queryKey: queryKeys.recorder,
+    queryFn: ({ signal }) => getRecorder({ signal }),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useUpdateRecorder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RecorderSettingsUpdate) => updateRecorder(body),
+    onSuccess: (settings) => {
+      queryClient.setQueryData(queryKeys.recorder, settings);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.auditEntries.all });
+    },
   });
 }

@@ -1,6 +1,6 @@
 # NOVA-078 — Relay: tick recording switch + Archive old ticks
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-078 · **Depends on:** NOVA-075, NOVA-076, NOVA-077
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-078 · **Depends on:** NOVA-075, NOVA-076, NOVA-077
 
 ## Goal
 On Relay's **Data jobs** page the super-admin turns live tick recording on or off, picks its stocks, sees
@@ -48,5 +48,14 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Services: `getRecorder`/`updateRecorder` (PUT), `createArchiveJob` + `useRecorder` (30 s refetch),
+  `useUpdateRecorder`, `useCreateArchiveJob`. MSW: recorder kept in memory (`resetMockRecorder` for tests).
+- Relay: `RecorderCard` (switch, state badge, stocks, link to the running job), `RecorderSymbolsModal`,
+  `ArchiveModal`; Overview `RecorderWaiting` note for `no_login` (own file). Labels in `lib/labels.ts`.
+- Plural fixes: "1 chosen stock", "Synced 1 stock" (Instruments page from 075).
+- Checks: `pnpm review:check` green (701 tests).
+- Guides: USER-GUIDE (Step 2, Step 7, Step 8, not-there-yet, what-do-I-do-if); READMEs, compose comment.
 
 ## Review
+Self-reviewed. Real-mode check after rebuilding the stack: see the D54 batch summary.

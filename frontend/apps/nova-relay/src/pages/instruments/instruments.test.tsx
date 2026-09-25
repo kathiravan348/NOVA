@@ -84,7 +84,7 @@ describe("Instruments", () => {
     renderApp("/instruments");
     await table();
     fireEvent.click(screen.getByRole("button", { name: "Sync with Kite" }));
-    expect(await screen.findByText("Synced 1 stocks (demo)")).toBeInTheDocument();
+    expect(await screen.findByText("Synced 1 stock (demo)")).toBeInTheDocument();
     expect(screen.getByText(/Not found on NSE: XYZ/)).toBeInTheDocument();
   });
 

@@ -6,6 +6,10 @@ import {
   DataJobSchema,
   type DataJobCreate,
   RateLimitSchema,
+  RecorderSettingsSchema,
+  type ArchiveJobCreate,
+  type RecorderSettings,
+  type RecorderSettingsUpdate,
   pageSchema,
   type AuditEntry,
   type BrokerAccount,
@@ -17,7 +21,7 @@ import {
   type RateLimitEndpoint,
   type RateLimitUpdate,
 } from "@nova/contracts";
-import { apiGet, apiPost, apiSend, withQuery, type RequestOptions } from "../http";
+import { apiGet, apiPost, apiRequest, apiSend, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
 
@@ -89,4 +93,22 @@ export function listAuditEntries(
   init?: RequestOptions,
 ): Promise<Page<AuditEntry>> {
   return apiGet(withQuery("/audit", { ...query }), pageSchema(AuditEntrySchema), init);
+}
+
+/** Queues moving ticks received before `before` (IST) to Parquet files (D54). */
+export function createArchiveJob(body: ArchiveJobCreate, init?: RequestOptions): Promise<DataJob> {
+  return apiPost("/data-jobs/archive", body, DataJobSchema, init);
+}
+
+/** The live tick recording switch and what the recorder is doing (D54). */
+export function getRecorder(init?: RequestOptions): Promise<RecorderSettings> {
+  return apiGet("/broker/recorder", RecorderSettingsSchema, init);
+}
+
+/** Turns recording on or off and sets its stocks (empty = every stock synced with Kite). */
+export function updateRecorder(
+  body: RecorderSettingsUpdate,
+  init?: RequestOptions,
+): Promise<RecorderSettings> {
+  return apiRequest("PUT", "/broker/recorder", body, RecorderSettingsSchema, init);
 }

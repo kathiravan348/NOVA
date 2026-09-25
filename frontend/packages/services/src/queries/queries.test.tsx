@@ -38,6 +38,9 @@ import {
   useBrokerProfile,
   useBrokerProfiles,
   useCancelDataJob,
+  useCreateArchiveJob,
+  useRecorder,
+  useUpdateRecorder,
   useCreateDataJob,
   useUpdateRateLimit,
   useDataJobs,
@@ -207,6 +210,23 @@ describe("query hooks", () => {
     const { result } = renderHook(() => useUniverse(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.length).toBeGreaterThan(0);
+  });
+
+  it("useUpdateRecorder saves the switch and useRecorder shows it", async () => {
+    const { result } = renderHook(
+      () => ({ recorder: useRecorder(), update: useUpdateRecorder() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.recorder.isSuccess).toBe(true));
+    await result.current.update.mutateAsync({ enabled: true, symbols: [] });
+    await waitFor(() => expect(result.current.recorder.data?.enabled).toBe(true));
+    await result.current.update.mutateAsync({ enabled: false, symbols: [] });
+  });
+
+  it("useCreateArchiveJob queues an archive", async () => {
+    const { result } = renderHook(() => useCreateArchiveJob(), { wrapper });
+    const job = await result.current.mutateAsync({ before: "2026-09-01" });
+    expect(job.type).toBe("archive");
   });
 
   it("useSyncInstruments posts the sync and refetches the stock list", async () => {

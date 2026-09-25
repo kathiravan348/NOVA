@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { handlers } from "@nova/mocks";
+import { handlers, resetMockRecorder } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -12,6 +12,7 @@ afterEach(() => {
   cleanup();
   server.resetHandlers();
   sessionStorage.clear();
+  resetMockRecorder();
 });
 afterAll(() => server.close());
 
@@ -114,5 +115,70 @@ describe("New download", () => {
     fireEvent.click(within(row).getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Queue download" }));
     expect(await screen.findByText("Not in the stock list: INFY")).toBeInTheDocument();
+  });
+});
+
+describe("Live prices", () => {
+  it("switches recording on and shows its state", async () => {
+    renderApp("/data-jobs");
+    const toggle = await screen.findByRole("switch", { name: "Record live prices" });
+    expect(screen.getByText("Off")).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(await screen.findByText("Recording switched on (demo)")).toBeInTheDocument();
+    expect(await screen.findByText("Waiting for market hours")).toBeInTheDocument();
+    expect(screen.getByText("All stocks synced with Kite")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["recording", "Recording"],
+    ["no_login", "Log in to Kite first"],
+  ])("labels the %s state", async (state, label) => {
+    server.use(
+      http.get("*/api/v1/broker/recorder", () =>
+        HttpResponse.json({
+          enabled: true,
+          symbols: ["INFY"],
+          state,
+          jobId: state === "recording" ? "job_002" : null,
+          updatedAt: "2026-09-22T04:30:00Z",
+        }),
+      ),
+    );
+    renderApp("/data-jobs");
+    expect(await screen.findByText(label)).toBeInTheDocument();
+    expect(screen.getByText("1 chosen stock")).toBeInTheDocument();
+    const link = screen.queryByRole("link", { name: "Open today's recording" });
+    expect(Boolean(link)).toBe(state === "recording");
+  });
+
+  it("saves the chosen stocks", async () => {
+    renderApp("/data-jobs");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
+    const table = await within(dialog).findByRole("table", { name: "Stocks to record" });
+    fireEvent.change(within(dialog).getByRole("searchbox", { name: "Search stocks" }), {
+      target: { value: "INFY" },
+    });
+    const row = (await within(table).findByText("INFY")).closest("tr")!;
+    fireEvent.click(within(row).getByRole("checkbox"));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save stocks" }));
+    expect(await screen.findByText("Stocks saved (demo)")).toBeInTheDocument();
+    expect(await screen.findByText("1 chosen stock")).toBeInTheDocument();
+  });
+
+  it("queues an archive and blocks a future date", async () => {
+    renderApp("/data-jobs");
+    fireEvent.click(await screen.findByRole("button", { name: "Archive old ticks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive old ticks" });
+    fireEvent.change(within(dialog).getByLabelText("Move ticks before"), {
+      target: { value: "2999-01-01" },
+    });
+    expect(within(dialog).getByText("The date can't be in the future")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Queue archive" })).toBeDisabled();
+    fireEvent.change(within(dialog).getByLabelText("Move ticks before"), {
+      target: { value: "2026-09-01" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Queue archive" }));
+    expect(await screen.findByText("Archive queued (demo)")).toBeInTheDocument();
   });
 });

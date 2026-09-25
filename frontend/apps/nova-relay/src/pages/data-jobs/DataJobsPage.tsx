@@ -6,6 +6,7 @@ import { Button, DataTable, EmptyState, StatusBadge, LoadMore } from "@nova/ui-c
 import { formatPercent, formatQuantity } from "@nova/ui-trading";
 import { useDataJobs } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
+import { RecorderCard } from "./RecorderCard";
 import { formatIstShort, formatPeriod } from "../../lib/format";
 import { jobStatusLabel, jobStatusTone, jobTypeLabel } from "../../lib/labels";
 
@@ -82,6 +83,7 @@ export function DataJobsPage() {
   );
   return (
     <div className="flex flex-col gap-4">
+      <RecorderCard />
       <DataTable
         caption="Data jobs"
         columns={columns}

@@ -3,6 +3,7 @@ import type {
   DataJobStatus,
   DataJobType,
   RateLimitEndpoint,
+  RecorderState,
   Segment,
   Timeframe,
 } from "@nova/contracts";
@@ -94,3 +95,18 @@ export const auditGroupLabel: Record<AuditGroup, string> = {
 };
 
 export const auditGroup = (action: AuditAction) => action.split(".")[0] as AuditGroup;
+
+export const recorderStateLabel: Record<RecorderState, string> = {
+  off: "Off",
+  waiting: "Waiting for market hours",
+  recording: "Recording",
+  no_login: "Log in to Kite first",
+};
+
+export const recorderStateTone: Record<RecorderState, "neutral" | "info" | "success" | "warning"> =
+  {
+    off: "neutral",
+    waiting: "info",
+    recording: "success",
+    no_login: "warning",
+  };
