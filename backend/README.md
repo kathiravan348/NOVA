@@ -21,6 +21,7 @@ docker compose build
 | `docker compose exec atlas python -m nova_atlas download --symbols INFY,TCS --timeframe 1d --from 2025-01-01 --to 2025-12-31` | queue a candle download |
 | `docker compose --profile market up -d tick-recorder` | record live ticks until 15:30 IST (needs a Kite login and synced instruments; add `--symbols` via `run` to limit) |
 | `docker compose exec atlas-worker python -m nova_atlas archive-ticks --before 2026-09-01` | move older ticks to Parquet in the `tick-archive` volume |
+| `NOVA_API_DOCS=true` in `.env`, then `docker compose up -d` | Swagger UI on http://127.0.0.1:8000/api/v1/docs (D50, dev only); sign in with `POST /api/v1/auth/login` there, then "Try it out" uses the session cookie |
 | `docker compose down` | stop everything (data stays in the `db-data` volume) |
 | `docker compose build` | rebuild the image after `uv.lock` changes |
 

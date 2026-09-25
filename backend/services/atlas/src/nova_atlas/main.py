@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
-from nova_common import install_error_handlers
+from nova_common import install_error_handlers, openapi_url
 from nova_db import create_db_engine, create_session_factory
 
 from nova_atlas import jobs, market_data
@@ -23,7 +23,11 @@ def create_app(settings: AtlasSettings | None = None) -> FastAPI:
         engine.dispose()
 
     app = FastAPI(
-        title="NOVA Atlas", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan
+        title="NOVA Atlas",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=openapi_url(settings),
+        lifespan=lifespan,
     )
     app.state.settings = settings
     app.state.session_factory = create_session_factory(engine)

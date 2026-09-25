@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 import httpx2
 from fastapi import APIRouter, FastAPI
-from nova_common import install_error_handlers
+from nova_common import install_error_handlers, openapi_url
 from nova_db import create_db_engine, create_session_factory
 from nova_db.models import BrokerAccount
 from redis import Redis
@@ -55,7 +55,11 @@ def create_app(
         engine.dispose()
 
     app = FastAPI(
-        title="NOVA Broker", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan
+        title="NOVA Broker",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=openapi_url(settings),
+        lifespan=lifespan,
     )
     app.state.settings = settings
     app.state.session_factory = session_factory

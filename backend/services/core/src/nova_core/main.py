@@ -8,7 +8,7 @@ from fastapi import APIRouter, FastAPI
 from nova_common import install_error_handlers
 from nova_db import create_db_engine, create_session_factory
 
-from nova_core import audit_routes, auth_routes, gateway
+from nova_core import api_docs, audit_routes, auth_routes, gateway
 from nova_core.settings import CoreSettings, get_core_settings
 
 API_PREFIX = "/api/v1"
@@ -44,6 +44,8 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    if settings.api_docs:
+        router.include_router(api_docs.router)
     router.include_router(auth_routes.router)
     router.include_router(audit_routes.router)
     router.include_router(gateway.router)

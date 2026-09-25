@@ -68,6 +68,7 @@
 | NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox (D47) | done | Claude | 062 |
 | NOVA-058 | Real mode: login + Relay screens on the real API (D48) | done | Claude | 046, 050, 051 |
 | NOVA-059 | Real mode: Orbit screens on the real API | done | Claude | 058, 061, 062 |
+| NOVA-063 | API docs: Swagger UI on NOVA Core, off by default (D50) | done | Claude | 059 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

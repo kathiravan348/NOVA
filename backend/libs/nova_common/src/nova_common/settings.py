@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     database_url: SecretStr
     redis_url: SecretStr
     log_level: LogLevel = "info"
+    # Dev machine only (D50): OpenAPI schemas and Swagger UI on NOVA Core.
+    api_docs: bool = False
 
 
 @lru_cache(maxsize=1)

@@ -42,13 +42,13 @@
 └─ backend/             uv workspace (D33, D36); Dockerfile = one image for all services
    ├─ scripts/check.sh  ruff, format, mypy per package, pytest
    ├─ libs/
-   │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers
+   │  ├─ nova_common/   Settings (NOVA_* env), ApiException + error handlers, openapi_url (D50)
    │  ├─ nova_db/       models, migrations (`python -m nova_db upgrade|check`), queue + paging helpers (D37, D41)
    │  ├─ nova_ledger/   charges per trade from dated `charge_rates` rows (D42)
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
    │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` + `redis` fixtures, `kite.FakeKite`, `broker.FakeBroker`
    └─ services/
-      ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; `python -m nova_core create-admin`
+      ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services, API docs when NOVA_API_DOCS (D50); `python -m nova_core create-admin`
       ├─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40),
       │                 `/internal/kite/*` data for other services (D41); live tick recorder (D49);
       │                 `python -m nova_broker add-account | new-token-key | record-ticks`
