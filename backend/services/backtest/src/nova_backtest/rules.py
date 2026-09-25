@@ -6,7 +6,8 @@ from nova_contracts import Condition, Operand, RuleGroup
 from nova_contracts.strategy import OperandIndicator, OperandNumber, OperandPrice
 
 from nova_backtest.bars import Bar
-from nova_backtest.indicators import Series, indicator
+from nova_backtest.engine import EngineError
+from nova_backtest.indicators import Series, indicator, settings_for
 
 
 class SeriesCache:
@@ -17,10 +18,16 @@ class SeriesCache:
         self._cache: dict[str, Series] = {}
 
     def values(self, operand: Operand) -> Series:
-        key = operand.model_dump_json()
+        """The operand's series; `offset` (bars ago, D51) shifts the cached series without it."""
+        offset = operand.offset if isinstance(operand, OperandPrice | OperandIndicator) else 0
+        base = operand.model_copy(update={"offset": 0}) if offset else operand
+        key = base.model_dump_json()
         if key not in self._cache:
-            self._cache[key] = self._compute(operand)
-        return self._cache[key]
+            self._cache[key] = self._compute(base)
+        series = self._cache[key]
+        if not offset:
+            return series
+        return [None] * min(offset, len(series)) + series[: max(len(series) - offset, 0)]
 
     def _compute(self, operand: Operand) -> Series:
         if isinstance(operand, OperandNumber):
@@ -64,12 +71,25 @@ def holds(group: RuleGroup, cache: SeriesCache, i: int) -> bool:
     return all(results) if group.combinator == "all" else any(results)
 
 
+def _check(operand: OperandIndicator) -> None:
+    """Fails the run up front when a stored spec has settings the catalog no longer accepts."""
+    try:
+        settings_for(operand.name, operand.params)
+    except ValueError as exc:
+        raise EngineError(f"{exc}: open the strategy and save it again") from exc
+
+
 class RuleSignals:
     """Entry/exit signals of a visual strategy, per symbol and bar index."""
 
     def __init__(
         self, bars: Mapping[str, Sequence[Bar]], entry: RuleGroup, exit_: RuleGroup
     ) -> None:
+        for group in (entry, exit_):
+            for condition in group.conditions:
+                for operand in (condition.left, condition.right):
+                    if isinstance(operand, OperandIndicator):
+                        _check(operand)
         self._caches = {symbol: SeriesCache(series) for symbol, series in bars.items()}
         self._entry, self._exit = entry, exit_
 

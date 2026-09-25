@@ -1,6 +1,6 @@
 # NOVA-065 — Backtest engine: catalog params, "bars ago" offset, trend + momentum indicators (D51)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-065 · **Depends on:** NOVA-064
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-065 · **Depends on:** NOVA-064
 
 ## Goal
 Visual strategies can use every trend and momentum indicator in the catalog, with their real params (MACD
@@ -50,5 +50,15 @@ Modify: `nova_backtest/{indicators.py,rules.py}`, `tests/{test_indicators.py,tes
 ## Questions
 
 ## Handoff
+Built by Claude (Antigravity offline). All acceptance checks pass.
+- `indicator()` checks settings with `check_params`, fills catalog defaults, dispatches by dict; 066 names raise
+  "… is not available yet". MACD now honours `fast`/`slow` and refuses `period`.
+- New `indicators_core.py` (not in Files): shared building blocks moved out of `indicators.py` so the trend and
+  momentum modules can import them without a cycle. `indicators.py` re-exports the old names.
+- Bad stored settings fail the run up front (`RuleSignals` → `EngineError` "…: open the strategy and save it again");
+  the worker turns any other ValueError into "Unexpected error", so the check must happen there.
+- `SeriesCache` caches the series without offset and shifts it; crosses use the shifted series.
+- Checks: Docker pytest backtest + contracts 186 passed; ruff, mypy strict clean. Guides: none (067).
 
 ## Review
+Self-reviewed. Hand-checked values: WMA, MACD signal/hist, SuperTrend flip, +DI/−DI/ADX (5 bars), PSAR reversal, Stochastic %K/%D, Stoch RSI, CCI, Williams %R, ROC; None-prefix lengths per default.

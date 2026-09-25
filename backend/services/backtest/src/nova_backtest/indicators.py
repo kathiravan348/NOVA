@@ -1,137 +1,92 @@
-"""Indicator series (D45). Floats in rupees are fine here: they only decide signals, never amounts.
+"""Indicator series by catalog name (D45, D51).
 
-Every function returns one value per bar, `None` until there are enough bars.
+Settings are checked against `nova_contracts.indicators`; missing ones get the catalog defaults.
+Every series has one value per bar, `None` until there are enough bars; values are rupee floats.
 """
 
-import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+
+from nova_contracts.indicators import BY_NAME, check_params
 
 from nova_backtest.bars import Bar
+from nova_backtest.indicators_core import (
+    Series,
+    atr,
+    bollinger,
+    ema,
+    macd,
+    rsi,
+    sma,
+    vwap,
+)
+from nova_backtest.indicators_momentum import cci, roc, stoch_d, stoch_k, stoch_rsi, williams_r
+from nova_backtest.indicators_trend import (
+    adx,
+    macd_hist,
+    macd_signal,
+    minus_di,
+    plus_di,
+    psar,
+    supertrend,
+    wma,
+)
 
-Series = list[float | None]
-
-
-def sma(values: Sequence[float], period: int) -> Series:
-    out: Series = [None] * len(values)
-    total = 0.0
-    for i, value in enumerate(values):
-        total += value
-        if i >= period:
-            total -= values[i - period]
-        if i >= period - 1:
-            out[i] = total / period
-    return out
-
-
-def ema(values: Sequence[float], period: int) -> Series:
-    """Seeded with the SMA of the first `period` values."""
-    out: Series = [None] * len(values)
-    if len(values) < period:
-        return out
-    alpha = 2 / (period + 1)
-    current = sum(values[:period]) / period
-    out[period - 1] = current
-    for i in range(period, len(values)):
-        current = alpha * values[i] + (1 - alpha) * current
-        out[i] = current
-    return out
+__all__ = ["Series", "atr", "bollinger", "ema", "indicator", "rsi", "sma", "vwap"]
 
 
-def _wilder(values: Sequence[float], period: int, first: int) -> Series:
-    """Wilder smoothing starting at index `first` (the first full window ends there)."""
-    out: Series = [None] * len(values)
-    if len(values) <= first:
-        return out
-    current = sum(values[first - period + 1 : first + 1]) / period
-    out[first] = current
-    for i in range(first + 1, len(values)):
-        current = (current * (period - 1) + values[i]) / period
-        out[i] = current
-    return out
+class Settings:
+    """An indicator's settings with defaults filled in."""
+
+    def __init__(self, values: dict[str, float]) -> None:
+        self._values = values
+
+    def whole(self, key: str) -> int:
+        return int(self._values[key])
+
+    def number(self, key: str) -> float:
+        return self._values[key]
 
 
-def rsi(closes: Sequence[float], period: int) -> Series:
-    changes = [0.0] + [closes[i] - closes[i - 1] for i in range(1, len(closes))]
-    gains = _wilder([max(c, 0.0) for c in changes], period, period)
-    losses = _wilder([max(-c, 0.0) for c in changes], period, period)
-    out: Series = [None] * len(closes)
-    for i, (gain, loss) in enumerate(zip(gains, losses, strict=True)):
-        if gain is None or loss is None:
-            continue
-        out[i] = 100.0 if loss == 0 else 100 - 100 / (1 + gain / loss)
-    return out
+Compute = Callable[[Sequence[Bar], list[float], Settings], Series]
+
+_DISPATCH: dict[str, Compute] = {
+    "sma": lambda _, c, s: sma(c, s.whole("period")),
+    "ema": lambda _, c, s: ema(c, s.whole("period")),
+    "wma": lambda _, c, s: wma(c, s.whole("period")),
+    "macd": lambda _, c, s: macd(c, s.whole("fast"), s.whole("slow")),
+    "macd_signal": lambda _, c, s: macd_signal(
+        c, s.whole("fast"), s.whole("slow"), s.whole("signal")
+    ),
+    "macd_hist": lambda _, c, s: macd_hist(c, s.whole("fast"), s.whole("slow"), s.whole("signal")),
+    "supertrend": lambda b, _, s: supertrend(b, s.whole("period"), s.number("multiplier")),
+    "adx": lambda b, _, s: adx(b, s.whole("period")),
+    "plus_di": lambda b, _, s: plus_di(b, s.whole("period")),
+    "minus_di": lambda b, _, s: minus_di(b, s.whole("period")),
+    "psar": lambda b, _, s: psar(b, s.number("step"), s.number("max")),
+    "rsi": lambda _, c, s: rsi(c, s.whole("period")),
+    "stoch_k": lambda b, _, s: stoch_k(b, s.whole("period"), s.whole("smooth")),
+    "stoch_d": lambda b, _, s: stoch_d(b, s.whole("period"), s.whole("smooth"), s.whole("signal")),
+    "stoch_rsi": lambda _, c, s: stoch_rsi(c, s.whole("rsi_period"), s.whole("period")),
+    "cci": lambda b, _, s: cci(b, s.whole("period")),
+    "williams_r": lambda b, _, s: williams_r(b, s.whole("period")),
+    "roc": lambda _, c, s: roc(c, s.whole("period")),
+    "atr": lambda b, _, s: atr(b, s.whole("period")),
+    "bb_upper": lambda _, c, s: bollinger(c, s.whole("period"), s.number("stddev"), upper=True),
+    "bb_lower": lambda _, c, s: bollinger(c, s.whole("period"), s.number("stddev"), upper=False),
+    "bb_middle": lambda _, c, s: sma(c, s.whole("period")),
+    "vwap": lambda b, _, __: vwap(b),
+}
 
 
-def macd(closes: Sequence[float], fast: int, slow: int) -> Series:
-    """The MACD line: EMA(fast) − EMA(slow)."""
-    return [
-        f - s if f is not None and s is not None else None
-        for f, s in zip(ema(closes, fast), ema(closes, slow), strict=True)
-    ]
-
-
-def vwap(bars: Sequence[Bar]) -> Series:
-    """Volume-weighted typical price, restarting each IST day (a daily bar is its own day)."""
-    out: Series = []
-    day, value, volume = None, 0.0, 0
-    for bar in bars:
-        if bar.ist_date != day:
-            day, value, volume = bar.ist_date, 0.0, 0
-        typical = (bar.high + bar.low + bar.close) / 300  # rupees
-        value += typical * bar.volume
-        volume += bar.volume
-        out.append(value / volume if volume else typical)
-    return out
-
-
-def atr(bars: Sequence[Bar], period: int) -> Series:
-    ranges = []
-    for i, bar in enumerate(bars):
-        high, low = bar.high / 100, bar.low / 100
-        previous = bars[i - 1].close / 100 if i else None
-        ranges.append(
-            high - low
-            if previous is None
-            else max(high - low, abs(high - previous), abs(low - previous))
-        )
-    return _wilder(ranges, period, period - 1)
-
-
-def bollinger(closes: Sequence[float], period: int, stddev: float, upper: bool) -> Series:
-    middle = sma(closes, period)
-    out: Series = [None] * len(closes)
-    for i, mean in enumerate(middle):
-        if mean is None:
-            continue
-        window = closes[i - period + 1 : i + 1]
-        spread = stddev * math.sqrt(sum((x - mean) ** 2 for x in window) / period)
-        out[i] = mean + spread if upper else mean - spread
-    return out
-
-
-def whole(params: dict[str, float], name: str, default: int) -> int:
-    """A positive whole-number parameter such as `period`."""
-    value = params.get(name, default)
-    if value != int(value) or value < 1:
-        raise ValueError(f"{name} must be a whole number of at least 1, got {value}")
-    return int(value)
+def settings_for(name: str, params: dict[str, float]) -> Settings:
+    """Checks `params` against the catalog (ValueError) and fills in the defaults."""
+    check_params(name, params)
+    return Settings(BY_NAME[name].defaults() | params)
 
 
 def indicator(name: str, params: dict[str, float], bars: Sequence[Bar]) -> Series:
-    closes = [bar.close / 100 for bar in bars]
-    if name == "sma":
-        return sma(closes, whole(params, "period", 20))
-    if name == "ema":
-        return ema(closes, whole(params, "period", 20))
-    if name == "rsi":
-        return rsi(closes, whole(params, "period", 14))
-    if name == "macd":
-        return macd(closes, whole(params, "fast", 12), whole(params, "slow", 26))
-    if name == "vwap":
-        return vwap(bars)
-    if name == "atr":
-        return atr(bars, whole(params, "period", 14))
-    if name in ("bb_upper", "bb_lower"):
-        spread = params.get("stddev", 2.0)
-        return bollinger(closes, whole(params, "period", 20), spread, upper=name == "bb_upper")
-    raise ValueError(f"Unknown indicator {name}")
+    settings = settings_for(name, params)
+    compute = _DISPATCH.get(name)
+    if compute is None:
+        raise ValueError(f"{BY_NAME[name].label} is not available yet")
+    return compute(bars, [bar.close / 100 for bar in bars], settings)
