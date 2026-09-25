@@ -20,6 +20,7 @@ from nova_db.enums import (
     DATA_JOB_STATUSES,
     DATA_JOB_TYPES,
     EXCHANGES,
+    INDEX_NAMES,
     SEGMENTS,
     TIMEFRAMES,
     sql_in,
@@ -183,3 +184,24 @@ class Tick(Base):
     last_qty: Mapped[int] = mapped_column(BigInteger)
     volume: Mapped[int] = mapped_column(BigInteger)
     oi: Mapped[int | None] = mapped_column(BigInteger)
+
+
+class UniverseEntry(Base):
+    """The stock list the Owner edits in Relay (D54); `sync` adds Kite tokens to `instruments`."""
+
+    __tablename__ = "universe"
+    __table_args__ = (
+        check_in("exchange", "exchange", EXCHANGES),
+        CheckConstraint(
+            "indices <@ ARRAY[" + ", ".join(f"'{i}'" for i in INDEX_NAMES) + "]::text[]",
+            name="indices",
+        ),
+    )
+
+    exchange: Mapped[str] = mapped_column(primary_key=True)
+    symbol: Mapped[str] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    sector: Mapped[str]
+    indices: Mapped[list[str]] = mapped_column(server_default="{}")
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = created_at_column()

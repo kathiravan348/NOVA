@@ -48,10 +48,10 @@ def queue_download(
     symbols = [s.strip().upper() for s in symbols if s.strip()]
     if not symbols or len(symbols) > MAX_DOWNLOAD_SYMBOLS:
         raise ValueError(f"Give 1-{MAX_DOWNLOAD_SYMBOLS} symbols")
-    known = {row.symbol for row in load_universe()}
+    known = {row.symbol for row in load_universe(db)}
     unknown = [s for s in symbols if s not in known]
     if unknown:
-        raise ValueError(f"Not in universe.csv: {', '.join(unknown)}")
+        raise ValueError(f"Not in the stock list: {', '.join(unknown)}")
     if timeframe not in KITE_INTERVAL:
         raise ValueError(f"Timeframe must be one of {', '.join(KITE_INTERVAL)}")
     if first > last:

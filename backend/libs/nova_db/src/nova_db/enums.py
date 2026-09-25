@@ -29,9 +29,21 @@ AUDIT_ACTIONS = (
     "backtest.run",
     "data_job.create",
     "data_job.cancel",
+    "instrument.add",
+    "instrument.update",
+    "instrument.remove",
+    "instrument.sync",
     "settings.update",
 )
-AUDIT_TARGET_TYPES = ("user", "broker_account", "strategy", "backtest", "data_job", "settings")
+AUDIT_TARGET_TYPES = (
+    "user",
+    "broker_account",
+    "strategy",
+    "backtest",
+    "data_job",
+    "settings",
+    "instrument",
+)
 
 ROLE_SUPER_ADMIN = "super_admin"
 

@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 25 Sep 2026 (NOVA-072). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 25 Sep 2026 (NOVA-074). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -108,6 +108,11 @@ No delete in Phase 1 (runs refer to versions).
 |---|---|---|---|
 | `GET /market-data/instruments` | Every instrument that has daily candles, with stats computed from them: last close, day change %, 52-week high/low, 20-day average volume, lot size, sector, indices, available timeframes, data from/to (IST dates). | `exchange` (default `NSE`) | `Instrument[]` |
 | `GET /market-data/candles` | OHLCV bars for one symbol and timeframe (`1m 3m 5m 15m 30m 1h 1d`). Default range: last 365 days (daily) or 5 days (intraday). Max 3,660 days daily / 60 days intraday. Daily bars carry an IST date, intraday a UTC time. | `symbol`, `timeframe`, `from?`, `to?`, `exchange?` | `Candle[]`; 404 unknown symbol; `[]` if no bars |
+| `GET /market-data/universe` | The stock list (what can be downloaded and synced), by symbol. `synced` = Kite knows the stock (its instrument has a token). | — | `UniverseEntry[]` |
+| `POST /market-data/universe` | Adds a stock. Name and sector are stored trimmed. Audit: `instrument.add` ("Added M&M (Mahindra & Mahindra)"). | `UniverseEntryWrite {symbol (NSE style: A–Z, 0–9, &, -), name, sector (≤ 80), indices}` | 201 `UniverseEntry`; 400 bad body or already listed |
+| `PUT /market-data/universe/{symbol}` | Changes name, sector and indices. The symbol itself cannot change. Audit: `instrument.update`. | path + `UniverseEntryWrite` (same symbol) | `UniverseEntry`; 400; 404 |
+| `DELETE /market-data/universe/{symbol}` | Removes a stock from the list. Its downloaded candles and its `instruments` row stay. Audit: `instrument.remove`. | path | 204; 400 while a queued or running job uses it; 404 |
+| `POST /market-data/instruments/sync` | Asks Kite (through the broker) for instrument tokens and F&O lot sizes of every listed stock, like `sync-instruments`. Needs a Kite login. Audit: `instrument.sync` ("Synced 23; not on Kite NSE: XYZ"). | — | `InstrumentSyncResult {synced, missing}`; 400 broker error (e.g. not logged in) |
 | `GET /data-jobs` | Background jobs, newest first, paged: type (`historical_download`, `tick_record`, `archive`), status, symbols, timeframe, period, progress %, rows written, error. | `limit`, `cursor` | `Page<DataJob>` |
 | `GET /data-jobs/{id}` | One job. | path | `DataJob`; 404 |
 | `POST /data-jobs` | Queues a historical candle download for the Atlas worker, like the `download` command. Symbols are upper-cased and must be in the stock list. Audit: `data_job.create` ("Queued 1d download of 2 symbol(s), 2025-01-01 to 2025-12-31"). | `DataJobCreate {symbols (1–200), timeframe, from, to, segment? (default `equity_delivery`)}` | 201 `DataJob` (`queued`); 400 bad body or unknown symbol |
@@ -123,7 +128,7 @@ No delete in Phase 1 (runs refer to versions).
 | `python -m nova_broker add-account` | Adds a Zerodha account (+ its default rate-limit rules). |
 | `python -m nova_broker new-token-key` | Makes the key used to encrypt Kite tokens. |
 | `python -m nova_broker record-ticks` | Records live ticks until 15:30 IST (Compose profile `market`). |
-| `python -m nova_atlas sync-instruments` | Loads instruments from `universe.csv` + Kite. |
+| `python -m nova_atlas sync-instruments` | Loads instruments from the stock list (`universe` table) + Kite, like `POST /market-data/instruments/sync`. |
 | `python -m nova_atlas download` | Queues a historical candle download job. |
 | `python -m nova_atlas archive-ticks` | Moves old ticks to Parquet files and deletes them from the database. |
 | `python -m nova_db upgrade \| check` | Runs migrations / checks models match the database. |

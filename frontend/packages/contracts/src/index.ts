@@ -13,3 +13,4 @@ export * from "./audit";
 export * from "./error";
 export * from "./marketData";
 export * from "./strategyStats";
+export * from "./universe";

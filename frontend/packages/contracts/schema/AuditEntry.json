@@ -40,6 +40,10 @@
         "backtest.run",
         "data_job.create",
         "data_job.cancel",
+        "instrument.add",
+        "instrument.update",
+        "instrument.remove",
+        "instrument.sync",
         "settings.update"
       ]
     },
@@ -53,7 +57,8 @@
             "strategy",
             "backtest",
             "data_job",
-            "settings"
+            "settings",
+            "instrument"
           ]
         },
         {

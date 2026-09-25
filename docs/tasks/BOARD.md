@@ -79,7 +79,7 @@
 | NOVA-071 | Editor: cost averaging fields + detail text + user guide (D53) | done | Claude | 069 |
 | NOVA-072 | Atlas: queue and cancel data jobs over HTTP (D54) | done | Claude | 061 |
 | NOVA-073 | Relay: new download page + real Cancel job (D54) | planned | — | 072, 074 |
-| NOVA-074 | Atlas: universe in the database + sync over HTTP (D54, migration 0006) | planned | — | 072 |
+| NOVA-074 | Atlas: universe in the database + sync over HTTP (D54, migration 0006) | done | Claude | 072 |
 | NOVA-075 | Relay: Instruments page (stock list + Sync with Kite) (D54) | planned | — | 073, 074 |
 | NOVA-076 | Broker: always-on tick recorder with an on/off setting (D54, migration 0007) | planned | — | 074 |
 | NOVA-077 | Atlas: tick archive as a data job (D54) | planned | — | 076 |

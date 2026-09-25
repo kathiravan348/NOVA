@@ -22,6 +22,7 @@ EXPECTED_TABLES = {
     "auth_sessions",
     "charge_rates",
     "ticks",
+    "universe",
 }
 
 
@@ -60,3 +61,10 @@ def test_downgrade_removes_everything_and_upgrade_restores_it(
 
     upgrade(database_url)
     assert set(inspect(engine).get_table_names()) >= EXPECTED_TABLES
+
+
+def test_the_stock_list_is_seeded(engine: Engine) -> None:
+    with engine.connect() as connection:
+        symbols = list(connection.execute(text("SELECT symbol FROM universe")).scalars())
+
+    assert len(symbols) == 24 and {"INFY", "TCS", "DABUR"} <= set(symbols)

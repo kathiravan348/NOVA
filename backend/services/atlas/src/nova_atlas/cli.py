@@ -26,7 +26,7 @@ def _broker(settings: AtlasSettings) -> BrokerData:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m nova_atlas")
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("sync-instruments", help="update instruments from universe.csv + Kite")
+    commands.add_parser("sync-instruments", help="update instruments from the stock list + Kite")
     download = commands.add_parser("download", help="queue a historical download")
     download.add_argument("--symbols", required=True, help="comma-separated, e.g. INFY,TCS")
     download.add_argument("--timeframe", required=True, choices=list(KITE_INTERVAL))

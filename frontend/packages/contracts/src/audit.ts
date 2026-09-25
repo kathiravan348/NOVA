@@ -13,6 +13,10 @@ export const AuditActionSchema = z.enum([
   "backtest.run",
   "data_job.create",
   "data_job.cancel",
+  "instrument.add",
+  "instrument.update",
+  "instrument.remove",
+  "instrument.sync",
   "settings.update",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
@@ -24,6 +28,7 @@ export const AuditTargetTypeSchema = z.enum([
   "backtest",
   "data_job",
   "settings",
+  "instrument",
 ]);
 export type AuditTargetType = z.infer<typeof AuditTargetTypeSchema>;
 

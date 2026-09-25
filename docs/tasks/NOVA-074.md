@@ -1,6 +1,6 @@
 # NOVA-074 — Atlas: universe in the database + sync over HTTP
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-074 · **Depends on:** NOVA-072
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-074 · **Depends on:** NOVA-072
 
 ## Goal
 The stock list lives in a `universe` table (seeded from `universe.csv`, then the file is deleted) and is
@@ -27,7 +27,7 @@ Modify:
 ## Build
 1. Migration 0006: table `universe` — PK (`exchange` default `NSE`, `symbol`), `name`, `sector`, `indices`
    text[] (CHECK each ∈ INDEX_NAMES), `created_at`, `updated_at`. Insert the 24 current rows as frozen literals.
-   Audit actions `universe.add`, `universe.update`, `universe.remove`, `instrument.sync`; target type `instrument`.
+   Audit actions `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`; target type `instrument`.
 2. Contracts: `UniverseEntry {symbol, name, sector, indices, synced}` (`synced` = instrument has a Kite token);
    `UniverseEntryWrite {symbol, name, sector, indices}`: symbol `^[A-Z0-9&-]{1,20}$`, name/sector 1–80 chars,
    indices ⊆ index names; `InstrumentSyncResult {synced: string[], missing: string[]}`. Zod + Pydantic + parity.
@@ -52,5 +52,16 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Migration 0006: `universe` table seeded with the 24 stocks; audit actions `instrument.add|update|remove|sync`
+  (one `instrument` prefix so Relay's audit filter groups them) and target type `instrument` (id = symbol).
+- `universe.py` reads the table (`load_universe(db)`, sorted by symbol); `universe.csv` deleted.
+- `universe_api.py`: list/add/update/remove + `POST /market-data/instruments/sync`; `create_app` takes a
+  `broker_factory` (tests pass the fake broker).
+- Also touched (not listed): `frontend/apps/nova-relay/src/lib/labels.ts` (labels + **Instruments** audit group,
+  required by the `Record<AuditAction>` type), atlas `conftest.py` (restores the seeded list), `test_download.py`.
+- Checks: `pnpm review:check` green (655); backend lint/types clean, pytest per package green (465).
+- Guides: API, DATABASE (0006), CONTRACTS, STRUCTURE, backend README.
 
 ## Review
+Self-reviewed. Real mode needs `docker compose build` + `up -d` so `migrate` reaches 0006.

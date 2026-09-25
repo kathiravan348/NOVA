@@ -17,6 +17,11 @@ import {
 } from "./strategy";
 import { StrategyStatsSchema } from "./strategyStats";
 import { TradeSchema } from "./trade";
+import {
+  InstrumentSyncResultSchema,
+  UniverseEntrySchema,
+  UniverseEntryWriteSchema,
+} from "./universe";
 import { UserSchema } from "./user";
 
 // Wire contracts (request/response bodies) exported as JSON Schema for backend parity tests (D34).
@@ -34,6 +39,7 @@ const contracts: Record<string, z.ZodType> = {
   DataJob: DataJobSchema,
   DataJobCreate: DataJobCreateSchema,
   Instrument: InstrumentSchema,
+  InstrumentSyncResult: InstrumentSyncResultSchema,
   LoginRequest: LoginRequestSchema,
   RateLimit: RateLimitSchema,
   RateLimitUpdate: RateLimitUpdateSchema,
@@ -43,6 +49,8 @@ const contracts: Record<string, z.ZodType> = {
   StrategyVersionCreate: StrategyVersionCreateSchema,
   StrategyStats: StrategyStatsSchema,
   Trade: TradeSchema,
+  UniverseEntry: UniverseEntrySchema,
+  UniverseEntryWrite: UniverseEntryWriteSchema,
   User: UserSchema,
 };
 

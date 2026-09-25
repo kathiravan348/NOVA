@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "synced": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z0-9&-]{1,20}$"
+      }
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z0-9&-]{1,20}$"
+      }
+    }
+  },
+  "required": [
+    "synced",
+    "missing"
+  ],
+  "additionalProperties": false
+}

@@ -121,7 +121,7 @@ def test_a_cancelled_job_stops(synced: Engine, broker: BrokerData) -> None:
 @pytest.mark.parametrize(
     ("symbols", "timeframe", "first", "last", "message"),
     [
-        (["NOPE"], "1d", date(2026, 1, 1), date(2026, 1, 2), "Not in universe"),
+        (["NOPE"], "1d", date(2026, 1, 1), date(2026, 1, 2), "Not in the stock list"),
         (["INFY"], "2h", date(2026, 1, 1), date(2026, 1, 2), "Timeframe"),
         (["INFY"], "1d", date(2026, 2, 1), date(2026, 1, 2), "on or before"),
         ([], "1d", date(2026, 1, 1), date(2026, 1, 2), "symbols"),

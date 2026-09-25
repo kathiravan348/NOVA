@@ -9,23 +9,13 @@ from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
 
-def test_the_shipped_universe_is_valid() -> None:
-    rows = load_universe()
+def test_the_seeded_stock_list_is_loaded_by_symbol(clean: Engine) -> None:
+    with Session(clean) as db:
+        rows = load_universe(db)
 
-    assert len(rows) == 24
-    assert {"INFY", "TCS", "RELIANCE"} <= {row.symbol for row in rows}
-
-
-@pytest.mark.parametrize(
-    ("text", "message"),
-    [
-        ("symbol,name,sector,indices\nAAA,A,Energy,SENSEX\n", "unknown index"),
-        ("symbol,name,sector,indices\nAAA,A,Energy,\nAAA,A,Energy,\n", "twice"),
-    ],
-)
-def test_bad_universe_files_are_rejected(text: str, message: str) -> None:
-    with pytest.raises(ValueError, match=message):
-        load_universe(text)
+    symbols = [row.symbol for row in rows]
+    assert len(rows) == 24 and symbols == sorted(symbols)
+    assert {"INFY", "TCS", "RELIANCE"} <= set(symbols)
 
 
 def test_sync_sets_tokens_and_the_nearest_future_lot_size(
@@ -35,7 +25,7 @@ def test_sync_sets_tokens_and_the_nearest_future_lot_size(
         result = sync_instruments(db, broker, today=date(2026, 9, 25))
         rows = {i.symbol: i for i in db.scalars(select(Instrument))}
 
-    assert result.synced == ["RELIANCE", "TCS", "INFY"]
+    assert result.synced == ["INFY", "RELIANCE", "TCS"]
     assert len(result.missing) == 21
     assert rows["INFY"].instrument_token == 408065
     assert rows["INFY"].lot_size == 300  # September future, not October's 400

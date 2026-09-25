@@ -54,6 +54,10 @@ export const auditActionLabel: Record<AuditAction, string> = {
   "backtest.run": "Backtest run",
   "data_job.create": "Data job created",
   "data_job.cancel": "Data job cancelled",
+  "instrument.add": "Stock added",
+  "instrument.update": "Stock updated",
+  "instrument.remove": "Stock removed",
+  "instrument.sync": "Stocks synced with Kite",
   "settings.update": "Settings changed",
 };
 
@@ -63,6 +67,7 @@ export const AUDIT_GROUPS = [
   "strategy",
   "backtest",
   "data_job",
+  "instrument",
   "settings",
 ] as const;
 export type AuditGroup = (typeof AUDIT_GROUPS)[number];
@@ -73,6 +78,7 @@ export const auditGroupLabel: Record<AuditGroup, string> = {
   strategy: "Strategies",
   backtest: "Backtests",
   data_job: "Data jobs",
+  instrument: "Instruments",
   settings: "Settings",
 };
 

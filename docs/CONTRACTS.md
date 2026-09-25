@@ -7,7 +7,7 @@
 > `GET /api/v1/broker/kite/callback` → 302 back to Relay `/accounts/{id}?kite=connected|failed`.
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, RateLimit, RateLimitUpdate, DataJob(+Create), Instrument, Candle, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, RateLimit, RateLimitUpdate, DataJob(+Create), Instrument, Candle, UniverseEntry(+Write), InstrumentSyncResult, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
@@ -31,5 +31,8 @@
 | DataJobCreate | `POST /api/v1/data-jobs` → 201 `DataJob` `queued` (400 `invalid_request` bad body, unknown symbol) | — (mock: validated, not stored) | Relay |
 | AuditEntry | `GET /api/v1/audit?limit=&cursor=` → `Page<AuditEntry>` | `data/auditEntries.json` | Relay |
 | Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range) |
+| UniverseEntry | `GET /api/v1/market-data/universe` → `UniverseEntry[]`; `POST` → 201, `PUT /{symbol}` → 200, `DELETE /{symbol}` → 204 (400 duplicate, symbol change or used by a waiting job; 404) | — | Relay |
+| UniverseEntryWrite | body of `POST /api/v1/market-data/universe` and `PUT /api/v1/market-data/universe/{symbol}` | — | Relay |
+| InstrumentSyncResult | `POST /api/v1/market-data/instruments/sync` → `{synced, missing}` (400 broker error) | — | Relay |
 | Candle | `GET /api/v1/market-data/candles?symbol=&timeframe=` | `data/candles.json` (keyed `SYMBOL:tf`) | Orbit, ui-trading |
 | ApiError | any endpoint (400/401/404/5xx; codes `invalid_request`, `unauthorized`, `not_found`, `internal`) | — | Core, Orbit, Relay |

@@ -1,24 +1,17 @@
-"""Instrument universe (D41): `data/universe.csv` (Owner-edited) + Kite tokens and lot sizes."""
+"""Stock list (D41, D54): the `universe` table (edited in Relay) + Kite tokens and lot sizes."""
 
 import csv
 import io
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
-from importlib import resources
 
-from nova_db.enums import INDEX_NAMES
-from nova_db.models import Instrument
+from nova_db.models import Instrument, UniverseEntry
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from nova_atlas.broker_client import BrokerData
 
-
-@dataclass(frozen=True)
-class UniverseRow:
-    symbol: str
-    name: str
-    sector: str
-    indices: list[str]
+EXCHANGE = "NSE"
 
 
 @dataclass(frozen=True)
@@ -27,21 +20,10 @@ class SyncResult:
     missing: list[str]
 
 
-def load_universe(text: str | None = None) -> list[UniverseRow]:
-    """Reads the universe file (or `text`); rejects unknown index names and duplicate symbols."""
-    if text is None:
-        text = resources.files("nova_atlas").joinpath("data/universe.csv").read_text("utf-8")
-    rows: list[UniverseRow] = []
-    for record in csv.DictReader(io.StringIO(text)):
-        indices = [name for name in record["indices"].split("|") if name]
-        unknown = [name for name in indices if name not in INDEX_NAMES]
-        if unknown:
-            raise ValueError(f"{record['symbol']}: unknown index {unknown[0]}")
-        rows.append(UniverseRow(record["symbol"], record["name"], record["sector"], indices))
-    symbols = [row.symbol for row in rows]
-    if len(set(symbols)) != len(symbols):
-        raise ValueError("universe.csv lists a symbol twice")
-    return rows
+def load_universe(db: Session) -> list[UniverseEntry]:
+    """Every stock of the list, by symbol."""
+    query = select(UniverseEntry).where(UniverseEntry.exchange == EXCHANGE)
+    return list(db.scalars(query.order_by(UniverseEntry.symbol)))
 
 
 def _equity_tokens(nse_csv: str) -> dict[str, int]:
@@ -68,9 +50,9 @@ def _lot_sizes(nfo_csv: str, today: date) -> dict[str, int]:
 
 
 def sync_instruments(db: Session, broker: BrokerData, today: date | None = None) -> SyncResult:
-    """Upserts every universe symbol that Kite lists on NSE; reports the ones it does not."""
-    universe = load_universe()
-    tokens = _equity_tokens(broker.instruments("NSE"))
+    """Upserts every listed stock that Kite has on NSE; reports the ones it does not."""
+    universe = load_universe(db)
+    tokens = _equity_tokens(broker.instruments(EXCHANGE))
     lots = _lot_sizes(broker.instruments("NFO"), today or datetime.now(UTC).date())
     synced, missing = [], []
     for row in universe:
@@ -78,13 +60,13 @@ def sync_instruments(db: Session, broker: BrokerData, today: date | None = None)
         if token is None:
             missing.append(row.symbol)
             continue
-        instrument = db.get(Instrument, ("NSE", row.symbol)) or Instrument(
-            exchange="NSE", symbol=row.symbol
+        instrument = db.get(Instrument, (EXCHANGE, row.symbol)) or Instrument(
+            exchange=EXCHANGE, symbol=row.symbol
         )
         instrument.name = row.name
         instrument.segment = "equity_delivery"
         instrument.sector = row.sector
-        instrument.indices = row.indices
+        instrument.indices = list(row.indices)
         instrument.lot_size = lots.get(row.symbol)
         instrument.instrument_token = token
         instrument.updated_at = datetime.now(UTC)
