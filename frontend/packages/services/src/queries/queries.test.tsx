@@ -29,6 +29,7 @@ import {
   useStrategy,
   useStrategyStats,
 } from "./orbit";
+import { useUniverse } from "./marketData";
 import { createQueryClient, shouldRetry } from "./queryClient";
 import {
   useAuditEntries,
@@ -36,6 +37,8 @@ import {
   useBrokerAccounts,
   useBrokerProfile,
   useBrokerProfiles,
+  useCancelDataJob,
+  useCreateDataJob,
   useUpdateRateLimit,
   useDataJobs,
   useRateLimits,
@@ -175,6 +178,35 @@ describe("query hooks", () => {
     });
     await waitFor(() => expect(requests).toContain("/api/v1/broker/rate-limits"));
     expect(requests[0]).toBe("/api/v1/broker/rate-limits/brk_001/orders");
+  });
+
+  it("useCreateDataJob posts a download and refetches the jobs list", async () => {
+    const { result } = renderHook(() => ({ jobs: useDataJobs(), create: useCreateDataJob() }), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true));
+    requests = [];
+    const job = await result.current.create.mutateAsync({
+      symbols: ["INFY"],
+      timeframe: "1d",
+      from: "2025-01-01",
+      to: "2025-12-31",
+    });
+    expect(job.status).toBe("queued");
+    await waitFor(() => expect(requests).toContain("/api/v1/data-jobs"));
+  });
+
+  it("useCancelDataJob posts the cancel and stores the cancelled job", async () => {
+    const { result } = renderHook(() => useCancelDataJob(), { wrapper });
+    const job = await result.current.mutateAsync("job_002");
+    expect(job.status).toBe("cancelled");
+    expect(requests).toContain("/api/v1/data-jobs/job_002/cancel");
+  });
+
+  it("useUniverse lists the stock list", async () => {
+    const { result } = renderHook(() => useUniverse(), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.length).toBeGreaterThan(0);
   });
 });
 

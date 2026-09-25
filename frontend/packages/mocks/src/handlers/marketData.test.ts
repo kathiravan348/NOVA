@@ -1,6 +1,11 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { setupServer } from "msw/node";
-import { ApiErrorSchema, CandleSchema, InstrumentSchema } from "@nova/contracts";
+import {
+  ApiErrorSchema,
+  CandleSchema,
+  InstrumentSchema,
+  UniverseEntrySchema,
+} from "@nova/contracts";
 import { mockCandles, mockInstruments } from "../data";
 import { marketDataHandlers } from "./marketData";
 import { emptyHandlers, errorHandlers } from "./scenarios";
@@ -47,5 +52,14 @@ describe("Market data MSW handlers", () => {
     expect(await (await get("/market-data/instruments")).json()).toEqual([]);
     server.use(...errorHandlers);
     expect((await get("/market-data/candles?symbol=TCS&timeframe=1d")).status).toBe(500);
+  });
+
+  it("GET /market-data/universe lists every mock stock as synced, by symbol", async () => {
+    const res = await get("/market-data/universe");
+    expect(res.status).toBe(200);
+    const rows = UniverseEntrySchema.array().parse(await res.json());
+    expect(rows).toHaveLength(mockInstruments.length);
+    expect(rows.every((r) => r.synced)).toBe(true);
+    expect(rows.map((r) => r.symbol)).toEqual(rows.map((r) => r.symbol).sort());
   });
 });

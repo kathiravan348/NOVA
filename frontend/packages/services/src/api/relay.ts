@@ -4,6 +4,7 @@ import {
   type BrokerAccountCreate,
   BrokerProfileSchema,
   DataJobSchema,
+  type DataJobCreate,
   RateLimitSchema,
   pageSchema,
   type AuditEntry,
@@ -66,6 +67,16 @@ export function getBrokerProfile(broker: string, init?: RequestOptions): Promise
 /** One page of data jobs (D32). */
 export function listDataJobs(query: PageQuery = {}, init?: RequestOptions): Promise<Page<DataJob>> {
   return apiGet(withQuery("/data-jobs", { ...query }), pageSchema(DataJobSchema), init);
+}
+
+/** Queues a historical download for the Atlas worker (D54). */
+export function createDataJob(body: DataJobCreate, init?: RequestOptions): Promise<DataJob> {
+  return apiPost("/data-jobs", body, DataJobSchema, init);
+}
+
+/** Cancels a queued or running job; a running download stops before its next chunk. */
+export function cancelDataJob(jobId: string, init?: RequestOptions): Promise<DataJob> {
+  return apiPost(`/data-jobs/${id(jobId)}/cancel`, undefined, DataJobSchema, init);
 }
 
 export function getDataJob(jobId: string, init?: RequestOptions): Promise<DataJob> {

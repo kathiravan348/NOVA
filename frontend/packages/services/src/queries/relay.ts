@@ -1,7 +1,14 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { BrokerAccountCreate, RateLimitEndpoint, RateLimitUpdate } from "@nova/contracts";
+import type {
+  BrokerAccountCreate,
+  DataJobCreate,
+  RateLimitEndpoint,
+  RateLimitUpdate,
+} from "@nova/contracts";
 import {
+  cancelDataJob,
   createBrokerAccount,
+  createDataJob,
   getBrokerAccount,
   getBrokerProfile,
   listBrokerProfiles,
@@ -94,6 +101,27 @@ export function useDataJob(id: string) {
     queryKey: queryKeys.dataJobs.detail(id),
     queryFn: ({ signal }) => getDataJob(id, { signal }),
     enabled: Boolean(id),
+  });
+}
+
+/** Queues a historical download; refreshes the data-jobs list (D54). */
+export function useCreateDataJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DataJobCreate) => createDataJob(body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.list }),
+  });
+}
+
+/** Cancels a queued or running job; refreshes the list and that job. */
+export function useCancelDataJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId: string) => cancelDataJob(jobId),
+    onSuccess: (job) => {
+      queryClient.setQueryData(queryKeys.dataJobs.detail(job.id), job);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.all });
+    },
   });
 }
 

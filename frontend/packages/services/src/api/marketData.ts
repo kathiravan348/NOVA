@@ -1,9 +1,11 @@
 import {
   CandleSchema,
   InstrumentSchema,
+  UniverseEntrySchema,
   type Candle,
   type Instrument,
   type Timeframe,
+  type UniverseEntry,
 } from "@nova/contracts";
 import { apiGet, type RequestOptions } from "../http";
 
@@ -18,4 +20,9 @@ export function listCandles(
 ): Promise<Candle[]> {
   const query = new URLSearchParams({ symbol, timeframe });
   return apiGet(`/market-data/candles?${query.toString()}`, CandleSchema.array(), init);
+}
+
+/** The stock list: what can be synced with Kite and downloaded (D54). */
+export function listUniverse(init?: RequestOptions): Promise<UniverseEntry[]> {
+  return apiGet("/market-data/universe", UniverseEntrySchema.array(), init);
 }

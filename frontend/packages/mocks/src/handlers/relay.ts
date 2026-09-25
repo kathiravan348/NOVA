@@ -1,14 +1,17 @@
 import { http, HttpResponse } from "msw";
 import {
   BrokerAccountCreateSchema,
+  DataJobCreateSchema,
   RateLimitUpdateSchema,
   type BrokerAccount,
+  type DataJob,
 } from "@nova/contracts";
 import {
   mockAuditEntries,
   mockBrokerAccounts,
   mockBrokerProfiles,
   mockDataJobs,
+  mockInstruments,
   mockRateLimits,
 } from "../data";
 import { apiPath, badRequest, notFound, paginate } from "./api";
@@ -99,6 +102,51 @@ export const relayHandlers = [
       return notFound(`Data job ${id} not found`);
     }
     return HttpResponse.json(job);
+  }),
+
+  // Demo: validates like the server and answers 201 without storing the job (D54).
+  http.post(apiPath("/data-jobs"), async ({ request }) => {
+    const parsed = DataJobCreateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) {
+      return badRequest(parsed.error.issues[0]?.message ?? "Invalid download");
+    }
+    const symbols = parsed.data.symbols.map((s) => s.trim().toUpperCase());
+    const unknown = symbols.filter((s) => !mockInstruments.some((i) => i.symbol === s));
+    if (unknown.length > 0) {
+      return badRequest(`Not in the stock list: ${unknown.join(", ")}`);
+    }
+    const job: DataJob = {
+      id: "job_new",
+      type: "historical_download",
+      status: "queued",
+      exchange: "NSE",
+      segment: parsed.data.segment,
+      symbols,
+      timeframe: parsed.data.timeframe,
+      from: parsed.data.from,
+      to: parsed.data.to,
+      progressPercent: 0,
+      rowsWritten: 0,
+      createdAt: "2026-09-22T04:30:00Z",
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+    };
+    return HttpResponse.json(job, { status: 201 });
+  }),
+
+  // Demo: answers the job as cancelled without changing the mock data.
+  http.post(apiPath("/data-jobs/:id/cancel"), ({ params }) => {
+    const id = params["id"] as string;
+    const job = mockDataJobs.find((j) => j.id === id);
+    if (!job) {
+      return notFound(`Data job ${id} not found`);
+    }
+    if (job.status !== "queued" && job.status !== "running") {
+      return badRequest(`Job is already ${job.status}`);
+    }
+    const finishedAt = job.status === "queued" ? "2026-09-22T04:30:00Z" : null;
+    return HttpResponse.json({ ...job, status: "cancelled", finishedAt } satisfies DataJob);
   }),
 
   http.get(apiPath("/audit"), ({ request }) => {

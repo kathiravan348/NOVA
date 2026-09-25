@@ -4,6 +4,7 @@ import type {
   DataJobType,
   RateLimitEndpoint,
   Segment,
+  Timeframe,
 } from "@nova/contracts";
 
 export const segmentLabel: Record<Segment, string> = {
@@ -11,6 +12,16 @@ export const segmentLabel: Record<Segment, string> = {
   equity_intraday: "Equity intraday",
   futures: "Futures",
   options: "Options",
+};
+
+export const timeframeLabel: Record<Timeframe, string> = {
+  "1m": "1 minute",
+  "3m": "3 minutes",
+  "5m": "5 minutes",
+  "15m": "15 minutes",
+  "30m": "30 minutes",
+  "1h": "1 hour",
+  "1d": "1 day",
 };
 
 export const endpointLabel: Record<RateLimitEndpoint, string> = {

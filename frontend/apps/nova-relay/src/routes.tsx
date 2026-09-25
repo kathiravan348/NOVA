@@ -9,6 +9,7 @@ import { AuditPage } from "./pages/audit/AuditPage";
 import { BrokerPage } from "./pages/broker/BrokerPage";
 import { DataJobDetailPage } from "./pages/data-jobs/DataJobDetailPage";
 import { DataJobsPage } from "./pages/data-jobs/DataJobsPage";
+import { NewDownloadPage } from "./pages/data-jobs/NewDownloadPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { RateLimitsPage } from "./pages/rate-limits/RateLimitsPage";
 
@@ -36,6 +37,7 @@ export const routes: RouteObject[] = [
           page("/broker", "Broker", <BrokerPage />),
           page("/rate-limits", "Rate limits", <RateLimitsPage />),
           page("/data-jobs", "Data jobs", <DataJobsPage />),
+          page("/data-jobs/new", "New download", <NewDownloadPage />),
           page("/data-jobs/:id", "Data job", <DataJobDetailPage />),
           page("/audit", "Audit log", <AuditPage />),
           { path: "*", element: <Navigate to="/" replace /> },

@@ -34,6 +34,7 @@ export const queryKeys = {
   },
   marketData: {
     instruments: ["market-data", "instruments"] as const,
+    universe: ["market-data", "universe"] as const,
     candles: (symbol: string, timeframe: string) =>
       ["market-data", "candles", symbol, timeframe] as const,
   },

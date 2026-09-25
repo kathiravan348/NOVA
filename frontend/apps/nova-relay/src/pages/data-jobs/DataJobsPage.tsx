@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Database } from "lucide-react";
 import type { DataJob } from "@nova/contracts";
-import { DataTable, EmptyState, StatusBadge, LoadMore } from "@nova/ui-core";
+import { Button, DataTable, EmptyState, StatusBadge, LoadMore } from "@nova/ui-core";
 import { formatPercent, formatQuantity } from "@nova/ui-trading";
 import { useDataJobs } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
@@ -75,11 +75,13 @@ const columns: ColumnDef<DataJob, unknown>[] = [
 
 export function DataJobsPage() {
   const query = useDataJobs();
+  const newDownload = (
+    <Button asChild size="sm">
+      <Link to="/data-jobs/new">New download</Link>
+    </Button>
+  );
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-body-sm text-text-muted">
-        Downloads and recordings run in NOVA Atlas (Stage B). This list is demo data.
-      </p>
       <DataTable
         caption="Data jobs"
         columns={columns}
@@ -87,6 +89,7 @@ export function DataJobsPage() {
         getRowId={(j) => j.id}
         initialSort={[{ id: "createdAt", desc: true }]}
         loading={query.isPending}
+        toolbar={query.data && query.data.length > 0 ? newDownload : undefined}
         error={
           query.isError ? (
             <QueryError error={query.error} onRetry={() => void query.refetch()} />
@@ -96,7 +99,8 @@ export function DataJobsPage() {
           <EmptyState
             icon={<Database className="h-6 w-6" />}
             title="No data jobs"
-            description="Download and recording jobs will appear here."
+            description="Download past prices from Zerodha to run backtests on them."
+            action={newDownload}
           />
         }
       />

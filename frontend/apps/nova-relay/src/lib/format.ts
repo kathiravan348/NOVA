@@ -28,3 +28,13 @@ export function formatPeriod(from: string, to: string): string {
   const start = formatInTimeZone(`${from}T00:00:00Z`, "UTC", sameYear ? "d MMM" : "d MMM yyyy");
   return `${start} – ${formatCalendarDate(to)}`;
 }
+
+/** Today's calendar date in India, `2026-09-25`. */
+export function todayIst(now: Date = new Date()): string {
+  return formatInTimeZone(now, IST, "yyyy-MM-dd");
+}
+
+/** The Indian calendar date `days` days before `now`. */
+export function istDaysAgo(days: number, now: Date = new Date()): string {
+  return todayIst(new Date(now.getTime() - days * 24 * 60 * 60 * 1000));
+}

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-071). NOVA **never places real orders**: it only
+> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-073). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -223,11 +223,19 @@ written in the audit log.
 Background work that fills our price database: **historical downloads** (past candles from Zerodha),
 **tick recording** (live prices during market hours) and **archiving** (moving old live prices to files).
 Each job shows status, symbols, period, progress % and rows written. Open one for details or the error if it
-failed. (Jobs are started by the admin from the command line for now.)
+failed.
+
+**To download past prices:** press **New download**, choose the **Timeframe** (the size of each price bar,
+from **1 minute** to **1 day**), the **From** and **To** dates and the stocks (tick the boxes; use the search
+box to find one), then **Queue download**. The job starts within seconds and shows its progress. Only stocks
+*synced* with Kite can be ticked. 1-minute data is large: start with a few stocks.
+
+**To stop a job** that is waiting or running, open it and press **Cancel job**, then confirm. Prices already
+saved stay. Tick recording and archiving are still started by the admin from the command line.
 
 ### Step 8 — Audit log
 A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, broker
-accounts added, limit changes, strategies created or saved, backtests queued. Each line shows time, who, what, on what, and a
+accounts added, limit changes, strategies created or saved, backtests queued, downloads queued or cancelled. Each line shows time, who, what, on what, and a
 summary. Use **Show** to filter by kind of activity and **Load older entries** to go back in time.
 
 ---
@@ -236,7 +244,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 
 - **No real buying or selling.** Placing orders is a later phase (NOVA Launch).
 - Broker accounts cannot be renamed, disabled or removed from the screen yet. There are no buttons yet to
-  start data downloads or cancel jobs either: the admin does these from the command line. The *Cancel* button on a data job is a demo.
+  change the list of stocks, sync it with Kite, record live prices or archive them either: the admin does
+  these from the command line.
 - Strategies cannot be deleted (old test results depend on them); set them to *Archived* instead.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
@@ -249,7 +258,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | Problem | What to do |
 |---|---|
 | Yellow bar at the top | You are in demo mode: nothing you do is saved. |
-| Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then ask the admin to download data. |
+| Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
+| A download *Failed* with *Unknown instruments* | The stock is not synced with Kite yet. Ask the admin to sync the stock list, then queue it again. |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |

@@ -1,6 +1,18 @@
 import { http, HttpResponse } from "msw";
+import type { UniverseEntry } from "@nova/contracts";
 import { mockCandles, mockInstruments } from "../data";
 import { apiPath, notFound } from "./api";
+
+/** The mock stock list: every mock instrument, all synced with Kite. */
+export const mockUniverse: UniverseEntry[] = mockInstruments
+  .map((i) => ({
+    symbol: i.symbol,
+    name: i.name,
+    sector: i.sector,
+    indices: i.indices,
+    synced: true,
+  }))
+  .sort((a, b) => a.symbol.localeCompare(b.symbol));
 
 export const marketDataHandlers = [
   http.get(apiPath("/market-data/instruments"), () => {
@@ -18,5 +30,9 @@ export const marketDataHandlers = [
       return notFound(`Instrument ${symbol} not found`);
     }
     return HttpResponse.json(mockCandles[`${symbol}:${timeframe}`] ?? []);
+  }),
+
+  http.get(apiPath("/market-data/universe"), () => {
+    return HttpResponse.json(mockUniverse);
   }),
 ];

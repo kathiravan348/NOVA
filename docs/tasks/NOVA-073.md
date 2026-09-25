@@ -1,6 +1,6 @@
 # NOVA-073 — Relay: new download page + real Cancel job
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-073 · **Depends on:** NOVA-072, NOVA-074
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-073 · **Depends on:** NOVA-072, NOVA-074
 
 ## Goal
 The super-admin queues a historical download from Relay (**New download** → pick stocks, timeframe, period)
@@ -50,5 +50,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Services: `createDataJob`, `cancelDataJob`, `listUniverse` + `useCreateDataJob`, `useCancelDataJob`, `useUniverse`.
+- MSW: POST `/data-jobs`, POST `/data-jobs/:id/cancel`, GET `/market-data/universe` (+ empty/error scenarios).
+- Relay: `/data-jobs/new` (**New download**), **Cancel job** asks first (`CancelJobButton.tsx`, one component
+  per file). Only stocks synced with Kite can be ticked (a download of an unsynced stock fails in the worker).
+- Also touched (not listed): `lib/format.ts` (`todayIst`, `istDaysAgo`), `lib/labels.ts` (`timeframeLabel`),
+  mocks handler tests (`relay.test.ts`, `marketData.test.ts`), `scenarios.ts`.
+- Checks: `pnpm review:check` green (668 tests).
+- Guides: USER-GUIDE (Step 7, Step 8, not-there-yet, what-do-I-do-if).
 
 ## Review
+Self-reviewed. Browser check deferred to the end of the D54 batch (port 3001 runs the Owner's real Relay).

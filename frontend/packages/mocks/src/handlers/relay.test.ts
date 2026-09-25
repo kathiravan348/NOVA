@@ -186,4 +186,55 @@ describe("Relay MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/audit?limit=500");
     expect(res.status).toBe(400);
   });
+
+  describe("POST /api/v1/data-jobs", () => {
+    const post = (body: unknown) =>
+      fetch("http://localhost/api/v1/data-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    const body = { symbols: ["infy"], timeframe: "1d", from: "2025-01-01", to: "2025-12-31" };
+
+    it("answers 201 with a queued download", async () => {
+      const res = await post(body);
+      expect(res.status).toBe(201);
+      const job = DataJobSchema.parse(await res.json());
+      expect(job).toMatchObject({
+        status: "queued",
+        symbols: ["INFY"],
+        segment: "equity_delivery",
+      });
+    });
+
+    it("rejects an unknown stock or a bad period with 400", async () => {
+      const unknown = await post({ ...body, symbols: ["NOPE"] });
+      expect(ApiErrorSchema.parse(await unknown.json()).error.message).toBe(
+        "Not in the stock list: NOPE",
+      );
+      expect((await post({ ...body, from: "2026-01-01" })).status).toBe(400);
+    });
+  });
+
+  describe("POST /api/v1/data-jobs/:id/cancel", () => {
+    const cancel = (id: string) =>
+      fetch(`http://localhost/api/v1/data-jobs/${id}/cancel`, { method: "POST" });
+
+    it("answers a queued or running job as cancelled", async () => {
+      const queued = DataJobSchema.parse(await (await cancel("job_003")).json());
+      expect(queued.status).toBe("cancelled");
+      expect(queued.finishedAt).not.toBeNull();
+      const running = DataJobSchema.parse(await (await cancel("job_002")).json());
+      expect(running).toMatchObject({ status: "cancelled", finishedAt: null });
+    });
+
+    it("refuses a finished job with 400 and an unknown one with 404", async () => {
+      const done = await cancel("job_001");
+      expect(done.status).toBe(400);
+      expect(ApiErrorSchema.parse(await done.json()).error.message).toBe(
+        "Job is already completed",
+      );
+      expect((await cancel("job_nope")).status).toBe(404);
+    });
+  });
 });
