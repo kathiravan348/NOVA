@@ -52,8 +52,8 @@
       ├─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40),
       │                 `/internal/kite/*` data for other services (D41); `python -m nova_broker add-account`
       ├─ strategy/      strategies, immutable versions, stats summary in SQL (D26, D43)
-      ├─ backtest/      queue runs (D44), runs/results/trades API, worker; visual engine (delivery + intraday,
-      │                 D45, D46): indicators, rules, simulate, metrics, visual
+      ├─ backtest/      queue runs (D44), runs/results/trades API, worker; strategy engine (visual + Python
+      │                 sandbox, delivery + intraday, D45–D47)
       └─ atlas/         NOVA Atlas: `data/universe.csv`, instrument sync, data jobs + worker (Postgres queue, D41);
                         `python -m nova_atlas sync-instruments | download | worker`
 ```

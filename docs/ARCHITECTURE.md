@@ -19,7 +19,9 @@ packages/contracts (types + Zod) ────────┘─ services/backtes
 ## Strategies
 Two authoring modes, one format:
 - Visual rule builder → saves a **Strategy Spec** (JSON: universe, timeframe, segment, entry rules, exit rules, sizing, stop-loss/target).
-- Python mode → a class implementing `on_bar(ctx) -> list[Signal]`, run in a restricted sandbox; its metadata is still a Strategy Spec with `mode: "python"`.
+- Python mode → `class Strategy` with `on_bar(self, ctx)` returning `"enter"`, `"exit"` or `None`, run in a restricted
+  sandbox (AST check + child process with no environment and resource limits, D47); its metadata is still a Strategy
+  Spec with `mode: "python"`.
 The backtest engine accepts only Strategy Specs. Results always include charges from NOVA Ledger.
 
 ## Data (Stage B)

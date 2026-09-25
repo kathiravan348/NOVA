@@ -4,6 +4,7 @@ from datetime import datetime, time, timedelta
 
 import pytest
 from nova_backtest.bars import IST, Bar
+from nova_backtest.rules import RuleSignals
 from nova_backtest.simulate import Simulation, simulate
 from nova_contracts import Charges, RuleGroup, Sizing
 from nova_contracts.strategy import Risk
@@ -75,7 +76,13 @@ def _run(
     fee: int = 0,
 ) -> Simulation:
     return simulate(
-        {"INFY": bars}, ENTRY, EXIT, sizing, risk, cash, start, lambda *_: _charges(fee)
+        {"INFY": bars},
+        RuleSignals({"INFY": bars}, ENTRY, EXIT),
+        sizing,
+        risk,
+        cash,
+        start,
+        lambda *_: _charges(fee),
     )
 
 
@@ -183,8 +190,7 @@ def _intraday_run(bars: list[Bar]) -> Simulation:
     start = datetime(2026, 9, 1, tzinfo=IST)
     return simulate(
         {"INFY": bars},
-        ENTRY,
-        EXIT,
+        RuleSignals({"INFY": bars}, ENTRY, EXIT),
         TEN,
         NO_RISK,
         10_000_000,

@@ -1,6 +1,6 @@
 """Evaluating a visual rule group on one symbol's bars (D9, D45)."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from nova_contracts import Condition, Operand, RuleGroup
 from nova_contracts.strategy import OperandIndicator, OperandNumber, OperandPrice
@@ -62,3 +62,19 @@ def _holds(condition: Condition, cache: SeriesCache, i: int) -> bool:
 def holds(group: RuleGroup, cache: SeriesCache, i: int) -> bool:
     results = (_holds(condition, cache, i) for condition in group.conditions)
     return all(results) if group.combinator == "all" else any(results)
+
+
+class RuleSignals:
+    """Entry/exit signals of a visual strategy, per symbol and bar index."""
+
+    def __init__(
+        self, bars: Mapping[str, Sequence[Bar]], entry: RuleGroup, exit_: RuleGroup
+    ) -> None:
+        self._caches = {symbol: SeriesCache(series) for symbol, series in bars.items()}
+        self._entry, self._exit = entry, exit_
+
+    def enter(self, symbol: str, i: int) -> bool:
+        return holds(self._entry, self._caches[symbol], i)
+
+    def exit(self, symbol: str, i: int) -> bool:
+        return holds(self._exit, self._caches[symbol], i)

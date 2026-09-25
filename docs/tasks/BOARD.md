@@ -65,7 +65,7 @@
 | NOVA-055 | Backtest service: queue runs (D44), runs/results/trades API, worker | done | Claude | 053, 054, 061 |
 | NOVA-062 | Backtest engine v1: equity delivery, visual specs, results, trades, per-symbol breakdown (D45) | done | Claude | 055 |
 | NOVA-056 | Backtest engine: equity intraday (MIS square-off, D46) | done | Claude | 062 |
-| NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox | draft | — | 062 |
+| NOVA-057 | Backtest engine: Python-mode strategies in a restricted sandbox (D47) | done | Claude | 062 |
 | NOVA-058 | Real mode: login + Relay screens on the real API | draft | — | 046, 050, 051 |
 | NOVA-059 | Real mode: Orbit screens on the real API | draft | — | 058, 061, 062 |
 

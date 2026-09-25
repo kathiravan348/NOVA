@@ -1,11 +1,11 @@
-"""Backtest engine for visual strategies (D45, D46): equity delivery and intraday (MIS)."""
+"""Backtest engine (D45, D46, D47): visual and Python strategies, equity delivery and intraday."""
 
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 
 from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import Charges, StrategySpec
-from nova_contracts.strategy import StrategySpecVisual
+from nova_contracts.strategy import StrategySpecPython, StrategySpecVisual
 from nova_db import new_id
 from nova_db.models import BacktestResult, BacktestRun, Candle, Instrument, StrategyVersion, Trade
 from nova_ledger import ChargeRates, rates_for, trade_charges
@@ -16,7 +16,9 @@ from sqlalchemy.orm import Session
 from nova_backtest.bars import IST, Bar
 from nova_backtest.engine import EngineError
 from nova_backtest.metrics import summarize
-from nova_backtest.simulate import simulate
+from nova_backtest.rules import RuleSignals
+from nova_backtest.sandbox import PythonSignals, run_python
+from nova_backtest.simulate import Signals, simulate
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 WARM_UP_DAYS = {"1d": 400}
@@ -25,7 +27,7 @@ SQUARE_OFF = time(15, 20)
 INTRADAY_WARM_UP_DAYS = 30
 
 
-def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual:
+def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPython:
     version = db.get(StrategyVersion, (run.strategy_id, run.strategy_version))
     if version is None:
         raise EngineError("The strategy version of this run no longer exists")
@@ -33,8 +35,6 @@ def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual:
         spec = SPEC.validate_python(version.spec)
     except ValidationError as exc:
         raise EngineError("The stored strategy spec is not valid") from exc
-    if spec.mode == "python":
-        raise EngineError("Python strategies arrive in NOVA-057")
     if spec.segment not in ("equity_delivery", "equity_intraday"):
         raise EngineError(f"{spec.segment} backtests are not supported yet")
     if spec.segment == "equity_intraday" and spec.timeframe == "1d":
@@ -77,7 +77,7 @@ def _ist_midnight(day: date) -> datetime:
     return datetime.combine(day, time(0, 0), tzinfo=IST).astimezone(UTC)
 
 
-class VisualEngine:
+class StrategyEngine:
     def run(self, db: Session, run_id: str) -> None:
         run = db.get(BacktestRun, run_id)
         if run is None:
@@ -106,10 +106,14 @@ class VisualEngine:
                     raise EngineError(str(exc)) from exc
             return trade_charges(rates[day], "buy", qty, entry, exit_)
 
+        signals: Signals = (
+            RuleSignals(bars, spec.entry, spec.exit)
+            if isinstance(spec, StrategySpecVisual)
+            else PythonSignals(run_python(spec.code, bars))
+        )
         result = simulate(
             bars,
-            spec.entry,
-            spec.exit,
+            signals,
             spec.sizing,
             spec.risk,
             run.initial_capital_paise,

@@ -6,7 +6,7 @@ from datetime import date, datetime, time, timedelta
 import pytest
 from fastapi.testclient import TestClient
 from nova_backtest.bars import IST
-from nova_backtest.visual import VisualEngine
+from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_worker
 from nova_db.models import BacktestRun, Candle, StrategyVersion
 from nova_testing.parity import Parity
@@ -96,7 +96,7 @@ def _queue(engine: Engine, version: int = 2, symbols: tuple[str, ...] = ("INFY",
 
 def _drain(factory: sessionmaker[Session]) -> BacktestRun:
     stop = threading.Event()
-    run_worker(factory, VisualEngine(), stop, poll_seconds=0, on_idle=stop.set)
+    run_worker(factory, StrategyEngine(), stop, poll_seconds=0, on_idle=stop.set)
     with factory() as db:
         run = db.get(BacktestRun, "run_e2e")
         assert run is not None
@@ -147,7 +147,7 @@ def test_rerun_replaces_the_old_result(seeded: Engine, factory: sessionmaker[Ses
 @pytest.mark.parametrize(
     ("spec", "message"),
     [
-        (_spec(mode="python", code="x"), "Python strategies arrive in NOVA-057"),
+        (_spec(mode="python", code="import os"), "Python strategy not allowed: imports"),
         (_spec(segment="equity_intraday"), "Intraday strategies need an intraday timeframe"),
         (_spec(timeframe="5m"), "No 5m candles in the period for INFY, TCS"),
     ],

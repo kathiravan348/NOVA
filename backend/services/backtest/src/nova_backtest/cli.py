@@ -9,12 +9,12 @@ from nova_db import create_db_engine, create_session_factory
 
 from nova_backtest.engine import BacktestEngine
 from nova_backtest.settings import get_backtest_settings
-from nova_backtest.visual import VisualEngine
+from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_worker
 
 
 def default_engine() -> BacktestEngine:
-    return VisualEngine()
+    return StrategyEngine()
 
 
 def main(argv: list[str] | None = None) -> int:

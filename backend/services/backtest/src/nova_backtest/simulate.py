@@ -8,15 +8,23 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Protocol
 
-from nova_contracts import Charges, RuleGroup, Sizing
+from nova_contracts import Charges, Sizing
 from nova_contracts.strategy import Risk, SizingFixedAmount, SizingFixedQty
 
 from nova_backtest.bars import IST, Bar
-from nova_backtest.rules import SeriesCache, holds
 
 # (qty, entry price, exit price, entry time) → charges of the whole trade.
 ChargesFn = Callable[[int, int, int, datetime], Charges]
+
+
+class Signals(Protocol):
+    """Whether a strategy wants in or out at the close of bar `i` of `symbol`."""
+
+    def enter(self, symbol: str, i: int) -> bool: ...
+
+    def exit(self, symbol: str, i: int) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -66,8 +74,7 @@ def shares(sizing: Sizing, equity: int, price: int) -> int:
 
 def simulate(
     bars: dict[str, list[Bar]],
-    entry: RuleGroup,
-    exit_: RuleGroup,
+    signals: Signals,
     sizing: Sizing,
     risk: Risk,
     cash: int,
@@ -75,7 +82,6 @@ def simulate(
     charges: ChargesFn,
     square_off: time | None = None,
 ) -> Simulation:
-    caches = {symbol: SeriesCache(series) for symbol, series in bars.items()}
     events = sorted(
         ((bar.ts, symbol, i) for symbol, series in bars.items() for i, bar in enumerate(series)),
         key=lambda event: (event[0], event[1]),
@@ -145,9 +151,9 @@ def simulate(
 
         last_close[symbol] = bar.close
         if symbol in positions:
-            if holds(exit_, caches[symbol], i):
+            if signals.exit(symbol, i):
                 pending[symbol] = "exit"
-        elif holds(entry, caches[symbol], i):
+        elif signals.enter(symbol, i):
             pending[symbol] = "enter"
 
     for symbol in list(positions):
