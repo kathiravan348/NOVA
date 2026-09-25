@@ -79,6 +79,10 @@ export const EditorFormSchema = z
     percent: z.string(),
     stopLossPercent: z.string(),
     targetPercent: z.string(),
+    /** Cost averaging (D53): off unless switched on. */
+    averagingOn: z.boolean(),
+    averagingDrop: z.string(),
+    averagingMaxAdds: z.string(),
     entry: RuleGroupFormSchema,
     exit: RuleGroupFormSchema,
     code: z.string(),
@@ -97,6 +101,15 @@ export const EditorFormSchema = z
     }
     for (const key of ["stopLossPercent", "targetPercent"] as const) {
       if (f[key].trim() !== "" && !isPositive(f[key])) issue([key], "Leave empty or above 0");
+    }
+    if (f.averagingOn) {
+      if (!(isPositive(f.averagingDrop) && Number(f.averagingDrop) <= 50)) {
+        issue(["averagingDrop"], "Between 0 and 50");
+      }
+      const adds = Number(f.averagingMaxAdds);
+      if (!(isPositiveInt(f.averagingMaxAdds) && adds <= 10)) {
+        issue(["averagingMaxAdds"], "Whole number from 1 to 10");
+      }
     }
     if (f.mode === "python") {
       if (f.code.trim() === "") issue(["code"], "Code is required");
@@ -182,6 +195,9 @@ export const emptyForm = (): EditorForm => ({
   percent: "",
   stopLossPercent: "",
   targetPercent: "",
+  averagingOn: false,
+  averagingDrop: "5",
+  averagingMaxAdds: "3",
   entry: { combinator: "all", conditions: [emptyCondition()] },
   exit: { combinator: "any", conditions: [emptyCondition()] },
   code: "",
@@ -246,6 +262,13 @@ export function fromSpec(name: string, description: string, spec: StrategySpec):
     percent: spec.sizing.type === "percent_equity" ? String(spec.sizing.percent) : "",
     stopLossPercent: spec.risk.stopLossPercent === null ? "" : String(spec.risk.stopLossPercent),
     targetPercent: spec.risk.targetPercent === null ? "" : String(spec.risk.targetPercent),
+    ...(spec.averaging
+      ? {
+          averagingOn: true,
+          averagingDrop: String(spec.averaging.dropPercent),
+          averagingMaxAdds: String(spec.averaging.maxAdds),
+        }
+      : {}),
     ...(spec.mode === "visual"
       ? { entry: groupFromSpec(spec.entry), exit: groupFromSpec(spec.exit) }
       : { code: spec.code }),
@@ -270,6 +293,15 @@ export function toSpec(form: EditorForm): StrategySpec {
       stopLossPercent: optionalPercent(form.stopLossPercent),
       targetPercent: optionalPercent(form.targetPercent),
     },
+    // Written only when on, so specs without it round-trip unchanged (D53).
+    ...(form.averagingOn
+      ? {
+          averaging: {
+            dropPercent: Number(form.averagingDrop),
+            maxAdds: Number(form.averagingMaxAdds),
+          },
+        }
+      : {}),
   };
   if (form.mode === "python") {
     return StrategySpecPythonSchema.parse({ mode: "python", ...base, code: form.code });

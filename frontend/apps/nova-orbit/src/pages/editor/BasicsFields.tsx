@@ -1,5 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import { Card, Input, Select, type SelectOption } from "@nova/ui-core";
+import { Card, Input, Select, Switch, type SelectOption } from "@nova/ui-core";
 import { segmentLabel, timeframeLabel } from "../../lib/format";
 import type { EditorForm } from "./editorForm";
 
@@ -7,9 +7,10 @@ const toOptions = (labels: Record<string, string>): SelectOption[] =>
   Object.entries(labels).map(([value, label]) => ({ value, label }));
 
 export function BasicsFields() {
-  const { register, watch, formState } = useFormContext<EditorForm>();
+  const { register, watch, setValue, formState } = useFormContext<EditorForm>();
   const { errors } = formState;
   const sizingType = watch("sizingType");
+  const averagingOn = watch("averagingOn");
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -93,6 +94,32 @@ export function BasicsFields() {
               error={errors.targetPercent?.message}
               {...register("targetPercent")}
             />
+            <Switch
+              label="Cost averaging"
+              description="Buy more each time the price falls by a set % below your last buy. Stop-loss and target then use the average buy price."
+              containerClassName="sm:col-span-2"
+              checked={averagingOn}
+              onCheckedChange={(on) =>
+                setValue("averagingOn", on, { shouldValidate: formState.isSubmitted })
+              }
+            />
+            {averagingOn && (
+              <Input
+                label="Add every (% fall)"
+                inputMode="decimal"
+                trailing="%"
+                error={errors.averagingDrop?.message}
+                {...register("averagingDrop")}
+              />
+            )}
+            {averagingOn && (
+              <Input
+                label="Max extra buys"
+                inputMode="numeric"
+                error={errors.averagingMaxAdds?.message}
+                {...register("averagingMaxAdds")}
+              />
+            )}
           </div>
         </Card>
       </div>

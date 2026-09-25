@@ -1,7 +1,12 @@
 import type { StrategySpec } from "@nova/contracts";
 import { Card, CodeEditor, DescriptionList } from "@nova/ui-core";
 import { segmentLabel, timeframeLabel } from "../../lib/format";
-import { describeRisk, describeRuleGroup, describeSizing } from "../../lib/strategyText";
+import {
+  describeAveraging,
+  describeRisk,
+  describeRuleGroup,
+  describeSizing,
+} from "../../lib/strategyText";
 
 function RuleBlock({
   title,
@@ -41,6 +46,7 @@ export function StrategySpecCard({ spec, version }: StrategySpecCardProps) {
             { label: "Timeframe", value: timeframeLabel[spec.timeframe] },
             { label: "Sizing", value: describeSizing(spec.sizing) },
             { label: "Risk", value: describeRisk(spec.risk) },
+            { label: "Cost averaging", value: describeAveraging(spec.averaging) },
           ]}
         />
         {spec.mode === "visual" ? (

@@ -1,4 +1,5 @@
 import type {
+  Averaging,
   Condition,
   ConditionOp,
   Operand,
@@ -85,6 +86,13 @@ export function describeSizing(sizing: Sizing): string {
     case "percent_equity":
       return `${sizing.percent}% of equity per trade`;
   }
+}
+
+/** "Buy again every 5% fall, up to 3 times" or "Off" (D53). */
+export function describeAveraging(averaging: Averaging | undefined): string {
+  if (!averaging) return "Off";
+  const times = averaging.maxAdds === 1 ? "once" : `up to ${averaging.maxAdds} times`;
+  return `Buy again every ${averaging.dropPercent}% fall, ${times}`;
 }
 
 export function describeRisk(risk: Risk): string {

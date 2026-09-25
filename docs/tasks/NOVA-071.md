@@ -1,6 +1,6 @@
 # NOVA-071 — Editor: cost averaging fields, detail text, user guide (D53)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-071 · **Depends on:** NOVA-069
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-071 · **Depends on:** NOVA-069
 
 ## Goal
 In the strategy editor the Owner can turn on **Cost averaging** and set **Add every (% fall)** and
@@ -39,5 +39,13 @@ Modify: the 7 files above, `docs/guides/USER-GUIDE.md`
 ## Questions
 
 ## Handoff
+Built by Claude (Antigravity offline). All acceptance checks pass.
+- Form: `averagingOn` / `averagingDrop` ("5") / `averagingMaxAdds` ("3"), checked only when on;
+  `toSpec` writes `averaging` only when on, so every mock spec still round-trips.
+- `BasicsFields`: **Cost averaging** Switch with a one-line description; **Add every (% fall)** and
+  **Max extra buys** appear when on. Strategy page: **Cost averaging** row (`describeAveraging`).
+- Browser (mock, 360px): fields full-width inside the card, no page overflow.
+- Checks: `pnpm review:check` green. Guides: USER-GUIDE Step 4 item 4 (with a worked example).
 
 ## Review
+Self-reviewed. Example in the guide checked: 100 → 95 → 90.25 → 85.74 (5% each, half-up paise).

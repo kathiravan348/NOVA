@@ -76,7 +76,7 @@
 | NOVA-068 | Python mode: every catalog indicator on `ctx` (D47, D51) | done | Claude | 066, 067 |
 | NOVA-069 | Cost averaging: spec contract + engine (add every X% fall, average-price risk, one trade; D53) | done | Claude | 066 |
 | NOVA-070 | Relay: add a broker account from the screen (POST /broker/accounts, audit, D52) | done | Claude | 058 |
-| NOVA-071 | Editor: cost averaging fields + detail text + user guide (D53) | planned | — | 069 |
+| NOVA-071 | Editor: cost averaging fields + detail text + user guide (D53) | done | Claude | 069 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

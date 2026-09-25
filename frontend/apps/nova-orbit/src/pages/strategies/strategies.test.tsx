@@ -81,6 +81,8 @@ describe("Strategy detail", () => {
   it("shows the latest spec in words and the version history", async () => {
     renderApp("/strategies/stg_001");
     expect(await screen.findByText("Specification · v2")).toBeInTheDocument();
+    expect(screen.getByText("Cost averaging")).toBeInTheDocument();
+    expect(screen.getByText("Off")).toBeInTheDocument();
     expect(screen.getByText("Entry")).toBeInTheDocument();
     expect(screen.getAllByText(/crosses above/).length).toBeGreaterThan(0);
     fireEvent.mouseDown(screen.getByRole("tab", { name: "Versions (2)" }));

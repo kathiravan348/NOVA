@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  describeAveraging,
   describeCondition,
   describeOperand,
   describeRisk,
@@ -84,5 +85,15 @@ describe("strategyText", () => {
     expect(formatIstDate("2026-09-21T20:00:00Z")).toBe("22 Sep 2026");
     expect(formatIstDateTime("2026-09-21T06:30:00Z")).toBe("21 Sep 2026, 12:00 IST");
     expect(formatCalendarDate("2026-09-21")).toBe("21 Sep 2026");
+  });
+
+  it("describes cost averaging (D53)", () => {
+    expect(describeAveraging(undefined)).toBe("Off");
+    expect(describeAveraging({ dropPercent: 5, maxAdds: 3 })).toBe(
+      "Buy again every 5% fall, up to 3 times",
+    );
+    expect(describeAveraging({ dropPercent: 2.5, maxAdds: 1 })).toBe(
+      "Buy again every 2.5% fall, once",
+    );
   });
 });

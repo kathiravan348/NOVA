@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-070; indicators NOVA-064–067). NOVA **never places real orders**: it only
+> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-071). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -117,6 +117,11 @@ Go to **Strategies → New strategy** (or **Edit** on an existing one).
 4. **Sizing and risk** — how much to buy each time: **Fixed quantity** (e.g. 10 shares),
    **Fixed amount** (e.g. ₹50,000) or a **Percentage** of your money; optional **Stop-loss** % (sell if it
    falls this much) and **Target** % (sell once it gains this much).
+   - **Cost averaging** (optional switch): while you hold a stock, buy the same amount again each time the
+     price falls by **Add every (% fall)** below your last buy, at most **Max extra buys** times. Example: 5%
+     and 3 → buy at ₹100, again at ₹95, ₹90.25 and ₹85.74. Stop-loss and target then count from the
+     **average** buy price. In the results the whole position is **one trade**: all the shares, at the
+     average price.
 5. The **Spec preview (JSON)** box shows the same rules in computer form. You can ignore it.
 6. Press **Save draft**.
    - New strategy → it is created as version 1 and opens.

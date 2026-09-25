@@ -153,4 +153,29 @@ describe("editorForm", () => {
       expect(issuesOf(form)).toEqual(["entry.conditions.0.left.offset"]);
     }
   });
+
+  it("writes cost averaging only when on and checks its fields (D53)", () => {
+    const form = validForm();
+    expect(form.averagingOn).toBe(false);
+    expect(toSpec(form)).not.toHaveProperty("averaging");
+
+    const on = { ...form, averagingOn: true, averagingDrop: "5", averagingMaxAdds: "3" };
+    const spec = toSpec(on);
+    expect(spec.averaging).toEqual({ dropPercent: 5, maxAdds: 3 });
+    expect(fromSpec("T", "", spec)).toMatchObject({
+      averagingOn: true,
+      averagingDrop: "5",
+      averagingMaxAdds: "3",
+    });
+
+    for (const [drop, adds] of [
+      ["0", "3"],
+      ["60", "3"],
+      ["5", "2.5"],
+      ["5", "11"],
+    ] as const) {
+      expect(issuesOf({ ...on, averagingDrop: drop, averagingMaxAdds: adds }).length).toBe(1);
+    }
+    expect(issuesOf({ ...form, averagingDrop: "0" })).toEqual([]); // ignored while off
+  });
 });

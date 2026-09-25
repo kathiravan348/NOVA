@@ -138,4 +138,15 @@ describe("Strategy editor", () => {
     expect(code).toHaveAttribute("contenteditable", "false");
     expect(code.textContent).toContain("Order.buy()");
   });
+
+  it("shows the cost averaging fields when switched on (D53)", async () => {
+    renderApp("/strategies/new");
+    const toggle = await screen.findByRole("switch", { name: /Cost averaging/ });
+    expect(screen.queryByLabelText(/^Add every/)).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    expect(await screen.findByLabelText(/^Add every/)).toHaveValue("5");
+    expect(screen.getByLabelText(/^Max extra buys/)).toHaveValue("3");
+  });
 });
