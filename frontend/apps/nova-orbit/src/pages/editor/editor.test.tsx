@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { EditorView } from "@codemirror/view";
 import { setupServer } from "msw/node";
@@ -6,12 +6,23 @@ import { handlers } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
+const posted: { path: string; body: unknown }[] = [];
+server.events.on("request:start", ({ request }) => {
+  if (request.method === "GET") return;
+  const path = `${request.method} ${new URL(request.url).pathname}`;
+  void request
+    .clone()
+    .json()
+    .then((body) => posted.push({ path, body }));
+});
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   cleanup();
   server.resetHandlers();
   sessionStorage.clear();
+  vi.unstubAllEnvs();
+  posted.length = 0;
 });
 afterAll(() => server.close());
 
@@ -46,6 +57,24 @@ describe("Strategy editor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
     expect(await screen.findByText("Draft saved")).toBeInTheDocument();
     expect(screen.getByLabelText("Strategy spec JSON").textContent).not.toContain("universe");
+    await waitFor(() => expect(posted.map((p) => p.path)).toEqual(["POST /api/v1/strategies"]));
+    expect(posted[0]!.body).toMatchObject({ name: "My test", spec: { mode: "visual" } });
+  });
+
+  it("saves a new version of an existing strategy and opens it in real mode (D43, D48)", async () => {
+    vi.stubEnv("VITE_DATA_MODE", "real");
+    const { router } = renderApp("/strategies/stg_001/edit");
+    fireEvent.change(await screen.findByDisplayValue("VWAP Momentum Intraday"), {
+      target: { value: "VWAP v3" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+
+    expect(await screen.findByText("Strategy saved")).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.pathname).toBe("/strategies/stg_001"));
+    expect(posted.map((p) => p.path)).toEqual([
+      "POST /api/v1/strategies/stg_001/versions",
+      "PATCH /api/v1/strategies/stg_001",
+    ]);
   });
 
   it("prefills an existing visual strategy", async () => {
@@ -67,7 +96,7 @@ describe("Strategy editor", () => {
     renderApp("/strategies/new");
     fireEvent.click(await screen.findByRole("radio", { name: "Python" }));
     const code = await screen.findByLabelText("Strategy code");
-    expect(code.textContent).toContain("def on_bar(ctx):");
+    expect(code.textContent).toContain("def on_bar(self, ctx):");
     expect(screen.queryByText("Entry rules")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "Visual rules" }));
     expect(await screen.findByText("Entry rules")).toBeInTheDocument();

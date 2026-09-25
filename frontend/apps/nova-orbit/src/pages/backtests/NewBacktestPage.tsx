@@ -14,10 +14,16 @@ import {
   Switch,
   useToast,
 } from "@nova/ui-core";
-import { useInstruments, useStrategies } from "@nova/services";
+import { getDataMode, useInstruments, useQueueBacktest, useStrategies } from "@nova/services";
 import { coversPeriod } from "../../components/InstrumentTable";
 import { QueryError } from "../../components/QueryState";
-import { BacktestFormSchema, defaultsFor, todayIst, type BacktestForm } from "./backtestForm";
+import {
+  BacktestFormSchema,
+  defaultsFor,
+  todayIst,
+  toRunCreate,
+  type BacktestForm,
+} from "./backtestForm";
 import { UniverseFields } from "./UniverseFields";
 
 function BacktestFormView({
@@ -32,6 +38,7 @@ function BacktestFormView({
   const toast = useToast();
   const navigate = useNavigate();
   const instruments = useInstruments();
+  const queueRun = useQueueBacktest();
   const [uncovered, setUncovered] = useState<string[]>([]);
   const form = useForm<BacktestForm>({
     resolver: zodResolver(BacktestFormSchema),
@@ -50,12 +57,27 @@ function BacktestFormView({
   }, [strategy, formState.dirtyFields.strategyId, setValue]);
 
   const queue = () => {
-    toast.show({
-      title: "Backtest queued (demo)",
-      description: "Nothing runs in Stage A.",
-      tone: "success",
+    queueRun.mutate(toRunCreate(form.getValues()), {
+      onSuccess: (run) => {
+        if (getDataMode() === "real") {
+          toast.show({ title: "Backtest queued", description: run.name, tone: "success" });
+          navigate(`/backtests/${run.id}`);
+          return;
+        }
+        toast.show({
+          title: "Backtest queued (demo)",
+          description: "Mock mode runs nothing.",
+          tone: "success",
+        });
+        navigate("/backtests");
+      },
+      onError: (err) =>
+        toast.show({
+          title: "Could not queue the backtest",
+          description: err.message,
+          tone: "danger",
+        }),
     });
-    navigate("/backtests");
   };
 
   // Symbols whose data does not cover the period must be dropped before queueing (R2).

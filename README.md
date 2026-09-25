@@ -2,8 +2,8 @@
 
 **Networked Order & Value Analytics**: a private trading platform for one family.
 
-> **Status: Stage A (prototype).** Frontend only. All data is static mock data served in the browser.
-> No backend, no real broker calls, no orders. See [`docs/PLAN.md`](docs/PLAN.md) for the roadmap.
+> **Status: Stage B (real backend).** The apps run on static mocks by default (`pnpm review`) or against the
+> backend in real mode (`dev:real`). Backtesting only: no orders. See [`docs/PLAN.md`](docs/PLAN.md).
 
 ## Apps
 
@@ -34,10 +34,10 @@ With the backend running (below) and a super-admin created:
 ```bash
 cd frontend
 pnpm --filter nova-relay dev:real
+pnpm --filter nova-orbit dev:real
 ```
 
-Relay then signs in with your email and password against NOVA Core (`/api` is proxied; D48). Orbit's screens
-switch to real in NOVA-059.
+Both apps then sign in with your email and password against NOVA Core (`/api` is proxied; D48).
 
 ## Backend (Stage B)
 
@@ -80,8 +80,8 @@ The full map is in [`docs/STRUCTURE.md`](docs/STRUCTURE.md).
 ## How data flows
 
 Screens → `@nova/services` hooks → `fetch /api/v1/…` → MSW (mock mode) serving `@nova/mocks`.
-Every response is validated against its `@nova/contracts` schema. `VITE_DATA_MODE=real` is refused until
-Stage B, when the same calls go to the NOVA Core gateway. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+Every response is validated against its `@nova/contracts` schema. In real mode (`dev:real`) the same calls go
+through the dev server's `/api` proxy to the NOVA Core gateway. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 and [`docs/CONTRACTS.md`](docs/CONTRACTS.md).
 
 ## Conventions

@@ -4,6 +4,7 @@ import {
   BacktestFormSchema,
   defaultsFor,
   todayIst,
+  toRunCreate,
   toUniverse,
   type BacktestForm,
 } from "./backtestForm";
@@ -74,5 +75,22 @@ describe("backtestForm", () => {
     expect(todayIst(new Date("2026-09-21T20:00:00Z"))).toBe("2026-09-22");
     expect(formatPeriod("2026-06-01", "2026-06-15")).toBe("1 Jun – 15 Jun 2026");
     expect(formatPeriod("2025-12-01", "2026-01-15")).toBe("1 Dec 2025 – 15 Jan 2026");
+  });
+
+  it("builds the queue body with capital in paise", () => {
+    const body = toRunCreate({
+      ...valid,
+      capitalRupees: "250000.5",
+      benchmark: false,
+      name: " Run ",
+    });
+
+    expect(body).toMatchObject({
+      strategyVersion: mockStrategies[0]!.latestVersion,
+      name: "Run",
+      initialCapitalPaise: 25_000_050,
+      benchmark: null,
+      universe: { type: "symbols", symbols: ["TCS"] },
+    });
   });
 });

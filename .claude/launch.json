@@ -18,6 +18,22 @@
       "port": 3000
     },
     {
+      "name": "nova-orbit-real",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "--filter",
+        "nova-orbit",
+        "dev:real"
+      ],
+      "port": 3000
+    },
+    {
       "name": "nova-relay",
       "runtimeExecutable": "fnm",
       "runtimeArgs": [

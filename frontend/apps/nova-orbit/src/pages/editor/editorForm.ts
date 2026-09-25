@@ -41,14 +41,20 @@ export const RuleGroupFormSchema = z.object({
 });
 export type RuleGroupForm = z.infer<typeof RuleGroupFormSchema>;
 
-export const PYTHON_TEMPLATE = `# on_bar runs once per closed bar and returns a list of signals.
-def on_bar(ctx):
-    signals = []
-    if ctx.close > ctx.sma(20) and ctx.position == 0:
-        signals.append(ctx.buy())
-    elif ctx.close < ctx.sma(20) and ctx.position > 0:
-        signals.append(ctx.sell())
-    return signals
+/** Python mode API (D47): no imports (math is available); names must not start with "_". */
+export const PYTHON_TEMPLATE = `# on_bar runs once per closed bar of each symbol.
+# Return "enter", "exit" or None. ctx: symbol, time, open, high, low, close,
+# volume, index, closes, sma(n), highest(n), lowest(n). Prices are in rupees.
+class Strategy:
+    def on_bar(self, ctx):
+        average = ctx.sma(20)
+        if average is None:
+            return None
+        if ctx.close > average:
+            return "enter"
+        if ctx.close < average:
+            return "exit"
+        return None
 `;
 
 export const EditorFormSchema = z

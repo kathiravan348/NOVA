@@ -1,4 +1,16 @@
-import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type {
+  BacktestRunCreate,
+  StrategyCreate,
+  StrategyUpdate,
+  StrategyVersionCreate,
+} from "@nova/contracts";
 import {
   getBacktest,
   getBacktestResult,
@@ -8,6 +20,10 @@ import {
   listBacktestTrades,
   listStrategies,
   listStrategyStats,
+  addStrategyVersion,
+  createStrategy,
+  queueBacktest,
+  updateStrategy,
   type BacktestFilter,
 } from "../api/orbit";
 import { queryKeys } from "./keys";
@@ -85,5 +101,52 @@ export function useBacktestResults(ids: string[]) {
       queryKey: queryKeys.backtests.result(id),
       queryFn: ({ signal }: { signal: AbortSignal }) => getBacktestResult(id, { signal }),
     })),
+  });
+}
+
+function useRefreshStrategies() {
+  const client = useQueryClient();
+  return () => client.invalidateQueries({ queryKey: queryKeys.strategies.all });
+}
+
+/** Creates a strategy (D43); refreshes the strategy list and stats. */
+export function useCreateStrategy() {
+  const refresh = useRefreshStrategies();
+  return useMutation({
+    mutationFn: (body: StrategyCreate) => createStrategy(body),
+    onSuccess: refresh,
+  });
+}
+
+/** Saves a new version of a strategy (D43). */
+export function useSaveStrategyVersion() {
+  const refresh = useRefreshStrategies();
+  return useMutation({
+    mutationFn: ({ strategyId, ...body }: StrategyVersionCreate & { strategyId: string }) =>
+      addStrategyVersion(strategyId, body),
+    onSuccess: refresh,
+  });
+}
+
+/** Renames or changes the status of a strategy (D43). */
+export function useUpdateStrategy() {
+  const refresh = useRefreshStrategies();
+  return useMutation({
+    mutationFn: ({ strategyId, ...body }: StrategyUpdate & { strategyId: string }) =>
+      updateStrategy(strategyId, body),
+    onSuccess: refresh,
+  });
+}
+
+/** Queues a backtest (D44); refreshes run lists and strategy stats. */
+export function useQueueBacktest() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: BacktestRunCreate) => queueBacktest(body),
+    onSuccess: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.backtests.all }),
+        client.invalidateQueries({ queryKey: queryKeys.strategies.all }),
+      ]),
   });
 }

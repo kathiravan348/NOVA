@@ -1,16 +1,26 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { handlers, mockBacktestRuns } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
+const posted: unknown[] = [];
+server.events.on("request:start", ({ request }) => {
+  if (request.method === "POST")
+    void request
+      .clone()
+      .json()
+      .then((body) => posted.push(body));
+});
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   cleanup();
   server.resetHandlers();
   sessionStorage.clear();
+  vi.unstubAllEnvs();
+  posted.length = 0;
 });
 afterAll(() => server.close());
 
@@ -107,6 +117,21 @@ describe("New backtest form", () => {
     fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
     expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.pathname).toBe("/backtests"));
+    expect(posted[0]).toMatchObject({
+      strategyId: "stg_001",
+      universe: { type: "symbols", symbols: ["TCS", "INFY"] },
+      initialCapitalPaise: 100_000_000,
+      benchmark: "NIFTY 50",
+    });
+  });
+
+  it("opens the queued run in real mode (D44, D48)", async () => {
+    vi.stubEnv("VITE_DATA_MODE", "real");
+    const { router } = renderApp("/backtests/new?strategy=stg_001");
+    fireEvent.click((await screen.findAllByRole("checkbox", { name: "Select TCS" }))[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    expect(await screen.findByText("Backtest queued")).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.pathname).toBe("/backtests/run_new"));
   });
 
   it("filters the picker and asks to drop symbols without data for the period", async () => {

@@ -106,7 +106,17 @@ export async function apiSend(
 }
 
 /** Sends a JSON body and validates the JSON answer with `schema` (e.g. sign-in). */
-export async function apiPost<T>(
+export function apiPost<T>(
+  path: string,
+  body: unknown,
+  schema: z.ZodType<T>,
+  init?: RequestOptions,
+): Promise<T> {
+  return apiRequest("POST", path, body, schema, init);
+}
+
+export async function apiRequest<T>(
+  method: "POST" | "PATCH",
   path: string,
   body: unknown,
   schema: z.ZodType<T>,
@@ -117,21 +127,25 @@ export async function apiPost<T>(
   let res: Response;
   try {
     res = await fetch(url, {
-      method: "POST",
+      method,
       signal: init?.signal,
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
-    throw new ApiRequestError(0, "network", `Network error for POST ${path}`);
+    throw new ApiRequestError(0, "network", `Network error for ${method} ${path}`);
   }
 
   const answer: unknown = await res.json().catch(() => undefined);
-  if (!res.ok) throw toApiError(res.status, answer, `POST ${path}`);
+  if (!res.ok) throw toApiError(res.status, answer, `${method} ${path}`);
   const parsed = schema.safeParse(answer);
   if (!parsed.success) {
-    throw new ApiRequestError(res.status, "invalid_response", `Invalid response for POST ${path}`);
+    throw new ApiRequestError(
+      res.status,
+      "invalid_response",
+      `Invalid response for ${method} ${path}`,
+    );
   }
   return parsed.data;
 }

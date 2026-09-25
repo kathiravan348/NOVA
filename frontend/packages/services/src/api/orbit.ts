@@ -6,6 +6,10 @@ import {
   TradeSchema,
   UserSchema,
   pageSchema,
+  type BacktestRunCreate,
+  type StrategyCreate,
+  type StrategyUpdate,
+  type StrategyVersionCreate,
   type BacktestResult,
   type BacktestRun,
   type Strategy,
@@ -15,7 +19,7 @@ import {
   type PageQuery,
   type User,
 } from "@nova/contracts";
-import { apiGet, withQuery, type RequestOptions } from "../http";
+import { apiGet, apiPost, apiRequest, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
 
@@ -67,4 +71,35 @@ export function listBacktestTrades(
     pageSchema(TradeSchema),
     init,
   );
+}
+
+/** Creates a `draft` strategy at version 1 (D43). */
+export function createStrategy(body: StrategyCreate, init?: RequestOptions): Promise<Strategy> {
+  return apiPost("/strategies", body, StrategySchema, init);
+}
+
+/** Saves a new immutable version (latest + 1, D43). */
+export function addStrategyVersion(
+  strategyId: string,
+  body: StrategyVersionCreate,
+  init?: RequestOptions,
+): Promise<Strategy> {
+  return apiPost(`/strategies/${id(strategyId)}/versions`, body, StrategySchema, init);
+}
+
+/** Changes name, description or status (D43). */
+export function updateStrategy(
+  strategyId: string,
+  body: StrategyUpdate,
+  init?: RequestOptions,
+): Promise<Strategy> {
+  return apiRequest("PATCH", `/strategies/${id(strategyId)}`, body, StrategySchema, init);
+}
+
+/** Queues a backtest run (D44). */
+export function queueBacktest(
+  body: BacktestRunCreate,
+  init?: RequestOptions,
+): Promise<BacktestRun> {
+  return apiPost("/backtests", body, BacktestRunSchema, init);
 }

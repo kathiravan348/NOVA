@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { formatInTimeZone } from "date-fns-tz";
-import { IndexNameSchema, type Strategy, type Universe } from "@nova/contracts";
+import {
+  IndexNameSchema,
+  type BacktestRunCreate,
+  type Strategy,
+  type Universe,
+} from "@nova/contracts";
 
 const MIN_CAPITAL_RUPEES = 10_000;
 
@@ -77,4 +82,18 @@ export function toUniverse(form: BacktestForm): Universe {
   return form.universeType === "index"
     ? { type: "index", index: form.index }
     : { type: "symbols", symbols: form.symbols };
+}
+
+/** The `POST /backtests` body (D44); capital in whole rupees becomes paise. */
+export function toRunCreate(form: BacktestForm): BacktestRunCreate {
+  return {
+    strategyId: form.strategyId,
+    strategyVersion: Number(form.version),
+    name: form.name.trim(),
+    universe: toUniverse(form),
+    from: form.from,
+    to: form.to,
+    initialCapitalPaise: Math.round(Number(form.capitalRupees) * 100),
+    benchmark: form.benchmark ? "NIFTY 50" : null,
+  };
 }

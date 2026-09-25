@@ -18,7 +18,8 @@ export function PythonFields() {
               </p>
             )}
             <p className="text-body-sm text-text-muted">
-              Runs in a sandbox in Stage B. Not executed in this prototype.
+              Runs in a sandbox: no imports (math is available), no names starting with an
+              underscore.
             </p>
           </div>
         )}
