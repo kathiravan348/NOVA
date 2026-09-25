@@ -77,6 +77,13 @@
 | NOVA-069 | Cost averaging: spec contract + engine (add every X% fall, average-price risk, one trade; D53) | done | Claude | 066 |
 | NOVA-070 | Relay: add a broker account from the screen (POST /broker/accounts, audit, D52) | done | Claude | 058 |
 | NOVA-071 | Editor: cost averaging fields + detail text + user guide (D53) | done | Claude | 069 |
+| NOVA-072 | Atlas: queue and cancel data jobs over HTTP (D54) | planned | — | 061 |
+| NOVA-073 | Relay: new download page + real Cancel job (D54) | planned | — | 072, 074 |
+| NOVA-074 | Atlas: universe in the database + sync over HTTP (D54, migration 0006) | planned | — | 072 |
+| NOVA-075 | Relay: Instruments page (stock list + Sync with Kite) (D54) | planned | — | 073, 074 |
+| NOVA-076 | Broker: always-on tick recorder with an on/off setting (D54, migration 0007) | planned | — | 074 |
+| NOVA-077 | Atlas: tick archive as a data job (D54) | planned | — | 076 |
+| NOVA-078 | Relay: tick recording switch + Archive old ticks (D54) | planned | — | 075, 076, 077 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -85,3 +92,4 @@
 - Review round 1 (see `docs/PLAN.md`): 030, 033, 038 run in parallel. Then Orbit 031 → 032 → 034 and 035/036/037; Relay 039 and 040 in parallel.
 - Indicators (D51): 064 first; then backend 065 → 066 and frontend 067 run in parallel (no shared files); 068 last.
 - Stage B (after 022): lane A = 043 → 044 / 047 (backend); lane B = 045 → 046 (frontend) runs alongside. Then 048 → 049 → 050 → 051; 053 and 054 can overlap 049–051.
+- Relay control panel (D54): backend 072 → 074 → 076 → 077; frontend 073 (after 074) → 075 → 078 runs alongside the backend lane.

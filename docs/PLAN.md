@@ -80,6 +80,7 @@ Database design → NOVA Core (gateway + auth) → Broker service (Kite login, t
 | 7. Strategies | 054 strategy service | Strategy CRUD, versions, stats summary |
 | 8. Backtests | 055 service + worker · 062 engine v1 (delivery) · 056 intraday · 057 Python mode | Real backtest runs, results, trades |
 | 9. Real mode | 058 Relay + login · 059 Orbit | Screens on the real API (`VITE_DATA_MODE=real`) |
+| 10. Relay control panel (D54) | 070 add account · 072–073 downloads + cancel · 074–075 universe + sync · 076–078 tick recording + archive | Daily admin work done in Relay; Docker only for setup |
 
 Futures and options engines come after 059; options wait for the data vendor decision.
 
