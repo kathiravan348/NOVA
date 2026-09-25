@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-073). NOVA **never places real orders**: it only
+> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-075). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -219,6 +219,19 @@ each kind of request (quotes, historical data, orders, other) you see:
 Press **Edit limits** to change the NOVA limit. It can never be set above Zerodha's limit. Every change is
 written in the audit log.
 
+### Step 6b — Instruments (the stock list)
+The list of stocks you can download prices for. Each row shows the symbol, name, sector, the indices it
+belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its prices can be downloaded.
+
+- **Add stock**: type the NSE symbol (e.g. **INFY**), the name and the sector, tick its indices, then
+  **Add stock**. A new stock shows **Not synced**.
+- **Sync with Kite**: asks Zerodha about every stock in the list (do the daily Kite login first). Symbols
+  Zerodha does not know are listed in yellow: check their spelling.
+- **Edit** changes the name, sector or indices. **Remove** takes a stock off the list; prices already
+  downloaded stay.
+
+The usual order for a new stock: **Add stock** → **Sync with Kite** → **New download** in Data jobs.
+
 ### Step 7 — Data jobs
 Background work that fills our price database: **historical downloads** (past candles from Zerodha),
 **tick recording** (live prices during market hours) and **archiving** (moving old live prices to files).
@@ -244,8 +257,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 
 - **No real buying or selling.** Placing orders is a later phase (NOVA Launch).
 - Broker accounts cannot be renamed, disabled or removed from the screen yet. There are no buttons yet to
-  change the list of stocks, sync it with Kite, record live prices or archive them either: the admin does
-  these from the command line.
+  record live prices or archive them either: the admin does these from the command line.
 - Strategies cannot be deleted (old test results depend on them); set them to *Archived* instead.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
@@ -259,7 +271,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 |---|---|
 | Yellow bar at the top | You are in demo mode: nothing you do is saved. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
-| A download *Failed* with *Unknown instruments* | The stock is not synced with Kite yet. Ask the admin to sync the stock list, then queue it again. |
+| A download *Failed* with *Unknown instruments* | The stock is not synced with Kite yet. Press **Sync with Kite** on the Instruments page, then queue it again. |
+| A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |

@@ -5,6 +5,7 @@ import { RouterProvider, createMemoryRouter } from "react-router";
 import { setupServer } from "msw/node";
 import { handlers, mockUser } from "@nova/mocks";
 import { createQueryClient, signOut } from "@nova/services";
+import { ToastProvider } from "@nova/ui-core";
 import { routes } from "./routes";
 
 const server = setupServer(...handlers);
@@ -21,7 +22,9 @@ function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </QueryClientProvider>,
   );
   return router;
@@ -58,5 +61,13 @@ describe("Relay routes", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
     expect(await screen.findByRole("button", { name: "Sign in" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/login");
+  });
+
+  it("opens the Instruments page from the nav", async () => {
+    const router = renderAt("/login?next=%2Finstruments");
+    await signInWithForm();
+    expect(await screen.findByRole("heading", { name: "Instruments" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/instruments");
+    expect(screen.getAllByRole("link", { name: "Instruments" }).length).toBeGreaterThan(0);
   });
 });

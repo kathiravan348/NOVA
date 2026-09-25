@@ -6,6 +6,7 @@ import {
   KeyRound,
   Landmark,
   LayoutDashboard,
+  ListOrdered,
   LogOut,
   ScrollText,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const navItems: { to: string; label: string; icon: ReactNode }[] = [
   { to: "/accounts", label: "Broker accounts", icon: <KeyRound className="h-4 w-4" /> },
   { to: "/broker", label: "Broker", icon: <Landmark className="h-4 w-4" /> },
   { to: "/rate-limits", label: "Rate limits", icon: <Gauge className="h-4 w-4" /> },
+  { to: "/instruments", label: "Instruments", icon: <ListOrdered className="h-4 w-4" /> },
   { to: "/data-jobs", label: "Data jobs", icon: <Database className="h-4 w-4" /> },
   { to: "/audit", label: "Audit log", icon: <ScrollText className="h-4 w-4" /> },
 ];

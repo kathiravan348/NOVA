@@ -17,7 +17,7 @@ docker compose build
 | `docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"` | create the super-admin (asks for the password) |
 | `docker compose exec broker python -m nova_broker add-account --label "Main" --client-id AB1234` | add a Zerodha account |
 | `docker compose run --rm broker python -m nova_broker new-token-key` | a value for `NOVA_BROKER_TOKEN_KEY` |
-| `docker compose exec atlas python -m nova_atlas sync-instruments` | instruments from the stock list (`universe` table) + Kite (needs a Kite login) |
+| `docker compose exec atlas python -m nova_atlas sync-instruments` | instruments from the stock list (`universe` table) + Kite (needs a Kite login); also **Instruments → Sync with Kite** in Relay |
 | `docker compose exec atlas python -m nova_atlas download --symbols INFY,TCS --timeframe 1d --from 2025-01-01 --to 2025-12-31` | queue a candle download |
 | `docker compose --profile market up -d tick-recorder` | record live ticks until 15:30 IST (needs a Kite login and synced instruments; add `--symbols` via `run` to limit) |
 | `docker compose exec atlas-worker python -m nova_atlas archive-ticks --before 2026-09-01` | move older ticks to Parquet in the `tick-archive` volume |

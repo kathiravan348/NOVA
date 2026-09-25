@@ -29,7 +29,7 @@ import {
   useStrategy,
   useStrategyStats,
 } from "./orbit";
-import { useUniverse } from "./marketData";
+import { useSyncInstruments, useUniverse } from "./marketData";
 import { createQueryClient, shouldRetry } from "./queryClient";
 import {
   useAuditEntries,
@@ -207,6 +207,18 @@ describe("query hooks", () => {
     const { result } = renderHook(() => useUniverse(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.length).toBeGreaterThan(0);
+  });
+
+  it("useSyncInstruments posts the sync and refetches the stock list", async () => {
+    const { result } = renderHook(() => ({ list: useUniverse(), sync: useSyncInstruments() }), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current.list.isSuccess).toBe(true));
+    requests = [];
+    const synced = await result.current.sync.mutateAsync();
+    expect(synced.missing).toEqual([]);
+    await waitFor(() => expect(requests).toContain("/api/v1/market-data/universe"));
+    expect(requests[0]).toBe("/api/v1/market-data/instruments/sync");
   });
 });
 

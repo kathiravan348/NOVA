@@ -1,6 +1,6 @@
 # NOVA-075 — Relay: Instruments page (stock list + Sync with Kite)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-075 · **Depends on:** NOVA-073, NOVA-074
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-075 · **Depends on:** NOVA-073, NOVA-074
 
 ## Goal
 A Relay **Instruments** page lists the stock list, lets the super-admin add, edit and remove stocks, and runs
@@ -48,5 +48,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Services: create/update/delete stock + `syncInstruments` and their hooks; `apiRequest` accepts `PUT`
+  (`http.ts`, one word).
+- MSW: POST/PUT/DELETE `/market-data/universe…`, POST `/market-data/instruments/sync` (+ handler tests).
+- Relay: nav **Instruments**, `/instruments` page, `UniverseEntryModal`, `RemoveStockModal` (own file, one
+  component per file). `routes.test.tsx` now wraps the router in `ToastProvider` like the app does.
+- The missing-symbols message is a yellow alert above the table (toast tones have no warning).
+- Checks: `pnpm review:check` green (680 tests).
+- Guides: USER-GUIDE (Step 6b, not-there-yet, what-do-I-do-if); backend README (Sync in Relay).
 
 ## Review
+Self-reviewed. Removed a hardcoded "NOVA" from page text (AGENTS.md: brand names only from config).

@@ -116,7 +116,7 @@ export function apiPost<T>(
 }
 
 export async function apiRequest<T>(
-  method: "POST" | "PATCH",
+  method: "POST" | "PATCH" | "PUT",
   path: string,
   body: unknown,
   schema: z.ZodType<T>,
