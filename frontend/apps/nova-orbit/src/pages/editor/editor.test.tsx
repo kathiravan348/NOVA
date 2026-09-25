@@ -43,6 +43,26 @@ describe("Strategy editor", () => {
     await waitFor(() => expect(rows("Entry rules")).toHaveLength(1));
   });
 
+  it("shows each indicator's own settings with catalog defaults (D51)", async () => {
+    renderApp("/strategies/new");
+    await screen.findByRole("heading", { name: "New strategy" });
+    const indicator = screen.getAllByLabelText(/^Indicator/)[0]!;
+    /** "Label=value" for each text field next to the indicator, without the screen-reader context. */
+    const settings = () =>
+      within(indicator.closest("div.grid") as HTMLElement)
+        .getAllByRole<HTMLInputElement>("textbox")
+        .map((box) => `${box.labels?.[0]?.textContent?.split(",")[0]}=${box.value}`);
+    expect(within(indicator).getByRole("group", { name: "Momentum" })).toBeInTheDocument();
+
+    fireEvent.change(indicator, { target: { value: "macd_signal" } });
+    await waitFor(() =>
+      expect(settings()).toEqual(["Fast=12", "Slow=26", "Signal=9", "Bars ago=0"]),
+    );
+
+    fireEvent.change(indicator, { target: { value: "rsi" } });
+    await waitFor(() => expect(settings()).toEqual(["Period=14", "Bars ago=0"]));
+  });
+
   it("shows errors and no toast for an invalid form", async () => {
     renderApp("/strategies/new");
     fireEvent.click(await screen.findByRole("button", { name: "Save draft" }));

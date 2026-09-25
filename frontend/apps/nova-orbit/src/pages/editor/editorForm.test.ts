@@ -48,13 +48,16 @@ describe("editorForm", () => {
     bad.sizingType = "percent_equity";
     bad.percent = "120";
     bad.stopLossPercent = "-1";
-    bad.entry.conditions[0]!.right = { ...bad.entry.conditions[0]!.right, period: "2.5" };
+    bad.entry.conditions[0]!.right = {
+      ...bad.entry.conditions[0]!.right,
+      params: { period: "2.5" },
+    };
     bad.exit.conditions[0]!.left = { ...bad.exit.conditions[0]!.left, kind: "number", value: "x" };
     expect(issuesOf(bad)).toEqual(
       expect.arrayContaining([
         "percent",
         "stopLossPercent",
-        "entry.conditions.0.right.period",
+        "entry.conditions.0.right.params.period",
         "exit.conditions.0.left.value",
       ]),
     );
@@ -73,12 +76,81 @@ describe("editorForm", () => {
 
   it("requires code only in python mode and skips rule checks there", () => {
     const form = validForm();
-    form.entry.conditions[0]!.right = { ...form.entry.conditions[0]!.right, period: "" };
-    expect(issuesOf(form)).toEqual(["entry.conditions.0.right.period"]);
+    form.entry.conditions[0]!.right = {
+      ...form.entry.conditions[0]!.right,
+      params: { period: "" },
+    };
+    expect(issuesOf(form)).toEqual(["entry.conditions.0.right.params.period"]);
     const python = { ...form, mode: "python" as const };
     expect(issuesOf(python)).toEqual(["code"]);
     const spec = toSpec({ ...python, code: "def on_bar(ctx):\n    return []\n" });
     expect(spec.mode).toBe("python");
     expect(spec).not.toHaveProperty("entry");
+  });
+
+  it("loads an old MACD {period} as the catalog defaults and saves {fast, slow} (D51)", () => {
+    const [mock] = mockStrategies.filter((m) => m.versions.some((v) => v.spec.mode === "visual"));
+    const spec = mock!.versions.find((v) => v.spec.mode === "visual")!.spec;
+    if (spec.mode !== "visual") throw new Error("visual spec expected");
+    const old = {
+      ...spec,
+      entry: {
+        ...spec.entry,
+        conditions: [
+          {
+            ...spec.entry.conditions[0]!,
+            left: { kind: "indicator" as const, name: "macd" as const, params: { period: 20 } },
+          },
+        ],
+      },
+    };
+    const form = fromSpec("M", "", old);
+    expect(form.entry.conditions[0]!.left.params).toEqual({ fast: "12", slow: "26" });
+    const saved = toSpec(form);
+    expect(saved.mode === "visual" && saved.entry.conditions[0]!.left).toEqual({
+      kind: "indicator",
+      name: "macd",
+      params: { fast: 12, slow: 26 },
+    });
+  });
+
+  it("checks each catalog setting and fast < slow", () => {
+    const form = validForm();
+    const right = form.entry.conditions[0]!.right;
+    form.entry.conditions[0]!.right = {
+      ...right,
+      name: "macd_signal",
+      params: { fast: "30", slow: "26", signal: "0" },
+    };
+    expect(issuesOf(form)).toEqual([
+      "entry.conditions.0.right.params.signal",
+      "entry.conditions.0.right.params.fast",
+    ]);
+    form.entry.conditions[0]!.right = {
+      ...right,
+      name: "psar",
+      params: { step: "0.5", max: "-1" },
+    };
+    expect(issuesOf(form)).toEqual(["entry.conditions.0.right.params.max"]);
+  });
+
+  it("writes bars ago only when above 0 and checks it", () => {
+    const form = validForm();
+    form.entry.conditions[0]!.left = {
+      ...form.entry.conditions[0]!.left,
+      field: "high",
+      offset: "1",
+    };
+    const spec = toSpec(form);
+    expect(spec.mode === "visual" && spec.entry.conditions[0]!.left).toEqual({
+      kind: "price",
+      field: "high",
+      offset: 1,
+    });
+    expect(spec.mode === "visual" && spec.entry.conditions[0]!.right).not.toHaveProperty("offset");
+    for (const offset of ["-1", "2.5", "501"]) {
+      form.entry.conditions[0]!.left = { ...form.entry.conditions[0]!.left, offset };
+      expect(issuesOf(form)).toEqual(["entry.conditions.0.left.offset"]);
+    }
   });
 });

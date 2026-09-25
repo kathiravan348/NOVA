@@ -20,6 +20,19 @@ describe("strategyText", () => {
     );
   });
 
+  it("uses catalog labels, catalog setting order and bars ago (D51)", () => {
+    expect(describeOperand({ kind: "price", field: "high", offset: 1 })).toBe("High 1 bar ago");
+    expect(
+      describeOperand({
+        kind: "indicator",
+        name: "macd_signal",
+        params: { signal: 9, slow: 26, fast: 12 },
+        offset: 3,
+      }),
+    ).toBe("MACD signal(12, 26, 9) 3 bars ago");
+    expect(describeOperand({ kind: "indicator", name: "pivot_r1", params: {} })).toBe("Pivot R1");
+  });
+
   it("describes conditions with every op", () => {
     const close = { kind: "price", field: "close" } as const;
     const n = { kind: "number", value: 5 } as const;

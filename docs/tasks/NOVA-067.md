@@ -1,6 +1,6 @@
 # NOVA-067 — Strategy editor: all catalog indicators, their own settings, "bars ago" (D51)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-067 · **Depends on:** NOVA-064 (merge after NOVA-066)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-067 · **Depends on:** NOVA-064 (merge after NOVA-066)
 
 ## Goal
 In the visual editor the Indicator list shows the 38 catalog indicators grouped (Trend, Momentum, Volatility,
@@ -50,5 +50,15 @@ Modify: the 8 files above except `indicators.ts`, and `docs/guides/USER-GUIDE.md
 ## Questions
 
 ## Handoff
+Built by Claude (Antigravity offline). All acceptance checks pass.
+- ui-core `Select`: optional `group` → consecutive options in one `<optgroup>`; story "Grouped" + test.
+- Editor form: `params` (catalog keys) + `offset`; validation from the catalog (whole ≥ 1 / > 0, fast < slow,
+  bars ago 0–500). `fromSpec` keeps known keys, fills defaults, drops unknown (old MACD {period} → 12/26);
+  `toSpec` writes every catalog param and `offset` only when > 0, so mock specs round-trip unchanged.
+- `OperandFields`: grouped list of 38, one input per setting (reset to defaults on change), **Bars ago**.
+- `strategyText`: catalog labels and order, " 1 bar ago" / " 3 bars ago".
+- Browser (mock mode, 360px): no page overflow, settings wrap two per row inside the card.
+- Checks: `pnpm review:check` green. Guides: USER-GUIDE Step 4 (groups, Bars ago) and the FAQ row.
 
 ## Review
+Self-reviewed. Screenshots timed out (pane hidden); layout checked by measuring field boxes at 360px.

@@ -7,7 +7,28 @@ export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  /** Consecutive options with the same group render inside one `<optgroup>`. */
+  group?: string;
 }
+
+type OptionRun = { group?: string; options: SelectOption[] };
+
+/** Splits options into runs of the same group, keeping their order. */
+function runsOf(options: SelectOption[]): OptionRun[] {
+  const runs: OptionRun[] = [];
+  for (const option of options) {
+    const last = runs[runs.length - 1];
+    if (last && last.group === option.group) last.options.push(option);
+    else runs.push({ group: option.group, options: [option] });
+  }
+  return runs;
+}
+
+const renderOption = (option: SelectOption) => (
+  <option key={option.value} value={option.value} disabled={option.disabled}>
+    {option.label}
+  </option>
+);
 
 export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "id"> {
   id?: string;
@@ -78,11 +99,15 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                 {placeholder}
               </option>
             )}
-            {options.map((option) => (
-              <option key={option.value} value={option.value} disabled={option.disabled}>
-                {option.label}
-              </option>
-            ))}
+            {runsOf(options).map((run, i) =>
+              run.group === undefined ? (
+                run.options.map(renderOption)
+              ) : (
+                <optgroup key={`${run.group}-${i}`} label={run.group}>
+                  {run.options.map(renderOption)}
+                </optgroup>
+              ),
+            )}
             {children}
           </select>
           <span

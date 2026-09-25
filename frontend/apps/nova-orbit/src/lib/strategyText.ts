@@ -1,7 +1,6 @@
 import type {
   Condition,
   ConditionOp,
-  IndicatorName,
   Operand,
   PriceField,
   Risk,
@@ -20,18 +19,6 @@ const priceLabel: Record<PriceField, string> = {
   volume: "Volume",
 };
 
-// Short labels for the first eight indicators; the rest use the catalog label until NOVA-067.
-const indicatorLabel: Partial<Record<IndicatorName, string>> = {
-  sma: "SMA",
-  ema: "EMA",
-  rsi: "RSI",
-  macd: "MACD",
-  vwap: "VWAP",
-  atr: "ATR",
-  bb_upper: "Bollinger upper",
-  bb_lower: "Bollinger lower",
-};
-
 const opLabel: Record<ConditionOp, string> = {
   crosses_above: "crosses above",
   crosses_below: "crosses below",
@@ -42,18 +29,27 @@ const opLabel: Record<ConditionOp, string> = {
   eq: "=",
 };
 
-/** `Close`, `VWAP`, `RSI(14)`, `SMA(period 20)` → params in key order; numbers as written. */
+const barsAgo = (offset: number | undefined) =>
+  offset ? ` ${offset} ${offset === 1 ? "bar" : "bars"} ago` : "";
+
+/**
+ * `Close`, `High 1 bar ago`, `VWAP`, `RSI(14)`, `MACD signal(12, 26, 9)`, `Pivot R1`: catalog labels
+ * (D51), settings in catalog order (unknown old keys after them), numbers as written.
+ */
 export function describeOperand(operand: Operand): string {
   switch (operand.kind) {
     case "price":
-      return priceLabel[operand.field];
+      return priceLabel[operand.field] + barsAgo(operand.offset);
     case "number":
       return String(operand.value);
     case "indicator": {
-      const values = Object.values(operand.params);
-      const name =
-        indicatorLabel[operand.name] ?? indicatorDef(operand.name)?.label ?? operand.name;
-      return values.length > 0 ? `${name}(${values.join(", ")})` : name;
+      const def = indicatorDef(operand.name);
+      const known = (def?.params ?? []).map((p) => p.key).filter((k) => k in operand.params);
+      const keys = [...known, ...Object.keys(operand.params).filter((k) => !known.includes(k))];
+      const values = keys.map((k) => operand.params[k]);
+      const name = def?.label ?? operand.name;
+      const text = values.length > 0 ? `${name}(${values.join(", ")})` : name;
+      return text + barsAgo(operand.offset);
     }
   }
 }

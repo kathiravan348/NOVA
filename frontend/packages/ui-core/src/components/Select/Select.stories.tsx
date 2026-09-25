@@ -64,3 +64,18 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+export const Grouped: Story = {
+  args: {
+    label: "Indicator",
+    options: [
+      { value: "sma", label: "SMA", group: "Trend" },
+      { value: "ema", label: "EMA", group: "Trend" },
+      { value: "macd", label: "MACD line", group: "Trend" },
+      { value: "rsi", label: "RSI", group: "Momentum" },
+      { value: "atr", label: "ATR", group: "Volatility" },
+      { value: "pivot", label: "Pivot", group: "Levels" },
+    ],
+    defaultValue: "rsi",
+  },
+};

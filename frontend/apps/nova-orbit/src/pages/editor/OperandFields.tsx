@@ -1,6 +1,7 @@
 import { useFormContext } from "react-hook-form";
+import { INDICATORS, indicatorDef, type IndicatorGroup, type IndicatorName } from "@nova/contracts";
 import { Input, Select, type SelectOption } from "@nova/ui-core";
-import type { EditorForm } from "./editorForm";
+import { defaultParams, type EditorForm } from "./editorForm";
 
 export type OperandPath = `${"entry" | "exit"}.conditions.${number}.${"left" | "right"}`;
 
@@ -18,16 +19,19 @@ const fieldOptions: SelectOption[] = [
   { value: "volume", label: "Volume" },
 ];
 
-const indicatorOptions: SelectOption[] = [
-  { value: "sma", label: "SMA" },
-  { value: "ema", label: "EMA" },
-  { value: "rsi", label: "RSI" },
-  { value: "macd", label: "MACD" },
-  { value: "vwap", label: "VWAP" },
-  { value: "atr", label: "ATR" },
-  { value: "bb_upper", label: "Bollinger upper" },
-  { value: "bb_lower", label: "Bollinger lower" },
-];
+const groupLabel: Record<IndicatorGroup, string> = {
+  trend: "Trend",
+  momentum: "Momentum",
+  volatility: "Volatility",
+  volume: "Volume",
+  levels: "Levels (previous day)",
+};
+
+const indicatorOptions: SelectOption[] = INDICATORS.map((i) => ({
+  value: i.name,
+  label: i.label,
+  group: groupLabel[i.group],
+}));
 
 export interface OperandFieldsProps {
   name: OperandPath;
@@ -38,10 +42,14 @@ export interface OperandFieldsProps {
 }
 
 export function OperandFields({ name, label, context }: OperandFieldsProps) {
-  const { register, watch, getFieldState, formState } = useFormContext<EditorForm>();
+  const { register, watch, setValue, getFieldState, formState } = useFormContext<EditorForm>();
   const kind = watch(`${name}.kind`);
   const indicator = watch(`${name}.name`);
+  const params = indicatorDef(indicator)?.params ?? [];
   const sr = <span className="sr-only">, {context}</span>;
+  const errorOf = (path: `${OperandPath}.${"value" | "offset" | `params.${string}`}`) =>
+    getFieldState(path, formState).error?.message;
+  const nameField = register(`${name}.name`);
 
   return (
     <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
@@ -62,7 +70,7 @@ export function OperandFields({ name, label, context }: OperandFieldsProps) {
         <Input
           label={<>Value{sr}</>}
           inputMode="decimal"
-          error={getFieldState(`${name}.value`, formState).error?.message}
+          error={errorOf(`${name}.value`)}
           {...register(`${name}.value`)}
         />
       )}
@@ -70,16 +78,36 @@ export function OperandFields({ name, label, context }: OperandFieldsProps) {
         <Select
           label={<>Indicator{sr}</>}
           options={indicatorOptions}
-          {...register(`${name}.name`)}
+          {...nameField}
+          onChange={(e) => {
+            void nameField.onChange(e);
+            setValue(`${name}.params`, defaultParams(e.target.value as IndicatorName), {
+              shouldValidate: formState.isSubmitted,
+            });
+          }}
         />
       )}
-      {kind === "indicator" && indicator !== "vwap" && (
+      {kind === "indicator" &&
+        params.map((p) => (
+          <Input
+            key={`${indicator}-${p.key}`}
+            label={
+              <>
+                {p.label}
+                {sr}
+              </>
+            }
+            inputMode={p.integer ? "numeric" : "decimal"}
+            error={errorOf(`${name}.params.${p.key}`)}
+            {...register(`${name}.params.${p.key}`)}
+          />
+        ))}
+      {kind !== "number" && (
         <Input
-          label={<>Period{sr}</>}
+          label={<>Bars ago{sr}</>}
           inputMode="numeric"
-          containerClassName="col-span-2"
-          error={getFieldState(`${name}.period`, formState).error?.message}
-          {...register(`${name}.period`)}
+          error={errorOf(`${name}.offset`)}
+          {...register(`${name}.offset`)}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-070). NOVA **never places real orders**: it only
+> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-070; indicators NOVA-064–067). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -93,8 +93,23 @@ Go to **Strategies → New strategy** (or **Edit** on an existing one).
 1. **Basics** — give it a **Name** and **Description**, choose **Segment** (delivery or intraday),
    **Exchange** (NSE) and **Timeframe** (candle size, e.g. 1 day or 5 minutes).
 2. **Entry rules** — *when to buy*. Each rule is: **Left** thing · comparison · **Right** thing.
-   - A "thing" can be a **Price** (Open, High, Low, Close, Volume), an **Indicator** (SMA, EMA, RSI, MACD,
-     VWAP, ATR, Bollinger upper/lower, with a period like 20), or a plain **Number**.
+   - A "thing" can be a **Price** (Open, High, Low, Close, Volume), an **Indicator**, or a plain **Number**.
+   - An *indicator* is a number calculated from past prices. The **Indicator** list has 38, in groups.
+     Choosing one shows its own settings (for example MACD: **Fast**, **Slow**, **Signal**), already filled
+     with the usual values. You can change them.
+     - **Trend**: moving averages (SMA, EMA, WMA), MACD; **SuperTrend** (a line under the price in an
+       up-trend, above it in a down-trend); **ADX** (how strong a trend is, whatever its direction) with
+       **+DI / −DI** (buying vs selling pressure); **Parabolic SAR** (a trailing stop that follows the trend).
+     - **Momentum**: RSI; **Stochastic** (where the close sits in the recent high–low range); **CCI** (how far
+       the price is from its average); **Williams %R** (like Stochastic, from 0 down to −100); rate of change %.
+     - **Volatility**: ATR (the average daily range), Bollinger bands; **Keltner** bands (average ± ATR);
+       **Highest high / Lowest low** of the last few candles (Donchian).
+     - **Volume**: VWAP; **OBV** (volume added on up days, taken away on down days); **MFI** (like RSI but
+       weighted by volume); Volume SMA.
+     - **Levels (previous day)**: yesterday's high, low and close, and the **pivot** levels traders compute
+       from them (Pivot, R1/R2 above it, S1/S2 below it).
+   - **Bars ago** looks back in time: 0 is the current candle, 1 the one before. Example: *Close greater
+     than High, 1 bar ago* means "today's close beats yesterday's high".
    - Comparisons: *crosses above*, *crosses below*, *greater than*, *less than*, *equal*, etc.
    - Choose **All conditions** (every rule must be true) or **Any condition** (one is enough).
    - Add rules with **Add condition**; remove one with its remove button.
@@ -225,5 +240,6 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | Yellow bar at the top | You are in demo mode: nothing you do is saved. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then ask the admin to download data. |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
+| Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |
 | Rate-limit warning above 80% | Wait for the reset time shown, or lower how much you download at once. |

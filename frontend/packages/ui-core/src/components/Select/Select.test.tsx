@@ -64,4 +64,22 @@ describe("Select", () => {
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
+
+  it("puts consecutive options of one group in an optgroup and keeps ungrouped ones flat", () => {
+    const { container } = render(
+      <Select
+        label="Indicator"
+        options={[
+          { value: "none", label: "None" },
+          { value: "sma", label: "SMA", group: "Trend" },
+          { value: "ema", label: "EMA", group: "Trend" },
+          { value: "rsi", label: "RSI", group: "Momentum" },
+        ]}
+      />,
+    );
+    const groups = container.querySelectorAll("optgroup");
+    expect([...groups].map((g) => g.label)).toEqual(["Trend", "Momentum"]);
+    expect(groups[0]!.querySelectorAll("option")).toHaveLength(2);
+    expect(container.querySelector("select > option")).toHaveTextContent("None");
+  });
 });

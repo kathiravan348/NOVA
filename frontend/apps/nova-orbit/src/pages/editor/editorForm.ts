@@ -9,6 +9,8 @@ import {
   StrategySpecPythonSchema,
   StrategySpecVisualSchema,
   TimeframeSchema,
+  indicatorDef,
+  type IndicatorName,
   type Operand,
   type RuleGroup,
   type StrategySpec,
@@ -23,12 +25,17 @@ import {
 const isNumber = (v: string) => v.trim() !== "" && Number.isFinite(Number(v));
 const isPositive = (v: string) => isNumber(v) && Number(v) > 0;
 const isPositiveInt = (v: string) => isPositive(v) && Number.isInteger(Number(v));
+const isOffset = (v: string) =>
+  isNumber(v) && Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 500;
 
 export const OperandFormSchema = z.object({
   kind: z.enum(["price", "indicator", "number"]),
   field: PriceFieldSchema,
   name: IndicatorNameSchema,
-  period: z.string(),
+  /** The indicator's settings by catalog key (D51). */
+  params: z.record(z.string(), z.string()),
+  /** Bars ago (D51), for price and indicator operands. */
+  offset: z.string(),
   value: z.string(),
 });
 export type OperandForm = z.infer<typeof OperandFormSchema>;
@@ -102,8 +109,11 @@ export const EditorFormSchema = z
         for (const side of ["left", "right"] as const) {
           const o = c[side];
           const at = [group, "conditions", i, side];
-          if (o.kind === "indicator" && o.name !== "vwap" && !isPositiveInt(o.period)) {
-            issue([...at, "period"], "Whole number above 0");
+          if (o.kind === "indicator") {
+            for (const [key, message] of paramIssues(o)) issue([...at, "params", key], message);
+          }
+          if (o.kind !== "number" && !isOffset(o.offset)) {
+            issue([...at, "offset"], "Whole number from 0 to 500");
           }
           if (o.kind === "number" && !isNumber(o.value)) issue([...at, "value"], "Enter a number");
         }
@@ -112,11 +122,43 @@ export const EditorFormSchema = z
   });
 export type EditorForm = z.infer<typeof EditorFormSchema>;
 
+/** Field problems of an indicator operand's settings, checked against the catalog (D51). */
+function paramIssues(o: OperandForm): [string, string][] {
+  const params = indicatorDef(o.name)?.params ?? [];
+  const found: [string, string][] = [];
+  for (const p of params) {
+    const v = o.params[p.key] ?? "";
+    if (p.integer ? !isPositiveInt(v) : !isPositive(v)) {
+      found.push([p.key, p.integer ? "Whole number above 0" : "Number above 0"]);
+    }
+  }
+  const fast = o.params["fast"];
+  const slow = o.params["slow"];
+  if (
+    fast !== undefined &&
+    slow !== undefined &&
+    isPositive(fast) &&
+    isPositive(slow) &&
+    Number(fast) >= Number(slow)
+  ) {
+    found.push(["fast", "Must be less than Slow"]);
+  }
+  return found;
+}
+
+/** The catalog defaults of an indicator as form strings. */
+export function defaultParams(name: IndicatorName): Record<string, string> {
+  return Object.fromEntries(
+    (indicatorDef(name)?.params ?? []).map((p) => [p.key, String(p.default)]),
+  );
+}
+
 export const emptyOperand = (kind: OperandForm["kind"]): OperandForm => ({
   kind,
   field: "close",
   name: "sma",
-  period: "20",
+  params: defaultParams("sma"),
+  offset: "0",
   value: "0",
 });
 
@@ -144,21 +186,29 @@ export const emptyForm = (): EditorForm => ({
   code: "",
 });
 
+/** Known settings come from the spec, missing ones get defaults, unknown ones are dropped (D51). */
 function operandFromSpec(o: Operand): OperandForm {
   const base = emptyOperand(o.kind);
-  if (o.kind === "price") return { ...base, field: o.field };
   if (o.kind === "number") return { ...base, value: String(o.value) };
-  return { ...base, name: o.name, period: o.params["period"] ? String(o.params["period"]) : "" };
+  const offset = String(o.offset ?? 0);
+  if (o.kind === "price") return { ...base, field: o.field, offset };
+  const params = defaultParams(o.name);
+  for (const key of Object.keys(params)) {
+    const value = o.params[key];
+    if (value !== undefined) params[key] = String(value);
+  }
+  return { ...base, name: o.name, params, offset };
 }
 
 function operandToSpec(o: OperandForm): Operand {
-  if (o.kind === "price") return { kind: "price", field: o.field };
   if (o.kind === "number") return { kind: "number", value: Number(o.value) };
-  return {
-    kind: "indicator",
-    name: o.name,
-    params: o.name === "vwap" ? {} : { period: Number(o.period) },
-  };
+  const offset = Number(o.offset);
+  const bars = offset > 0 ? { offset } : {};
+  if (o.kind === "price") return { kind: "price", field: o.field, ...bars };
+  const params = Object.fromEntries(
+    (indicatorDef(o.name)?.params ?? []).map((p) => [p.key, Number(o.params[p.key])]),
+  );
+  return { kind: "indicator", name: o.name, params, ...bars };
 }
 
 const groupFromSpec = (g: RuleGroup): RuleGroupForm => ({
