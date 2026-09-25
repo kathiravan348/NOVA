@@ -56,6 +56,8 @@ _(implementer writes here if blocked)_
 **Commands run:** `backend-check` pass (352 tests).
 **Checked:** live stack with the flag on: `/api/v1/docs` renders, schema has 25 public paths from all five
 services, no internal paths or headers; with it off, Core and all four services return 404.
+**Follow-up (Owner request):** operations grouped by area (Auth, Broker, Market data, Data jobs, Strategies,
+Backtests, Audit, System) via tags added in the merged schema; services unchanged.
 **New dependencies:** none.
 **Deviations:** `NOVA_API_DOCS` goes in the shared `x-backend` env block (strategy, backtest, atlas use it) and
 broker's own block, instead of five separate lines.

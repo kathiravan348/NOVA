@@ -21,6 +21,20 @@ router = APIRouter()
 # An OpenAPI document is free-form JSON; its shape is not ours to type.
 Schema = dict[str, Any]
 
+# Swagger groups operations by tag, in this order. Key: first path segment after /api/v1/.
+TAGS: list[tuple[str, tuple[str, ...], str]] = [
+    ("Auth", ("auth", "me"), "Sign-in, sign-out and the signed-in user."),
+    ("Broker", ("broker",), "Zerodha accounts, Kite login, profiles and API rate limits."),
+    ("Market data", ("market-data",), "Instruments and candles (Atlas)."),
+    ("Data jobs", ("data-jobs",), "Instrument sync and historical downloads (Atlas)."),
+    ("Strategies", ("strategies",), "Strategies, versions and stats."),
+    ("Backtests", ("backtests",), "Backtest runs, results and trades."),
+    ("Audit", ("audit",), "Audit log of changes."),
+    ("System", ("health",), "Service health."),
+]
+OTHER_TAG = "Other"
+METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
+
 
 def upstreams(settings: CoreSettings) -> dict[str, list[str]]:
     """Base URL of each configured service → the gateway prefixes it owns."""
@@ -32,8 +46,35 @@ def upstreams(settings: CoreSettings) -> dict[str, list[str]]:
     return owned
 
 
+def first_segment(path: str) -> str:
+    return path.removeprefix("/api/v1/").split("/", 1)[0]
+
+
 def forwarded(path: str, prefixes: list[str]) -> bool:
-    return path.removeprefix("/api/v1/").split("/", 1)[0] in prefixes
+    return first_segment(path) in prefixes
+
+
+def tag_for(path: str) -> str:
+    segment = first_segment(path)
+    return next((name for name, owned, _ in TAGS if segment in owned), OTHER_TAG)
+
+
+def tag_operations(schema: Schema) -> None:
+    """Give every operation its area's tag (copies: FastAPI caches Core's schema dicts)."""
+    used: set[str] = set()
+    paths: Schema = {}
+    for path, item in schema["paths"].items():
+        tag = tag_for(path)
+        used.add(tag)
+        paths[path] = {
+            key: {**operation, "tags": [tag]} if key in METHODS else operation
+            for key, operation in item.items()
+        }
+    schema["paths"] = paths
+    tags = [{"name": name, "description": text} for name, _, text in TAGS if name in used]
+    if OTHER_TAG in used:
+        tags.append({"name": OTHER_TAG, "description": "Not yet grouped."})
+    schema["tags"] = tags
 
 
 def merge(target: Schema, upstream: Schema, prefixes: list[str]) -> None:
@@ -76,6 +117,7 @@ async def openapi(request: Request) -> Schema:
             missing.extend(prefixes)
         else:
             merge(schema, upstream, prefixes)
+    tag_operations(schema)
     if missing:
         info: Schema = dict(schema.get("info", {}))
         info["description"] = "Not available right now: " + ", ".join(missing) + "."

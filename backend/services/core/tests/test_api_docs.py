@@ -79,3 +79,14 @@ def test_schema_names_a_failed_service(dummy_settings: CoreSettings) -> None:
     assert "/api/v1/auth/login" in schema["paths"]
     assert "/api/v1/strategies" in schema["paths"]
     assert schema["info"]["description"] == "Not available right now: backtests."
+
+
+def test_schema_groups_operations_by_area(dummy_settings: CoreSettings) -> None:
+    schema = docs_client(dummy_settings, Upstreams(), on=True).get("/api/v1/openapi.json").json()
+
+    assert schema["paths"]["/api/v1/auth/login"]["post"]["tags"] == ["Auth"]
+    assert schema["paths"]["/api/v1/me"]["get"]["tags"] == ["Auth"]
+    assert schema["paths"]["/api/v1/strategies"]["get"]["tags"] == ["Strategies"]
+    assert schema["paths"]["/api/v1/health"]["get"]["tags"] == ["System"]
+    names = [tag["name"] for tag in schema["tags"]]
+    assert names == ["Auth", "Strategies", "Audit", "System"]
