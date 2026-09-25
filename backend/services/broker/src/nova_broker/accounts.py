@@ -1,21 +1,48 @@
 """Broker accounts and the daily Kite login (D39)."""
 
+import re
 from datetime import UTC, datetime
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, RedirectResponse
 from nova_common import ApiException
+from nova_contracts import BrokerAccountCreate
+from nova_db import new_id
 from nova_db.audit import record_audit
 from nova_db.models import BrokerAccount, BrokerSession
 from nova_db.web import Db
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from nova_broker import login_state
 from nova_broker.deps import AppSettings, CallerDep, Cipher, Kite, state_key
 from nova_broker.kite import KiteError
+from nova_broker.limits import ensure_rules
 from nova_broker.sessions import expiry_after, note_expiry, status_of, to_contract
 
 router = APIRouter(prefix="/broker")
+
+CLIENT_ID = re.compile(r"^[A-Za-z0-9]{4,12}$")
+
+
+def add_account(db: Session, *, label: str, client_id: str) -> BrokerAccount:
+    """Adds a Zerodha account and its default rate-limit rules (CLI and `POST /broker/accounts`)."""
+    if not label.strip():
+        raise ValueError("Label must not be empty")
+    if not CLIENT_ID.fullmatch(client_id):
+        raise ValueError("Client id must be 4-12 letters or digits (your Zerodha user id)")
+    exists = db.scalar(
+        select(BrokerAccount.id).where(func.upper(BrokerAccount.client_id) == client_id.upper())
+    )
+    if exists:
+        raise ValueError(f"Account {client_id.upper()} already exists")
+    account = BrokerAccount(
+        id=new_id("brk"), broker="zerodha", label=label.strip(), client_id=client_id.upper()
+    )
+    db.add(account)
+    db.flush()
+    ensure_rules(db, account.id)
+    return account
 
 
 def _account(db: Db, account_id: str) -> BrokerAccount:
@@ -39,6 +66,27 @@ def list_accounts(_: CallerDep, db: Db) -> JSONResponse:
     body = [_view(db, account, now) for account in accounts]
     db.commit()
     return JSONResponse(body)
+
+
+@router.post("/accounts", status_code=201)
+def create_account(body: BrokerAccountCreate, caller: CallerDep, db: Db) -> JSONResponse:
+    try:
+        account = add_account(db, label=body.label, client_id=body.client_id)
+    except ValueError as exc:
+        raise ApiException(400, "invalid_request", str(exc)) from exc
+    record_audit(
+        db,
+        action="broker.account_create",
+        actor_id=caller.id,
+        actor_name=caller.name,
+        summary=f"Added {account.label} ({account.client_id})",
+        target_type="broker_account",
+        target_id=account.id,
+        ip=caller.ip,
+    )
+    view = _view(db, account, datetime.now(UTC))
+    db.commit()
+    return JSONResponse(view, status_code=201)
 
 
 @router.get("/accounts/{account_id}")

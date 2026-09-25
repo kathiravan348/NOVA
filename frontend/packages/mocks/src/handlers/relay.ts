@@ -1,5 +1,9 @@
 import { http, HttpResponse } from "msw";
-import { RateLimitUpdateSchema } from "@nova/contracts";
+import {
+  BrokerAccountCreateSchema,
+  RateLimitUpdateSchema,
+  type BrokerAccount,
+} from "@nova/contracts";
 import {
   mockAuditEntries,
   mockBrokerAccounts,
@@ -12,6 +16,28 @@ import { apiPath, badRequest, notFound, paginate } from "./api";
 export const relayHandlers = [
   http.get(apiPath("/broker/accounts"), () => {
     return HttpResponse.json(mockBrokerAccounts);
+  }),
+
+  // Demo: validates like the server and answers 201 without storing the account (D52).
+  http.post(apiPath("/broker/accounts"), async ({ request }) => {
+    const parsed = BrokerAccountCreateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) {
+      return badRequest("Body must be { label, clientId } with a 4-12 letter or digit client ID");
+    }
+    const clientId = parsed.data.clientId.toUpperCase();
+    if (mockBrokerAccounts.some((a) => a.clientId.toUpperCase() === clientId)) {
+      return badRequest(`Account ${clientId} already exists`);
+    }
+    const account: BrokerAccount = {
+      id: "brk_new",
+      broker: "zerodha",
+      label: parsed.data.label.trim(),
+      clientId,
+      enabled: true,
+      session: { status: "not_logged_in", loggedInAt: null, expiresAt: null },
+      createdAt: "2026-09-22T04:30:00Z",
+    };
+    return HttpResponse.json(account, { status: 201 });
   }),
 
   http.get(apiPath("/broker/accounts/:id"), ({ params }) => {

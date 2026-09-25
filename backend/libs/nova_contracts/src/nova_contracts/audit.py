@@ -12,6 +12,7 @@ AuditAction = Literal[
     "broker.login",
     "broker.session_expired",
     "broker.rate_limit_update",
+    "broker.account_create",
     "strategy.create",
     "strategy.update",
     "backtest.run",

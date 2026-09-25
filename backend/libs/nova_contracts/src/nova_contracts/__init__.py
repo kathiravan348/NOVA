@@ -15,6 +15,7 @@ from nova_contracts.backtest import (
 from nova_contracts.broker import (
     Broker,
     BrokerAccount,
+    BrokerAccountCreate,
     BrokerLink,
     BrokerLinkKind,
     BrokerProfile,
@@ -79,6 +80,7 @@ __all__ = [
     "BestNetPnl",
     "Broker",
     "BrokerAccount",
+    "BrokerAccountCreate",
     "BrokerLink",
     "BrokerLinkKind",
     "BrokerProfile",

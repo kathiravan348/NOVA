@@ -1,6 +1,7 @@
 import {
   AuditEntrySchema,
   BrokerAccountSchema,
+  type BrokerAccountCreate,
   BrokerProfileSchema,
   DataJobSchema,
   RateLimitSchema,
@@ -15,7 +16,7 @@ import {
   type RateLimitEndpoint,
   type RateLimitUpdate,
 } from "@nova/contracts";
-import { apiGet, apiSend, withQuery, type RequestOptions } from "../http";
+import { apiGet, apiPost, apiSend, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
 
@@ -25,6 +26,14 @@ export function listBrokerAccounts(init?: RequestOptions): Promise<BrokerAccount
 
 export function getBrokerAccount(accountId: string, init?: RequestOptions): Promise<BrokerAccount> {
   return apiGet(`/broker/accounts/${id(accountId)}`, BrokerAccountSchema, init);
+}
+
+/** Adds a Zerodha account (not logged in yet) with default rate limits (D52). */
+export function createBrokerAccount(
+  body: BrokerAccountCreate,
+  init?: RequestOptions,
+): Promise<BrokerAccount> {
+  return apiPost("/broker/accounts", body, BrokerAccountSchema, init);
 }
 
 export function listRateLimits(init?: RequestOptions): Promise<RateLimit[]> {

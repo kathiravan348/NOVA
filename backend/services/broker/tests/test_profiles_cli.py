@@ -1,7 +1,8 @@
 import httpx2
 import pytest
 from fastapi.testclient import TestClient
-from nova_broker.cli import add_account, main
+from nova_broker.accounts import add_account
+from nova_broker.cli import main
 from nova_broker.main import create_app
 from nova_broker.settings import BrokerSettings
 from nova_testing.parity import Parity

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-063). NOVA **never places real orders**: it only
+> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-070). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -172,7 +172,11 @@ Zerodha requires a fresh login every day: a login is valid until **6:00 AM the n
 ### Step 4 — Broker accounts
 A list of Zerodha accounts: name, client ID, session status and when it expires.
 Open one to see **Logged in**, **Expires**, **Time left**, and its request limits.
-(New accounts are added by the admin from the command line, not from the screen.)
+
+To add an account, press **Add account**, fill in **Account name** (any name, e.g. *Main*) and
+**Zerodha client ID** (your Zerodha user ID, e.g. *AB1234*), then press **Add account** again.
+The new account starts as **Not logged in**: open it and do the daily Kite login (Step 3).
+Each client ID can be added only once. Adding an account is written in the audit log.
 
 ### Step 5 — Broker
 Facts about our Zerodha setup: API type, plan, renewal date, API key (**only the last 4 characters**
@@ -196,8 +200,8 @@ Each job shows status, symbols, period, progress % and rows written. Open one fo
 failed. (Jobs are started by the admin from the command line for now.)
 
 ### Step 8 — Audit log
-A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, limit
-changes, strategies created or saved, backtests queued. Each line shows time, who, what, on what, and a
+A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, broker
+accounts added, limit changes, strategies created or saved, backtests queued. Each line shows time, who, what, on what, and a
 summary. Use **Show** to filter by kind of activity and **Load older entries** to go back in time.
 
 ---
@@ -205,8 +209,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 ## 6. What is NOT there yet (not bugs)
 
 - **No real buying or selling.** Placing orders is a later phase (NOVA Launch).
-- No screen buttons yet to add broker accounts, start data downloads or cancel jobs — the admin does these
-  from the command line. The *Cancel* button on a data job is a demo.
+- Broker accounts cannot be renamed, disabled or removed from the screen yet. There are no buttons yet to
+  start data downloads or cancel jobs either: the admin does these from the command line. The *Cancel* button on a data job is a demo.
 - Strategies cannot be deleted (old test results depend on them); set them to *Archived* instead.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.

@@ -47,6 +47,13 @@ export const BrokerAccountSchema = z.strictObject({
 });
 export type BrokerAccount = z.infer<typeof BrokerAccountSchema>;
 
+/** Request body for `POST /broker/accounts` (D52): the server trims the label and upper-cases the client ID. */
+export const BrokerAccountCreateSchema = z.strictObject({
+  label: z.string().max(60).regex(/\S/, "Enter an account name"),
+  clientId: z.string().regex(/^[A-Za-z0-9]{4,12}$/, "4–12 letters or digits"),
+});
+export type BrokerAccountCreate = z.infer<typeof BrokerAccountCreateSchema>;
+
 export const BrokerLinkKindSchema = z.enum([
   "docs",
   "rate_limits",

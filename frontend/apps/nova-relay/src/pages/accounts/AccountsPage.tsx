@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Plus } from "lucide-react";
 import type { BrokerAccount } from "@nova/contracts";
-import { Badge, DataTable, EmptyState, StatusBadge } from "@nova/ui-core";
+import { Badge, Button, DataTable, EmptyState, StatusBadge } from "@nova/ui-core";
 import { useBrokerAccounts } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
 import { brokerLabel, sessionLabel, sessionTone } from "../../lib/session";
+import { AddAccountModal } from "./AddAccountModal";
 
 const columns: ColumnDef<BrokerAccount, unknown>[] = [
   {
@@ -65,25 +67,37 @@ const columns: ColumnDef<BrokerAccount, unknown>[] = [
 
 export function AccountsPage() {
   const query = useBrokerAccounts();
+  const [adding, setAdding] = useState(false);
+  const addButton = (
+    <Button onClick={() => setAdding(true)}>
+      <Plus className="h-4 w-4" aria-hidden="true" />
+      Add account
+    </Button>
+  );
   return (
-    <DataTable
-      caption="Broker accounts"
-      columns={columns}
-      data={query.data ?? []}
-      getRowId={(a) => a.id}
-      loading={query.isPending}
-      error={
-        query.isError ? (
-          <QueryError error={query.error} onRetry={() => void query.refetch()} />
-        ) : undefined
-      }
-      emptyState={
-        <EmptyState
-          icon={<KeyRound className="h-6 w-6" />}
-          title="No broker accounts"
-          description="Accounts are added in Stage B."
-        />
-      }
-    />
+    <>
+      <DataTable
+        caption="Broker accounts"
+        columns={columns}
+        data={query.data ?? []}
+        getRowId={(a) => a.id}
+        loading={query.isPending}
+        toolbar={query.data && query.data.length > 0 ? addButton : undefined}
+        error={
+          query.isError ? (
+            <QueryError error={query.error} onRetry={() => void query.refetch()} />
+          ) : undefined
+        }
+        emptyState={
+          <EmptyState
+            icon={<KeyRound className="h-6 w-6" />}
+            title="No broker accounts"
+            description="Add your Zerodha account to log in to Kite and download market data."
+            action={addButton}
+          />
+        }
+      />
+      <AddAccountModal open={adding} onClose={() => setAdding(false)} />
+    </>
   );
 }

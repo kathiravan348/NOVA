@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 25 Sep 2026 (NOVA-063). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 25 Sep 2026 (NOVA-070). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -47,6 +47,7 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
 | `GET /broker/accounts` | Lists Zerodha accounts with their session status (`active` / `expired` / `not_logged_in`), login and expiry times. Notices newly expired sessions (audit `broker.session_expired`). | — | `BrokerAccount[]` |
+| `POST /broker/accounts` | Adds a Zerodha account (not logged in) and its default rate-limit rules, like the `add-account` command. The label is stored trimmed and the client ID upper-cased. Audit: `broker.account_create` ("Added Main (AB1234)"). | `BrokerAccountCreate {label (≤ 60, not blank), clientId (4–12 letters/digits)}` | 201 `BrokerAccount`; 400 bad body or client ID already exists |
 | `GET /broker/accounts/{id}` | One account, same shape. | path `id` | `BrokerAccount`; 404 |
 | `GET /broker/accounts/{id}/login` | **Browser navigation, not JSON.** Starts the daily Kite login: redirects (302) to Zerodha's login page with a signed `state`. 400 if the account is disabled. | path `id` | 302 → Kite |
 | `GET /broker/kite/callback` | **Kite sends the browser here after login.** Checks `state`, swaps `request_token` for an access token, checks the Zerodha user ID matches the account, stores the token **encrypted**, sets expiry to the next 06:00 IST. Audit: `broker.login` (success or failure with reason). | query `state`, `status`, `request_token` | 302 → Relay `/accounts/{id}?kite=connected\|failed` |

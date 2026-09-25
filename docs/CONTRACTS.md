@@ -7,7 +7,7 @@
 > `GET /api/v1/broker/kite/callback` → 302 back to Relay `/accounts/{id}?kite=connected|failed`.
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount, BrokerProfile, RateLimit, RateLimitUpdate, DataJob, Instrument, Candle, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, RateLimit, RateLimitUpdate, DataJob, Instrument, Candle, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
@@ -22,6 +22,7 @@
 | Trade | `GET /api/v1/backtests/{id}/trades?limit=&cursor=` → `Page<Trade>` | `data/trades.json` | Orbit |
 | Charges | — | `data/trades.json` (inside each trade) | Ledger, Orbit, ui-trading |
 | BrokerAccount | `GET /api/v1/broker/accounts`, `GET /api/v1/broker/accounts/{id}` | `data/brokerAccounts.json` | Relay |
+| BrokerAccountCreate | `POST /api/v1/broker/accounts` → 201 `BrokerAccount` (400 `invalid_request` bad body or duplicate client ID) | — (mock: validated, not stored) | Relay |
 | RateLimit (v2: `rules[]` per window with brokerLimit, novaLimit, used, resetsAt) | `GET /api/v1/broker/rate-limits` | `data/rateLimits.json` | Relay |
 | RateLimitUpdate | `PATCH /api/v1/broker/rate-limits/{accountId}/{endpoint}` → 204 (400 `invalid_request` above broker limit) | — (Stage A: validated, not stored) | Relay |
 | BrokerProfile | `GET /api/v1/broker/profiles`, `GET /api/v1/broker/profiles/{broker}` | `data/brokerProfiles.json` | Relay |

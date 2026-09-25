@@ -3,7 +3,6 @@
 import argparse
 import asyncio
 import logging
-import re
 import signal
 import sys
 import threading
@@ -12,42 +11,22 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from nova_common import ApiException
-from nova_db import create_db_engine, create_session_factory, new_id
-from nova_db.models import BrokerAccount, Instrument, Tick
-from sqlalchemy import func, select
+from nova_db import create_db_engine, create_session_factory
+from nova_db.models import Instrument, Tick
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, sessionmaker
 from websockets.asyncio.client import connect
 
+from nova_broker.accounts import add_account
 from nova_broker.crypto import TokenCipher, new_key
 from nova_broker.internal import active_session
-from nova_broker.limits import ensure_rules
 from nova_broker.recorder import Recorder, kite_url
 from nova_broker.settings import BrokerSettings, get_broker_settings
 
-CLIENT_ID = re.compile(r"^[A-Za-z0-9]{4,12}$")
 IST = ZoneInfo("Asia/Kolkata")
 MARKET_CLOSE = time(15, 30)
 MAX_TOKENS = 3000  # Kite's limit per WebSocket connection
-
-
-def add_account(db: Session, *, label: str, client_id: str) -> BrokerAccount:
-    if not label.strip():
-        raise ValueError("Label must not be empty")
-    if not CLIENT_ID.fullmatch(client_id):
-        raise ValueError("Client id must be 4-12 letters or digits (your Zerodha user id)")
-    exists = db.scalar(
-        select(BrokerAccount.id).where(func.upper(BrokerAccount.client_id) == client_id.upper())
-    )
-    if exists:
-        raise ValueError(f"Account {client_id} already exists")
-    account = BrokerAccount(
-        id=new_id("brk"), broker="zerodha", label=label.strip(), client_id=client_id.upper()
-    )
-    db.add(account)
-    db.flush()
-    ensure_rules(db, account.id)
-    return account
 
 
 def tick_symbols(db: Session, symbols: list[str]) -> dict[int, str]:

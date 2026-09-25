@@ -6,7 +6,7 @@ import httpx2
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from nova_broker.cli import add_account
+from nova_broker.accounts import add_account
 from nova_broker.crypto import new_key
 from nova_broker.main import create_app
 from nova_broker.settings import BrokerSettings

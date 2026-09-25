@@ -1,8 +1,9 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
-from nova_broker.cli import add_account
-from nova_db.models import AuditEntry, BrokerSession
+from nova_broker.accounts import add_account
+from nova_db.models import AuditEntry, BrokerSession, RateLimitRule
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
@@ -78,3 +79,65 @@ def test_unknown_account_is_not_found(client: TestClient) -> None:
 
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "not_found"
+
+
+def test_create_adds_an_account_with_default_limits(
+    client: TestClient, clean: Engine, parity: Parity
+) -> None:
+    response = client.post(
+        "/api/v1/broker/accounts", json={"label": " Main ", "clientId": "ab1234"}
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    parity.assert_valid(body, "BrokerAccount")
+    assert (body["label"], body["clientId"], body["enabled"]) == ("Main", "AB1234", True)
+    assert body["session"]["status"] == "not_logged_in"
+    with Session(clean) as db:
+        rules = db.scalars(select(RateLimitRule).where(RateLimitRule.account_id == body["id"]))
+        assert len(rules.all()) == 6
+        audit = db.scalars(
+            select(AuditEntry).where(AuditEntry.action == "broker.account_create")
+        ).one()
+    assert (audit.actor_id, audit.target_id) == ("usr_owner", body["id"])
+    assert audit.summary == "Added Main (AB1234)"
+
+
+def test_create_rejects_a_duplicate_client_id(client: TestClient, clean: Engine) -> None:
+    _seed(clean)
+
+    response = client.post("/api/v1/broker/accounts", json={"label": "Again", "clientId": "aa1111"})
+
+    assert response.status_code == 400
+    assert response.json()["error"] == {
+        "code": "invalid_request",
+        "message": "Account AA1111 already exists",
+    }
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"label": "Main", "clientId": "AB-12"},
+        {"label": "Main", "clientId": "ABC"},
+        {"label": "   ", "clientId": "AB1234"},
+        {"label": "x" * 61, "clientId": "AB1234"},
+        {"label": "Main"},
+        {"label": "Main", "clientId": "AB1234", "enabled": False},
+    ],
+)
+def test_create_rejects_a_bad_body(client: TestClient, body: dict[str, object]) -> None:
+    response = client.post("/api/v1/broker/accounts", json=body)
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invalid_request"
+
+
+def test_create_needs_the_internal_token(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/broker/accounts",
+        json={"label": "Main", "clientId": "AB1234"},
+        headers={"x-nova-internal-token": "wrong"},
+    )
+
+    assert response.status_code == 401

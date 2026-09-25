@@ -114,6 +114,32 @@ describe("Relay MSW handlers", () => {
     expect(missing.status).toBe(404);
   });
 
+  describe("POST /api/v1/broker/accounts", () => {
+    const post = (body: unknown) =>
+      fetch("http://localhost/api/v1/broker/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+    it("answers 201 with a not-logged-in account", async () => {
+      const res = await post({ label: " Family ", clientId: "zz9999" });
+      expect(res.status).toBe(201);
+      const account = BrokerAccountSchema.parse(await res.json());
+      expect(account).toMatchObject({ label: "Family", clientId: "ZZ9999" });
+      expect(account.session.status).toBe("not_logged_in");
+    });
+
+    it("rejects a duplicate client ID or a bad body with 400", async () => {
+      const duplicate = await post({ label: "Again", clientId: "ab1234" });
+      expect(duplicate.status).toBe(400);
+      expect(ApiErrorSchema.parse(await duplicate.json()).error.message).toBe(
+        "Account AB1234 already exists",
+      );
+      expect((await post({ label: "Main", clientId: "AB-1" })).status).toBe(400);
+    });
+  });
+
   describe("PATCH /api/v1/broker/rate-limits/:accountId/:endpoint", () => {
     const patch = (path: string, body: unknown) =>
       fetch(`http://localhost/api/v1/broker/rate-limits/${path}`, {

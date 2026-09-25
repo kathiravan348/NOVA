@@ -77,4 +77,44 @@ describe("Broker accounts", () => {
     expect(await screen.findByText("Kite connected")).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.search).toBe(""));
   });
+
+  describe("Add account", () => {
+    const open = async () => {
+      renderApp("/accounts");
+      fireEvent.click(await screen.findByRole("button", { name: "Add account" }));
+      return screen.findByRole("dialog", { name: "Add broker account" });
+    };
+    const fill = (label: string, clientId: string) => {
+      fireEvent.change(screen.getByLabelText("Account name"), { target: { value: label } });
+      fireEvent.change(screen.getByLabelText("Zerodha client ID"), { target: { value: clientId } });
+      fireEvent.click(screen.getAllByRole("button", { name: "Add account" }).at(-1)!);
+    };
+
+    it("offers the button on an empty list too", async () => {
+      server.use(...emptyHandlers);
+      renderApp("/accounts");
+      expect((await screen.findAllByText("No broker accounts")).length).toBeGreaterThan(0);
+      expect(screen.getAllByRole("button", { name: "Add account" }).length).toBeGreaterThan(0);
+    });
+
+    it("checks the client ID before sending", async () => {
+      await open();
+      fill("Main", "AB-1");
+      expect(await screen.findByText("4–12 letters or digits")).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("shows the server message for a duplicate", async () => {
+      await open();
+      fill("Again", "ab1234");
+      expect(await screen.findByRole("alert")).toHaveTextContent("Account AB1234 already exists");
+    });
+
+    it("adds the account and closes (demo)", async () => {
+      await open();
+      fill("Family", "zz9999");
+      expect(await screen.findByText("Account added (demo)")).toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+  });
 });

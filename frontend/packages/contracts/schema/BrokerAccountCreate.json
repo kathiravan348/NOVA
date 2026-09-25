@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "maxLength": 60,
+      "pattern": "\\S"
+    },
+    "clientId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]{4,12}$"
+    }
+  },
+  "required": [
+    "label",
+    "clientId"
+  ],
+  "additionalProperties": false
+}

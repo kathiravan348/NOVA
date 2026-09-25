@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { RateLimitEndpoint, RateLimitUpdate } from "@nova/contracts";
+import type { BrokerAccountCreate, RateLimitEndpoint, RateLimitUpdate } from "@nova/contracts";
 import {
+  createBrokerAccount,
   getBrokerAccount,
   getBrokerProfile,
   listBrokerProfiles,
@@ -26,6 +27,19 @@ export function useBrokerAccount(id: string) {
     queryKey: queryKeys.brokerAccounts.detail(id),
     queryFn: ({ signal }) => getBrokerAccount(id, { signal }),
     enabled: Boolean(id),
+  });
+}
+
+/** Adds a broker account; refreshes the account list and rate limits (D52). */
+export function useCreateBrokerAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: BrokerAccountCreate) => createBrokerAccount(body),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.brokerAccounts.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.rateLimits.all }),
+      ]),
   });
 }
 

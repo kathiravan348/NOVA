@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 25 Sep 2026 (migrations `0001`–`0004`). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 25 Sep 2026 (migrations `0001`–`0005`). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -44,7 +44,7 @@ instruments   candles (hypertable)   ticks (hypertable)   data_jobs
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **broker_accounts** | Each Zerodha account NOVA knows (added with `add-account`). | `id`, `broker` (`zerodha`), `label`, `client_id` (unique Zerodha user ID), `enabled`, `created_at` |
+| **broker_accounts** | Each Zerodha account NOVA knows (added in Relay or with `add-account`). | `id`, `broker` (`zerodha`), `label`, `client_id` (unique Zerodha user ID), `enabled`, `created_at` |
 | **broker_sessions** | The current Kite login of each account (one row per account). Status is derived: no token = not logged in; past `expires_at` = expired. The access token is **encrypted** with `NOVA_BROKER_TOKEN_KEY`. | `account_id` (PK), `access_token_encrypted`, `logged_in_at`, `expires_at` (next 06:00 IST) |
 | **broker_profiles** | Facts about the Zerodha setup shown on Relay's Broker page, refreshed at broker start-up from settings + `data/zerodha.json`. Only the **last 4** characters of the API key are stored; the secret never is. | `broker` (PK), `name`, `api`, `plan`, `subscription_renews_on`, `api_key_last4`, `redirect_url`, `postback_url`, `static_ip`, `session_rule`, `links` (JSON) |
 | **rate_limit_rules** | The request limits per account × endpoint (`quote`, `historical`, `orders`, `other`) × window (`second`, `minute`, `day`). `nova_limit` must be > 0 and ≤ `broker_limit` (default 90% of it). Live usage is **not** here: it is in Redis. | PK (`account_id`, `endpoint`, `rate_window`), `broker_limit`, `nova_limit`, `updated_at` |
@@ -75,7 +75,7 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings), `summary`, `ip` |
+| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings), `summary`, `ip` |
 
 ## 6. Outside PostgreSQL
 
@@ -83,4 +83,4 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 |---|---|
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
-| **alembic_version** (table) | The migration the database is on (currently `0004`). Managed by Alembic only. |
+| **alembic_version** (table) | The migration the database is on (currently `0005`). Managed by Alembic only. |

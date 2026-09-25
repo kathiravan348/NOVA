@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BrokerAccount,
+  BrokerAccountCreateSchema,
   BrokerAccountSchema,
   BrokerProfileSchema,
   type BrokerProfile,
@@ -192,5 +193,24 @@ describe("BrokerProfileSchema", () => {
       BrokerProfileSchema.safeParse({ ...profile, links: [{ ...link, kind: "video" }] }).success,
     ).toBe(false);
     expect(BrokerProfileSchema.safeParse({ ...profile, apiSecret: "s" }).success).toBe(false);
+  });
+});
+
+describe("BrokerAccountCreateSchema", () => {
+  const ok = { label: "Main", clientId: "AB1234" };
+
+  it("accepts a label and a 4–12 character client ID", () => {
+    expect(BrokerAccountCreateSchema.safeParse(ok).success).toBe(true);
+    expect(BrokerAccountCreateSchema.safeParse({ ...ok, clientId: "ab12" }).success).toBe(true);
+  });
+
+  it("rejects a blank or long label, a bad client ID and extra fields", () => {
+    expect(BrokerAccountCreateSchema.safeParse({ ...ok, label: "  " }).success).toBe(false);
+    expect(BrokerAccountCreateSchema.safeParse({ ...ok, label: "x".repeat(61) }).success).toBe(
+      false,
+    );
+    expect(BrokerAccountCreateSchema.safeParse({ ...ok, clientId: "AB-12" }).success).toBe(false);
+    expect(BrokerAccountCreateSchema.safeParse({ ...ok, clientId: "ABC" }).success).toBe(false);
+    expect(BrokerAccountCreateSchema.safeParse({ ...ok, enabled: false }).success).toBe(false);
   });
 });

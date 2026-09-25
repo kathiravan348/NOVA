@@ -45,6 +45,13 @@ class BrokerAccount(Contract):
     created_at: UtcDateTime
 
 
+class BrokerAccountCreate(Contract):
+    """Body of `POST /broker/accounts` (D52). Stored with a trimmed label, upper-case client id."""
+
+    label: Annotated[str, Field(max_length=60, pattern=r"\S")]
+    client_id: Annotated[str, Field(pattern=r"^[A-Za-z0-9]{4,12}$")]
+
+
 class BrokerLink(Contract):
     label: NonEmpty
     url: Annotated[str, Field(pattern=r"^https://[^\s]+$")]

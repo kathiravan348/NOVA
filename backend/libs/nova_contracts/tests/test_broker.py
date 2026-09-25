@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from nova_contracts import BrokerAccount, BrokerProfile
+from nova_contracts import BrokerAccount, BrokerAccountCreate, BrokerProfile
 from nova_testing.parity import Parity
 from pydantic import ValidationError
 
@@ -54,3 +54,26 @@ def test_bad_profile_is_rejected(parity: Parity, change: dict[str, object]) -> N
 
     with pytest.raises(ValidationError):
         BrokerProfile.model_validate_json(json.dumps(raw))
+
+
+def test_create_body_matches_schema(parity: Parity) -> None:
+    body = {"label": "Main", "clientId": "AB1234"}
+
+    dumped = BrokerAccountCreate.model_validate_json(json.dumps(body)).model_dump(mode="json")
+
+    assert dumped == body
+    parity.assert_valid(dumped, "BrokerAccountCreate")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"label": " ", "clientId": "AB1234"},
+        {"label": "x" * 61, "clientId": "AB1234"},
+        {"label": "Main", "clientId": "AB 12"},
+        {"label": "Main", "clientId": "ABCDEFGHIJKLM"},
+    ],
+)
+def test_bad_create_body_is_rejected(body: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        BrokerAccountCreate.model_validate_json(json.dumps(body))
