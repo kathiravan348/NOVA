@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ArchiveJobCreateSchema,
   DataJob,
   DataJobCreateSchema,
   DataJobSchema,
@@ -227,5 +228,13 @@ describe("DataJobCreateSchema", () => {
     { extra: true },
   ])("rejects %o", (change) => {
     expect(DataJobCreateSchema.safeParse({ ...body, ...change }).success).toBe(false);
+  });
+});
+
+describe("ArchiveJobCreateSchema", () => {
+  it("takes one date", () => {
+    expect(ArchiveJobCreateSchema.parse({ before: "2026-09-01" }).before).toBe("2026-09-01");
+    expect(ArchiveJobCreateSchema.safeParse({ before: "1 Sep" }).success).toBe(false);
+    expect(ArchiveJobCreateSchema.safeParse({}).success).toBe(false);
   });
 });

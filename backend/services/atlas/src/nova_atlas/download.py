@@ -100,7 +100,8 @@ def upsert_candles(db: Session, rows: list[dict[str, Any]]) -> int:
     return len(rows)
 
 
-def _finish(db: Session, job: DataJob, error: str | None) -> None:
+def finish_job(db: Session, job: DataJob, error: str | None) -> None:
+    """Ends a job `completed` (100%) or `failed` with `error`, and commits."""
     job.status = "failed" if error else "completed"
     job.error = error[:ERROR_LENGTH] if error else None
     if not error:
@@ -112,7 +113,7 @@ def _finish(db: Session, job: DataJob, error: str | None) -> None:
 def fail_job(db: Session, job_id: str, message: str) -> None:
     job = db.get(DataJob, job_id)
     if job is not None:
-        _finish(db, job, message)
+        finish_job(db, job, message)
 
 
 def run_download(db: Session, job_id: str, broker: BrokerData) -> None:
@@ -128,7 +129,11 @@ def run_download(db: Session, job_id: str, broker: BrokerData) -> None:
     tokens = {symbol: token for symbol, token in found}
     missing = [s for s in job.symbols if tokens.get(s) is None]
     if missing:
-        _finish(db, job, f"Unknown instruments: {', '.join(missing)} (run sync-instruments)")
+        finish_job(
+            db,
+            job,
+            f"Unknown instruments: {', '.join(missing)} (sync the stock list with Kite first)",
+        )
         return
 
     chunks = plan_chunks(job.date_from, job.date_to, job.timeframe)
@@ -155,6 +160,6 @@ def run_download(db: Session, job_id: str, broker: BrokerData) -> None:
                 db.commit()
     except (BrokerDataError, ValueError, TypeError) as exc:
         db.rollback()
-        _finish(db, job, str(exc) or type(exc).__name__)
+        finish_job(db, job, str(exc) or type(exc).__name__)
         return
-    _finish(db, job, None)
+    finish_job(db, job, None)

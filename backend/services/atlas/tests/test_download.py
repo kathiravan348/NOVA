@@ -90,7 +90,7 @@ def test_unknown_instruments_fail_the_job(clean: Engine, broker: BrokerData) -> 
         job = db.get(DataJob, job_id)
 
     assert job is not None and job.status == "failed"
-    assert job.error == "Unknown instruments: INFY (run sync-instruments)"
+    assert job.error == "Unknown instruments: INFY (sync the stock list with Kite first)"
 
 
 def test_broker_errors_fail_the_job(

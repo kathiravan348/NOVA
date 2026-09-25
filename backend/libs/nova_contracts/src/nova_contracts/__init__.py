@@ -38,6 +38,7 @@ from nova_contracts.common import (
 )
 from nova_contracts.data_job import (
     MAX_DOWNLOAD_SYMBOLS,
+    ArchiveJobCreate,
     DataJob,
     DataJobCreate,
     DataJobStatus,
@@ -129,6 +130,7 @@ __all__ = [
     "RecorderSettingsUpdate",
     "RecorderState",
     "ApiError",
+    "ArchiveJobCreate",
     "ApiErrorBody",
     "ApiErrorCode",
     "Contract",

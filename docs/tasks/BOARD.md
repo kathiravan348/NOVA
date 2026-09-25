@@ -82,7 +82,7 @@
 | NOVA-074 | Atlas: universe in the database + sync over HTTP (D54, migration 0006) | done | Claude | 072 |
 | NOVA-075 | Relay: Instruments page (stock list + Sync with Kite) (D54) | done | Claude | 073, 074 |
 | NOVA-076 | Broker: always-on tick recorder with an on/off setting (D54, migration 0007) | done | Claude | 074 |
-| NOVA-077 | Atlas: tick archive as a data job (D54) | planned | — | 076 |
+| NOVA-077 | Atlas: tick archive as a data job (D54) | done | Claude | 076 |
 | NOVA-078 | Relay: tick recording switch + Archive old ticks (D54) | planned | — | 075, 076, 077 |
 
 ## Parallel lanes (tasks that can run at the same time)

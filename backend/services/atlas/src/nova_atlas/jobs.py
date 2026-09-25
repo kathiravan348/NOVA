@@ -1,6 +1,6 @@
 """Data jobs (D32, D41, D54): list, one job, queue a download, cancel."""
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Query
@@ -11,6 +11,7 @@ from nova_contracts import (
     MAX_DOWNLOAD_SYMBOLS,
     PAGE_LIMIT_DEFAULT,
     PAGE_LIMIT_MAX,
+    ArchiveJobCreate,
     DataJobCreate,
     Page,
 )
@@ -23,6 +24,7 @@ from nova_db.paging import newest_first
 from nova_db.web import Db
 from sqlalchemy.orm import Session
 
+from nova_atlas.archive import IST, archive_days, archive_symbols
 from nova_atlas.download import KITE_INTERVAL
 from nova_atlas.universe import load_universe
 
@@ -76,6 +78,45 @@ def queue_download(
         actor_id=actor_id,
         actor_name=actor_name,
         summary=f"Queued {timeframe} download of {len(symbols)} symbol(s), {first} to {last}",
+        target_type="data_job",
+        target_id=job.id,
+        ip=ip,
+    )
+    return job
+
+
+def queue_archive(
+    db: Session,
+    *,
+    before: date,
+    actor_id: str | None = None,
+    actor_name: str = CONSOLE,
+    ip: str | None = None,
+) -> DataJob:
+    """Adds a `queued` archive of every tick received before `before` (IST) and audits it."""
+    if before > datetime.now(IST).date():
+        raise ValueError("The date must be today or earlier")
+    days = archive_days(db, before)
+    if not days:
+        raise ValueError(f"No ticks before {before.isoformat()}")
+    job = DataJob(
+        id=new_id("job"),
+        type="archive",
+        status="queued",
+        exchange="NSE",
+        segment="equity_delivery",
+        symbols=archive_symbols(db, before),
+        timeframe=None,
+        date_from=days[0],
+        date_to=before - timedelta(days=1),
+    )
+    db.add(job)
+    record_audit(
+        db,
+        action="data_job.create",
+        actor_id=actor_id,
+        actor_name=actor_name,
+        summary=f"Queued archive of ticks before {before.isoformat()}",
         target_type="data_job",
         target_id=job.id,
         ip=ip,
@@ -189,3 +230,15 @@ def cancel(job_id: str, caller: CallerDep, db: Db) -> JSONResponse:
         raise ApiException(400, "invalid_request", str(exc)) from exc
     db.commit()
     return JSONResponse(to_contract(job).model_dump(mode="json"))
+
+
+@router.post("/data-jobs/archive", status_code=201)
+def create_archive(body: ArchiveJobCreate, caller: CallerDep, db: Db) -> JSONResponse:
+    try:
+        job = queue_archive(
+            db, before=body.before, actor_id=caller.id, actor_name=caller.name, ip=caller.ip
+        )
+    except ValueError as exc:
+        raise ApiException(400, "invalid_request", str(exc)) from exc
+    db.commit()
+    return JSONResponse(to_contract(job).model_dump(mode="json"), status_code=201)

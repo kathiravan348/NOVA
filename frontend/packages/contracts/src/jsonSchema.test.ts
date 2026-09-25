@@ -5,7 +5,7 @@ import { LoginRequestSchema } from "./auth";
 import { AuditEntrySchema } from "./audit";
 import { BacktestResultSchema, BacktestRunCreateSchema, BacktestRunSchema } from "./backtest";
 import { BrokerAccountCreateSchema, BrokerAccountSchema, BrokerProfileSchema } from "./broker";
-import { DataJobCreateSchema, DataJobSchema } from "./dataJob";
+import { ArchiveJobCreateSchema, DataJobCreateSchema, DataJobSchema } from "./dataJob";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
@@ -29,6 +29,7 @@ import { UserSchema } from "./user";
 // Regenerate with `pnpm --filter @nova/contracts schema:update`. Refinements are not part of JSON Schema.
 const contracts: Record<string, z.ZodType> = {
   ApiError: ApiErrorSchema,
+  ArchiveJobCreate: ArchiveJobCreateSchema,
   AuditEntry: AuditEntrySchema,
   BacktestResult: BacktestResultSchema,
   BacktestRun: BacktestRunSchema,

@@ -53,7 +53,10 @@ def seeded_universe(engine: Engine) -> list[dict[str, Any]]:
 def clean(engine: Engine, seeded_universe: list[dict[str, Any]]) -> Engine:
     with engine.begin() as connection:
         connection.execute(
-            text("TRUNCATE data_jobs, instruments, candles, audit_entries, users, universe CASCADE")
+            text(
+                "TRUNCATE data_jobs, instruments, candles, ticks, audit_entries, users, universe"
+                " CASCADE"
+            )
         )
         connection.execute(insert(UniverseEntry), seeded_universe)
     with Session(engine) as db:

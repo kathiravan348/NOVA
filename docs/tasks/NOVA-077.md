@@ -1,6 +1,6 @@
 # NOVA-077 — Atlas: tick archive as a data job
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-077 · **Depends on:** NOVA-076
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-077 · **Depends on:** NOVA-076
 
 ## Goal
 `POST /data-jobs/archive` queues an `archive` job that the Atlas worker runs, so old ticks move to Parquet
@@ -40,5 +40,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- `ArchiveJobCreate` contract + schema; `queue_archive` + `POST /data-jobs/archive` in `jobs.py`.
+- `archive.py`: `archive_ticks(…, on_day)` reports each day (and can stop), `archive_days`, `archive_symbols`,
+  `run_archive`. `download._finish` is now public `finish_job` so both job kinds end the same way.
+- Worker runs `historical_download` and `archive` (`WORKER_TYPES`), with `archive_dir` from settings.
+- Download error for unsynced stocks now says "sync the stock list with Kite first" (no CLI name).
+- Tests: new `test_archive_jobs.py`; atlas `conftest.py` also truncates `ticks`.
+- Checks: `pnpm review:check` green (689); backend lint/types clean, pytest per package green (511).
+- Guides: API, DATABASE, CONTRACTS.
 
 ## Review
+Self-reviewed.

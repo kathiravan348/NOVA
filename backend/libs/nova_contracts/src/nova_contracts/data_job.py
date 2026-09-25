@@ -73,3 +73,9 @@ class DataJobCreate(Contract):
         if self.from_ > self.to:
             raise ValueError("from date must be less than or equal to to date")
         return self
+
+
+class ArchiveJobCreate(Contract):
+    """Body of `POST /data-jobs/archive`: move ticks received before `before` (IST) to Parquet."""
+
+    before: IsoDate

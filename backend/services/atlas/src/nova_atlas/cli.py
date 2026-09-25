@@ -47,7 +47,13 @@ def main(argv: list[str] | None = None) -> int:
             stop = threading.Event()
             signal.signal(signal.SIGTERM, lambda *_: stop.set())
             signal.signal(signal.SIGINT, lambda *_: stop.set())
-            run_worker(factory, _broker(settings), stop, settings.worker_poll_seconds)
+            run_worker(
+                factory,
+                _broker(settings),
+                stop,
+                settings.worker_poll_seconds,
+                archive_dir=settings.archive_dir,
+            )
             return 0
         with factory() as db:
             if args.command == "archive-ticks":

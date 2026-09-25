@@ -104,3 +104,7 @@ export const DataJobCreateSchema = z
     path: ["from"],
   });
 export type DataJobCreate = z.input<typeof DataJobCreateSchema>;
+
+/** Request body for `POST /data-jobs/archive` (D54): move ticks received before `before` (IST). */
+export const ArchiveJobCreateSchema = z.strictObject({ before: IsoDateSchema });
+export type ArchiveJobCreate = z.infer<typeof ArchiveJobCreateSchema>;
