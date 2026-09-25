@@ -69,6 +69,12 @@
 | NOVA-058 | Real mode: login + Relay screens on the real API (D48) | done | Claude | 046, 050, 051 |
 | NOVA-059 | Real mode: Orbit screens on the real API | done | Claude | 058, 061, 062 |
 | NOVA-063 | API docs: Swagger UI on NOVA Core, off by default (D50) | done | Claude | 059 |
+| NOVA-064 | Indicator catalog (38) + "bars ago" offset in strategy contracts; params checked on save (D51) | planned | — | 059 |
+| NOVA-065 | Engine: catalog params (MACD fix), offset, trend + momentum indicators (D51) | planned | — | 064 |
+| NOVA-066 | Engine: volume, channel and previous-day level indicators (D51) | planned | — | 065 |
+| NOVA-067 | Editor: grouped indicator list, per-indicator settings, Bars ago (D51) | planned | — | 064 (merge after 066) |
+| NOVA-068 | Python mode: every catalog indicator on `ctx` (D47, D51) | planned | — | 066, 067 |
+| NOVA-069 | Cost averaging (add to a position as price falls) | draft | Claude | Owner decision |
 | NOVA-070 | Relay: add a broker account from the screen (POST /broker/accounts, audit, D52) | done | Claude | 058 |
 
 ## Parallel lanes (tasks that can run at the same time)
@@ -76,4 +82,5 @@
 - After 007: 008, 009, 010, 011, 025 touch different folders and can overlap (shared files: AGENTS §3 rule 3). 026 follows 010.
 - After 013: Orbit screens (014–018) and Relay screens (019–020) can overlap.
 - Review round 1 (see `docs/PLAN.md`): 030, 033, 038 run in parallel. Then Orbit 031 → 032 → 034 and 035/036/037; Relay 039 and 040 in parallel.
+- Indicators (D51): 064 first; then backend 065 → 066 and frontend 067 run in parallel (no shared files); 068 last.
 - Stage B (after 022): lane A = 043 → 044 / 047 (backend); lane B = 045 → 046 (frontend) runs alongside. Then 048 → 049 → 050 → 051; 053 and 054 can overlap 049–051.
