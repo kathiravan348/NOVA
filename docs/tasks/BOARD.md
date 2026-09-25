@@ -59,7 +59,7 @@
 | NOVA-050 | Broker: rate limiter (Redis, endpoint × window), rate-limits GET/PATCH + audit; daily reset setting (D40) | done | Claude | 049 |
 | NOVA-051 | Atlas: instrument sync + historical downloads (Postgres job queue, D41), data-jobs endpoints | done | Claude | 050 |
 | NOVA-061 | Atlas: market-data endpoints (instruments with computed stats, candles by date range) | done | Claude | 051 |
-| NOVA-052 | Atlas: live tick recorder + Parquet archive (D11) | draft | — | 051 |
+| NOVA-052 | Atlas: live tick recorder + Parquet archive (D11, D49) | done | Claude | 051 |
 | NOVA-053 | Ledger: charges engine (equity delivery + intraday), dated rate tables (D42) | done | Claude | 047 |
 | NOVA-054 | Strategy service: strategies CRUD, versions, stats summary (D43) | done | Claude | 048 |
 | NOVA-055 | Backtest service: queue runs (D44), runs/results/trades API, worker | done | Claude | 053, 054, 061 |

@@ -21,6 +21,7 @@ EXPECTED_TABLES = {
     "candles",
     "auth_sessions",
     "charge_rates",
+    "ticks",
 }
 
 
@@ -37,7 +38,7 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
             text("SELECT hypertable_name FROM timescaledb_information.hypertables")
         ).scalars()
 
-        assert list(names) == ["candles"]
+        assert sorted(names) == ["candles", "ticks"]
 
 
 def test_super_admin_role_is_seeded(engine: Engine) -> None:

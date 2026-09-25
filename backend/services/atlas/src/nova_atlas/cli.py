@@ -1,4 +1,4 @@
-"""`python -m nova_atlas sync-instruments | download … | worker`."""
+"""`python -m nova_atlas sync-instruments | download … | worker | archive-ticks`."""
 
 import argparse
 import logging
@@ -13,6 +13,7 @@ from nova_db.enums import SEGMENTS
 from nova_db.models import DataJob
 from sqlalchemy.orm import Session
 
+from nova_atlas.archive import archive_ticks
 from nova_atlas.broker_client import BrokerData, BrokerDataError
 from nova_atlas.download import KITE_INTERVAL
 from nova_atlas.settings import AtlasSettings, get_atlas_settings
@@ -77,6 +78,8 @@ def main(argv: list[str] | None = None) -> int:
     download.add_argument("--to", dest="last", required=True, type=date.fromisoformat)
     download.add_argument("--segment", default="equity_delivery", choices=list(SEGMENTS))
     commands.add_parser("worker", help="run data jobs until stopped")
+    archive = commands.add_parser("archive-ticks", help="move old ticks to Parquet")
+    archive.add_argument("--before", required=True, type=date.fromisoformat, help="IST date")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
 
@@ -91,6 +94,10 @@ def main(argv: list[str] | None = None) -> int:
             run_worker(factory, _broker(settings), stop, settings.worker_poll_seconds)
             return 0
         with factory() as db:
+            if args.command == "archive-ticks":
+                written = archive_ticks(db, settings.archive_dir, args.before)
+                print(f"Archived {len(written)} file(s) under {settings.archive_dir}")
+                return 0
             if args.command == "sync-instruments":
                 result = sync_instruments(db, _broker(settings))
                 print(f"Synced {len(result.synced)}; not on Kite NSE: {result.missing or 'none'}")

@@ -5,8 +5,8 @@ Many frontends, one shared backend, one shared UI library.
 
 ```
 apps/nova-orbit ─┐                       ┌─ services/core    (gateway, auth, users/roles)
-apps/nova-relay ─┼─ packages/services ───┼─ services/broker  (Kite login, tokens, rate limiter, usage)
-                 │   (mock | real)       ├─ services/atlas   (historical download, tick recorder, archive)
+apps/nova-relay ─┼─ packages/services ───┼─ services/broker  (Kite login, tokens, rate limiter, tick recorder)
+                 │   (mock | real)       ├─ services/atlas   (historical download, tick archive)
 packages/ui-core │                       ├─ services/ledger  (charges engine; tax later)
 packages/ui-trading                      ├─ services/strategy(strategy specs, versions, approval)
 packages/contracts (types + Zod) ────────┘─ services/backtest(backtest jobs, results)
@@ -27,8 +27,10 @@ The backtest engine accepts only Strategy Specs. Results always include charges 
 ## Data (Stage B)
 - PostgreSQL (`backend/libs/nova_db`, D37): users, roles, strategies + versions, backtest runs/results/trades (charges per trade),
   broker accounts/sessions/profiles, rate-limit rules, data jobs, audit log, instruments; `charge_rates` (dated, D42).
-- TimescaleDB: candles (1m and up) and recorded ticks (recent window).
-- Parquet files: archive of ticks and old candles, partitioned by date/segment/symbol.
+- TimescaleDB: candles (1m and up) and `ticks` (recent window), both hypertables. Ticks come only from the live
+  recorder (`nova_broker record-ticks`, Compose profile `market`, D49).
+- Parquet files: old ticks via `nova_atlas archive-ticks` → `archive/date=YYYY-MM-DD/symbol=SYM/ticks.parquet`
+  (volume `tick-archive`, D49); old candles later.
 - Redis: rate limiter, job queue.
 - Money as integer paise or `Decimal`, never float. Times in UTC.
 

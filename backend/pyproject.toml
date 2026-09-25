@@ -59,6 +59,11 @@ python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
 
+# pyarrow ships no type information (D49).
+[[tool.mypy.overrides]]
+module = ["pyarrow", "pyarrow.*"]
+ignore_missing_imports = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true

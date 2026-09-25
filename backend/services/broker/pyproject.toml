@@ -12,6 +12,7 @@ dependencies = [
     "nova-db",
     "redis==8.1.0",
     "uvicorn==0.53.0",
+    "websockets==17.1",
 ]
 
 [build-system]

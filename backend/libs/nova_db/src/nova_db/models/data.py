@@ -164,3 +164,22 @@ class ChargeRate(Base):
     rates: Mapped[Json]
     source: Mapped[str]
     created_at: Mapped[datetime] = created_at_column()
+
+
+class Tick(Base):
+    """One live tick from Kite's WebSocket (D11, D49); hypertable on `received_at` (rev 0004)."""
+
+    __tablename__ = "ticks"
+    __table_args__ = (
+        check_in("exchange", "exchange", EXCHANGES),
+        CheckConstraint("last_price_paise > 0 AND last_qty >= 0 AND volume >= 0", name="values"),
+    )
+
+    exchange: Mapped[str] = mapped_column(primary_key=True)
+    symbol: Mapped[str] = mapped_column(primary_key=True)
+    received_at: Mapped[datetime] = mapped_column(primary_key=True)
+    exchange_ts: Mapped[datetime | None]
+    last_price_paise: Mapped[int] = mapped_column(BigInteger)
+    last_qty: Mapped[int] = mapped_column(BigInteger)
+    volume: Mapped[int] = mapped_column(BigInteger)
+    oi: Mapped[int | None] = mapped_column(BigInteger)
