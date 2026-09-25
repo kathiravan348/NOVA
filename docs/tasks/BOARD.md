@@ -69,7 +69,7 @@
 | NOVA-058 | Real mode: login + Relay screens on the real API (D48) | done | Claude | 046, 050, 051 |
 | NOVA-059 | Real mode: Orbit screens on the real API | done | Claude | 058, 061, 062 |
 | NOVA-063 | API docs: Swagger UI on NOVA Core, off by default (D50) | done | Claude | 059 |
-| NOVA-064 | Indicator catalog (38) + "bars ago" offset in strategy contracts; params checked on save (D51) | planned | — | 059 |
+| NOVA-064 | Indicator catalog (38) + "bars ago" offset in strategy contracts; params checked on save (D51) | done | Claude | 059 |
 | NOVA-065 | Engine: catalog params (MACD fix), offset, trend + momentum indicators (D51) | planned | — | 064 |
 | NOVA-066 | Engine: volume, channel and previous-day level indicators (D51) | planned | — | 065 |
 | NOVA-067 | Editor: grouped indicator list, per-indicator settings, Bars ago (D51) | planned | — | 064 (merge after 066) |

@@ -5,23 +5,27 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Exchange, Id, Segment, Timeframe, UtcDateTime
+from nova_contracts.indicators import IndicatorName, param_problems
 
 PriceField = Literal["open", "high", "low", "close", "volume"]
-IndicatorName = Literal["sma", "ema", "rsi", "macd", "vwap", "atr", "bb_upper", "bb_lower"]
 ConditionOp = Literal["crosses_above", "crosses_below", "gt", "gte", "lt", "lte", "eq"]
 StrategyStatus = Literal["draft", "active", "archived"]
 NonEmpty = Annotated[str, Field(min_length=1)]
+# Bars ago (D51): absent on the wire = 0, and 0 is never written back (old specs stay identical).
+Offset = Annotated[int, Field(ge=0, le=500, exclude_if=lambda v: v == 0)]
 
 
 class OperandPrice(Contract):
     kind: Literal["price"]
     field: PriceField
+    offset: Offset = 0
 
 
 class OperandIndicator(Contract):
     kind: Literal["indicator"]
     name: IndicatorName
     params: dict[str, float]
+    offset: Offset = 0
 
 
 class OperandNumber(Contract):
@@ -114,15 +118,37 @@ class Strategy(Contract):
         return self
 
 
-class StrategyCreate(Contract):
+def spec_param_problems(spec: StrategySpecVisual | StrategySpecPython) -> list[str]:
+    """Indicator settings problems of a visual spec (D51): writes refuse them, reads do not."""
+    if not isinstance(spec, StrategySpecVisual):
+        return []
+    operands = [o for g in (spec.entry, spec.exit) for c in g.conditions for o in (c.left, c.right)]
+    return [
+        problem
+        for o in operands
+        if isinstance(o, OperandIndicator)
+        for problem in param_problems(o.name, o.params)
+    ]
+
+
+class _CheckedSpec(Contract):
+    spec: StrategySpec
+
+    @model_validator(mode="after")
+    def _params(self) -> Self:
+        problems = spec_param_problems(self.spec)
+        if problems:
+            raise ValueError("; ".join(problems))
+        return self
+
+
+class StrategyCreate(_CheckedSpec):
     name: NonEmpty
     description: str
-    spec: StrategySpec
 
 
-class StrategyVersionCreate(Contract):
+class StrategyVersionCreate(_CheckedSpec):
     note: str
-    spec: StrategySpec
 
 
 class StrategyUpdate(Contract):

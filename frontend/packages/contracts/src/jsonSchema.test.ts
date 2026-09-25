@@ -6,6 +6,7 @@ import { AuditEntrySchema } from "./audit";
 import { BacktestResultSchema, BacktestRunCreateSchema, BacktestRunSchema } from "./backtest";
 import { BrokerAccountCreateSchema, BrokerAccountSchema, BrokerProfileSchema } from "./broker";
 import { DataJobSchema } from "./dataJob";
+import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
 import {
@@ -51,5 +52,12 @@ describe("JSON Schema export", () => {
     await expect(JSON.stringify(json, null, 2) + "\n").toMatchFileSnapshot(
       `../schema/${name}.json`,
     );
+  });
+});
+
+describe("indicator catalog export (D51)", () => {
+  it("matches schema/indicators.json", async () => {
+    const json = JSON.stringify(INDICATORS, null, 2) + "\n";
+    await expect(json).toMatchFileSnapshot("../schema/indicators.json");
   });
 });

@@ -1,0 +1,534 @@
+[
+  {
+    "name": "sma",
+    "label": "SMA",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "ema",
+    "label": "EMA",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "wma",
+    "label": "WMA",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "macd",
+    "label": "MACD line",
+    "group": "trend",
+    "params": [
+      {
+        "key": "fast",
+        "label": "Fast",
+        "default": 12,
+        "integer": true
+      },
+      {
+        "key": "slow",
+        "label": "Slow",
+        "default": 26,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "macd_signal",
+    "label": "MACD signal",
+    "group": "trend",
+    "params": [
+      {
+        "key": "fast",
+        "label": "Fast",
+        "default": 12,
+        "integer": true
+      },
+      {
+        "key": "slow",
+        "label": "Slow",
+        "default": 26,
+        "integer": true
+      },
+      {
+        "key": "signal",
+        "label": "Signal",
+        "default": 9,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "macd_hist",
+    "label": "MACD histogram",
+    "group": "trend",
+    "params": [
+      {
+        "key": "fast",
+        "label": "Fast",
+        "default": 12,
+        "integer": true
+      },
+      {
+        "key": "slow",
+        "label": "Slow",
+        "default": 26,
+        "integer": true
+      },
+      {
+        "key": "signal",
+        "label": "Signal",
+        "default": 9,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "supertrend",
+    "label": "SuperTrend",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 10,
+        "integer": true
+      },
+      {
+        "key": "multiplier",
+        "label": "Multiplier",
+        "default": 3,
+        "integer": false
+      }
+    ]
+  },
+  {
+    "name": "adx",
+    "label": "ADX",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "plus_di",
+    "label": "+DI",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "minus_di",
+    "label": "−DI",
+    "group": "trend",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "psar",
+    "label": "Parabolic SAR",
+    "group": "trend",
+    "params": [
+      {
+        "key": "step",
+        "label": "Step",
+        "default": 0.02,
+        "integer": false
+      },
+      {
+        "key": "max",
+        "label": "Max",
+        "default": 0.2,
+        "integer": false
+      }
+    ]
+  },
+  {
+    "name": "rsi",
+    "label": "RSI",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "stoch_k",
+    "label": "Stochastic %K",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      },
+      {
+        "key": "smooth",
+        "label": "Smooth",
+        "default": 3,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "stoch_d",
+    "label": "Stochastic %D",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      },
+      {
+        "key": "smooth",
+        "label": "Smooth",
+        "default": 3,
+        "integer": true
+      },
+      {
+        "key": "signal",
+        "label": "Signal",
+        "default": 3,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "stoch_rsi",
+    "label": "Stochastic RSI",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "rsi_period",
+        "label": "RSI period",
+        "default": 14,
+        "integer": true
+      },
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "cci",
+    "label": "CCI",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "williams_r",
+    "label": "Williams %R",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "roc",
+    "label": "Rate of change %",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 12,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "atr",
+    "label": "ATR",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "bb_upper",
+    "label": "Bollinger upper",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      },
+      {
+        "key": "stddev",
+        "label": "Std dev",
+        "default": 2,
+        "integer": false
+      }
+    ]
+  },
+  {
+    "name": "bb_middle",
+    "label": "Bollinger middle",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      },
+      {
+        "key": "stddev",
+        "label": "Std dev",
+        "default": 2,
+        "integer": false
+      }
+    ]
+  },
+  {
+    "name": "bb_lower",
+    "label": "Bollinger lower",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      },
+      {
+        "key": "stddev",
+        "label": "Std dev",
+        "default": 2,
+        "integer": false
+      }
+    ]
+  },
+  {
+    "name": "keltner_upper",
+    "label": "Keltner upper",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      },
+      {
+        "key": "multiplier",
+        "label": "Multiplier",
+        "default": 2,
+        "integer": false
+      },
+      {
+        "key": "atr_period",
+        "label": "ATR period",
+        "default": 10,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "keltner_lower",
+    "label": "Keltner lower",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      },
+      {
+        "key": "multiplier",
+        "label": "Multiplier",
+        "default": 2,
+        "integer": false
+      },
+      {
+        "key": "atr_period",
+        "label": "ATR period",
+        "default": 10,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "donchian_upper",
+    "label": "Highest high",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "donchian_lower",
+    "label": "Lowest low",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "vwap",
+    "label": "VWAP",
+    "group": "volume",
+    "params": []
+  },
+  {
+    "name": "obv",
+    "label": "OBV",
+    "group": "volume",
+    "params": []
+  },
+  {
+    "name": "mfi",
+    "label": "MFI",
+    "group": "volume",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 14,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "volume_sma",
+    "label": "Volume SMA",
+    "group": "volume",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "prev_day_high",
+    "label": "Previous day high",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "prev_day_low",
+    "label": "Previous day low",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "prev_day_close",
+    "label": "Previous day close",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "pivot",
+    "label": "Pivot",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "pivot_r1",
+    "label": "Pivot R1",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "pivot_s1",
+    "label": "Pivot S1",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "pivot_r2",
+    "label": "Pivot R2",
+    "group": "levels",
+    "params": []
+  },
+  {
+    "name": "pivot_s2",
+    "label": "Pivot S2",
+    "group": "levels",
+    "params": []
+  }
+]

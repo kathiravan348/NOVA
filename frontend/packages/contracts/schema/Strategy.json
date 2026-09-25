@@ -209,6 +209,11 @@
                                         "close",
                                         "volume"
                                       ]
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -229,12 +234,42 @@
                                       "enum": [
                                         "sma",
                                         "ema",
-                                        "rsi",
+                                        "wma",
                                         "macd",
-                                        "vwap",
+                                        "macd_signal",
+                                        "macd_hist",
+                                        "supertrend",
+                                        "adx",
+                                        "plus_di",
+                                        "minus_di",
+                                        "psar",
+                                        "rsi",
+                                        "stoch_k",
+                                        "stoch_d",
+                                        "stoch_rsi",
+                                        "cci",
+                                        "williams_r",
+                                        "roc",
                                         "atr",
                                         "bb_upper",
-                                        "bb_lower"
+                                        "bb_middle",
+                                        "bb_lower",
+                                        "keltner_upper",
+                                        "keltner_lower",
+                                        "donchian_upper",
+                                        "donchian_lower",
+                                        "vwap",
+                                        "obv",
+                                        "mfi",
+                                        "volume_sma",
+                                        "prev_day_high",
+                                        "prev_day_low",
+                                        "prev_day_close",
+                                        "pivot",
+                                        "pivot_r1",
+                                        "pivot_s1",
+                                        "pivot_r2",
+                                        "pivot_s2"
                                       ]
                                     },
                                     "params": {
@@ -245,6 +280,11 @@
                                       "additionalProperties": {
                                         "type": "number"
                                       }
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -303,6 +343,11 @@
                                         "close",
                                         "volume"
                                       ]
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -323,12 +368,42 @@
                                       "enum": [
                                         "sma",
                                         "ema",
-                                        "rsi",
+                                        "wma",
                                         "macd",
-                                        "vwap",
+                                        "macd_signal",
+                                        "macd_hist",
+                                        "supertrend",
+                                        "adx",
+                                        "plus_di",
+                                        "minus_di",
+                                        "psar",
+                                        "rsi",
+                                        "stoch_k",
+                                        "stoch_d",
+                                        "stoch_rsi",
+                                        "cci",
+                                        "williams_r",
+                                        "roc",
                                         "atr",
                                         "bb_upper",
-                                        "bb_lower"
+                                        "bb_middle",
+                                        "bb_lower",
+                                        "keltner_upper",
+                                        "keltner_lower",
+                                        "donchian_upper",
+                                        "donchian_lower",
+                                        "vwap",
+                                        "obv",
+                                        "mfi",
+                                        "volume_sma",
+                                        "prev_day_high",
+                                        "prev_day_low",
+                                        "prev_day_close",
+                                        "pivot",
+                                        "pivot_r1",
+                                        "pivot_s1",
+                                        "pivot_r2",
+                                        "pivot_s2"
                                       ]
                                     },
                                     "params": {
@@ -339,6 +414,11 @@
                                       "additionalProperties": {
                                         "type": "number"
                                       }
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -417,6 +497,11 @@
                                         "close",
                                         "volume"
                                       ]
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -437,12 +522,42 @@
                                       "enum": [
                                         "sma",
                                         "ema",
-                                        "rsi",
+                                        "wma",
                                         "macd",
-                                        "vwap",
+                                        "macd_signal",
+                                        "macd_hist",
+                                        "supertrend",
+                                        "adx",
+                                        "plus_di",
+                                        "minus_di",
+                                        "psar",
+                                        "rsi",
+                                        "stoch_k",
+                                        "stoch_d",
+                                        "stoch_rsi",
+                                        "cci",
+                                        "williams_r",
+                                        "roc",
                                         "atr",
                                         "bb_upper",
-                                        "bb_lower"
+                                        "bb_middle",
+                                        "bb_lower",
+                                        "keltner_upper",
+                                        "keltner_lower",
+                                        "donchian_upper",
+                                        "donchian_lower",
+                                        "vwap",
+                                        "obv",
+                                        "mfi",
+                                        "volume_sma",
+                                        "prev_day_high",
+                                        "prev_day_low",
+                                        "prev_day_close",
+                                        "pivot",
+                                        "pivot_r1",
+                                        "pivot_s1",
+                                        "pivot_r2",
+                                        "pivot_s2"
                                       ]
                                     },
                                     "params": {
@@ -453,6 +568,11 @@
                                       "additionalProperties": {
                                         "type": "number"
                                       }
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -511,6 +631,11 @@
                                         "close",
                                         "volume"
                                       ]
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [
@@ -531,12 +656,42 @@
                                       "enum": [
                                         "sma",
                                         "ema",
-                                        "rsi",
+                                        "wma",
                                         "macd",
-                                        "vwap",
+                                        "macd_signal",
+                                        "macd_hist",
+                                        "supertrend",
+                                        "adx",
+                                        "plus_di",
+                                        "minus_di",
+                                        "psar",
+                                        "rsi",
+                                        "stoch_k",
+                                        "stoch_d",
+                                        "stoch_rsi",
+                                        "cci",
+                                        "williams_r",
+                                        "roc",
                                         "atr",
                                         "bb_upper",
-                                        "bb_lower"
+                                        "bb_middle",
+                                        "bb_lower",
+                                        "keltner_upper",
+                                        "keltner_lower",
+                                        "donchian_upper",
+                                        "donchian_lower",
+                                        "vwap",
+                                        "obv",
+                                        "mfi",
+                                        "volume_sma",
+                                        "prev_day_high",
+                                        "prev_day_low",
+                                        "prev_day_close",
+                                        "pivot",
+                                        "pivot_r1",
+                                        "pivot_s1",
+                                        "pivot_r2",
+                                        "pivot_s2"
                                       ]
                                     },
                                     "params": {
@@ -547,6 +702,11 @@
                                       "additionalProperties": {
                                         "type": "number"
                                       }
+                                    },
+                                    "offset": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
                                     }
                                   },
                                   "required": [

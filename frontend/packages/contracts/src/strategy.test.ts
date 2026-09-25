@@ -199,3 +199,53 @@ describe("strategy write bodies (D43)", () => {
     expect(StrategyUpdateSchema.safeParse({ status: "deleted" }).success).toBe(false);
   });
 });
+
+describe("indicator params and offset (D51)", () => {
+  const withEntry = (left: Record<string, unknown>) => ({
+    mode: "visual",
+    segment: "equity_delivery",
+    exchange: "NSE",
+    timeframe: "1d",
+    sizing: { type: "fixed_qty", qty: 1 },
+    risk: { stopLossPercent: null, targetPercent: null },
+    entry: {
+      combinator: "all",
+      conditions: [{ left, op: "gt", right: { kind: "number", value: 0 } }],
+    },
+    exit: {
+      combinator: "all",
+      conditions: [
+        { left: { kind: "price", field: "close" }, op: "lt", right: { kind: "number", value: 1 } },
+      ],
+    },
+  });
+  const create = (left: Record<string, unknown>) =>
+    StrategyCreateSchema.safeParse({ name: "S", description: "", spec: withEntry(left) }).success;
+
+  it("refuses bad indicator params on write but still reads them", () => {
+    const macd = { kind: "indicator", name: "macd", params: { period: 20 } };
+    const rsi = { kind: "indicator", name: "rsi", params: { period: 2.5 } };
+    expect(create(macd)).toBe(false);
+    expect(create(rsi)).toBe(false);
+    expect(StrategyVersionCreateSchema.safeParse({ note: "", spec: withEntry(macd) }).success).toBe(
+      false,
+    );
+    expect(StrategySpecVisualSchema.safeParse(withEntry(macd)).success).toBe(true);
+    expect(create({ kind: "indicator", name: "macd", params: { fast: 12, slow: 26 } })).toBe(true);
+  });
+
+  it("accepts offset 0–500 or absent, refuses −1, 501 and 1.5", () => {
+    for (const offset of [0, 1, 500, undefined]) {
+      expect(OperandSchema.safeParse({ kind: "price", field: "high", offset }).success).toBe(true);
+      expect(
+        OperandSchema.safeParse({ kind: "indicator", name: "sma", params: {}, offset }).success,
+      ).toBe(true);
+    }
+    for (const offset of [-1, 501, 1.5]) {
+      expect(OperandSchema.safeParse({ kind: "price", field: "high", offset }).success).toBe(false);
+      expect(
+        OperandSchema.safeParse({ kind: "indicator", name: "sma", params: {}, offset }).success,
+      ).toBe(false);
+    }
+  });
+});

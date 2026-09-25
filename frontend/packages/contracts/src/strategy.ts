@@ -6,25 +6,18 @@ import {
   TimeframeSchema,
   UtcDateTimeSchema,
 } from "./common";
+import { IndicatorNameSchema, checkIndicatorParams } from "./indicators";
 
 export const PriceFieldSchema = z.enum(["open", "high", "low", "close", "volume"]);
 export type PriceField = z.infer<typeof PriceFieldSchema>;
 
-export const IndicatorNameSchema = z.enum([
-  "sma",
-  "ema",
-  "rsi",
-  "macd",
-  "vwap",
-  "atr",
-  "bb_upper",
-  "bb_lower",
-]);
-export type IndicatorName = z.infer<typeof IndicatorNameSchema>;
+export const OffsetSchema = z.number().int().min(0).max(500);
 
 export const OperandPriceSchema = z.strictObject({
   kind: z.literal("price"),
   field: PriceFieldSchema,
+  /** Bars ago (D51); absent = 0. */
+  offset: OffsetSchema.optional(),
 });
 export type OperandPrice = z.infer<typeof OperandPriceSchema>;
 
@@ -32,6 +25,8 @@ export const OperandIndicatorSchema = z.strictObject({
   kind: z.literal("indicator"),
   name: IndicatorNameSchema,
   params: z.record(z.string(), z.number()),
+  /** Bars ago (D51); absent = 0. */
+  offset: OffsetSchema.optional(),
 });
 export type OperandIndicator = z.infer<typeof OperandIndicatorSchema>;
 
@@ -191,19 +186,40 @@ export const StrategySchema = z
   );
 export type Strategy = z.infer<typeof StrategySchema>;
 
+/** Indicator settings problems in a visual spec (D51); write bodies refuse them, reads stay tolerant. */
+export function specParamProblems(spec: StrategySpec): string[] {
+  if (spec.mode !== "visual") return [];
+  const operands = [spec.entry, spec.exit].flatMap((g) =>
+    g.conditions.flatMap((c) => [c.left, c.right]),
+  );
+  return operands.flatMap((o) =>
+    o.kind === "indicator" ? checkIndicatorParams(o.name, o.params) : [],
+  );
+}
+
+const checkedSpec = (body: { spec: StrategySpec }, ctx: z.RefinementCtx) => {
+  for (const message of specParamProblems(body.spec)) {
+    ctx.addIssue({ code: "custom", message, path: ["spec"] });
+  }
+};
+
 /** Body of `POST /strategies` (D43): creates version 1 of a `draft` strategy. */
-export const StrategyCreateSchema = z.strictObject({
-  name: z.string().min(1),
-  description: z.string(),
-  spec: StrategySpecSchema,
-});
+export const StrategyCreateSchema = z
+  .strictObject({
+    name: z.string().min(1),
+    description: z.string(),
+    spec: StrategySpecSchema,
+  })
+  .superRefine(checkedSpec);
 export type StrategyCreate = z.infer<typeof StrategyCreateSchema>;
 
 /** Body of `POST /strategies/{id}/versions` (D43): versions are immutable; this adds latest + 1. */
-export const StrategyVersionCreateSchema = z.strictObject({
-  note: z.string(),
-  spec: StrategySpecSchema,
-});
+export const StrategyVersionCreateSchema = z
+  .strictObject({
+    note: z.string(),
+    spec: StrategySpecSchema,
+  })
+  .superRefine(checkedSpec);
 export type StrategyVersionCreate = z.infer<typeof StrategyVersionCreateSchema>;
 
 /** Body of `PATCH /strategies/{id}` (D43): at least one field. */

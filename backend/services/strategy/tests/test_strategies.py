@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 from nova_db.models import AuditEntry
@@ -81,3 +83,15 @@ def test_empty_or_unknown_update_is_refused(client: TestClient, spec: dict[str, 
     assert (
         client.patch(f"{STRATEGIES}/{strategy_id}", json={"status": "deleted"}).status_code == 400
     )
+
+
+def test_bad_indicator_settings_are_refused(client: TestClient, spec: dict[str, object]) -> None:
+    """D51: the catalog decides which settings an indicator has."""
+    bad = json.loads(json.dumps(spec))
+    left = {"kind": "indicator", "name": "macd", "params": {"period": 20}}
+    bad["entry"]["conditions"][0]["left"] = left
+
+    response = client.post(STRATEGIES, json={"name": "M", "description": "", "spec": bad})
+
+    assert response.status_code == 400
+    assert "Unknown setting 'period' for MACD line" in response.json()["error"]["message"]

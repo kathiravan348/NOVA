@@ -3,6 +3,7 @@ export * from "./user";
 export * from "./auth";
 export * from "./charges";
 export * from "./trade";
+export * from "./indicators";
 export * from "./strategy";
 export * from "./backtest";
 export * from "./broker";

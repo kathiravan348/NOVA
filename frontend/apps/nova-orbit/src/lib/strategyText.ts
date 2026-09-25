@@ -9,6 +9,7 @@ import type {
   Sizing,
   Universe,
 } from "@nova/contracts";
+import { indicatorDef } from "@nova/contracts";
 import { formatInr } from "@nova/ui-trading";
 
 const priceLabel: Record<PriceField, string> = {
@@ -19,7 +20,8 @@ const priceLabel: Record<PriceField, string> = {
   volume: "Volume",
 };
 
-const indicatorLabel: Record<IndicatorName, string> = {
+// Short labels for the first eight indicators; the rest use the catalog label until NOVA-067.
+const indicatorLabel: Partial<Record<IndicatorName, string>> = {
   sma: "SMA",
   ema: "EMA",
   rsi: "RSI",
@@ -49,7 +51,8 @@ export function describeOperand(operand: Operand): string {
       return String(operand.value);
     case "indicator": {
       const values = Object.values(operand.params);
-      const name = indicatorLabel[operand.name];
+      const name =
+        indicatorLabel[operand.name] ?? indicatorDef(operand.name)?.label ?? operand.name;
       return values.length > 0 ? `${name}(${values.join(", ")})` : name;
     }
   }

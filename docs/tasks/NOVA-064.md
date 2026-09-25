@@ -1,6 +1,6 @@
 # NOVA-064 — Indicator catalog + "bars ago" offset in the strategy contracts (D51)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-064 · **Depends on:** NOVA-059
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-064 · **Depends on:** NOVA-059
 
 ## Goal
 The contracts know 38 indicators, each with its params (key, label, default, integer or decimal). Price and
@@ -57,5 +57,14 @@ Modify: `contracts/src/{strategy.ts,strategy.test.ts,jsonSchema.test.ts,index.ts
 ## Questions
 
 ## Handoff
+Built by Claude (Antigravity offline). All acceptance checks pass.
+- Catalog: `contracts/src/indicators.ts` (+ `schema/indicators.json`), Python `nova_contracts.indicators`.
+- `offset` on price/indicator operands; Python uses `exclude_if` so 0 is never written (old specs unchanged).
+- Write bodies refuse bad params (TS superRefine, Python `_CheckedSpec`) → strategy service 400 (test added).
+- Outside the Files list, to keep the build green: `nova-orbit/src/lib/strategyText.ts` falls back to catalog
+  labels for new names (067 replaces the map); `services/strategy/tests/test_strategies.py` one test.
+- Checks: `pnpm review:check` green; Docker pytest strategy + backtest + contracts: 167 passed.
+- Guides: API.md (catalog, offset, 400).
 
 ## Review
+Self-reviewed (no second agent). Parity: Python catalog equals the TS export; IndicatorName Literal equals the catalog order.

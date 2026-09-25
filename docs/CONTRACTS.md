@@ -14,7 +14,8 @@
 | User | `GET /api/v1/me`; response of `POST /api/v1/auth/login` | `data/user.json` | Core, Orbit, Relay |
 | LoginRequest | `POST /api/v1/auth/login` body → `User` + session cookie; `POST /api/v1/auth/logout` → 204 (D38) | — | Core |
 | Strategy (rules only, no universe: D25) | `GET /api/v1/strategies`, `GET /api/v1/strategies/{id}`; response of the writes below | `data/strategies.json` | Orbit |
-| StrategyCreate / StrategyVersionCreate / StrategyUpdate (D43) | `POST /api/v1/strategies` (201), `POST /api/v1/strategies/{id}/versions` (201), `PATCH /api/v1/strategies/{id}` | — (handlers answer from the body) | Orbit |
+| Indicator catalog (D51: 38 indicators, params, groups; `INDICATORS`, `checkIndicatorParams`) | — (static; exported to `schema/indicators.json`, Python `nova_contracts.indicators`) | — | Orbit, backtest |
+| StrategyCreate / StrategyVersionCreate / StrategyUpdate (D43; refuse bad indicator params, D51) | `POST /api/v1/strategies` (201), `POST /api/v1/strategies/{id}/versions` (201), `PATCH /api/v1/strategies/{id}` | — (handlers answer from the body) | Orbit |
 | BacktestRun (with `universe`: symbols or index) | `GET /api/v1/backtests?strategyId=&limit=&cursor=` → `Page<BacktestRun>`, `GET /api/v1/backtests/{id}` | `data/backtestRuns.json` | Orbit |
 | BacktestRunCreate (D44) | `POST /api/v1/backtests` → 201 `BacktestRun` (`queued`) | — (handler answers from the body) | Orbit |
 | StrategyStats (runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L) | `GET /api/v1/strategies/stats` | `data/strategyStats.json` | Orbit |
