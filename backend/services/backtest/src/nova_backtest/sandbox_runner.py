@@ -1,9 +1,10 @@
 """Child process that runs one Python strategy (D47). Standard library only.
 
 Started as `python -I sandbox_runner.py` with an empty environment. Reads one JSON request on stdin:
-`{"code": str, "series": {symbol: [[time, open, high, low, close, volume], ...]}}` (rupees)
-and writes one JSON line: `{"signals": {symbol: ["enter" | "exit" | null, ...]}}`
-or `{"error": str}`.
+`{"code": str, "series": {symbol: [[time, open, high, low, close, volume], ...]}}` (rupees),
+`"indicators": {symbol: {key: [value | null, ...]}}` (one value per bar, computed by the parent for
+every `ctx.<indicator>(…)` call it found, D51) and `"catalog": {name: [[key, default], ...]}`;
+writes one JSON line: `{"signals": {symbol: ["enter" | "exit" | null, ...]}}` or `{"error": str}`.
 The code was already checked by `sandbox.check_code`; this process adds limits and safe builtins.
 """
 
@@ -55,12 +56,53 @@ class Closes:
         return iter(self._values[: self._end])
 
 
+# Any: JSON values from the parent (settings are numbers, series are floats or None).
+Catalog = dict[str, list[list[Any]]]
+Indicators = dict[str, list[Any]]
+
+
+def indicator_key(
+    catalog: Catalog, name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> str:
+    """Same text as `sandbox.canonical_key`: every setting in catalog order, defaults filled."""
+    settings = {key: default for key, default in catalog[name]}
+    settings.update(zip([key for key, _ in catalog[name]], args, strict=False))
+    settings.update(kwargs)
+    return (
+        f"{name}(" + ", ".join(f"{key}={float(settings[key])!r}" for key, _ in catalog[name]) + ")"
+    )
+
+
 class Context:
-    def __init__(self, symbol: str, index: int, bar: list[Any], closes: Closes) -> None:
+    def __init__(
+        self,
+        symbol: str,
+        index: int,
+        bar: list[Any],
+        closes: Closes,
+        catalog: Catalog | None = None,
+        indicators: Indicators | None = None,
+    ) -> None:
         # Any: a bar row is [time, open, high, low, close, volume] from JSON.
         self.symbol, self.index = symbol, index
         self.time, self.open, self.high, self.low, self.close, self.volume = bar
         self.closes = closes
+        self._catalog = catalog or {}
+        self._indicators = indicators or {}
+
+    def __getattr__(self, name: str) -> Any:  # Any: a function returning a float or None
+        """`ctx.rsi(14)`, `ctx.macd_signal(12, 26, 9, ago=1)`: values the parent computed."""
+        if name.startswith("_") or name not in self._catalog:
+            raise AttributeError(f"ctx has no {name}")
+
+        def value(*args: Any, ago: int = 0, **kwargs: Any) -> float | None:
+            series = self._indicators.get(indicator_key(self._catalog, name, args, kwargs))
+            if series is None:
+                raise ValueError(f"write ctx.{name}(…) with plain numbers as its settings")
+            at = self.index - ago
+            return series[at] if at >= 0 else None
+
+        return value
 
     def _window(self, n: int) -> list[float] | None:
         if not isinstance(n, int) or n < 1:
@@ -100,12 +142,15 @@ def main() -> None:
         if strategy_class is None:
             raise ValueError("define a class named Strategy")
         signals: dict[str, list[str | None]] = {}
+        catalog: Catalog = request.get("catalog", {})
         for symbol, bars in request["series"].items():
             instance = strategy_class()
             closes = [bar[4] for bar in bars]
+            indicators: Indicators = request.get("indicators", {}).get(symbol, {})
             out: list[str | None] = []
             for i, bar in enumerate(bars):
-                result = instance.on_bar(Context(symbol, i, bar, Closes(closes, i + 1)))
+                ctx = Context(symbol, i, bar, Closes(closes, i + 1), catalog, indicators)
+                result = instance.on_bar(ctx)
                 if result not in ("enter", "exit", None):
                     raise ValueError(f'on_bar must return "enter", "exit" or None, not {result!r}')
                 out.append(result)

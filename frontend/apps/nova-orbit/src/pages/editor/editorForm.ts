@@ -52,6 +52,7 @@ export type RuleGroupForm = z.infer<typeof RuleGroupFormSchema>;
 export const PYTHON_TEMPLATE = `# on_bar runs once per closed bar of each symbol.
 # Return "enter", "exit" or None. ctx: symbol, time, open, high, low, close,
 # volume, index, closes, sma(n), highest(n), lowest(n). Prices are in rupees.
+# Any indicator: ctx.rsi(14), ctx.supertrend(10, 3), ctx.macd_signal(12, 26, 9, ago=1).
 class Strategy:
     def on_bar(self, ctx):
         average = ctx.sma(20)

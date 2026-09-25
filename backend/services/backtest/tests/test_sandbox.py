@@ -1,13 +1,15 @@
 """Python strategies in the sandbox (D47)."""
 
+import ast
 import re
 import subprocess
 import sys
 from datetime import datetime, time, timedelta
+from pathlib import Path
 from typing import Any
 
 import pytest
-from nova_backtest import sandbox
+from nova_backtest import sandbox, sandbox_runner
 from nova_backtest.bars import IST, Bar
 from nova_backtest.engine import EngineError
 from nova_backtest.rules import RuleSignals
@@ -166,3 +168,99 @@ def test_the_child_has_no_dangerous_builtins_even_without_the_check(
 
     with pytest.raises(EngineError, match="NameError: name 'open' is not defined"):
         run_python(code, BARS)
+
+
+# 40 daily closes: 20 falling (RSI(14) ends below 30), then 20 rising (RSI climbs back above 30).
+SWING = [150 - 3 * i for i in range(20)] + [93 + 4 * i for i in range(20)]
+SWING_BARS = {
+    "INFY": [
+        Bar(DAY0 + timedelta(days=i), c * 100, (c + 1) * 100, (c - 1) * 100, c * 100, 1_000)
+        for i, c in enumerate(SWING)
+    ]
+}
+RSI_CODE = """
+class Strategy:
+    def on_bar(self, ctx):
+        value = ctx.rsi(14)
+        if value is not None and value < 30:
+            return "enter"
+        return None
+"""
+
+
+def test_ctx_rsi_signals_match_the_visual_rule() -> None:
+    """D51: a Python call and a visual rule use the same indicator code."""
+    rule = {
+        "combinator": "all",
+        "conditions": [
+            {
+                "left": {"kind": "indicator", "name": "rsi", "params": {"period": 14}},
+                "op": "lt",
+                "right": {"kind": "number", "value": 30},
+            }
+        ],
+    }
+    group = RuleGroup.model_validate(rule)
+    visual = RuleSignals(SWING_BARS, group, group)
+    python = PythonSignals(run_python(RSI_CODE, SWING_BARS))
+
+    expected = [visual.enter("INFY", i) for i in range(40)]
+    assert any(expected) and not all(expected[14:])
+    assert [python.enter("INFY", i) for i in range(40)] == expected
+
+
+@pytest.mark.parametrize(
+    ("call", "reason"),
+    [
+        ("ctx.rsi(n)", "ctx.rsi settings must be plain numbers"),
+        ("ctx.rsi(14, 3)", "ctx.rsi takes at most 1 settings"),
+        ("ctx.foo(1)", "ctx has no foo()"),
+        ("ctx.macd(fast=30, slow=10)", "MACD line fast must be less than slow"),
+        ("ctx.rsi(period=14, period2=3)", "ctx.rsi has no setting period2"),
+        ("ctx.rsi(14, ago=n)", "ctx.rsi ago must be a whole number from 0 to 500"),
+        ("ctx.rsi(True)", "ctx.rsi settings must be plain numbers"),
+    ],
+)
+def test_bad_indicator_calls_are_refused_with_their_line(call: str, reason: str) -> None:
+    code = f"class Strategy:\n    def on_bar(self, ctx):\n        n = 3\n        return {call}\n"
+
+    with pytest.raises(EngineError, match=re.escape(reason) + r".*\(line 4\)"):
+        check_code(code)
+
+
+def test_existing_helpers_still_take_variables() -> None:
+    code = "class Strategy:\n    def on_bar(self, ctx):\n        n = 5\n        return ctx.sma(n)\n"
+
+    assert check_code(code) == {}
+    assert list(check_code(RSI_CODE)) == ["rsi(period=14.0)"]
+
+
+def test_ago_reads_an_earlier_bar() -> None:
+    catalog = {"rsi": [["period", 14]]}
+    series = {"rsi(period=14.0)": [10.0, 20.0, 30.0]}
+    ctx = sandbox_runner.Context(
+        "INFY", 2, ["t", 1, 1, 1, 1, 1], sandbox_runner.Closes([1.0] * 3, 3), catalog, series
+    )
+
+    assert ctx.rsi(14) == 30.0
+    assert ctx.rsi(period=14, ago=1) == 20.0
+    assert ctx.rsi(14, ago=3) is None
+    for name in ("nope", "_hidden"):  # unknown and private names stay closed
+        with pytest.raises(AttributeError):
+            getattr(ctx, name)
+
+
+def test_the_runner_imports_only_the_standard_library() -> None:
+    tree = ast.parse(Path(sandbox.RUNNER).read_text(encoding="utf-8"))
+    modules = {
+        alias.name.split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    } | {
+        (node.module or "").split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    }
+
+    assert modules and modules <= sys.stdlib_module_names

@@ -24,7 +24,7 @@
 | DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards; optional row selection (`selectedIds`, "Select all shown"), search box and toolbar slot | `Core/DataTable` |
 | Field | Form control wrapper with label, helper description, and error message | `Core/Field` |
 | Input | Accessible text/numeric input with leading/trailing adornments wrapped in Field | `Core/Input` |
-| Select | Native select dropdown with ChevronDown indicator wrapped in Field | `Core/Select` |
+| Select | Native select dropdown with ChevronDown indicator wrapped in Field; options with the same `group` render in one `<optgroup>` | `Core/Select` |
 | Checkbox | Radix-based accessible checkbox with clickable label wrapped in Field | `Core/Checkbox` |
 | Switch | Radix-based accessible toggle switch with clickable label wrapped in Field | `Core/Switch` |
 | DateTimePicker | Native date/datetime-local picker displaying IST and storing UTC ISO | `Core/DateTimePicker` |

@@ -7,9 +7,13 @@ import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import NoReturn
+
+from nova_contracts.indicators import BY_NAME, param_problems
 
 from nova_backtest.bars import Bar
 from nova_backtest.engine import EngineError
+from nova_backtest.indicators import indicator
 
 RUNNER = Path(__file__).with_name("sandbox_runner.py")
 WALL_SECONDS = 30.0
@@ -19,10 +23,35 @@ FORBIDDEN_CALLS = {
 }  # fmt: skip
 FORBIDDEN_ATTRIBUTES = {"format", "format_map", "mro"}
 ALLOWED_DUNDER_DEFS = {"__init__"}
+# `ctx.sma` stays the child's own closes helper; other catalog names are computed here (D51).
+CTX_INDICATORS = set(BY_NAME) - {"sma"}
+CTX_METHODS = {"sma", "highest", "lowest"} | CTX_INDICATORS
+MAX_AGO = 500
+
+
+def canonical_key(name: str, params: Mapping[str, float]) -> str:
+    """`rsi(period=14.0)`: all settings, defaults filled, catalog order (the child matches it)."""
+    filled = BY_NAME[name].defaults() | dict(params)
+    return (
+        f"{name}("
+        + ", ".join(f"{p.key}={float(filled[p.key])!r}" for p in BY_NAME[name].params)
+        + ")"
+    )
+
+
+def _number(node: ast.expr) -> float | None:
+    """An int or float literal (not a bool), else None."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, int | float):
+        return None if isinstance(node.value, bool) else float(node.value)
+    return None
 
 
 class _Checker(ast.NodeVisitor):
-    def refuse(self, node: ast.AST, why: str) -> None:
+    def __init__(self) -> None:
+        # Canonical key → (indicator name, settings) of every `ctx.<indicator>(…)` call (D51).
+        self.calls: dict[str, tuple[str, dict[str, float]]] = {}
+
+    def refuse(self, node: ast.AST, why: str) -> NoReturn:
         raise EngineError(
             f"Python strategy not allowed: {why} (line {getattr(node, 'lineno', '?')})"
         )
@@ -50,21 +79,60 @@ class _Checker(ast.NodeVisitor):
             self.refuse(node, f"attribute {node.attr}")
         self.generic_visit(node)
 
+    def visit_Call(self, node: ast.Call) -> None:
+        func = node.func
+        if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+            if func.value.id == "ctx" and func.attr not in CTX_METHODS:
+                self.refuse(node, f"ctx has no {func.attr}()")
+            if func.value.id == "ctx" and func.attr in CTX_INDICATORS:
+                self._indicator_call(node, func.attr)
+        self.generic_visit(node)
+
+    def _indicator_call(self, node: ast.Call, name: str) -> None:
+        keys = [p.key for p in BY_NAME[name].params]
+        what = f"ctx.{name}"
+        if len(node.args) > len(keys):
+            self.refuse(node, f"{what} takes at most {len(keys)} settings ({', '.join(keys)})")
+        params: dict[str, float] = {}
+        for key, arg in zip(keys, node.args, strict=False):
+            value = _number(arg)
+            if value is None:
+                self.refuse(node, f"{what} settings must be plain numbers")
+            params[key] = value
+        for keyword in node.keywords:
+            value = _number(keyword.value)
+            if keyword.arg == "ago":
+                if value is None or value != int(value) or not 0 <= value <= MAX_AGO:
+                    self.refuse(node, f"{what} ago must be a whole number from 0 to {MAX_AGO}")
+                continue
+            if keyword.arg not in keys or keyword.arg in params:
+                self.refuse(node, f"{what} has no setting {keyword.arg}")
+            if value is None:
+                self.refuse(node, f"{what} settings must be plain numbers")
+            params[str(keyword.arg)] = value
+        problems = param_problems(name, params)
+        if problems:
+            self.refuse(node, "; ".join(problems))
+        self.calls[canonical_key(name, params)] = (name, params)
+
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         if node.name.startswith("_") and node.name not in ALLOWED_DUNDER_DEFS:
             self.refuse(node, f"function names starting with _ ({node.name})")
         self.generic_visit(node)
 
 
-def check_code(code: str) -> None:
+def check_code(code: str) -> dict[str, tuple[str, dict[str, float]]]:
+    """Refuses unsafe code; returns the `ctx.<indicator>(…)` calls by canonical key (D51)."""
     try:
         tree = ast.parse(code, filename="<strategy>")
     except SyntaxError as exc:
         raise EngineError(f"Python strategy has a syntax error (line {exc.lineno})") from exc
-    _Checker().visit(tree)
+    checker = _Checker()
+    checker.visit(tree)
     defines = any(isinstance(n, ast.ClassDef) and n.name == "Strategy" for n in tree.body)
     if not defines:
         raise EngineError("Python strategy must define a class named Strategy")
+    return checker.calls
 
 
 def _environment() -> dict[str, str]:
@@ -77,7 +145,14 @@ def _environment() -> dict[str, str]:
 def run_python(
     code: str, bars: Mapping[str, Sequence[Bar]], timeout: float = WALL_SECONDS
 ) -> dict[str, list[str | None]]:
-    check_code(code)
+    calls = check_code(code) or {}
+    indicators = {
+        symbol: {key: indicator(name, params, rows) for key, (name, params) in calls.items()}
+        for symbol, rows in bars.items()
+    }
+    catalog = {
+        name: [[p.key, p.default] for p in BY_NAME[name].params] for name in sorted(CTX_INDICATORS)
+    }
     series = {
         symbol: [
             [b.ts.isoformat(), b.open / 100, b.high / 100, b.low / 100, b.close / 100, b.volume]
@@ -88,7 +163,9 @@ def run_python(
     try:
         done = subprocess.run(  # noqa: S603 - fixed interpreter and script, JSON on stdin
             [sys.executable, "-I", str(RUNNER)],
-            input=json.dumps({"code": code, "series": series}),
+            input=json.dumps(
+                {"code": code, "series": series, "indicators": indicators, "catalog": catalog}
+            ),
             capture_output=True,
             text=True,
             timeout=timeout,

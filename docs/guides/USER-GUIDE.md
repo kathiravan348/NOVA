@@ -127,6 +127,12 @@ Switch **Authoring mode** to **Python**. A ready template appears: a `Strategy` 
 function returns `"enter"`, `"exit"` or nothing for each candle. For safety, the code cannot import
 libraries, open files or reach the internet; it runs in a locked box with time and memory limits.
 
+Every indicator from the visual list works here too, written as `ctx.` plus its short name and its
+settings in the same order as the editor shows them: `ctx.rsi(14)`, `ctx.supertrend(10, 3)`,
+`ctx.macd_signal(12, 26, 9)` (or by name: `ctx.macd_signal(fast=12, slow=26, signal=9)`). Add `ago=1` for
+the value one candle earlier. The settings must be plain numbers typed in the code, not names you
+calculate. The answer is empty (`None`) until there are enough candles.
+
 ### Step 5 — Run a backtest
 Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 

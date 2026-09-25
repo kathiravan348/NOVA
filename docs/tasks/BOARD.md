@@ -73,7 +73,7 @@
 | NOVA-065 | Engine: catalog params (MACD fix), offset, trend + momentum indicators (D51) | done | Claude | 064 |
 | NOVA-066 | Engine: volume, channel and previous-day level indicators (D51) | done | Claude | 065 |
 | NOVA-067 | Editor: grouped indicator list, per-indicator settings, Bars ago (D51) | done | Claude | 064 (merge after 066) |
-| NOVA-068 | Python mode: every catalog indicator on `ctx` (D47, D51) | planned | — | 066, 067 |
+| NOVA-068 | Python mode: every catalog indicator on `ctx` (D47, D51) | done | Claude | 066, 067 |
 | NOVA-069 | Cost averaging (add to a position as price falls) | draft | Claude | Owner decision |
 | NOVA-070 | Relay: add a broker account from the screen (POST /broker/accounts, audit, D52) | done | Claude | 058 |
 

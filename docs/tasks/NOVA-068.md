@@ -1,6 +1,6 @@
 # NOVA-068 — Python mode: every catalog indicator on `ctx` (D47, D51)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-068 · **Depends on:** NOVA-066, NOVA-067
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-068 · **Depends on:** NOVA-066, NOVA-067
 
 ## Goal
 Python strategies can call any catalog indicator, e.g. `ctx.rsi(14)`, `ctx.supertrend(10, 3)`,
@@ -47,5 +47,17 @@ Modify: `nova_backtest/{sandbox.py,sandbox_runner.py,strategy_engine.py}`, `test
 ## Questions
 
 ## Handoff
+Built by Claude (Antigravity offline). All acceptance checks pass.
+- `sandbox.check_code` now returns every `ctx.<indicator>(…)` call (literal numbers only, positional in catalog
+  order or by key, optional `ago` 0–500, `param_problems` applied) and refuses unknown `ctx.x()` calls.
+- The series are computed in `run_python` (sandbox.py), not strategy_engine.py: it already has the bars, so
+  strategy_engine needed no change. The request carries `indicators` and `catalog` (keys + defaults).
+- Child `Context.__getattr__` builds the same canonical key and returns the value at index − ago; private and
+  unknown names raise AttributeError. The runner still imports only the standard library (test).
+- Also: COMPONENTS.md Select line (group option from 067).
+- Checks: `pnpm review:check` green; ruff/format/mypy per package clean; all backend tests pass in Docker (run
+  in batches: the running dev stack exhausts Postgres connections for one full run).
+- Guides: USER-GUIDE Python section.
 
 ## Review
+Self-reviewed. ctx.rsi(14) signals equal the visual RSI(14) lt 30 rule on a 40-bar fixture.
