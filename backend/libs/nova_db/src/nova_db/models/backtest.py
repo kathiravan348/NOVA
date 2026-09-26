@@ -11,7 +11,10 @@ from sqlalchemy import (
     Index,
     Integer,
     SmallInteger,
+    UniqueConstraint,
+    true,
 )
+from sqlalchemy.engine.default import DefaultExecutionContext
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nova_db.enums import (
@@ -24,6 +27,11 @@ from nova_db.enums import (
     sql_in,
 )
 from nova_db.models.base import Base, Json, JsonList, check_in, created_at_column
+
+def _own_id(context: DefaultExecutionContext) -> str:
+    """A new run without a `root_id` starts its own chain (version 1)."""
+    return str(context.get_current_parameters()["id"])  # type: ignore[no-untyped-call]
+
 
 PROGRESS_COUNTS = ("symbols_done", "symbols_total", "bars_done", "bars_total", "trades_so_far")
 
@@ -47,6 +55,9 @@ class BacktestRun(Base):
         CheckConstraint(" AND ".join(f"{c} >= 0" for c in PROGRESS_COUNTS), name="progress_counts"),
         Index(None, "created_at", "id"),
         Index(None, "strategy_id", "created_at", "id"),
+        UniqueConstraint("root_id", "version"),
+        CheckConstraint("version >= 1", name="version"),
+        CheckConstraint("(version = 1) = (root_id = id)", name="root_first"),
     )
 
     id: Mapped[str] = mapped_column(primary_key=True)
@@ -72,6 +83,11 @@ class BacktestRun(Base):
     bars_total: Mapped[int] = mapped_column(Integer, server_default="0")
     trades_so_far: Mapped[int] = mapped_column(Integer, server_default="0")
     simulated_to: Mapped[date | None]
+    # Versions of one backtest share `root_id`, the first run's id (D60).
+    root_id: Mapped[str] = mapped_column(default=_own_id)
+    version: Mapped[int] = mapped_column(Integer, server_default="1")
+    # False once a newer version completed: trades, curve and per-symbol rows are gone.
+    report_kept: Mapped[bool] = mapped_column(server_default=true())
 
 
 class BacktestResult(Base):
