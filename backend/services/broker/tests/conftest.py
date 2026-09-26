@@ -111,7 +111,7 @@ def synced(clean: Engine) -> Engine:
     """Recorder tests: two instruments with a Kite token (+ one without), no jobs or ticks, the
     recording switch off (as migration 0007 leaves it)."""
     with clean.begin() as connection:
-        connection.execute(text("TRUNCATE instruments, data_jobs, ticks"))
+        connection.execute(text("TRUNCATE instruments, data_jobs, data_job_steps, ticks"))
         connection.execute(text("UPDATE recorder_settings SET enabled = false, symbols = '{}'"))
     with Session(clean) as db:
         for symbol, token in [*SYNCED.items(), ("NOTOKEN", None)]:

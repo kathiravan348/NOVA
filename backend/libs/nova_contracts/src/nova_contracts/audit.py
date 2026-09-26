@@ -19,12 +19,18 @@ AuditAction = Literal[
     "backtest.run",
     "data_job.create",
     "data_job.cancel",
+    "data_job.plan",
+    "data_job.start",
+    "data_job.pause",
+    "data_job.resume",
+    "data_job.delete",
     "instrument.add",
     "instrument.update",
     "instrument.remove",
     "instrument.sync",
     "instrument.clear_new",
     "settings.update",
+    "download_settings.update",
 ]
 AuditTargetType = Literal[
     "user", "broker_account", "strategy", "backtest", "data_job", "settings", "instrument"

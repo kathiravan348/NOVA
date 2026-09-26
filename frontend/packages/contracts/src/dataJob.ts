@@ -16,14 +16,46 @@ export const DataJobTypeSchema = z.enum([
 ]);
 export type DataJobType = z.infer<typeof DataJobTypeSchema>;
 
+/** `draft`: planned, not started (expires after 24 h); `paused`: stopped between steps (D57). */
 export const DataJobStatusSchema = z.enum([
+  "draft",
   "queued",
   "running",
   "completed",
   "failed",
   "cancelled",
+  "paused",
 ]);
 export type DataJobStatus = z.infer<typeof DataJobStatusSchema>;
+
+/** What a download does with candles already stored (D57). */
+export const DownloadModeSchema = z.enum(["skip_existing", "overwrite"]);
+export type DownloadMode = z.infer<typeof DownloadModeSchema>;
+
+/** One stock of a download plan. `existingFrom`/`existingTo`: candles already stored in the period. */
+export const DataJobPlanSymbolSchema = z.strictObject({
+  symbol: z.string().min(1),
+  steps: z.number().int().min(0),
+  skippedSteps: z.number().int().min(0),
+  existingFrom: IsoDateSchema.nullable(),
+  existingTo: IsoDateSchema.nullable(),
+});
+export type DataJobPlanSymbol = z.infer<typeof DataJobPlanSymbolSchema>;
+
+/** The cost of a download, shown before **Start** (D57 (2)). `steps` counts every step, skipped ones too. */
+export const DataJobPlanSchema = z.strictObject({
+  steps: z.number().int().min(0),
+  skippedSteps: z.number().int().min(0),
+  requests: z.number().int().min(0),
+  estimatedRows: z.number().int().min(0),
+  estimatedBytes: z.number().int().min(0),
+  estimatedSeconds: z.number().int().min(0),
+  estimatedStartAt: UtcDateTimeSchema,
+  jobsAhead: z.number().int().min(0),
+  perSymbol: z.array(DataJobPlanSymbolSchema),
+  warnings: z.array(z.string().min(1)),
+});
+export type DataJobPlan = z.infer<typeof DataJobPlanSchema>;
 
 export const DataJobSchema = z
   .strictObject({
@@ -44,6 +76,12 @@ export const DataJobSchema = z
     finishedAt: UtcDateTimeSchema.nullable(),
     error: z.string().nullable(),
     summary: z.string().max(500).nullable(),
+    // Planned downloads (D57); null / 0 for other jobs and downloads queued before plans.
+    mode: DownloadModeSchema.nullable(),
+    plan: DataJobPlanSchema.nullable(),
+    stepsDone: z.number().int().min(0),
+    stepsTotal: z.number().int().min(0),
+    expiresAt: UtcDateTimeSchema.nullable(),
   })
   .refine(
     (data) => {
@@ -86,11 +124,19 @@ export const DataJobSchema = z
       if (data.status === "queued") {
         return data.startedAt === null && data.finishedAt === null;
       }
+      if (data.status === "draft") {
+        return (
+          data.startedAt === null &&
+          data.finishedAt === null &&
+          data.plan !== null &&
+          data.expiresAt !== null
+        );
+      }
       return true;
     },
     {
       message:
-        "completed jobs require progressPercent 100 and finishedAt set; queued jobs require startedAt and finishedAt to be null",
+        "completed jobs require progressPercent 100 and finishedAt set; queued jobs require startedAt and finishedAt to be null; drafts need a plan and expiresAt",
       path: ["status"],
     },
   );
@@ -115,6 +161,36 @@ export const DataJobCreateSchema = z
     path: ["from"],
   });
 export type DataJobCreate = z.input<typeof DataJobCreateSchema>;
+
+/** Body of `POST /data-jobs/plan` (D57): a download to plan as a `draft`, and what to do with stored candles. */
+export const DataJobPlanRequestSchema = z
+  .strictObject({
+    symbols: z
+      .array(z.string().min(1))
+      .min(1, "Pick at least one stock")
+      .max(MAX_DOWNLOAD_SYMBOLS, `Pick at most ${MAX_DOWNLOAD_SYMBOLS} stocks`),
+    timeframe: TimeframeSchema,
+    from: IsoDateSchema,
+    to: IsoDateSchema,
+    segment: SegmentSchema.default("equity_delivery"),
+    mode: DownloadModeSchema.default("skip_existing"),
+  })
+  .refine((data) => data.from <= data.to, {
+    message: "From must be on or before To",
+    path: ["from"],
+  });
+export type DataJobPlanRequest = z.input<typeof DataJobPlanRequestSchema>;
+
+/** Pace of downloads on weekdays 09:15–15:30 IST (D57 (5)): `slow` at most 1 request/s, `full` 2/s. */
+export const MarketHoursModeSchema = z.enum(["slow", "full"]);
+export type MarketHoursMode = z.infer<typeof MarketHoursModeSchema>;
+
+export const DownloadSettingsSchema = z.strictObject({ marketHoursMode: MarketHoursModeSchema });
+export type DownloadSettings = z.infer<typeof DownloadSettingsSchema>;
+
+/** Body of `PATCH /data-jobs/settings`. */
+export const DownloadSettingsUpdateSchema = DownloadSettingsSchema;
+export type DownloadSettingsUpdate = z.infer<typeof DownloadSettingsUpdateSchema>;
 
 /** Request body for `POST /data-jobs/archive` (D54): move ticks received before `before` (IST). */
 export const ArchiveJobCreateSchema = z.strictObject({ before: IsoDateSchema });

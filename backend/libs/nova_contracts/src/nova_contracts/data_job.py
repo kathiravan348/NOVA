@@ -7,7 +7,36 @@ from pydantic import Field, model_validator
 from nova_contracts.common import Contract, Exchange, Id, IsoDate, Segment, Timeframe, UtcDateTime
 
 DataJobType = Literal["historical_download", "tick_record", "archive", "instrument_sync"]
-DataJobStatus = Literal["queued", "running", "completed", "failed", "cancelled"]
+# `draft`: planned, not started (expires after 24 h); `paused`: stopped between steps (D57).
+DataJobStatus = Literal["draft", "queued", "running", "completed", "failed", "cancelled", "paused"]
+DownloadMode = Literal["skip_existing", "overwrite"]
+MarketHoursMode = Literal["slow", "full"]
+Count = Annotated[int, Field(ge=0)]
+
+
+class DataJobPlanSymbol(Contract):
+    """One stock of a plan; `existing_*`: candles already stored in the period."""
+
+    symbol: Annotated[str, Field(min_length=1)]
+    steps: Count
+    skipped_steps: Count
+    existing_from: IsoDate | None
+    existing_to: IsoDate | None
+
+
+class DataJobPlan(Contract):
+    """The cost of a download, shown before Start (D57 (2)). `steps` includes skipped ones."""
+
+    steps: Count
+    skipped_steps: Count
+    requests: Count
+    estimated_rows: Count
+    estimated_bytes: Count
+    estimated_seconds: Count
+    estimated_start_at: UtcDateTime
+    jobs_ahead: Count
+    per_symbol: list[DataJobPlanSymbol]
+    warnings: list[Annotated[str, Field(min_length=1)]]
 
 
 class DataJob(Contract):
@@ -29,6 +58,12 @@ class DataJob(Contract):
     finished_at: UtcDateTime | None
     error: str | None
     summary: Annotated[str, Field(max_length=500)] | None
+    # Planned downloads (D57); null / 0 for other jobs and downloads queued before plans.
+    mode: DownloadMode | None
+    plan: DataJobPlan | None
+    steps_done: Count
+    steps_total: Count
+    expires_at: UtcDateTime | None
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
@@ -54,6 +89,13 @@ class DataJob(Contract):
             self.started_at is not None or self.finished_at is not None
         ):
             raise ValueError("queued jobs have no startedAt or finishedAt")
+        if self.status == "draft" and (
+            self.started_at is not None
+            or self.finished_at is not None
+            or self.plan is None
+            or self.expires_at is None
+        ):
+            raise ValueError("drafts need a plan and expiresAt, and are not started")
         return self
 
 
@@ -83,3 +125,19 @@ class ArchiveJobCreate(Contract):
     """Body of `POST /data-jobs/archive`: move ticks received before `before` (IST) to Parquet."""
 
     before: IsoDate
+
+
+class DataJobPlanRequest(DataJobCreate):
+    """Body of `POST /data-jobs/plan` (D57): a download to plan as a `draft`."""
+
+    mode: DownloadMode = "skip_existing"
+
+
+class DownloadSettings(Contract):
+    """Pace on weekdays 09:15–15:30 IST (D57 (5)): `slow` ≤ 1 request/s, `full` 2/s."""
+
+    market_hours_mode: MarketHoursMode
+
+
+class DownloadSettingsUpdate(DownloadSettings):
+    """Body of `PATCH /data-jobs/settings`."""

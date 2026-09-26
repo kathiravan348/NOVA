@@ -26,6 +26,8 @@ EXPECTED_TABLES = {
     "ticks",
     "universe",
     "recorder_settings",
+    "data_job_steps",
+    "download_settings",
 }
 
 
@@ -138,3 +140,35 @@ def test_data_job_changes_are_announced_until_downgraded(engine: Engine, databas
 
     upgrade(database_url)
     assert _job_trigger_exists(engine)
+
+
+def test_download_settings_start_slow(engine: Engine) -> None:
+    with engine.connect() as connection:
+        rows = connection.execute(text("SELECT id, market_hours_mode FROM download_settings")).all()
+
+    assert [tuple(row) for row in rows] == [(1, "slow")]
+
+
+def test_paused_jobs_become_cancelled_and_drafts_go_on_downgrade(
+    engine: Engine, database_url: str
+) -> None:
+    with engine.begin() as connection:
+        connection.execute(text("TRUNCATE data_jobs CASCADE"))
+        connection.execute(
+            text(
+                "INSERT INTO data_jobs (id, type, status, exchange, segment, symbols, timeframe,"
+                " date_from, date_to, mode, plan, expires_at) VALUES"
+                " ('job_d', 'historical_download', 'draft', 'NSE', 'equity_delivery', '{INFY}',"
+                " '1d', '2025-01-01', '2025-12-31', 'skip_existing', '{}',"
+                " now() + interval '1 day'),"
+                " ('job_p', 'historical_download', 'paused', 'NSE', 'equity_delivery', '{INFY}',"
+                " '1d', '2025-01-01', '2025-12-31', 'overwrite', NULL, NULL)"
+            )
+        )
+    downgrade(database_url, "0010")
+    with engine.begin() as connection:
+        rows = connection.execute(text("SELECT id, status FROM data_jobs")).all()
+        connection.execute(text("TRUNCATE data_jobs CASCADE"))
+    upgrade(database_url)
+
+    assert [tuple(row) for row in rows] == [("job_p", "cancelled")]

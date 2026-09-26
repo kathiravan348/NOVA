@@ -40,19 +40,26 @@ export const jobTypeLabel: Record<DataJobType, string> = {
 };
 
 export const jobStatusLabel: Record<DataJobStatus, string> = {
+  draft: "Planned",
   queued: "Queued",
   running: "Running",
   completed: "Completed",
   failed: "Failed",
   cancelled: "Cancelled",
+  paused: "Paused",
 };
 
-export const jobStatusTone: Record<DataJobStatus, "neutral" | "info" | "success" | "danger"> = {
+export const jobStatusTone: Record<
+  DataJobStatus,
+  "neutral" | "info" | "success" | "warning" | "danger"
+> = {
+  draft: "neutral",
   queued: "neutral",
   running: "info",
   completed: "success",
   failed: "danger",
   cancelled: "neutral",
+  paused: "warning",
 };
 
 export const auditActionLabel: Record<AuditAction, string> = {
@@ -68,12 +75,18 @@ export const auditActionLabel: Record<AuditAction, string> = {
   "backtest.run": "Backtest run",
   "data_job.create": "Data job created",
   "data_job.cancel": "Data job cancelled",
+  "data_job.plan": "Download planned",
+  "data_job.start": "Download started",
+  "data_job.pause": "Download paused",
+  "data_job.resume": "Download resumed",
+  "data_job.delete": "Data job deleted",
   "instrument.add": "Stock added",
   "instrument.update": "Stock updated",
   "instrument.remove": "Stock removed",
   "instrument.sync": "Stocks synced with Kite",
   "instrument.clear_new": "Cleared new listing",
   "settings.update": "Settings changed",
+  "download_settings.update": "Download pace changed",
 };
 
 export const AUDIT_GROUPS = [
@@ -97,7 +110,10 @@ export const auditGroupLabel: Record<AuditGroup, string> = {
   settings: "Settings",
 };
 
-export const auditGroup = (action: AuditAction) => action.split(".")[0] as AuditGroup;
+export const auditGroup = (action: AuditAction): AuditGroup => {
+  const prefix = action.split(".")[0];
+  return prefix === "download_settings" ? "settings" : (prefix as AuditGroup);
+};
 
 export const recorderStateLabel: Record<RecorderState, string> = {
   off: "Off",

@@ -1,6 +1,6 @@
 # NOVA-092 — Download plans: draft/paused statuses, job steps, market-hours setting
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-092 · **Depends on:** NOVA-090
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-092 · **Depends on:** NOVA-090
 
 ## Goal
 Tables and contracts for planned, resumable downloads (D57 (2)–(5)). No planning logic yet (093).
@@ -48,5 +48,14 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** migration 0011 (statuses `draft`/`paused`, `mode`, `plan`, `expires_at`, `steps_total`/`steps_done`, `data_job_steps`, `download_settings`, audit actions), models, contracts (Zod + Pydantic + schemas), mocks.
+**Files changed:** as listed; plus Atlas `jobs.py` and Core `realtime.py` (map new fields), Relay `lib/labels.ts` (new statuses and actions), broker test truncate.
+**Commands run:** backend-check (635 passed) · `pnpm review:check` → pass.
+**New dependencies:** none. **Maps updated:** CONTRACTS. **Guides updated:** DATABASE.
+**Deviations from task:** added `steps_total`/`steps_done` on `data_jobs` (each step updates the job row, so the socket reports step progress) and audit action `data_job.delete` (for NOVA-095, saves a migration). Queue tests live in `nova_db/tests/test_queue.py` (new). `claim_next` already only takes `queued`.
+**Known gaps:** endpoints and worker (093).
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Fixed directly:** JSONB `plan` stores None as SQL NULL (`none_as_null`); audit group for `download_settings.update` is Settings.
+**Guides checked:** DATABASE, CONTRACTS match. **Rulebook issues found:** none. **Follow-up tasks created:** NOVA-095, NOVA-096 (delete jobs).

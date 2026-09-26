@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 26 Sep 2026 (migrations `0001`–`0010`, NOVA-090). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 26 Sep 2026 (migrations `0001`–`0011`, NOVA-092). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -27,7 +27,7 @@ strategies ── strategy_versions ── backtest_runs ─┬─ backtest_resu
                                                   └─ trades
 charge_rates                                   (fees & taxes used for trades)
 
-universe ─ instruments   market_indices   candles (hypertable)   ticks (hypertable)   data_jobs
+universe ─ instruments   market_indices   candles (hypertable)   ticks (hypertable)   data_jobs ─ data_job_steps   download_settings
 ```
 
 ---
@@ -74,13 +74,15 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 | **instruments** | Master list of shares/contracts (from the `universe` stock list + Kite, by sync). Prices and stats are **not** stored here; the API computes them from candles. | PK (`exchange`, `symbol`), `name`, `segment`, `sector`, `indices` (text[]), `lot_size`, `instrument_token` (Kite's id, unique), `updated_at` |
 | **candles** | Price bars (OHLCV). **TimescaleDB hypertable** on `ts`, 30-day chunks. Daily bars are stored at 00:00 IST. DB check: high ≥ open/close ≥ low > 0. | PK (`exchange`, `symbol`, `timeframe`, `ts`), `open_paise`, `high_paise`, `low_paise`, `close_paise`, `volume`; `timeframe` ∈ `1m 3m 5m 15m 30m 1h 1d` |
 | **ticks** | Live price updates recorded from Kite's WebSocket during market hours. **Hypertable** on `received_at`, 1-day chunks. Older days are moved to Parquet by `archive-ticks` and then deleted here. | PK (`exchange`, `symbol`, `received_at`), `exchange_ts`, `last_price_paise`, `last_qty`, `volume`, `oi` |
-| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` and `archive` jobs). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`, `instrument_sync` (no symbols). Checks: downloads need timeframe + period; symbols required except for `instrument_sync`; `summary` ≤ 500 chars; completed = 100%; errors only when failed. Trigger `data_jobs_notify` (0010) sends `pg_notify('nova_events', {"type":"data_job.updated","id":…})` after every insert or update; NOVA Core listens and pushes the job to open WebSockets. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error`, `summary` (one result line) |
+| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` and `archive` jobs). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`, `instrument_sync` (no symbols). Checks: downloads need timeframe + period; symbols required except for `instrument_sync`; `summary` ≤ 500 chars; completed = 100%; errors only when failed. Trigger `data_jobs_notify` (0010) sends `pg_notify('nova_events', {"type":"data_job.updated","id":…})` after every insert or update; NOVA Core listens and pushes the job to open WebSockets. | `id`, `type`, `status` (`draft` planned, not started / `queued` / `running` / `completed` / `failed` / `cancelled` / `paused` stopped between steps), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error`, `summary` (one result line), `mode` (`skip_existing`/`overwrite`, downloads only), `plan` (jsonb `DataJobPlan`, shown before Start), `expires_at` (drafts only; required on drafts), `steps_total`, `steps_done` (0 ≤ done ≤ total; kept in step with `data_job_steps`) |
+| **data_job_steps** | The steps of a planned download (D57): one Kite-sized request per stock × date chunk, saved as it finishes, so Pause, Resume and a worker restart continue from the next `pending` step. Removed with their job. | PK (`job_id` → data_jobs, cascade; `seq`), `symbol`, `start_at`, `end_at` (UTC, start < end), `status` (`pending`/`done`/`skipped`; `finished_at` set exactly when not pending), `rows_written`, `finished_at`; index (`job_id`, `status`, `seq`) |
+| **download_settings** | The one row (id 1) of download settings (D57): pace on weekdays 09:15–15:30 IST. Starts `slow`. | `id` (always 1), `market_hours_mode` (`slow` ≤ 1 request/s, `full` 2/s), `updated_at`, `updated_by` → users (set null) |
 
 ## 5. Audit
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `instrument.clear_new`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
+| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `data_job.plan`, `data_job.start`, `data_job.pause`, `data_job.resume`, `data_job.delete`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `instrument.clear_new`, `settings.update`, `download_settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
 
 ## 6. Outside PostgreSQL
 
@@ -88,4 +90,4 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 |---|---|
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
-| **alembic_version** (table) | The migration the database is on (currently `0010`). Managed by Alembic only. |
+| **alembic_version** (table) | The migration the database is on (currently `0011`). Managed by Alembic only. |

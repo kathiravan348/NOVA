@@ -6,6 +6,9 @@ import {
   DataJobSchema,
   DataJobStatusSchema,
   DataJobTypeSchema,
+  DataJobPlan,
+  DataJobPlanRequestSchema,
+  DownloadSettingsSchema,
 } from "./dataJob";
 
 describe("DataJob schemas", () => {
@@ -26,6 +29,11 @@ describe("DataJob schemas", () => {
     finishedAt: "2026-01-01T06:10:00Z",
     error: null,
     summary: null,
+    mode: null,
+    plan: null,
+    stepsDone: 0,
+    stepsTotal: 0,
+    expiresAt: null,
   };
 
   const validRunningTickJob: DataJob = {
@@ -45,6 +53,11 @@ describe("DataJob schemas", () => {
     finishedAt: null,
     error: null,
     summary: null,
+    mode: null,
+    plan: null,
+    stepsDone: 0,
+    stepsTotal: 0,
+    expiresAt: null,
   };
 
   describe("DataJobTypeSchema", () => {
@@ -69,7 +82,7 @@ describe("DataJob schemas", () => {
     });
 
     it("rejects invalid status enum", () => {
-      expect(DataJobStatusSchema.safeParse("paused").success).toBe(false);
+      expect(DataJobStatusSchema.safeParse("stopped").success).toBe(false);
     });
   });
 
@@ -238,5 +251,80 @@ describe("ArchiveJobCreateSchema", () => {
     expect(ArchiveJobCreateSchema.parse({ before: "2026-09-01" }).before).toBe("2026-09-01");
     expect(ArchiveJobCreateSchema.safeParse({ before: "1 Sep" }).success).toBe(false);
     expect(ArchiveJobCreateSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe("Planned downloads (D57)", () => {
+  const plan: DataJobPlan = {
+    steps: 4,
+    skippedSteps: 1,
+    requests: 3,
+    estimatedRows: 1125,
+    estimatedBytes: 90000,
+    estimatedSeconds: 2,
+    estimatedStartAt: "2026-09-26T06:00:00Z",
+    jobsAhead: 0,
+    perSymbol: [
+      {
+        symbol: "INFY",
+        steps: 4,
+        skippedSteps: 1,
+        existingFrom: "2025-01-01",
+        existingTo: "2025-03-31",
+      },
+    ],
+    warnings: [],
+  };
+  const draft: DataJob = {
+    id: "job-plan",
+    type: "historical_download",
+    status: "draft",
+    exchange: "NSE",
+    segment: "equity_delivery",
+    symbols: ["INFY"],
+    timeframe: "1m",
+    from: "2025-01-01",
+    to: "2025-12-31",
+    progressPercent: 0,
+    rowsWritten: 0,
+    createdAt: "2026-09-26T06:00:00Z",
+    startedAt: null,
+    finishedAt: null,
+    error: null,
+    summary: null,
+    mode: "skip_existing",
+    plan,
+    stepsDone: 0,
+    stepsTotal: 4,
+    expiresAt: "2026-09-27T06:00:00Z",
+  };
+
+  it("accepts a draft with a plan and a paused job", () => {
+    expect(DataJobSchema.parse(draft)).toEqual(draft);
+    const paused = {
+      ...draft,
+      status: "paused",
+      startedAt: "2026-09-26T06:01:00Z",
+      expiresAt: null,
+    };
+    expect(DataJobSchema.safeParse(paused).success).toBe(true);
+  });
+
+  it.each([{ plan: null }, { expiresAt: null }, { startedAt: "2026-09-26T06:01:00Z" }])(
+    "rejects a draft with %o",
+    (change) => {
+      expect(DataJobSchema.safeParse({ ...draft, ...change }).success).toBe(false);
+    },
+  );
+
+  it("plan request defaults to skipping stored candles", () => {
+    const body = { symbols: ["INFY"], timeframe: "1m", from: "2025-01-01", to: "2025-12-31" };
+    expect(DataJobPlanRequestSchema.parse(body).mode).toBe("skip_existing");
+    expect(DataJobPlanRequestSchema.safeParse({ ...body, mode: "append" }).success).toBe(false);
+  });
+
+  it("download settings take slow or full", () => {
+    expect(DownloadSettingsSchema.parse({ marketHoursMode: "full" }).marketHoursMode).toBe("full");
+    expect(DownloadSettingsSchema.safeParse({ marketHoursMode: "fast" }).success).toBe(false);
   });
 });

@@ -237,6 +237,11 @@ export const relayHandlers = [
       finishedAt: null,
       error: null,
       summary: null,
+      mode: null,
+      plan: null,
+      stepsDone: 0,
+      stepsTotal: 0,
+      expiresAt: null,
     };
     return HttpResponse.json(job, { status: 201 });
   }),
@@ -281,6 +286,11 @@ export const relayHandlers = [
       finishedAt: null,
       error: null,
       summary: null,
+      mode: null,
+      plan: null,
+      stepsDone: 0,
+      stepsTotal: 0,
+      expiresAt: null,
     };
     return HttpResponse.json(job, { status: 201 });
   }),
