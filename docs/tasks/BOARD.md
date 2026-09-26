@@ -109,6 +109,11 @@
 | NOVA-101 | Backtest progress: stage, counts and percent on each run (D58, migration 0014) | done | Claude | 100 |
 | NOVA-102 | Orbit: live backtest progress on the run page and in the list (D58) | done | Claude | 101 |
 | NOVA-103 | Backtest worker: no stuck runs, restart after a crash, bar limit (D59) | done | Claude | — |
+| NOVA-104 | Contracts, mocks, services: backtest versions and delete, stats by version (D60) | planned | — | 102 |
+| NOVA-105 | Backtest service: versions, delete, slim history (D60, migration 0015) | planned | — | 104 |
+| NOVA-106 | Strategy stats per strategy version (D60) | planned | — | 104 |
+| NOVA-107 | Orbit: delete backtests, Edit as a new version, Versions table (D60) | planned | — | 104 (merge after 105) |
+| NOVA-108 | Orbit: view any strategy version and compare two side by side (D60) | planned | — | 104 (merge after 106) |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -124,3 +129,4 @@
 - Delete jobs (Owner request 26 Sep): 095 before 094 (the plan review discards drafts with it) → 096 after 094.
 - Scale + progress (D58): 099 → 100 → 101 (migrations in order; 100 and 101 both edit `strategy_engine.py`) → 102.
 - Worker fix (D59, live bug): 103 first; it can run alongside 099 (no shared files). 100 and 101 follow it (all edit `strategy_engine.py`).
+- Backtest versions (D60): 104 (contracts) first; then backend 105 and 106 and frontend 107 and 108 in parallel (no shared files).
