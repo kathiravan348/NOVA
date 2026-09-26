@@ -84,6 +84,11 @@
 | NOVA-076 | Broker: always-on tick recorder with an on/off setting (D54, migration 0007) | done | Claude | 074 |
 | NOVA-077 | Atlas: tick archive as a data job (D54) | done | Claude | 076 |
 | NOVA-078 | Relay: tick recording switch + Archive old ticks (D54) | done | Claude | 075, 076, 077 |
+| NOVA-079 | Relay: broker screens from three to two (Broker + account page, D55) | planned | — | 078 |
+| NOVA-080 | Broker: Kite app per account, API secret sealed with a passphrase (D55, migration 0008) | planned | — | 079 |
+| NOVA-081 | Broker: login finished with the passphrase; Kite keys leave `.env`; broker CLI trimmed (D55) | planned | — | 080, 083 |
+| NOVA-082 | Relay: Kite app card + passphrase to finish the login (D55) | planned | — | 081 (merge with 081) |
+| NOVA-083 | Atlas: remove CLI commands Relay covers (D55) | planned | — | 078 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -93,3 +98,4 @@
 - Indicators (D51): 064 first; then backend 065 → 066 and frontend 067 run in parallel (no shared files); 068 last.
 - Stage B (after 022): lane A = 043 → 044 / 047 (backend); lane B = 045 → 046 (frontend) runs alongside. Then 048 → 049 → 050 → 051; 053 and 054 can overlap 049–051.
 - Relay control panel (D54): backend 072 → 074 → 076 → 077; frontend 073 (after 074) → 075 → 078 runs alongside the backend lane.
+- Kite keys in Relay (D55): 079 → 080 → 081 → 082 (081 and 082 merge together); 083 runs alongside 079/080.

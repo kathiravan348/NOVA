@@ -112,7 +112,7 @@ Rules:
 - Tests: every component has a render test; every contract has a schema test against its mock.
 - No secrets, keys or tokens in code, mocks, logs or commits. `.env` files are git-ignored.
 - Windows: use pnpm scripts, not shell-specific commands. Line endings LF (`.gitattributes`). Paths via `path.join`, never hardcoded `\` or `/`.
-- Python: full type hints (mypy strict), no `Any` without a comment saying why. Pydantic models forbid extra fields. Money as integer paise or `Decimal`, never `float`. Times timezone-aware UTC. Every endpoint has a test; every contract model has a parity test (D34). Settings only from environment (`pydantic-settings`).
+- Python: full type hints (mypy strict), no `Any` without a comment saying why. Pydantic models forbid extra fields. Money as integer paise or `Decimal`, never `float`. Times timezone-aware UTC. Every endpoint has a test; every contract model has a parity test (D34). Infrastructure settings only from environment (`pydantic-settings`); app settings the Owner edits live in the database (D54, D55).
 
 ## 9. Definition of done (every task)
 - [ ] Acceptance checks in the task file all pass
@@ -126,6 +126,6 @@ Rules:
 ## 10. Never
 - Never place, modify or cancel real orders. No order code exists in Phase 1; live trading is Phase 3.
 - Never call Zerodha or other real APIs outside the broker service, and never from tests (D35).
-- Never put keys, secrets or tokens in code, mocks, fixtures, logs or commits; only in `.env` (git-ignored).
+- Never put keys, secrets or tokens in code, mocks, fixtures, logs or commits. Infrastructure secrets live only in `.env` (git-ignored); Kite secrets only sealed in the database (D55).
 - Never change another task's files, the design tokens, or the plan without a task for it.
 - Never delete tests to make a build pass.
