@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { DEFAULT_INDEX_NAMES, type Instrument } from "@nova/contracts";
+import type { Instrument } from "@nova/contracts";
 import { Badge, Checkbox, DataTable, Select } from "@nova/ui-core";
 import { formatPercent, formatPrice, formatQuantity } from "@nova/ui-trading";
 import { formatCalendarDate, formatPeriod } from "../lib/format";
@@ -150,6 +150,11 @@ export function InstrumentTable({
     () => [...new Set(instruments.map((i) => i.sector))].sort(),
     [instruments],
   );
+  // Only indices that these instruments belong to (D56: any NSE index).
+  const indices = useMemo(
+    () => [...new Set(instruments.flatMap((i) => i.indices))].sort(),
+    [instruments],
+  );
   // Memoised: DataTable goes back to page 1 whenever `data` changes identity.
   const rows = useMemo(
     () =>
@@ -186,7 +191,7 @@ export function InstrumentTable({
             onChange={(e) => setIndex(e.target.value)}
             options={[
               { value: ALL, label: "All indices" },
-              ...DEFAULT_INDEX_NAMES.map((v) => ({ value: v, label: v })),
+              ...indices.map((v) => ({ value: v, label: v })),
             ]}
             containerClassName="md:w-44"
           />

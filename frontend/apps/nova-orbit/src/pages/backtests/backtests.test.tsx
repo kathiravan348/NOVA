@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { handlers, mockBacktestRuns } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
@@ -96,6 +96,15 @@ describe("New backtest form", () => {
     expect(await screen.findByDisplayValue("VWAP Momentum Intraday backtest")).toBeInTheDocument();
     expect(screen.getByLabelText(/^Strategy/)).toHaveValue("stg_001");
     expect(screen.getByLabelText(/^Version/)).toHaveValue("2");
+  });
+
+  it("offers every NSE index for a whole-index test (D56)", async () => {
+    renderApp("/backtests/new?strategy=stg_001");
+    fireEvent.change(await screen.findByLabelText(/^Test on/), { target: { value: "index" } });
+    const index = await screen.findByLabelText(/^Index/);
+    await within(index).findByRole("option", { name: /^NIFTY MIDCAP 100 \(/ });
+    expect(within(index).getAllByRole("option")).toHaveLength(19);
+    expect(index).toHaveValue("NIFTY 50");
   });
 
   it("rejects a start after the end", async () => {

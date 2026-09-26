@@ -52,7 +52,9 @@ def _symbols(db: Session, run: BacktestRun) -> list[str]:
         .order_by(Instrument.symbol)
     ).all()
     if not rows:
-        raise EngineError(f"No instruments are in {universe['index']} (run sync-instruments)")
+        raise EngineError(
+            f"No instruments are in {universe['index']}: sync with Kite on Relay's Instruments page"
+        )
     return list(rows)
 
 

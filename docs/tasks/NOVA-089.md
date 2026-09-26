@@ -1,6 +1,6 @@
 # NOVA-089 — Orbit: index choices from the indices list
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-089 · **Depends on:** NOVA-085
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-089 · **Depends on:** NOVA-085
 
 ## Goal
 Orbit's backtest universe picker and market-data filter offer every index in `market_indices`, not the
@@ -36,5 +36,13 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Backtest form: **Index** options from `useMarketIndices()` with member counts; keeps a name the list no
+  longer has; disabled while loading, error text if it fails.
+- Market data `InstrumentTable`: index filter lists the indices its instruments belong to (like sectors),
+  so no extra request. `DEFAULT_INDEX_NAMES` removed from contracts.
+- Also touched: backtest engine error for an empty index no longer names the removed CLI command.
+- Checks: `pnpm review:check` green; backtest pytest green. Guides: USER-GUIDE.
 
 ## Review
+Self-reviewed.

@@ -1,7 +1,7 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
-import { DEFAULT_INDEX_NAMES } from "@nova/contracts";
+import type { MarketIndex } from "@nova/contracts";
 import { Card, Select } from "@nova/ui-core";
-import { useInstruments } from "@nova/services";
+import { useInstruments, useMarketIndices } from "@nova/services";
 import { InstrumentTable } from "../../components/InstrumentTable";
 import { QueryError } from "../../components/QueryState";
 import type { BacktestForm } from "./backtestForm";
@@ -10,6 +10,7 @@ import type { BacktestForm } from "./backtestForm";
 export function UniverseFields({ form }: { form: UseFormReturn<BacktestForm> }) {
   const { register, control, watch, formState } = form;
   const instruments = useInstruments();
+  const indices = useMarketIndices();
   const universeType = watch("universeType");
   const from = watch("from");
   const to = watch("to");
@@ -30,7 +31,9 @@ export function UniverseFields({ form }: { form: UseFormReturn<BacktestForm> }) 
           {universeType === "index" && (
             <Select
               label="Index"
-              options={DEFAULT_INDEX_NAMES.map((v) => ({ value: v, label: v }))}
+              options={indexOptions(indices.data, watch("index"))}
+              disabled={indices.isPending}
+              error={indices.isError ? "Could not load the indices" : undefined}
               {...register("index")}
             />
           )}
@@ -70,4 +73,15 @@ export function UniverseFields({ form }: { form: UseFormReturn<BacktestForm> }) 
       </div>
     </Card>
   );
+}
+
+/** Every known index (with its size), plus the form's current one if the list no longer has it. */
+function indexOptions(known: MarketIndex[] | undefined, current: string) {
+  const options = (known ?? []).map((i) => ({
+    value: i.name,
+    label: `${i.name} (${i.members.toLocaleString("en-IN")})`,
+  }));
+  return options.some((o) => o.value === current) || !current
+    ? options
+    : [{ value: current, label: current }, ...options];
 }

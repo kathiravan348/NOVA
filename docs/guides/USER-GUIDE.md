@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-088). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-089). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -148,7 +148,9 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 4. **Symbols → Test on**:
    - **Chosen symbols**: search by name, filter by index, sector or "F&O only", tick rows or press
      *Select all shown*. The count of chosen shares shows above the list.
-   - **A whole index**: e.g. all NIFTY 50 shares.
+   - **A whole index**: e.g. all NIFTY 50 shares. You can pick any of the 19 NSE indices NOVA knows
+     (NIFTY 500, NIFTY MIDCAP 100, NIFTY IT …); the number after each is how many shares it has. A big
+     index needs prices downloaded for all its shares first.
 5. Press **Queue backtest**. If some shares have no price data for your dates, NOVA marks them
    *Partial data* and asks whether to **Drop and queue** without them.
 6. The run goes into a waiting line: status *Queued* → *Running* → *Completed* (or *Failed* with the reason).
