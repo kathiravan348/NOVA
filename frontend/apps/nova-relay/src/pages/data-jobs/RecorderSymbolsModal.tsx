@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MAX_RECORDER_SYMBOLS, type RecorderSettings, type UniverseEntry } from "@nova/contracts";
-import { Button, DataTable, Modal, useToast } from "@nova/ui-core";
+import { Button, Modal, useToast } from "@nova/ui-core";
 import { getDataMode, useUniverse, useUpdateRecorder } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
+import { BulkStockPicker } from "./BulkStockPicker";
 
 const columns: ColumnDef<UniverseEntry, unknown>[] = [
   { id: "symbol", header: "Symbol", accessorKey: "symbol", meta: { primary: true } },
@@ -56,24 +57,18 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
 
   return (
     <div className="flex flex-col gap-4">
-      <DataTable
+      <BulkStockPicker
         caption="Stocks to record"
         columns={columns}
-        data={(universe.data ?? []).filter((e) => e.synced)}
-        getRowId={(e) => e.symbol}
+        entries={(universe.data ?? []).filter((e) => e.synced)}
+        selected={symbols}
+        onChange={setSymbols}
         loading={universe.isPending}
         error={
           universe.isError ? (
             <QueryError error={universe.error} onRetry={() => void universe.refetch()} />
           ) : undefined
         }
-        selectedIds={symbols}
-        onSelectedIdsChange={setSymbols}
-        search={{
-          label: "Search stocks",
-          placeholder: "Symbol or name",
-          getText: (e) => `${e.symbol} ${e.name}`,
-        }}
         pageSize={8}
       />
       {(failed !== null || tooMany) && (

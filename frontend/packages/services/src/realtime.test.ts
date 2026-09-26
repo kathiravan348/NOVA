@@ -9,6 +9,7 @@ import { queryKeys } from "./queries/keys";
 import { createQueryClient } from "./queries/queryClient";
 import { JOB_POLL_MS, useDataJob, useDataJobs } from "./queries/relay";
 import {
+  CONNECT_TIMEOUT_MS,
   RECONNECT_MS,
   applyJobUpdate,
   connectRealtime,
@@ -17,7 +18,9 @@ import {
 } from "./realtime";
 
 class FakeSocket {
+  static CONNECTING = 0;
   static all: FakeSocket[] = [];
+  readyState = 0;
   sent: string[] = [];
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
@@ -29,9 +32,11 @@ class FakeSocket {
     this.sent.push(text);
   }
   close() {
+    this.readyState = 3;
     this.onclose?.();
   }
   open() {
+    this.readyState = 1;
     this.onopen?.();
   }
   message(value: unknown) {
@@ -164,6 +169,21 @@ describe("realtime client", () => {
     disconnect();
     disconnect = undefined;
     expect(getRealtimeStatus()).toBe("off");
+  });
+
+  it("closes a handshake that hangs and tries again", () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    disconnect = connectRealtime(createQueryClient());
+
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS);
+    expect(FakeSocket.all[0]!.readyState).toBe(3);
+    expect(getRealtimeStatus()).toBe("down");
+    vi.advanceTimersByTime(RECONNECT_MS.first);
+    expect(FakeSocket.all).toHaveLength(2);
+    FakeSocket.last().open();
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS);
+    expect(getRealtimeStatus()).toBe("open");
   });
 
   it("polls an active job only while the socket is not open", async () => {
