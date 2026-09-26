@@ -120,3 +120,28 @@ def test_calls_wait_for_a_limiter_slot(
     assert service.get(HISTORY, params=PARAMS).status_code == 200
 
     assert len(waits) == 1 and 0 < waits[0] <= 1
+
+
+def test_session_says_whether_kite_is_logged_in(
+    service: TestClient, account_id: str, clean: Engine, settings: BrokerSettings
+) -> None:
+    assert service.get("/internal/kite/session").json() == {"loggedIn": False, "accountId": None}
+
+    assert settings.broker_token_key is not None
+    cipher = TokenCipher(settings.broker_token_key.get_secret_value())
+    now = datetime.now(UTC)
+    with Session(clean) as db:
+        db.add(
+            BrokerSession(
+                account_id=account_id,
+                access_token_encrypted=cipher.encrypt(ACCESS_TOKEN),
+                logged_in_at=now,
+                expires_at=now + timedelta(hours=8),
+            )
+        )
+        db.commit()
+
+    assert service.get("/internal/kite/session").json() == {
+        "loggedIn": True,
+        "accountId": account_id,
+    }
