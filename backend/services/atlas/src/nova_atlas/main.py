@@ -7,7 +7,7 @@ from fastapi import APIRouter, FastAPI
 from nova_common import install_error_handlers, openapi_url
 from nova_db import create_db_engine, create_session_factory
 
-from nova_atlas import jobs, market_data, universe_api
+from nova_atlas import job_control, jobs, market_data, universe_api
 from nova_atlas.settings import AtlasSettings, get_atlas_settings
 
 API_PREFIX = "/api/v1"
@@ -41,6 +41,7 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    router.include_router(job_control.router)
     router.include_router(jobs.router)
     router.include_router(market_data.router)
     router.include_router(universe_api.router)

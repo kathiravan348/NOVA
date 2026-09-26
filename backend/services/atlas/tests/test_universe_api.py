@@ -188,3 +188,20 @@ def test_needs_the_internal_token(client: TestClient) -> None:
     headers = {"x-nova-internal-token": "nope"}
     assert client.get(UNIVERSE, headers=headers).status_code == 401
     assert client.post(SYNC, headers=headers).status_code == 401
+
+
+def test_sectors_are_counted_for_bulk_picking(
+    client: TestClient, clean: Engine, parity: Parity
+) -> None:
+    with Session(clean) as db:
+        rows = db.scalars(select(UniverseEntry)).all()
+        expected: dict[str, int] = {}
+        for row in rows:
+            expected[row.sector] = expected.get(row.sector, 0) + 1
+
+    sectors = client.get("/api/v1/market-data/universe/sectors").json()
+
+    assert {s["sector"]: s["count"] for s in sectors} == expected
+    assert [s["sector"] for s in sectors] == sorted(expected)
+    for sector in sectors:
+        parity.assert_valid(sector, "UniverseSector")

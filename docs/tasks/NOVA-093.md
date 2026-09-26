@@ -1,6 +1,6 @@
 # NOVA-093 — Atlas: plan, coverage check, Start/Pause/Resume, step-by-step worker, market-hours pace
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-093 · **Depends on:** NOVA-087, NOVA-092
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-093 · **Depends on:** NOVA-087, NOVA-092
 
 ## Goal
 A download is planned (what exists, what is left, how long) before it runs, starts only on approval, can be
@@ -50,5 +50,13 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** `plan.py` (coverage, estimates, warnings, steps), step-by-step `run_download` with Pause/Cancel checks and `Pacer`, endpoints plan/start/pause/resume/settings, `universe/sectors`, draft expiry in the worker.
+**Files changed:** as listed; plus `job_control.py` (new: endpoints, keeps `jobs.py` < 300 lines), `main.py`, `UniverseSector` contract (Zod + Pydantic + schema), `docs/CONTRACTS.md`.
+**Commands run:** backend-check (651 passed) · `pnpm review:check` → pass.
+**New dependencies:** none. **Guides updated:** API.
+**Deviations from task:** paths follow the existing `/data-jobs` routes (`/data-jobs/plan`, `/data-jobs/settings` with PATCH) instead of `/market-data/jobs`. Removing a stock is also blocked by draft/paused jobs. The settings write is an upsert (tests truncate `users` with CASCADE, which empties the settings row).
+**Known gaps:** screens (094).
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Guides checked:** API, CONTRACTS match. **Rulebook issues found:** none. **Follow-up tasks created:** none.

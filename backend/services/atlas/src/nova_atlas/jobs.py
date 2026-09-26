@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import CallerDep
 from nova_contracts import (
-    MAX_DOWNLOAD_SYMBOLS,
     PAGE_LIMIT_DEFAULT,
     PAGE_LIMIT_MAX,
     ArchiveJobCreate,
@@ -21,15 +20,13 @@ from nova_contracts import DataJob as DataJobContract
 from nova_contracts.data_job import DataJobType
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.enums import SEGMENTS
 from nova_db.models import DataJob
 from nova_db.paging import newest_first
 from nova_db.web import Db
 from sqlalchemy.orm import Session
 
 from nova_atlas.archive import IST, archive_days, archive_symbols
-from nova_atlas.download import KITE_INTERVAL
-from nova_atlas.universe import load_universe
+from nova_atlas.plan import create_download
 
 router = APIRouter()
 
@@ -49,43 +46,20 @@ def queue_download(
     actor_name: str = CONSOLE,
     ip: str | None = None,
 ) -> DataJob:
-    """Adds a `queued` historical download and audits it; the worker picks it up."""
-    symbols = [s.strip().upper() for s in symbols if s.strip()]
-    if not symbols or len(symbols) > MAX_DOWNLOAD_SYMBOLS:
-        raise ValueError(f"Give 1-{MAX_DOWNLOAD_SYMBOLS} symbols")
-    known = {row.symbol for row in load_universe(db)}
-    unknown = [s for s in symbols if s not in known]
-    if unknown:
-        raise ValueError(f"Not in the stock list: {', '.join(unknown)}")
-    if timeframe not in KITE_INTERVAL:
-        raise ValueError(f"Timeframe must be one of {', '.join(KITE_INTERVAL)}")
-    if first > last:
-        raise ValueError("From must be on or before To")
-    if segment not in SEGMENTS:
-        raise ValueError(f"Segment must be one of {', '.join(SEGMENTS)}")
-    job = DataJob(
-        id=new_id("job"),
-        type="historical_download",
-        status="queued",
-        exchange="NSE",
-        segment=segment,
+    """Plans a download that skips stored candles and queues it at once (the pre-D57 flow)."""
+    return create_download(
+        db,
         symbols=symbols,
         timeframe=timeframe,
-        date_from=first,
-        date_to=last,
-    )
-    db.add(job)
-    record_audit(
-        db,
-        action="data_job.create",
+        first=first,
+        last=last,
+        segment=segment,
+        mode="skip_existing",
+        start=True,
         actor_id=actor_id,
         actor_name=actor_name,
-        summary=f"Queued {timeframe} download of {len(symbols)} symbol(s), {first} to {last}",
-        target_type="data_job",
-        target_id=job.id,
         ip=ip,
     )
-    return job
 
 
 def queue_archive(
@@ -138,11 +112,12 @@ def _describe(job: DataJob) -> str:
 def cancel_job(
     db: Session, job: DataJob, *, actor_id: str | None, actor_name: str, ip: str | None
 ) -> None:
-    """Queued jobs end now; a running job stops at its next checkpoint (the worker checks)."""
-    if job.status not in ("queued", "running"):
+    """Waiting jobs end now; a running job stops at its next checkpoint (the worker checks)."""
+    if job.status not in ("draft", "queued", "running", "paused"):
         raise ValueError(f"Job is already {job.status}")
-    if job.status == "queued":
+    if job.status != "running":
         job.finished_at = datetime.now(UTC)
+    job.expires_at = None
     job.status = "cancelled"
     record_audit(
         db,

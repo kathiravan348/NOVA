@@ -1,12 +1,15 @@
 """Historical download jobs (D11, D41): Kite candles → `candles`, in Kite-sized chunks."""
 
+import time as time_module
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from nova_db.models import Candle, DataJob, Instrument
+from nova_contracts import MarketHoursMode
+from nova_db.models import Candle, DataJob, DataJobStep, DownloadSetting, Instrument
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -28,6 +31,7 @@ CHUNK_DAYS = {"1m": 60, "3m": 100, "5m": 100, "15m": 200, "30m": 200, "1h": 400,
 ERROR_LENGTH = 300
 # Rows per INSERT: Postgres takes at most 65,535 values per statement (8 columns → 40,000).
 CANDLE_BATCH = 5000
+MARKET_OPEN, MARKET_CLOSE = time(9, 15), time(15, 30)
 
 
 @dataclass(frozen=True)
@@ -117,8 +121,75 @@ def fail_job(db: Session, job_id: str, message: str) -> None:
         finish_job(db, job, message)
 
 
-def run_download(db: Session, job_id: str, broker: BrokerData) -> None:
-    """Runs one claimed `historical_download` job to `completed`, `failed` or `cancelled`."""
+def is_market_hours(at: datetime) -> bool:
+    ist = at.astimezone(IST)
+    return ist.weekday() < 5 and MARKET_OPEN <= ist.time() < MARKET_CLOSE
+
+
+def request_gap(at: datetime, pace_mode: str) -> float:
+    """Seconds between historical requests: 1 in slow market hours, else the account's 2/s."""
+    return 1.0 if pace_mode == "slow" and is_market_hours(at) else 0.5
+
+
+def market_hours_mode(db: Session) -> MarketHoursMode:
+    row = db.get(DownloadSetting, 1)
+    return "full" if row is not None and row.market_hours_mode == "full" else "slow"
+
+
+class Pacer:
+    """Keeps historical requests at most 1/s in market hours when the setting is `slow` (D57 (5)).
+
+    Full pace is left to the broker's rate limiter (2/s, D40).
+    """
+
+    def __init__(
+        self,
+        clock: Callable[[], float] = time_module.monotonic,
+        sleep: Callable[[float], None] = time_module.sleep,
+        now: Callable[[], datetime] = lambda: datetime.now(UTC),
+    ) -> None:
+        self._clock, self._sleep, self._now = clock, sleep, now
+        self._last: float | None = None
+
+    def wait(self, pace_mode: str) -> None:
+        if pace_mode == "slow" and is_market_hours(self._now()) and self._last is not None:
+            left = self._last + 1.0 - self._clock()
+            if left > 0:
+                self._sleep(left)
+        self._last = self._clock()
+
+
+def add_all_steps(db: Session, job: DataJob) -> None:
+    """Steps for a download queued before plans existed: every chunk, none skipped."""
+    assert job.timeframe is not None and job.date_from is not None and job.date_to is not None
+    chunks = plan_chunks(job.date_from, job.date_to, job.timeframe)
+    seq = 0
+    for symbol in job.symbols:
+        for chunk in chunks:
+            db.add(
+                DataJobStep(
+                    job_id=job.id, seq=seq, symbol=symbol, start_at=chunk.start, end_at=chunk.end
+                )
+            )
+            seq += 1
+    job.steps_total, job.steps_done = seq, 0
+    db.commit()
+
+
+def _next_step(db: Session, job_id: str) -> DataJobStep | None:
+    return db.scalars(
+        select(DataJobStep)
+        .where(DataJobStep.job_id == job_id, DataJobStep.status == "pending")
+        .order_by(DataJobStep.seq)
+        .limit(1)
+    ).first()
+
+
+def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | None = None) -> None:
+    """Runs the pending steps of a claimed download, saving each as it finishes (D57 (4)).
+
+    Ends `completed`, `failed` or `cancelled`; returns early, still `paused`, when paused.
+    """
     job = db.get(DataJob, job_id)
     if job is None or job.timeframe is None or job.date_from is None or job.date_to is None:
         raise ValueError(f"Job {job_id} is not a runnable historical download")
@@ -136,29 +207,40 @@ def run_download(db: Session, job_id: str, broker: BrokerData) -> None:
             f"Not synced with Kite: {', '.join(missing)}. Run Sync with Kite on Instruments first.",
         )
         return
-
-    chunks = plan_chunks(job.date_from, job.date_to, job.timeframe)
-    total, done = len(chunks) * len(job.symbols), 0
+    if job.steps_total == 0:
+        add_all_steps(db, job)
+    pacer = pacer or Pacer()
     try:
-        for symbol in job.symbols:
-            token = tokens[symbol]
-            assert token is not None
-            for chunk in chunks:
-                db.refresh(job)
-                if job.status == "cancelled":
-                    job.finished_at = datetime.now(UTC)
-                    db.commit()
-                    return
-                bars = broker.historical(
-                    token, KITE_INTERVAL[job.timeframe], chunk.start, chunk.end
-                )
-                rows = [
-                    r for bar in bars if (r := to_row(job.exchange, symbol, job.timeframe, bar))
-                ]
-                job.rows_written += upsert_candles(db, rows)
-                done += 1
-                job.progress_percent = Decimal(done * 100) / Decimal(total)
+        while True:
+            db.refresh(job)
+            if job.status == "cancelled":
+                job.finished_at = datetime.now(UTC)
                 db.commit()
+                return
+            if job.status == "paused":
+                return
+            step = _next_step(db, job.id)
+            if step is None:
+                break
+            token = tokens[step.symbol]
+            assert token is not None
+            pacer.wait(market_hours_mode(db))
+            bars = broker.historical(
+                token,
+                KITE_INTERVAL[job.timeframe],
+                step.start_at.astimezone(IST),
+                step.end_at.astimezone(IST),
+            )
+            rows = [
+                r for bar in bars if (r := to_row(job.exchange, step.symbol, job.timeframe, bar))
+            ]
+            written = upsert_candles(db, rows)
+            step.status, step.rows_written = "done", written
+            step.finished_at = datetime.now(UTC)
+            job.rows_written += written
+            job.steps_done += 1
+            job.progress_percent = Decimal(job.steps_done * 100) / Decimal(job.steps_total)
+            db.commit()
     except (BrokerDataError, ValueError, TypeError) as exc:
         db.rollback()
         finish_job(db, job, str(exc) or type(exc).__name__)
