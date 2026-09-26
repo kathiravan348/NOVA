@@ -26,3 +26,10 @@ export const UniverseEntrySchema = z.strictObject({
   newListing: z.boolean(),
 });
 export type UniverseEntry = z.infer<typeof UniverseEntrySchema>;
+
+/** One sector of the stock list and its stock count (`GET /market-data/universe/sectors`, D57). */
+export const UniverseSectorSchema = z.strictObject({
+  sector: z.string().min(1),
+  count: z.number().int().min(1),
+});
+export type UniverseSector = z.infer<typeof UniverseSectorSchema>;

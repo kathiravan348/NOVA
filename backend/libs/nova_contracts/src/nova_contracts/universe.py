@@ -28,3 +28,10 @@ class UniverseEntry(UniverseEntryWrite):
 
     synced: bool
     new_listing: bool
+
+
+class UniverseSector(Contract):
+    """One sector of the stock list and how many stocks it has (`GET …/universe/sectors`, D57)."""
+
+    sector: Annotated[str, Field(min_length=1)]
+    count: Annotated[int, Field(ge=1)]

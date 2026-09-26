@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from nova_atlas.archive import run_archive
 from nova_atlas.broker_client import BrokerData
 from nova_atlas.download import fail_job, run_download
+from nova_atlas.job_control import expire_drafts
 from nova_atlas.sync_job import run_instrument_sync
 
 logger = logging.getLogger("nova.atlas.worker")
@@ -56,7 +57,8 @@ def run_worker(
 ) -> None:
     """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there).
 
-    `schedule` queues timed jobs (the daily sync, D56); it runs at most once a minute while idle.
+    Once a minute while idle it cancels expired plans (D57) and runs `schedule`, which queues
+    timed jobs (the daily sync, D56).
     """
     with session_factory() as db:
         requeued = requeue_running(db, DataJob, OWNED)
@@ -76,8 +78,16 @@ def run_worker(
                     db.rollback()
                     fail_job(db, job_id, crash_message(exc))
                 continue
-            if schedule is not None and clock() >= next_schedule_check:
+            due = clock() >= next_schedule_check
+            if due:
                 next_schedule_check = clock() + SCHEDULE_EVERY_SECONDS
+                try:
+                    if expired := expire_drafts(db):
+                        logger.info("Cancelled %s expired plan(s)", expired)
+                except Exception:
+                    logger.exception("Expiring plans failed")
+                    db.rollback()
+            if due and schedule is not None:
                 try:
                     if schedule(db, broker):
                         logger.info("Queued the daily instrument sync")

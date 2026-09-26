@@ -8,12 +8,12 @@ from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import Caller, CallerDep
 from nova_contracts import MarketIndex as MarketIndexContract
-from nova_contracts import UniverseEntry, UniverseEntryWrite
+from nova_contracts import UniverseEntry, UniverseEntryWrite, UniverseSector
 from nova_db.audit import record_audit
 from nova_db.models import DataJob, Instrument, MarketIndex
 from nova_db.models import UniverseEntry as UniverseRow
 from nova_db.web import Db
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from nova_atlas.jobs import to_contract
@@ -101,6 +101,19 @@ def list_universe(
     return JSONResponse([_view(row, row.symbol in synced) for row in rows])
 
 
+@router.get("/universe/sectors")
+def list_sectors(_: CallerDep, db: Db) -> JSONResponse:
+    """Sectors with their stock counts, for picking stocks in bulk (D57 (6))."""
+    rows = db.execute(
+        select(UniverseRow.sector, func.count())
+        .where(UniverseRow.exchange == EXCHANGE)
+        .group_by(UniverseRow.sector)
+        .order_by(UniverseRow.sector)
+    )
+    sectors = [UniverseSector(sector=s, count=n) for s, n in rows]
+    return JSONResponse([s.model_dump(mode="json") for s in sectors])
+
+
 @router.post("/universe", status_code=201)
 def add_entry(body: UniverseEntryWrite, caller: CallerDep, db: Db) -> JSONResponse:
     if db.get(UniverseRow, (EXCHANGE, body.symbol)) is not None:
@@ -129,7 +142,10 @@ def remove_entry(symbol: str, caller: CallerDep, db: Db) -> Response:
     row = _row(db, symbol)
     busy = db.scalar(
         select(DataJob.id)
-        .where(DataJob.status.in_(("queued", "running")), DataJob.symbols.contains([symbol]))
+        .where(
+            DataJob.status.in_(("draft", "queued", "running", "paused")),
+            DataJob.symbols.contains([symbol]),
+        )
         .limit(1)
     )
     if busy is not None:

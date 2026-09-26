@@ -33,7 +33,7 @@ import {
 } from "./strategy";
 import { StrategyStatsSchema } from "./strategyStats";
 import { TradeSchema } from "./trade";
-import { UniverseEntrySchema, UniverseEntryWriteSchema } from "./universe";
+import { UniverseEntrySchema, UniverseEntryWriteSchema, UniverseSectorSchema } from "./universe";
 import { UserSchema } from "./user";
 import { RealtimeMessageSchema } from "./realtime";
 
@@ -74,6 +74,7 @@ const contracts: Record<string, z.ZodType> = {
   UniverseEntry: UniverseEntrySchema,
   MarketIndex: MarketIndexSchema,
   UniverseEntryWrite: UniverseEntryWriteSchema,
+  UniverseSector: UniverseSectorSchema,
   User: UserSchema,
   RealtimeMessage: RealtimeMessageSchema,
 };
