@@ -102,6 +102,8 @@
 | NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | done | Claude | 088, 091, 093, 095 |
 | NOVA-095 | Atlas: delete finished data jobs, optionally with their candles; `data_job.deleted` event (migration 0012) | done | Claude | 093 |
 | NOVA-096 | Relay: Delete job (+ candles) and clear the 26 Sep test downloads | done | Claude | 094, 095 |
+| NOVA-097 | Instruments from any timeframe; backtest coverage by the strategy's timeframe | planned | — | 098 |
+| NOVA-098 | Postgres connections: limit 100, small pools per service | in-progress | Claude | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
