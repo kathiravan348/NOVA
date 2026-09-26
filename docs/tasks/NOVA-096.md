@@ -1,6 +1,6 @@
 # NOVA-096 — Relay: Delete job (with or without its candles) + clear the test downloads
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-096 · **Depends on:** NOVA-094, NOVA-095
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-096 · **Depends on:** NOVA-094, NOVA-095
 
 ## Goal
 A finished job can be deleted from its page, with a choice to also delete the candles it downloaded. The
@@ -43,5 +43,12 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** `DeleteJobButton` on the job page (planned/finished jobs; candles checkbox for downloads), realtime and mutation cache removal, user guide.
+**Files changed:** `DeleteJobButton.tsx`, `DataJobDetailPage.tsx`, `downloads.test.tsx` (tests live next to the other download tests), `realtime.test.ts`, `USER-GUIDE.md`. Services, mocks and the realtime handler landed with NOVA-094.
+**Commands run:** `pnpm review:check` → pass.
+**Owner stack (26 Sep):** deleted with candles the 4 test downloads (91,723 + 6,480 + 0 + 247 candles) and Claude's own test download (129,150) and draft; only the `instrument_sync` job remains; `candles` is empty; 6 `data_job.delete` audit rows.
+**New dependencies:** none. **Guides updated:** USER-GUIDE.
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Guides checked:** USER-GUIDE matches. **Rulebook issues found:** none. **Follow-up tasks created:** none.

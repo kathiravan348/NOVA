@@ -183,3 +183,42 @@ describe("Download pace", () => {
     await waitFor(() => expect((pace as HTMLSelectElement).value).toBe("full"));
   });
 });
+
+describe("Delete job", () => {
+  it("is offered only for planned or finished jobs", async () => {
+    renderApp("/data-jobs/job_002"); // running
+    await screen.findByText("Running");
+    expect(screen.queryByRole("button", { name: "Delete job" })).not.toBeInTheDocument();
+  });
+
+  it("deletes a download with its candles and returns to the list", async () => {
+    renderApp("/data-jobs/job_001"); // a completed download
+    fireEvent.click(await screen.findByRole("button", { name: "Delete job" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete this job?" });
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: /Also delete the candles/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete job" }));
+
+    expect(await screen.findByText("Job deleted (demo)")).toBeInTheDocument();
+    expect(calls).toContain("DELETE /api/v1/data-jobs/job_001");
+    expect(await screen.findByRole("table", { name: "Data jobs" })).toBeInTheDocument();
+  });
+
+  it("sends candles=true only when ticked, and offers no candles for other jobs", async () => {
+    const urls: string[] = [];
+    server.events.on("request:start", ({ request }) => {
+      if (request.method === "DELETE") urls.push(request.url);
+    });
+    renderApp("/data-jobs/job_001");
+    fireEvent.click(await screen.findByRole("button", { name: "Delete job" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete this job?" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete job" }));
+    await screen.findByText("Job deleted (demo)");
+    expect(urls.at(-1)).not.toContain("candles=true");
+
+    cleanup();
+    renderApp("/data-jobs/job_006"); // a completed stock-list sync
+    fireEvent.click(await screen.findByRole("button", { name: "Delete job" }));
+    const syncDialog = await screen.findByRole("dialog", { name: "Delete this job?" });
+    expect(within(syncDialog).queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+});
