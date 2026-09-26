@@ -84,7 +84,7 @@
 | NOVA-076 | Broker: always-on tick recorder with an on/off setting (D54, migration 0007) | done | Claude | 074 |
 | NOVA-077 | Atlas: tick archive as a data job (D54) | done | Claude | 076 |
 | NOVA-078 | Relay: tick recording switch + Archive old ticks (D54) | done | Claude | 075, 076, 077 |
-| NOVA-079 | Relay: broker screens from three to two (Broker + account page, D55) | planned | — | 078 |
+| NOVA-079 | Relay: broker screens from three to two (Broker + account page, D55) | done | Claude | 078 |
 | NOVA-080 | Broker: Kite app per account, API secret sealed with a passphrase (D55, migration 0008) | planned | — | 079 |
 | NOVA-081 | Broker: login finished with the passphrase; Kite keys leave `.env`; broker CLI trimmed (D55) | planned | — | 080, 083 |
 | NOVA-082 | Relay: Kite app card + passphrase to finish the login (D55) | planned | — | 081 (merge with 081) |

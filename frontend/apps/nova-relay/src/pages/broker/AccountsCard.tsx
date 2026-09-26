@@ -18,7 +18,7 @@ const columns: ColumnDef<BrokerAccount, unknown>[] = [
     meta: { primary: true },
     cell: ({ row }) => (
       <Link
-        to={`/accounts/${row.original.id}`}
+        to={`/broker/${row.original.id}`}
         className="font-medium text-action-text hover:underline"
       >
         {row.original.label}
@@ -65,7 +65,8 @@ const columns: ColumnDef<BrokerAccount, unknown>[] = [
   },
 ];
 
-export function AccountsPage() {
+/** Accounts with their Kite session, plus Add account. */
+export function AccountsCard() {
   const query = useBrokerAccounts();
   const [adding, setAdding] = useState(false);
   const addButton = (

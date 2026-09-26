@@ -45,11 +45,13 @@ describe("Relay routes", () => {
   });
 
   it("signs in, lands on next and shows the nav", async () => {
-    const router = renderAt("/rate-limits");
+    const router = renderAt("/data-jobs");
     await signInWithForm();
-    expect(await screen.findByRole("heading", { name: "Rate limits" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/rate-limits");
-    expect(screen.getAllByRole("link", { name: "Broker accounts" }).length).toBeGreaterThan(0);
+    expect(await screen.findByRole("heading", { name: "Data jobs" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/data-jobs");
+    expect(screen.getAllByRole("link", { name: "Broker" }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("link", { name: "Rate limits" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Broker accounts" })).not.toBeInTheDocument();
     expect(screen.getAllByText(mockUser.name).length).toBeGreaterThan(0);
   });
 
@@ -69,5 +71,16 @@ describe("Relay routes", () => {
     expect(await screen.findByRole("heading", { name: "Instruments" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/instruments");
     expect(screen.getAllByRole("link", { name: "Instruments" }).length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ["/accounts", "/broker"],
+    ["/rate-limits", "/broker"],
+    ["/accounts/brk_001", "/broker/brk_001"],
+  ])("redirects the old path %s to %s", async (from, to) => {
+    const router = renderAt(`/login?next=${encodeURIComponent(from)}`);
+    await signInWithForm();
+    await screen.findByRole("heading", { name: to === "/broker" ? "Broker" : "Broker account" });
+    expect(router.state.location.pathname).toBe(to);
   });
 });

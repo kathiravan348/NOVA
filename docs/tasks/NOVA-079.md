@@ -1,6 +1,6 @@
 # NOVA-079 — Relay: broker screens from three to two
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-079 · **Depends on:** NOVA-078
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-079 · **Depends on:** NOVA-078
 
 ## Goal
 Relay's **Broker accounts**, **Broker** and **Rate limits** screens become two: **Broker** (`/broker`) and the
@@ -50,5 +50,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- `/broker` = LimitWarnings + AccountsCard (was AccountsPage) + ProfileCard; `/broker/:id` edits limits in place.
+- `AccountLimitsCard` takes `accountLabel` (title is always "Rate limits"); Edit buttons name the account.
+- `LimitWarnings` lost `withLink`: each account name links to `/broker/:id` (Overview too).
+- Old paths redirect; `/accounts/:id` keeps the query string. Menu: one **Broker** item.
+- Not listed but needed: `pages/overview/overview.test.tsx` (warning link). The Rate limits page's
+  "No rate-limit data" empty state is gone: an account without limits simply shows no card.
+- Checks: `pnpm review:check` green (703 tests); checked at 375px and desktop in the browser.
+- Guides: USER-GUIDE (Relay steps 3–6, §7). STRUCTURE unchanged (it does not list pages).
 
 ## Review
+Self-reviewed (Owner asked Claude to build 079–083). No issues found.

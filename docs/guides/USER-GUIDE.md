@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **25 Sep 2026** (Stage B, tasks up to NOVA-078). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-079). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -191,36 +191,36 @@ Open Relay (http://localhost:3001) and sign in the same way as Orbit. You land o
 
 ### Step 3 — Do the daily Kite login
 Zerodha requires a fresh login every day: a login is valid until **6:00 AM the next morning** (IST).
-1. On **Overview** or **Broker accounts → an account**, press **Log in to Kite**.
+1. On **Overview** or **Broker → an account**, press **Log in to Kite**.
 2. Zerodha's own login page opens. Log in there (NOVA never sees your Zerodha password).
 3. You come back to the account page with a message: **Kite connected** ✓ or **Kite login failed**
    (the audit log says why, e.g. you logged in with a different Zerodha ID).
 
-### Step 4 — Broker accounts
-A list of Zerodha accounts: name, client ID, session status and when it expires.
-Open one to see **Logged in**, **Expires**, **Time left**, and its request limits.
+### Step 4 — Broker
+Everything about Zerodha on one page, top to bottom:
+- A warning if any account uses more than **80%** of a request limit. Press the account's name to see its limits.
+- **Broker accounts**: name, client ID, session status and when it expires. Press a name to open the account.
+- Facts about our Zerodha setup: API type, plan, renewal date, API key (**only the last 4 characters**
+  are ever shown), redirect URL, static IP, the session rule, and **Useful links** to Zerodha pages.
 
 To add an account, press **Add account**, fill in **Account name** (any name, e.g. *Main*) and
 **Zerodha client ID** (your Zerodha user ID, e.g. *AB1234*), then press **Add account** again.
 The new account starts as **Not logged in**: open it and do the daily Kite login (Step 3).
 Each client ID can be added only once. Adding an account is written in the audit log.
 
-### Step 5 — Broker
-Facts about our Zerodha setup: API type, plan, renewal date, API key (**only the last 4 characters**
-are ever shown), redirect URL, static IP, the session rule, and **Useful links** to Zerodha pages.
-
-### Step 6 — Rate limits
-Zerodha only allows a certain number of requests per second, per minute and per day. For each account and
-each kind of request (quotes, historical data, orders, other) you see:
+### Step 5 — One account
+Shows **Logged in**, **Expires** and **Time left** for the Kite session, and the account's **Rate limits**.
+Zerodha only allows a certain number of requests per second, per minute and per day. For each kind of
+request (quotes, historical data, orders, other) you see:
 - **Broker limit** — Zerodha's maximum;
 - **NOVA limit** — our own, safer maximum (by default 90% of Zerodha's);
 - **Used** now, **% used**, and when the daily count **resets**;
 - an **Above 80%** flag when we are close to the limit.
 
 Press **Edit limits** to change the NOVA limit. It can never be set above Zerodha's limit. Every change is
-written in the audit log.
+written in the audit log. **Back to broker** returns to the list.
 
-### Step 6b — Instruments (the stock list)
+### Step 6 — Instruments (the stock list)
 The list of stocks you can download prices for. Each row shows the symbol, name, sector, the indices it
 belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its prices can be downloaded.
 
@@ -286,5 +286,5 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |
-| Rate-limit warning above 80% | Wait for the reset time shown, or lower how much you download at once. |
+| Rate-limit warning above 80% | Press the account's name in the warning to see which limit. Wait for the reset time shown, or lower how much you download at once. |
 | **Live prices** says **Log in to Kite first** | Recording is on but today's Kite login is missing. Do the daily login (Step 3); recording starts within a minute. |
