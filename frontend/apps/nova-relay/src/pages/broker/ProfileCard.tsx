@@ -1,9 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import type { BrokerProfile } from "@nova/contracts";
 import { Card, DescriptionList } from "@nova/ui-core";
-import { formatCalendarDate } from "../../lib/format";
 
-/** Broker API and plan facts with useful links, all from data (R4, D28). */
+/** Broker facts with useful links, all from data (R4, D28). App details are per account (D55). */
 export function ProfileCard({ profile }: { profile: BrokerProfile }) {
   const p = profile;
   return (
@@ -13,28 +12,6 @@ export function ProfileCard({ profile }: { profile: BrokerProfile }) {
           columns={2}
           items={[
             { label: "API", value: p.api },
-            { label: "Plan", value: p.plan },
-            {
-              label: "Subscription renews",
-              value: p.subscriptionRenewsOn ? formatCalendarDate(p.subscriptionRenewsOn) : "—",
-            },
-            {
-              label: "API key",
-              value: <span className="font-mono">{`•••• ${p.apiKeyLast4}`}</span>,
-            },
-            { label: "Redirect URL", value: <span className="break-all">{p.redirectUrl}</span> },
-            {
-              label: "Postback URL",
-              value: p.postbackUrl ? <span className="break-all">{p.postbackUrl}</span> : "None",
-            },
-            {
-              label: "Static IP",
-              value: p.staticIp ? (
-                <span className="font-mono">{p.staticIp}</span>
-              ) : (
-                "Not registered (needed from Phase 3)"
-              ),
-            },
             { label: "Session", value: p.sessionRule },
           ]}
         />

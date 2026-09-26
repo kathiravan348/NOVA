@@ -9,6 +9,13 @@ import {
   BrokerSession,
   BrokerSessionSchema,
   BrokerSessionStatusSchema,
+  type KiteApp,
+  KiteAppSchema,
+  KiteAppUpdateSchema,
+  type KiteKeysUpdate,
+  KiteKeysUpdateSchema,
+  KitePassphraseSchema,
+  MIN_PASSPHRASE_LENGTH,
 } from "./broker";
 
 describe("Broker schemas", () => {
@@ -156,34 +163,15 @@ describe("BrokerProfileSchema", () => {
     broker: "zerodha",
     name: "Zerodha",
     api: "Kite Connect v3",
-    plan: "Connect",
-    subscriptionRenewsOn: "2026-12-01",
-    apiKeyLast4: "x7Q2",
-    redirectUrl: "https://nova.example/relay/callback",
-    postbackUrl: null,
-    staticIp: "203.0.113.25",
     sessionRule: "Daily login; token valid until 06:00 IST next day",
     links: [{ label: "API docs", url: "https://kite.trade/docs/connect/v3/", kind: "docs" }],
   };
 
-  it("accepts a valid profile, with null optional fields", () => {
+  it("accepts a valid profile", () => {
     expect(BrokerProfileSchema.parse(profile)).toEqual(profile);
-    expect(
-      BrokerProfileSchema.safeParse({ ...profile, subscriptionRenewsOn: null, staticIp: null })
-        .success,
-    ).toBe(true);
   });
 
-  it("rejects a full API key and a bad IP", () => {
-    expect(BrokerProfileSchema.safeParse({ ...profile, apiKeyLast4: "abcdef12" }).success).toBe(
-      false,
-    );
-    expect(BrokerProfileSchema.safeParse({ ...profile, staticIp: "300.1.1.1" }).success).toBe(
-      false,
-    );
-  });
-
-  it("rejects non-https links, unknown link kinds and extra keys", () => {
+  it("rejects non-https links, unknown link kinds and app fields (now per account, D55)", () => {
     const link = profile.links[0]!;
     expect(
       BrokerProfileSchema.safeParse({ ...profile, links: [{ ...link, url: "http://kite.trade" }] })
@@ -192,7 +180,61 @@ describe("BrokerProfileSchema", () => {
     expect(
       BrokerProfileSchema.safeParse({ ...profile, links: [{ ...link, kind: "video" }] }).success,
     ).toBe(false);
-    expect(BrokerProfileSchema.safeParse({ ...profile, apiSecret: "s" }).success).toBe(false);
+    expect(BrokerProfileSchema.safeParse({ ...profile, apiKeyLast4: "k7Q2" }).success).toBe(false);
+  });
+});
+
+describe("KiteAppSchema", () => {
+  const app: KiteApp = {
+    accountId: "brk_001",
+    apiKeyLast4: "k7Q2",
+    secretSaved: true,
+    plan: "Kite Connect (paid, monthly)",
+    subscriptionRenewsOn: "2026-10-15",
+    redirectUrl: "http://localhost:3001/api/v1/broker/kite/callback",
+    postbackUrl: null,
+    staticIp: "203.0.113.25",
+    updatedAt: "2026-09-26T03:00:00Z",
+  };
+
+  it("accepts an app with keys and one without", () => {
+    expect(KiteAppSchema.parse(app)).toEqual(app);
+    const empty = { ...app, apiKeyLast4: null, secretSaved: false, plan: null, updatedAt: null };
+    expect(KiteAppSchema.safeParse(empty).success).toBe(true);
+  });
+
+  it("rejects a key without a secret, a full key, a bad IP and any secret", () => {
+    expect(KiteAppSchema.safeParse({ ...app, secretSaved: false }).success).toBe(false);
+    expect(KiteAppSchema.safeParse({ ...app, apiKeyLast4: "abcdef12" }).success).toBe(false);
+    expect(KiteAppSchema.safeParse({ ...app, staticIp: "300.1.1.1" }).success).toBe(false);
+    expect(KiteAppSchema.safeParse({ ...app, apiSecret: "s" }).success).toBe(false);
+  });
+});
+
+describe("Kite app bodies", () => {
+  const keys: KiteKeysUpdate = {
+    apiKey: "kitekeyAB12",
+    apiSecret: "kite-secret",
+    passphrase: "correct horse battery",
+  };
+
+  it("checks the keys and the passphrase length", () => {
+    expect(KiteKeysUpdateSchema.safeParse(keys).success).toBe(true);
+    expect(KiteKeysUpdateSchema.safeParse({ ...keys, apiKey: "key-1" }).success).toBe(false);
+    expect(KiteKeysUpdateSchema.safeParse({ ...keys, apiSecret: "a b" }).success).toBe(false);
+    expect(
+      KiteKeysUpdateSchema.safeParse({ ...keys, passphrase: "x".repeat(MIN_PASSPHRASE_LENGTH - 1) })
+        .success,
+    ).toBe(false);
+  });
+
+  it("checks the details and the passphrase body", () => {
+    const details = { plan: null, subscriptionRenewsOn: null, postbackUrl: null, staticIp: null };
+    expect(KiteAppUpdateSchema.safeParse(details).success).toBe(true);
+    expect(KiteAppUpdateSchema.safeParse({ ...details, plan: " " }).success).toBe(false);
+    expect(KiteAppUpdateSchema.safeParse({ ...details, postbackUrl: "nope" }).success).toBe(false);
+    expect(KitePassphraseSchema.safeParse({ passphrase: "" }).success).toBe(false);
+    expect(KitePassphraseSchema.safeParse({ passphrase: "p" }).success).toBe(true);
   });
 });
 

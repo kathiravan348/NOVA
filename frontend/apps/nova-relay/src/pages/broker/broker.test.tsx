@@ -54,12 +54,11 @@ describe("Broker page", () => {
     }
   });
 
-  it("shows the profile with only the last 4 key characters", async () => {
+  it("shows the broker facts without any app details (per account since D55)", async () => {
     renderApp("/broker");
     expect(await screen.findByText("Kite Connect v3")).toBeInTheDocument();
-    expect(screen.getByText("•••• k7Q2")).toBeInTheDocument();
-    expect(screen.getByText("Not registered (needed from Phase 3)")).toBeInTheDocument();
     expect(screen.getByText(/valid until 06:00 IST/)).toBeInTheDocument();
+    expect(screen.queryByText("API key")).not.toBeInTheDocument();
   });
 
   it("opens every useful link from the data in a new tab", async () => {

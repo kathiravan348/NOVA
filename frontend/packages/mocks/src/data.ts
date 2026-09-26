@@ -8,6 +8,7 @@ import {
   InstrumentSchema,
   RateLimitSchema,
   BrokerProfileSchema,
+  KiteAppSchema,
   StrategySchema,
   StrategyStatsSchema,
   TradeSchema,
@@ -23,6 +24,7 @@ import brokerAccountsJson from "../data/brokerAccounts.json";
 import dataJobsJson from "../data/dataJobs.json";
 import rateLimitsJson from "../data/rateLimits.json";
 import brokerProfilesJson from "../data/brokerProfiles.json";
+import kiteAppsJson from "../data/kiteApps.json";
 import strategiesJson from "../data/strategies.json";
 import strategyStatsJson from "../data/strategyStats.json";
 import tradesJson from "../data/trades.json";
@@ -39,6 +41,7 @@ export const mockTrades = TradeSchema.array().parse(tradesJson);
 export const mockBrokerAccounts = BrokerAccountSchema.array().parse(brokerAccountsJson);
 export const mockRateLimits = RateLimitSchema.array().parse(rateLimitsJson);
 export const mockBrokerProfiles = BrokerProfileSchema.array().parse(brokerProfilesJson);
+export const mockKiteApps = KiteAppSchema.array().parse(kiteAppsJson);
 export const mockDataJobs = DataJobSchema.array().parse(dataJobsJson);
 export const mockAuditEntries = AuditEntrySchema.array().parse(auditEntriesJson);
 export const mockInstruments = InstrumentSchema.array().parse(instrumentsJson);

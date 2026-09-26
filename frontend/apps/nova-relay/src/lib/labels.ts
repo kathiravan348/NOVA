@@ -61,6 +61,7 @@ export const auditActionLabel: Record<AuditAction, string> = {
   "broker.session_expired": "Kite session expired",
   "broker.rate_limit_update": "Rate limit changed",
   "broker.account_create": "Broker account added",
+  "broker.kite_app_update": "Kite app changed",
   "strategy.create": "Strategy created",
   "strategy.update": "Strategy updated",
   "backtest.run": "Backtest run",

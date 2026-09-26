@@ -12,6 +12,7 @@ from nova_db.models import (
     BacktestRun,
     Base,
     BrokerAccount,
+    BrokerKiteApp,
     BrokerSession,
     Candle,
     DataJob,
@@ -104,6 +105,15 @@ def _rule(**over: Any) -> RateLimitRule:
     return RateLimitRule(**(fields | over))
 
 
+def _kite_app(**over: Any) -> BrokerKiteApp:
+    fields: dict[str, Any] = {
+        "account_id": "brk_1",
+        "api_key": "kitekey1",
+        "api_secret_sealed": b"x",
+    }
+    return BrokerKiteApp(**(fields | over))
+
+
 def _broker_session(**over: Any) -> BrokerSession:
     fields: dict[str, Any] = {
         "account_id": "brk_1",
@@ -180,6 +190,8 @@ CASES: list[tuple[str, Factory, dict[str, Any]]] = [
     ("rule nova above broker", _rule, {"nova_limit": 5_001}),
     ("rule window", _rule, {"rate_window": "hour"}),
     ("session triple", _broker_session, {"access_token_encrypted": None}),
+    ("kite key without secret", _kite_app, {"api_secret_sealed": None}),
+    ("kite key format", _kite_app, {"api_key": "bad key!"}),
     ("session order", _broker_session, {"expires_at": NOW - timedelta(hours=1)}),
     ("job download needs period", _job, {"timeframe": None}),
     ("job completed at 100", _job, {"progress_percent": Decimal("99")}),
@@ -207,7 +219,9 @@ def seeded(session: Session) -> Session:
 def test_valid_rows_are_accepted(seeded: Session) -> None:
     seeded.add(_run())
     seeded.flush()
-    seeded.add_all([_result(), _trade(), _rule(), _broker_session(), _job(), _audit(), _candle()])
+    seeded.add_all(
+        [_result(), _trade(), _rule(), _broker_session(), _kite_app(), _job(), _audit(), _candle()]
+    )
     seeded.flush()
 
 

@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 25 Sep 2026 (migrations `0001`–`0007`, NOVA-076). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 26 Sep 2026 (migrations `0001`–`0008`, NOVA-080). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -19,6 +19,7 @@ users ─┬─ user_roles ── roles                 (who may sign in)
        └─ audit_entries (actor)                (who did what)
 
 broker_accounts ─┬─ broker_sessions            (today's Kite login, token encrypted)
+                 ├─ broker_kite_apps           (own Kite app, secret sealed by passphrase)
                  └─ rate_limit_rules           (broker vs NOVA limits)
 broker_profiles                                (Zerodha setup facts)
 
@@ -46,7 +47,8 @@ universe ─ instruments   candles (hypertable)   ticks (hypertable)   data_jobs
 |---|---|---|
 | **broker_accounts** | Each Zerodha account NOVA knows (added in Relay or with `add-account`). | `id`, `broker` (`zerodha`), `label`, `client_id` (unique Zerodha user ID), `enabled`, `created_at` |
 | **broker_sessions** | The current Kite login of each account (one row per account). Status is derived: no token = not logged in; past `expires_at` = expired. The access token is **encrypted** with `NOVA_BROKER_TOKEN_KEY`. | `account_id` (PK), `access_token_encrypted`, `logged_in_at`, `expires_at` (next 06:00 IST) |
-| **broker_profiles** | Facts about the Zerodha setup shown on Relay's Broker page, refreshed at broker start-up from settings + `data/zerodha.json`. Only the **last 4** characters of the API key are stored; the secret never is. | `broker` (PK), `name`, `api`, `plan`, `subscription_renews_on`, `api_key_last4`, `redirect_url`, `postback_url`, `static_ip`, `session_rule`, `links` (JSON) |
+| **broker_kite_apps** | Each account's own Kite Connect app (D55; one per family member). The API key is plain (it is public in the login URL); the **API secret is sealed with the Owner's passphrase** (scrypt + AES-256-GCM, account id bound in), so neither a database copy nor `.env` reveals it. Key and secret are set together. Migration 0008 copied the old profile's plan/renewal/postback/static IP into a row per existing account. | `account_id` (PK) → broker_accounts (cascade), `api_key`, `api_secret_sealed` (version, salt, nonce, ciphertext), `plan`, `subscription_renews_on`, `postback_url`, `static_ip`, `updated_at` |
+| **broker_profiles** | Zerodha facts shown on Relay's Broker page, refreshed at broker start-up from `data/zerodha.json`. | `broker` (PK), `name`, `api`, `session_rule`, `links` (JSON) |
 | **rate_limit_rules** | The request limits per account × endpoint (`quote`, `historical`, `orders`, `other`) × window (`second`, `minute`, `day`). `nova_limit` must be > 0 and ≤ `broker_limit` (default 90% of it). Live usage is **not** here: it is in Redis. | PK (`account_id`, `endpoint`, `rate_window`), `broker_limit`, `nova_limit`, `updated_at` |
 | **recorder_settings** | The one row (id 1) that switches live tick recording on or off (D54), set with `PUT /broker/recorder`. The always-on recorder reads it every 30 s. Starts off. | `id` (always 1), `enabled`, `symbols` (text[]; empty = every stock synced with Kite), `updated_at` |
 
@@ -77,7 +79,7 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
+| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
 
 ## 6. Outside PostgreSQL
 
@@ -85,4 +87,4 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 |---|---|
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
-| **alembic_version** (table) | The migration the database is on (currently `0007`). Managed by Alembic only. |
+| **alembic_version** (table) | The migration the database is on (currently `0008`). Managed by Alembic only. |

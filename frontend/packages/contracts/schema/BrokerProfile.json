@@ -14,52 +14,6 @@
       "type": "string",
       "minLength": 1
     },
-    "plan": {
-      "type": "string",
-      "minLength": 1
-    },
-    "subscriptionRenewsOn": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "date",
-          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "apiKeyLast4": {
-      "type": "string",
-      "pattern": "^[A-Za-z0-9]{4}$"
-    },
-    "redirectUrl": {
-      "type": "string",
-      "format": "uri"
-    },
-    "postbackUrl": {
-      "anyOf": [
-        {
-          "type": "string",
-          "format": "uri"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "staticIp": {
-      "anyOf": [
-        {
-          "type": "string",
-          "pattern": "^(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}$"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
     "sessionRule": {
       "type": "string",
       "minLength": 1
@@ -103,12 +57,6 @@
     "broker",
     "name",
     "api",
-    "plan",
-    "subscriptionRenewsOn",
-    "apiKeyLast4",
-    "redirectUrl",
-    "postbackUrl",
-    "staticIp",
     "sessionRule",
     "links"
   ],

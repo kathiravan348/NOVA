@@ -24,6 +24,7 @@ AUDIT_ACTIONS = (
     "broker.session_expired",
     "broker.rate_limit_update",
     "broker.account_create",
+    "broker.kite_app_update",
     "strategy.create",
     "strategy.update",
     "backtest.run",

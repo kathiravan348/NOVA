@@ -59,14 +59,59 @@ class BrokerLink(Contract):
 
 
 class BrokerProfile(Contract):
+    """Broker facts from the repo data file (D28). App details are per account: `KiteApp` (D55)."""
+
     broker: Broker
     name: NonEmpty
     api: NonEmpty
-    plan: NonEmpty
-    subscription_renews_on: IsoDate | None
-    api_key_last4: Annotated[str, Field(pattern=r"^[A-Za-z0-9]{4}$")]
-    redirect_url: Annotated[str, Field(pattern=_URL)]
-    postback_url: Annotated[str, Field(pattern=_URL)] | None
-    static_ip: Annotated[str, Field(pattern=_IPV4)] | None
     session_rule: NonEmpty
     links: list[BrokerLink]
+
+
+_KEY_LAST4 = Annotated[str, Field(pattern=r"^[A-Za-z0-9]{4}$")]
+Plan = Annotated[str, Field(max_length=60, pattern=r"\S")]
+Url = Annotated[str, Field(pattern=_URL)]
+Ipv4 = Annotated[str, Field(pattern=_IPV4)]
+
+
+class KiteApp(Contract):
+    """One account's Kite Connect app (D55). The secret is never sent, only whether one is saved."""
+
+    account_id: Id
+    api_key_last4: _KEY_LAST4 | None
+    secret_saved: bool
+    plan: Plan | None
+    subscription_renews_on: IsoDate | None
+    redirect_url: Url
+    postback_url: Url | None
+    static_ip: Ipv4 | None
+    updated_at: UtcDateTime | None
+
+    @model_validator(mode="after")
+    def _keys_together(self) -> Self:
+        if (self.api_key_last4 is not None) != self.secret_saved:
+            raise ValueError("apiKeyLast4 and secretSaved go together")
+        return self
+
+
+class KiteAppUpdate(Contract):
+    """Body of `PATCH /broker/accounts/{id}/kite-app`: the app details, never the keys."""
+
+    plan: Plan | None
+    subscription_renews_on: IsoDate | None
+    postback_url: Url | None
+    static_ip: Ipv4 | None
+
+
+class KiteKeysUpdate(Contract):
+    """Body of `PUT /broker/accounts/{id}/kite-app/keys`; the passphrase seals the secret."""
+
+    api_key: Annotated[str, Field(pattern=r"^[A-Za-z0-9]{6,64}$")]
+    api_secret: Annotated[str, Field(min_length=1, max_length=128, pattern=r"^\S+$")]
+    passphrase: Annotated[str, Field(min_length=12, max_length=128)]
+
+
+class KitePassphrase(Contract):
+    """Body of the passphrase check and of finishing a Kite login (D55)."""
+
+    passphrase: Annotated[str, Field(min_length=1, max_length=128)]

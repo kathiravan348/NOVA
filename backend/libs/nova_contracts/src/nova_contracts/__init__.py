@@ -21,6 +21,10 @@ from nova_contracts.broker import (
     BrokerProfile,
     BrokerSession,
     BrokerSessionStatus,
+    KiteApp,
+    KiteAppUpdate,
+    KiteKeysUpdate,
+    KitePassphrase,
 )
 from nova_contracts.charges import Charges
 from nova_contracts.common import (
@@ -104,6 +108,10 @@ __all__ = [
     "BrokerProfile",
     "BrokerSession",
     "BrokerSessionStatus",
+    "KiteApp",
+    "KiteAppUpdate",
+    "KiteKeysUpdate",
+    "KitePassphrase",
     "DataJob",
     "DataJobCreate",
     "DataJobStatus",
