@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-087). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-088). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -124,7 +124,7 @@ No delete in Phase 1 (runs refer to versions).
 | `POST /market-data/universe/{symbol}/clear-new` | Marks a new listing as seen (`newListing` false). Audit: `instrument.clear_new` (only when it was new). | path | `UniverseEntry`; 404 |
 | `GET /market-data/indices` | Every NSE index NOVA knows (`market_indices`), biggest first: name, Kite symbol, members in the stock list, last refresh. | — | `MarketIndex[]` |
 | `POST /market-data/instruments/sync` | Queues an `instrument_sync` data job (D56). The Atlas worker then adds every NSE stock Kite lists (plain symbols and `-BE`/`-BZ`/`-SM`/`-ST`; bonds and SGBs skipped), reads each index's members from NSE (through the broker), fills sectors of new or *Unclassified* stocks from NSE's industry, and refreshes tokens and F&O lot sizes. Stocks added after an earlier completed sync are new listings. A failed NSE file keeps that index's old members and is named in the job `summary`. The worker also queues one each weekday from 08:45 IST once Kite is logged in (none queued, running or completed today; a failed one is retried after 30 min). Audit: `instrument.sync` ("Queued sync with Kite" / "Queued the daily sync with Kite" by System). | — | 202 `DataJob` (`instrument_sync`, `queued`); 400 a sync is already waiting or running |
-| `GET /data-jobs` | Background jobs, newest first, paged: type (`historical_download`, `tick_record`, `archive`, `instrument_sync` — no symbols), status, symbols, timeframe, period, progress %, rows written (stocks synced for a sync), error, summary. | `limit`, `cursor` | `Page<DataJob>` |
+| `GET /data-jobs` | Background jobs, newest first, paged (`type=` keeps one kind, e.g. the latest `instrument_sync` with `limit=1`): type (`historical_download`, `tick_record`, `archive`, `instrument_sync` — no symbols), status, symbols, timeframe, period, progress %, rows written (stocks synced for a sync), error, summary. | `limit`, `cursor`, `type` | `Page<DataJob>`; 400 unknown type |
 | `GET /data-jobs/{id}` | One job. | path | `DataJob`; 404 |
 | `POST /data-jobs` | Queues a historical candle download for the Atlas worker, like the `download` command. Symbols are upper-cased and must be in the stock list. Audit: `data_job.create` ("Queued 1d download of 2 symbol(s), 2025-01-01 to 2025-12-31"). | `DataJobCreate {symbols (1–200), timeframe, from, to, segment? (default `equity_delivery`)}` | 201 `DataJob` (`queued`); 400 bad body or unknown symbol |
 | `POST /data-jobs/{id}/cancel` | Cancels a `queued` job at once, or a `running` one: the worker stops before its next chunk (rows already saved stay). Cancelling a running `tick_record` job stops the recording and turns the recorder switch off. Audit: `data_job.cancel` ("Cancelled 1d download of 2 symbol(s)"). | path | `DataJob` (`cancelled`); 400 "Job is already …" (completed, failed or cancelled); 404 |

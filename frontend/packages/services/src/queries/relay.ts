@@ -253,3 +253,16 @@ export function useUpdateRecorder() {
     },
   });
 }
+
+/** The newest `instrument_sync` job, or null; refreshes while it is queued or running (D56). */
+export function useLatestSync() {
+  return useQuery({
+    queryKey: queryKeys.dataJobs.latestSync,
+    queryFn: async ({ signal }) => {
+      const page = await listDataJobs({ limit: 1, type: "instrument_sync" }, { signal });
+      return page.items[0] ?? null;
+    },
+    refetchInterval: (query) =>
+      query.state.data && isActive(query.state.data) ? JOB_POLL_MS.detail : false,
+  });
+}

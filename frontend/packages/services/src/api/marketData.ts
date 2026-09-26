@@ -1,10 +1,12 @@
 import {
   CandleSchema,
   InstrumentSchema,
+  MarketIndexSchema,
   DataJobSchema,
   UniverseEntrySchema,
   type Candle,
   type Instrument,
+  type MarketIndex,
   type DataJob,
   type Timeframe,
   type UniverseEntry,
@@ -52,8 +54,18 @@ export function deleteUniverseEntry(symbol: string, init?: RequestOptions): Prom
   return apiSend("DELETE", `/market-data/universe/${encodeURIComponent(symbol)}`, undefined, init);
 }
 
-/** Asks Kite for tokens and lot sizes of every listed stock (needs a Kite login). */
 /** Queues an `instrument_sync` data job (D56). */
 export function syncInstruments(init?: RequestOptions): Promise<DataJob> {
   return apiPost("/market-data/instruments/sync", undefined, DataJobSchema, init);
+}
+
+/** Every NSE index NOVA knows, biggest first (D56). */
+export function listMarketIndices(init?: RequestOptions): Promise<MarketIndex[]> {
+  return apiGet("/market-data/indices", MarketIndexSchema.array(), init);
+}
+
+/** Marks a new listing as seen (D56). */
+export function clearNewListing(symbol: string, init?: RequestOptions): Promise<UniverseEntry> {
+  const path = `/market-data/universe/${encodeURIComponent(symbol)}/clear-new`;
+  return apiPost(path, undefined, UniverseEntrySchema, init);
 }

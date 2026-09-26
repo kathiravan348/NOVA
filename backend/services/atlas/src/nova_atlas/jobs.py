@@ -16,6 +16,7 @@ from nova_contracts import (
     Page,
 )
 from nova_contracts import DataJob as DataJobContract
+from nova_contracts.data_job import DataJobType
 from nova_db import new_id
 from nova_db.audit import record_audit
 from nova_db.enums import SEGMENTS
@@ -189,9 +190,12 @@ def list_jobs(
     db: Db,
     limit: Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)] = PAGE_LIMIT_DEFAULT,
     cursor: Annotated[str | None, Query(min_length=1)] = None,
+    job_type: Annotated[DataJobType | None, Query(alias="type")] = None,
 ) -> JSONResponse:
+    """Newest first; `type` keeps one kind (e.g. the latest `instrument_sync`, D56)."""
+    where = [DataJob.type == job_type] if job_type else []
     rows, next_cursor = newest_first(
-        db, DataJob, DataJob.created_at, DataJob.id, limit=limit, cursor=cursor
+        db, DataJob, DataJob.created_at, DataJob.id, limit=limit, cursor=cursor, where=where
     )
     page = Page[DataJobContract](items=[to_contract(r) for r in rows], next_cursor=next_cursor)
     return JSONResponse(page.model_dump(mode="json"))

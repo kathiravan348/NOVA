@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-087). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-088). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -240,24 +240,25 @@ Press **Edit limits** to change the NOVA limit. It can never be set above Zerodh
 written in the audit log. **Back to broker** returns to the list.
 
 ### Step 6 — Instruments (the stock list)
-The list of stocks you can download prices for. Each row shows the symbol, name, sector, the indices it
+The list of stocks you can download prices for: after a sync, **every stock listed on the NSE** (about
+3,900, including small SME companies and ETFs). Each row shows the symbol, name, sector, the indices it
 belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its prices can be downloaded.
 
-- **Add stock**: type the NSE symbol (e.g. **INFY**), the name and the sector, tick its indices, then
-  **Add stock**. A new stock shows **Not synced**.
-- **Sync with Kite**: brings in **every stock listed on the NSE** (about 3,900, including small SME
-  companies and ETFs) and updates which stocks belong to which index (NIFTY 50, NIFTY IT, NIFTY MIDCAP 100
-  and 16 more). It runs as a job: NOVA opens its page, where you see the progress and, at the end, one line
-  such as "3,860 stocks synced; 2 new listing(s): ABC, XYZ". Do the daily Kite login first.
+- **Sync with Kite** (the card at the top): brings in new NSE stocks and updates which stocks belong to
+  which index (NIFTY 50, NIFTY IT, NIFTY MIDCAP 100 and 16 more). The card shows the progress while it
+  runs and, afterwards, **Last synced** with one line such as "3,860 stocks synced; 2 new listing(s):
+  ABC, XYZ". **View job** opens it in Data jobs. Do the daily Kite login first.
 - NOVA also syncs **by itself every weekday from 08:45**, as soon as the Kite login of the day is done.
-- A **new listing** is a stock that appeared since the previous sync, for example a company that just
-  had its IPO (its first day of trading). An IPO shows up on its listing day, not before: Zerodha only
-  lists a stock once it trades.
-- **Edit** changes the name, sector or indices. **Remove** takes a stock off the list; prices already
-  downloaded stay.
-
-You rarely need **Add stock** now: the sync adds NSE stocks by itself. Then queue a **New download** in
-Data jobs.
+- **Index**: show only the stocks of one index. The number after each index is how many stocks it has.
+- **Search stocks**: find a stock by symbol, name or sector.
+- **New listings** tab: stocks that appeared since the previous sync, marked **New** — for example a
+  company that just had its IPO (its first day of trading). An IPO shows up on its listing day, not
+  before: Zerodha only lists a stock once it trades. **Mark as seen** removes the **New** mark.
+- **Sector** comes from the NSE's index lists, so only stocks in at least one of the 19 indices have one;
+  the others show **Unclassified** until you **Edit** them.
+- **Add stock** is rarely needed now (the sync adds NSE stocks). **Edit** changes the name, sector or
+  indices. **Remove** takes a stock off the list; prices already downloaded stay (the next sync adds an
+  NSE stock back).
 
 ### Step 7 — Data jobs
 Background work that fills our price database: **historical downloads** (past candles from Zerodha),

@@ -4,6 +4,7 @@ import {
   ApiErrorSchema,
   CandleSchema,
   InstrumentSchema,
+  MarketIndexSchema,
   DataJobSchema,
   UniverseEntrySchema,
 } from "@nova/contracts";
@@ -17,7 +18,8 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const get = (path: string) => fetch(`http://localhost/api/v1${path}`);
+const API = "http://localhost/api/v1";
+const get = (path: string) => fetch(`${API}${path}`);
 
 describe("Market data MSW handlers", () => {
   it("GET /market-data/instruments returns the instruments", async () => {
@@ -55,13 +57,31 @@ describe("Market data MSW handlers", () => {
     expect((await get("/market-data/candles?symbol=TCS&timeframe=1d")).status).toBe(500);
   });
 
-  it("GET /market-data/universe lists every mock stock as synced, by symbol", async () => {
+  it("GET /market-data/universe lists every mock stock and two new listings, by symbol", async () => {
     const res = await get("/market-data/universe");
     expect(res.status).toBe(200);
     const rows = UniverseEntrySchema.array().parse(await res.json());
-    expect(rows).toHaveLength(mockInstruments.length);
+    expect(rows).toHaveLength(mockInstruments.length + 2);
+    expect(rows.filter((r) => r.newListing).map((r) => r.symbol)).toEqual([
+      "GREENGRID-SM",
+      "NOVATECH",
+    ]);
     expect(rows.every((r) => r.synced)).toBe(true);
     expect(rows.map((r) => r.symbol)).toEqual(rows.map((r) => r.symbol).sort());
+  });
+
+  it("GET /market-data/indices lists the 19 indices, biggest first", async () => {
+    const rows = MarketIndexSchema.array().parse(await (await get("/market-data/indices")).json());
+    expect(rows).toHaveLength(19);
+    expect(rows[0]!.members).toBeGreaterThanOrEqual(rows[1]!.members);
+  });
+
+  it("POST /market-data/universe/:symbol/clear-new marks a new listing as seen", async () => {
+    const url = `${API}/market-data/universe/NOVATECH/clear-new`;
+    const res = await fetch(url, { method: "POST" });
+    expect(UniverseEntrySchema.parse(await res.json()).newListing).toBe(false);
+    const missing = await fetch(`${API}/market-data/universe/NOPE/clear-new`, { method: "POST" });
+    expect(missing.status).toBe(404);
   });
 
   describe("stock-list writes", () => {

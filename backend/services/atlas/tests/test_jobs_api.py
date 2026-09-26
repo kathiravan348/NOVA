@@ -2,6 +2,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from nova_atlas.sync_job import queue_instrument_sync
 from nova_db.models import AuditEntry, DataJob
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, select, update
@@ -54,6 +55,18 @@ def test_pages_walk_every_job_newest_first(
             break
 
     assert seen == expected
+
+
+def test_the_list_can_keep_one_job_type(client: TestClient, clean: Engine) -> None:
+    _seed(clean, 3)
+    with Session(clean) as db:
+        queue_instrument_sync(db)
+        db.commit()
+
+    syncs = client.get(JOBS, params={"type": "instrument_sync", "limit": 1}).json()["items"]
+
+    assert [job["type"] for job in syncs] == ["instrument_sync"]
+    assert client.get(JOBS, params={"type": "nope"}).status_code == 400
 
 
 def test_one_job_and_not_found(client: TestClient, clean: Engine) -> None:
