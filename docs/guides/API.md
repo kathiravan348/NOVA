@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-085). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-086). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -69,6 +69,8 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 |---|---|
 | `GET /internal/kite/instruments/{exchange}` | Kite's instrument list (CSV) for `NSE` or `NFO`. Used by the instrument sync (`POST /market-data/instruments/sync`). |
 | `GET /internal/kite/historical?instrument_token=&interval=&start=&end=` | Historical candles from Kite. Used by Atlas download jobs. |
+| `GET /internal/kite/session` | `{loggedIn, accountId}`: whether an enabled account has a live Kite session. No Kite call, no limiter slot. Used by the daily instrument sync (D56). |
+| `GET /internal/nse/constituents?file=ind_nifty50list.csv` | One NSE index's members `[{symbol, company, industry}]` (`EQ` rows) from `NOVA_NSE_INDEX_BASE_URL` (default niftyindices.com). Not a Kite call, no limiter slot. 400 bad file name (`ind_…csv` only); 502 NSE did not answer, refused, or sent something else. Used by the instrument sync (D56). |
 
 Both use the first enabled account with a live session (else 400 "Log in to Kite in Relay first") and wait for a
 rate-limiter slot first (up to 20 s, else 503).

@@ -16,6 +16,8 @@ class BrokerSettings(Settings):
     relay_url: str = "http://localhost:3001"
     # When Kite's per-day limits reset (IST). Not documented by Kite: 00:00 until confirmed (D40).
     kite_daily_reset: time = time(0, 0)
+    # NSE index constituent files (D56); fetched here because only the broker calls outside APIs.
+    nse_index_base_url: str = "https://www.niftyindices.com/IndexConstituent"
 
 
 @lru_cache(maxsize=1)

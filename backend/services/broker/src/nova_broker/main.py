@@ -16,6 +16,8 @@ from nova_broker import accounts, internal, kite_app, profiles, rate_limits, rec
 from nova_broker.kite import kite_http
 from nova_broker.limiter import RateLimiter
 from nova_broker.limits import ensure_rules
+from nova_broker.nse import nse_http
+from nova_broker.nse import router as nse_router
 from nova_broker.settings import BrokerSettings, get_broker_settings
 
 API_PREFIX = "/api/v1"
@@ -25,14 +27,16 @@ def create_app(
     settings: BrokerSettings | None = None,
     *,
     kite_transport: httpx2.BaseTransport | None = None,
+    nse_transport: httpx2.BaseTransport | None = None,
     redis: Redis | None = None,
 ) -> FastAPI:
-    """`kite_transport` replaces the network for Kite calls in tests (D35)."""
+    """`kite_transport` and `nse_transport` replace the network in tests (D35)."""
     settings = settings or get_broker_settings()
     engine = create_db_engine(settings.database_url.get_secret_value())
     session_factory = create_session_factory(engine)
     redis = redis or Redis.from_url(settings.redis_url.get_secret_value())
     http = kite_http(kite_transport)
+    nse = nse_http(settings.nse_index_base_url, nse_transport)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -43,6 +47,7 @@ def create_app(
             db.commit()
         yield
         http.close()
+        nse.close()
         engine.dispose()
 
     app = FastAPI(
@@ -55,6 +60,7 @@ def create_app(
     app.state.settings = settings
     app.state.session_factory = session_factory
     app.state.kite_http = http
+    app.state.nse_http = nse
     app.state.redis = redis
     app.state.limiter = RateLimiter(redis, settings.kite_daily_reset)
     app.state.sleep = time.sleep
@@ -74,6 +80,7 @@ def create_app(
     app.include_router(router)
     # Service-to-service only (D41): outside /api/v1, so NOVA Core never forwards it.
     app.include_router(internal.router)
+    app.include_router(nse_router)
     return app
 
 

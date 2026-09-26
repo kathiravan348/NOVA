@@ -91,7 +91,7 @@
 | NOVA-083 | Atlas: remove CLI commands Relay covers (D55) | done | Claude | 078 |
 | NOVA-084 | Data jobs: batched candle writes, clear failure reasons, job screens refresh (D56) | done | Claude | 083 |
 | NOVA-085 | Indices table, open `IndexName`, new-listing flag, `instrument_sync` job type (D56, migration 0009) | done | Claude | 083 |
-| NOVA-086 | Broker: NSE index constituents + session status over `/internal` (D56) | planned | — | 083 |
+| NOVA-086 | Broker: NSE index constituents + session status over `/internal` (D56) | done | Claude | 083 |
 | NOVA-087 | Atlas: sync all NSE stocks + indices as a job; daily auto-sync (D56) | planned | — | 084, 085, 086 |
 | NOVA-088 | Relay: Instruments for ~2,500 stocks (search, index filter, New listings, sync job) (D56) | planned | — | 087 |
 | NOVA-089 | Orbit: index choices from the indices list (D56) | planned | — | 085 |

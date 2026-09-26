@@ -90,6 +90,16 @@ def wait_for_slot(request: Request, db: Session, account_id: str, endpoint: str)
         sleep(wait)
 
 
+@router.get("/session")
+def session(_: Service, db: Db, cipher: Cipher) -> JSONResponse:
+    """Whether a Kite session is live (D56 daily sync). No Kite call, no limiter slot."""
+    try:
+        live = active_session(db, cipher)
+    except ApiException:
+        return JSONResponse({"loggedIn": False, "accountId": None})
+    return JSONResponse({"loggedIn": True, "accountId": live.account_id})
+
+
 @router.get("/instruments/{exchange}")
 def instruments(
     exchange: str, request: Request, _: Service, db: Db, cipher: Cipher
