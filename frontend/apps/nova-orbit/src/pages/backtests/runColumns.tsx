@@ -60,12 +60,14 @@ export function useRunColumns({ withStrategy = true } = {}): ColumnDef<BacktestR
       id: "status",
       header: "Status",
       accessorKey: "status",
-      cell: ({ row }) => (
-        <StatusBadge
-          tone={runStatusTone[row.original.status]}
-          label={runStatusLabel[row.original.status]}
-        />
-      ),
+      cell: ({ row }) => {
+        const { status, progress } = row.original;
+        const label =
+          status === "running" && progress
+            ? `${runStatusLabel.running} · ${progress.percent}%`
+            : runStatusLabel[status];
+        return <StatusBadge tone={runStatusTone[status]} label={label} />;
+      },
     },
     {
       id: "period",

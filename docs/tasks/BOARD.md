@@ -107,7 +107,7 @@
 | NOVA-099 | Compress old candles (TimescaleDB compression, D58, migration 0013) | done | Claude | 098 |
 | NOVA-100 | Download 1m and 1d only; build 3m–1h candles from 1m (D58) | done | Claude | 099, 103 |
 | NOVA-101 | Backtest progress: stage, counts and percent on each run (D58, migration 0014) | done | Claude | 100 |
-| NOVA-102 | Orbit: live backtest progress on the run page and in the list (D58) | planned | — | 101 |
+| NOVA-102 | Orbit: live backtest progress on the run page and in the list (D58) | done | Claude | 101 |
 | NOVA-103 | Backtest worker: no stuck runs, restart after a crash, bar limit (D59) | done | Claude | — |
 
 ## Parallel lanes (tasks that can run at the same time)

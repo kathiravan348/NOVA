@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import { AlertTriangle, GitCompare, Hourglass } from "lucide-react";
+import { AlertTriangle, GitCompare } from "lucide-react";
 import type { BacktestRun } from "@nova/contracts";
 import {
   Button,
@@ -17,6 +17,8 @@ import { QueryError, QueryState } from "../../components/QueryState";
 import { formatIstDateTime, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
 import { describeUniverse } from "../../lib/strategyText";
 import { MetricsGrid } from "./MetricsGrid";
+import { RunProgress } from "./RunProgress";
+import { progressLine } from "./progressText";
 import { SymbolBreakdown } from "./SymbolBreakdown";
 import { TradesTable } from "./TradesTable";
 
@@ -128,22 +130,24 @@ function CompletedRun({ run }: { run: BacktestRun }) {
 function RunBody({ run }: { run: BacktestRun }) {
   if (run.status === "completed") return <CompletedRun run={run} />;
   if (run.status === "failed") {
+    const stopped = run.progress
+      ? `Stopped while: ${progressLine(run.progress)} (${run.progress.percent}%)`
+      : null;
     return (
       <EmptyState
         tone="error"
         icon={<AlertTriangle className="h-6 w-6" />}
         title="This run failed"
-        description={run.error ?? "No error message."}
+        description={
+          <>
+            {run.error ?? "No error message."}
+            {stopped && <span className="mt-2 block text-text-muted">{stopped}</span>}
+          </>
+        }
       />
     );
   }
-  return (
-    <EmptyState
-      icon={<Hourglass className="h-6 w-6" />}
-      title="This run hasn't finished"
-      description={`Status: ${runStatusLabel[run.status]}. Results appear when it completes.`}
-    />
-  );
+  return <RunProgress run={run} />;
 }
 
 export function BacktestResultPage() {

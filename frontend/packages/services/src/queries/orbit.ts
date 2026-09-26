@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type {
+  BacktestRun,
   BacktestRunCreate,
   StrategyCreate,
   StrategyUpdate,
@@ -57,6 +58,13 @@ export function useStrategy(id: string) {
 }
 
 /** Backtest runs, one page at a time; `fetchNextPage` loads more. */
+/** How often run screens refresh while a run is queued or running (D58). */
+export const RUN_POLL_MS = { detail: 2_000, list: 5_000 };
+
+function isRunActive(run: Pick<BacktestRun, "status">): boolean {
+  return run.status === "queued" || run.status === "running";
+}
+
 export function useBacktests(filter: BacktestFilter = {}) {
   return useInfiniteQuery({
     queryKey: queryKeys.backtests.list(filter),
@@ -64,14 +72,30 @@ export function useBacktests(filter: BacktestFilter = {}) {
       listBacktests({ ...filter, ...cursorQuery(pageParam) }, { signal }),
     ...pagedListOptions,
     select: flattenPages,
+    refetchInterval: (query) =>
+      query.state.data?.pages.some((page) => page.items.some(isRunActive))
+        ? RUN_POLL_MS.list
+        : false,
   });
 }
 
+/** One run; refreshes while it is queued or running. When it finishes, run lists and stats refresh. */
 export function useBacktest(id: string) {
+  const client = useQueryClient();
   return useQuery({
     queryKey: queryKeys.backtests.detail(id),
-    queryFn: ({ signal }) => getBacktest(id, { signal }),
+    queryFn: async ({ signal }) => {
+      const before = client.getQueryData<BacktestRun>(queryKeys.backtests.detail(id));
+      const run = await getBacktest(id, { signal });
+      if (before && isRunActive(before) && !isRunActive(run)) {
+        void client.invalidateQueries({ queryKey: queryKeys.backtests.lists });
+        void client.invalidateQueries({ queryKey: queryKeys.strategies.stats });
+      }
+      return run;
+    },
     enabled: Boolean(id),
+    refetchInterval: (query) =>
+      query.state.data && isRunActive(query.state.data) ? RUN_POLL_MS.detail : false,
   });
 }
 

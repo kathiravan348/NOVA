@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
   errorHandlers,
@@ -22,6 +22,8 @@ import {
 import { ApiRequestError } from "../http";
 import { queryKeys } from "./keys";
 import {
+  RUN_POLL_MS,
+  useBacktest,
   useBacktestResults,
   useBacktests,
   useMe,
@@ -134,6 +136,37 @@ describe("query hooks", () => {
     const { result } = renderHook(() => useBacktestResults(ids), { wrapper });
     await waitFor(() => expect(result.current.every((q) => q.isSuccess)).toBe(true));
     expect(result.current.map((q) => q.data)).toEqual(mockBacktestResults);
+  });
+
+  it("useBacktest polls a running run until it completes, then refreshes lists and stats", async () => {
+    const completed = mockBacktestRuns.find((r) => r.id === "run_001")!;
+    const running = { ...completed, status: "running", finishedAt: null };
+    let calls = 0;
+    server.use(
+      http.get("*/api/v1/backtests/run_001", () => {
+        calls += 1;
+        return HttpResponse.json(calls < 3 ? running : completed);
+      }),
+    );
+    const client = createQueryClient();
+    client.setQueryData(queryKeys.strategies.stats, mockStrategyStats);
+    client.setQueryData(queryKeys.backtests.list({}), { pages: [], pageParams: [] });
+    const original = RUN_POLL_MS.detail;
+    RUN_POLL_MS.detail = 20;
+    try {
+      const { result } = renderHook(() => useBacktest("run_001"), {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        ),
+      });
+      await waitFor(() => expect(result.current.data?.status).toBe("completed"));
+      expect(client.getQueryState(queryKeys.strategies.stats)?.isInvalidated).toBe(true);
+      expect(client.getQueryState(queryKeys.backtests.list({}))?.isInvalidated).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(calls).toBe(3); // no polling once completed
+    } finally {
+      RUN_POLL_MS.detail = original;
+    }
   });
 
   it("useStrategy('') stays idle and never fetches", () => {
