@@ -305,7 +305,7 @@ describe("Kite app (D55)", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Finish login" }));
     expect(await screen.findByText("Kite connected")).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.search).toBe(""));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("closes with a message when the pending login expired", async () => {

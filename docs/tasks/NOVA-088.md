@@ -1,6 +1,6 @@
 # NOVA-088 — Relay: Instruments for ~2,500 stocks (search, index filter, New listings, sync job)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-088 · **Depends on:** NOVA-087
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-088 · **Depends on:** NOVA-087
 
 ## Goal
 The Instruments page handles the whole NSE list: search, filter by any index, a **New listings** view for
@@ -48,5 +48,17 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- `SyncCard` (latest sync via new `useLatestSync` → `GET /data-jobs?type=instrument_sync&limit=1`, polls
+  while active, refreshes universe/indices/instruments when it completes). Page: Tabs **All stocks** /
+  **New listings (n)**, **Index** select (counts), search, **New** badge + **Mark as seen**. Edit dialog
+  offers all indices from the API (keeps names no longer listed).
+- Changes from the task text: filtering stays client-side (087 kept the list whole); **Load more** not
+  needed (DataTable pages 25 at a time). Backend: `GET /data-jobs` gained `type` (+ test).
+- Mocks: 2 demo new listings, 19 indices, a completed demo sync job, clear-new handler, jobs `type` filter.
+- Also fixed: flaky `broker.test.tsx` passphrase test (waits for the dialog to close).
+- Checked in the browser (mock mode): desktop dark + light, 375px stacked cards.
+- Checks: `pnpm review:check` green; backend gate green. Guides: USER-GUIDE, API.
 
 ## Review
+Self-reviewed.

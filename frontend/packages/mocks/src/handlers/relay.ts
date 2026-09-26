@@ -195,7 +195,9 @@ export const relayHandlers = [
   }),
 
   http.get(apiPath("/data-jobs"), ({ request }) => {
-    return paginate(mockDataJobs, request.url);
+    const type = new URL(request.url).searchParams.get("type");
+    const jobs = type ? mockDataJobs.filter((j) => j.type === type) : mockDataJobs;
+    return paginate(jobs, request.url);
   }),
 
   http.get(apiPath("/data-jobs/:id"), ({ params }) => {

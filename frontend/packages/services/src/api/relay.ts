@@ -4,6 +4,7 @@ import {
   type BrokerAccountCreate,
   BrokerProfileSchema,
   DataJobSchema,
+  type DataJobType,
   KiteAppSchema,
   type KiteApp,
   type KiteAppUpdate,
@@ -126,7 +127,11 @@ export function getBrokerProfile(broker: string, init?: RequestOptions): Promise
 }
 
 /** One page of data jobs (D32). */
-export function listDataJobs(query: PageQuery = {}, init?: RequestOptions): Promise<Page<DataJob>> {
+/** Data jobs, newest first; `type` keeps one kind (D56). */
+export function listDataJobs(
+  query: PageQuery & { type?: DataJobType } = {},
+  init?: RequestOptions,
+): Promise<Page<DataJob>> {
   return apiGet(withQuery("/data-jobs", { ...query }), pageSchema(DataJobSchema), init);
 }
 

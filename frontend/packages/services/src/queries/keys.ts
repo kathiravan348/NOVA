@@ -28,6 +28,7 @@ export const queryKeys = {
   dataJobs: {
     all: ["data-jobs"] as const,
     list: ["data-jobs", "list"] as const,
+    latestSync: ["data-jobs", "latest-sync"] as const,
     detail: (id: string) => ["data-jobs", id] as const,
   },
   auditEntries: {
@@ -37,6 +38,7 @@ export const queryKeys = {
   marketData: {
     instruments: ["market-data", "instruments"] as const,
     universe: ["market-data", "universe"] as const,
+    indices: ["market-data", "indices"] as const,
     candles: (symbol: string, timeframe: string) =>
       ["market-data", "candles", symbol, timeframe] as const,
   },

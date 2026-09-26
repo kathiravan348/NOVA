@@ -88,5 +88,23 @@
     "finishedAt": "2026-09-15T02:05:00Z",
     "error": null,
     "summary": null
+  },
+  {
+    "id": "job_006",
+    "type": "instrument_sync",
+    "status": "completed",
+    "exchange": "NSE",
+    "segment": "equity_delivery",
+    "symbols": [],
+    "timeframe": null,
+    "from": null,
+    "to": null,
+    "progressPercent": 100,
+    "rowsWritten": 26,
+    "createdAt": "2026-09-15T03:15:00Z",
+    "startedAt": "2026-09-15T03:15:02Z",
+    "finishedAt": "2026-09-15T03:15:40Z",
+    "error": null,
+    "summary": "26 stocks synced; 2 new listing(s): GREENGRID-SM, NOVATECH"
   }
 ]

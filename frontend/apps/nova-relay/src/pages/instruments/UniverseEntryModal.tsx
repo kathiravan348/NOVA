@@ -1,12 +1,12 @@
 import { useState } from "react";
-import {
-  DEFAULT_INDEX_NAMES,
-  UniverseEntryWriteSchema,
-  type IndexName,
-  type UniverseEntry,
-} from "@nova/contracts";
+import { UniverseEntryWriteSchema, type IndexName, type UniverseEntry } from "@nova/contracts";
 import { Button, Checkbox, Input, Modal, useToast } from "@nova/ui-core";
-import { getDataMode, useCreateUniverseEntry, useUpdateUniverseEntry } from "@nova/services";
+import {
+  getDataMode,
+  useCreateUniverseEntry,
+  useMarketIndices,
+  useUpdateUniverseEntry,
+} from "@nova/services";
 
 export interface UniverseEntryModalProps {
   /** `null` = add a new stock; an entry = edit it. */
@@ -37,6 +37,7 @@ function EntryForm({ entry, onDone }: { entry: UniverseEntry | null; onDone: () 
   const toast = useToast();
   const create = useCreateUniverseEntry();
   const update = useUpdateUniverseEntry();
+  const known = useMarketIndices();
   const [symbol, setSymbol] = useState(entry?.symbol ?? "");
   const [name, setName] = useState(entry?.name ?? "");
   const [sector, setSector] = useState(entry?.sector ?? "");
@@ -106,9 +107,15 @@ function EntryForm({ entry, onDone }: { entry: UniverseEntry | null; onDone: () 
         onChange={(e) => setSector(e.target.value)}
         error={fieldError("sector")}
       />
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <legend className="mb-1 text-body-sm font-medium text-text-primary">Indices</legend>
-        {DEFAULT_INDEX_NAMES.map((index) => (
+        {known.isPending && <p className="text-body-sm text-text-muted">Loading indices…</p>}
+        {known.isError && (
+          <p role="alert" className="text-body-sm text-loss">
+            Could not load the indices.
+          </p>
+        )}
+        {indexChoices(known.data?.map((i) => i.name) ?? [], indices).map((index) => (
           <Checkbox
             key={index}
             label={index}
@@ -132,4 +139,9 @@ function EntryForm({ entry, onDone }: { entry: UniverseEntry | null; onDone: () 
       </div>
     </form>
   );
+}
+
+/** Every known index, plus any the stock already has that the list no longer shows. */
+function indexChoices(known: IndexName[], chosen: IndexName[]): IndexName[] {
+  return [...known, ...chosen.filter((name) => !known.includes(name))];
 }

@@ -5,7 +5,9 @@ import {
   deleteUniverseEntry,
   listCandles,
   listInstruments,
+  listMarketIndices,
   listUniverse,
+  clearNewListing,
   syncInstruments,
   updateUniverseEntry,
 } from "../api/marketData";
@@ -68,6 +70,37 @@ export function useSyncInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => syncInstruments(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.all }),
+    onSuccess: (job) => {
+      queryClient.setQueryData(queryKeys.dataJobs.latestSync, job);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.list });
+    },
   });
+}
+
+/** Every NSE index with its member count (D56). */
+export function useMarketIndices() {
+  return useQuery({
+    queryKey: queryKeys.marketData.indices,
+    queryFn: ({ signal }) => listMarketIndices({ signal }),
+  });
+}
+
+/** Marks a new listing as seen; refreshes the stock list. */
+export function useClearNewListing() {
+  const refresh = useRefreshUniverse();
+  return useMutation({
+    mutationFn: (symbol: string) => clearNewListing(symbol),
+    onSuccess: refresh,
+  });
+}
+
+/** After a sync finishes: the stock list, indices and instruments changed. */
+export function useRefreshAfterSync() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.marketData.universe }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.marketData.indices }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.marketData.instruments }),
+    ]);
 }
