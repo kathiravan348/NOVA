@@ -99,7 +99,9 @@
 | NOVA-091 | Frontend: realtime client; data-job screens update live, polling as fallback (D57) | done | Claude | 084, 090 |
 | NOVA-092 | Download plans: draft/paused statuses, job steps, market-hours setting (D57, migration 0011) | done | Claude | 090 |
 | NOVA-093 | Atlas: plan, coverage check, Start/Pause/Resume, step-by-step worker, market-hours pace (D57) | done | Claude | 087, 092 |
-| NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | planned | — | 088, 091, 093 |
+| NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | planned | — | 088, 091, 093, 095 |
+| NOVA-095 | Atlas: delete finished data jobs, optionally with their candles; `data_job.deleted` event (migration 0012) | in-progress | Claude | 093 |
+| NOVA-096 | Relay: Delete job (+ candles) and clear the 26 Sep test downloads | planned | — | 094, 095 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -112,3 +114,4 @@
 - Kite keys in Relay (D55): 079 → 080 → 081 → 082 (081 and 082 merge together); 083 runs alongside 079/080.
 - Stock list (D56): 084 (live bug), 085 and 086 touch different files and can run in parallel → 087 (after 084 too: both edit `worker.py`) → 088; 089 after 085, alongside 087/088.
 - Realtime + planned downloads (D57): 090 after 085 (both migrate `data_jobs`) → 091 (frontend) and 092 (backend) in parallel → 093 (after 087) → 094 (after 088).
+- Delete jobs (Owner request 26 Sep): 095 before 094 (the plan review discards drafts with it) → 096 after 094.
