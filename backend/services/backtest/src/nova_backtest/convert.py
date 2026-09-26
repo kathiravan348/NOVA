@@ -2,6 +2,7 @@
 
 from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import BacktestRun as RunContract
+from nova_contracts import BacktestVersion as VersionContract
 from nova_contracts import Trade as TradeContract
 from nova_db.models import BacktestResult, BacktestRun, Trade
 
@@ -35,6 +36,48 @@ def run_contract(row: BacktestRun) -> RunContract:
                 "trades_so_far": row.trades_so_far,
                 "simulated_to": row.simulated_to,
             },
+            "root_id": row.root_id,
+            "version": row.version,
+            "report_kept": row.report_kept,
+        }
+    )
+
+
+def metrics_of(row: BacktestResult) -> dict[str, object]:
+    return {
+        "gross_pnl_paise": row.gross_pnl_paise,
+        "charges_paise": row.charges_paise,
+        "net_pnl_paise": row.net_pnl_paise,
+        "return_percent": float(row.return_percent),
+        "cagr_percent": float(row.cagr_percent),
+        "max_drawdown_percent": float(row.max_drawdown_percent),
+        "sharpe": float(row.sharpe),
+        "win_rate_percent": float(row.win_rate_percent),
+        "trade_count": row.trade_count,
+        "win_count": row.win_count,
+        "loss_count": row.loss_count,
+    }
+
+
+def version_contract(row: BacktestRun, result: BacktestResult | None) -> VersionContract:
+    """One version of a backtest's history (D60); metrics only when it completed."""
+    completed = row.status == "completed" and result is not None
+    return VersionContract.model_validate(
+        {
+            "run_id": row.id,
+            "version": row.version,
+            "status": row.status,
+            "strategy_version": row.strategy_version,
+            "name": row.name,
+            "universe": row.universe,
+            "from_": row.date_from,
+            "to": row.date_to,
+            "initial_capital_paise": row.initial_capital_paise,
+            "benchmark": row.benchmark,
+            "created_at": row.created_at,
+            "error": row.error,
+            "report_kept": row.report_kept,
+            "metrics": metrics_of(result) if completed and result is not None else None,
         }
     )
 
@@ -43,19 +86,7 @@ def result_contract(row: BacktestResult) -> ResultContract:
     return ResultContract.model_validate(
         {
             "run_id": row.run_id,
-            "metrics": {
-                "gross_pnl_paise": row.gross_pnl_paise,
-                "charges_paise": row.charges_paise,
-                "net_pnl_paise": row.net_pnl_paise,
-                "return_percent": float(row.return_percent),
-                "cagr_percent": float(row.cagr_percent),
-                "max_drawdown_percent": float(row.max_drawdown_percent),
-                "sharpe": float(row.sharpe),
-                "win_rate_percent": float(row.win_rate_percent),
-                "trade_count": row.trade_count,
-                "win_count": row.win_count,
-                "loss_count": row.loss_count,
-            },
+            "metrics": metrics_of(row),
             "equity_curve": row.equity_curve,
             "by_symbol": row.by_symbol,
         }

@@ -15,6 +15,24 @@ class BestNetPnl(Contract):
     net_pnl_paise: Paise
 
 
+class VersionStats(Contract):
+    """Completed runs and best return of one strategy version (D60)."""
+
+    version: Annotated[int, Field(ge=1)]
+    runs_completed: Count
+    best_return_percent: float | None
+    best_run_id: Id | None
+
+    @model_validator(mode="after")
+    def _best_when_completed(self) -> Self:
+        expected = self.runs_completed > 0
+        if (self.best_return_percent is not None) != expected or (
+            self.best_run_id is not None
+        ) != expected:
+            raise ValueError("best fields are set exactly when a run completed")
+        return self
+
+
 class StrategyStats(Contract):
     strategy_id: Id
     runs_total: Count
@@ -28,6 +46,7 @@ class StrategyStats(Contract):
     win_rate_max_percent: Percent | None
     worst_drawdown_percent: Annotated[float, Field(le=0)] | None
     best_net_pnl: BestNetPnl | None
+    by_version: list[VersionStats]
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
@@ -52,4 +71,7 @@ class StrategyStats(Contract):
         low, high = self.win_rate_min_percent, self.win_rate_max_percent
         if low is not None and high is not None and low > high:
             raise ValueError("winRateMinPercent must be at most winRateMaxPercent")
+        versions = [v.version for v in self.by_version]
+        if versions != sorted(set(versions)):
+            raise ValueError("byVersion lists each version once, ascending")
         return self

@@ -23,7 +23,11 @@ import { ApiRequestError } from "../http";
 import { queryKeys } from "./keys";
 import {
   RUN_POLL_MS,
+  useAddBacktestVersion,
   useBacktest,
+  useBacktestVersions,
+  useDeleteBacktest,
+  useDeleteBacktests,
   useBacktestResults,
   useBacktests,
   useMe,
@@ -64,6 +68,11 @@ afterEach(() => {
   requests = [];
 });
 afterAll(() => server.close());
+
+/** The list shows only the newest version of each backtest (D60). */
+const listedRuns = mockBacktestRuns.filter(
+  (r) => !mockBacktestRuns.some((o) => o.rootId === r.rootId && o.version > r.version),
+);
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={createQueryClient()}>{children}</QueryClientProvider>;
@@ -125,9 +134,7 @@ describe("query hooks", () => {
     const strategyId = mockBacktestRuns[0]!.strategyId;
     const { result } = renderHook(() => useBacktests({ strategyId }), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual(
-      mockBacktestRuns.filter((r) => r.strategyId === strategyId),
-    );
+    expect(result.current.data).toEqual(listedRuns.filter((r) => r.strategyId === strategyId));
     expect(result.current.hasNextPage).toBe(false);
   });
 
@@ -167,6 +174,61 @@ describe("query hooks", () => {
     } finally {
       RUN_POLL_MS.detail = original;
     }
+  });
+
+  it("useBacktestVersions lists a backtest's versions (D60)", async () => {
+    const { result } = renderHook(() => useBacktestVersions("run_002"), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map((v) => v.version)).toEqual([2, 1]);
+  });
+
+  it("useAddBacktestVersion posts the next version and refreshes lists and stats", async () => {
+    const client = createQueryClient();
+    client.setQueryData(queryKeys.strategies.stats, mockStrategyStats);
+    const { result } = renderHook(() => useAddBacktestVersion(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+    const run = mockBacktestRuns.find((r) => r.id === "run_002")!;
+    const body = {
+      strategyVersion: 2,
+      name: run.name,
+      universe: run.universe,
+      from: run.from,
+      to: run.to,
+      initialCapitalPaise: run.initialCapitalPaise,
+      benchmark: run.benchmark,
+    };
+    const queued = await result.current.mutateAsync({ runId: "run_002", body });
+    expect([queued.version, queued.rootId]).toEqual([3, "run_006"]);
+    expect(requests).toContain("/api/v1/backtests/run_002/versions");
+    expect(client.getQueryState(queryKeys.strategies.stats)?.isInvalidated).toBe(true);
+  });
+
+  it("useDeleteBacktest forgets a deleted backtest and keeps pages for a version delete", async () => {
+    const client = createQueryClient();
+    client.setQueryData(queryKeys.backtests.detail("run_002"), mockBacktestRuns[1]);
+    client.setQueryData(queryKeys.backtests.list({}), { pages: [], pageParams: [] });
+    const { result } = renderHook(() => useDeleteBacktest(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+    const one = await result.current.mutateAsync({ runId: "run_006", scope: "version" });
+    expect(one.deletedRuns).toBe(1);
+    expect(client.getQueryData(queryKeys.backtests.detail("run_002"))).toBeDefined();
+    const all = await result.current.mutateAsync({ runId: "run_002", scope: "all" });
+    expect(all.deletedRuns).toBe(2);
+    expect(client.getQueryData(queryKeys.backtests.detail("run_002"))).toBeUndefined();
+    expect(client.getQueryState(queryKeys.backtests.list({}))?.isInvalidated).toBe(true);
+  });
+
+  it("useDeleteBacktests posts the ids", async () => {
+    const { result } = renderHook(() => useDeleteBacktests(), { wrapper });
+    const done = await result.current.mutateAsync(["run_001", "run_005"]);
+    expect(done.deletedRuns).toBe(2);
+    expect(requests).toContain("/api/v1/backtests/delete");
   });
 
   it("useStrategy('') stays idle and never fetches", () => {

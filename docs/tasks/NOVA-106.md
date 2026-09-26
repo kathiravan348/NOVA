@@ -1,6 +1,6 @@
 # NOVA-106 — Strategy stats per strategy version (D60)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-106 · **Depends on:** NOVA-104
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-106 · **Depends on:** NOVA-104
 
 ## Goal
 `GET /strategies/stats` also returns `byVersion`: each strategy version's completed runs and best return, so
@@ -34,5 +34,9 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. `stats.py` second query `_BY_VERSION` (every strategy version, completed runs, best return, best run id with
+ties on lowest id); `by_version` attached per strategy. Test for v1 (two runs) / v2 (none). API.md.
+Guides: API.
 
 ## Review
+Built and reviewed by Claude. `backend-check` 698 passed; `pnpm review:check` passed. Merged.

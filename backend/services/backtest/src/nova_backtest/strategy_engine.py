@@ -21,6 +21,7 @@ from nova_backtest.progress import ProgressSink
 from nova_backtest.rules import RuleSignals
 from nova_backtest.sandbox import PythonSignals, run_python
 from nova_backtest.simulate import Signals, simulate
+from nova_backtest.versions import trim_older_versions
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 WARM_UP_DAYS = {"1d": 400}
@@ -229,4 +230,5 @@ class StrategyEngine:
         run.stage = "done"
         run.progress_percent = 100
         run.trades_so_far = len(result.trades)
+        trim_older_versions(db, run)  # D60: older versions keep only their metrics
         db.commit()

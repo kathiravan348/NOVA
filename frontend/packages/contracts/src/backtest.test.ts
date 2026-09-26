@@ -37,6 +37,9 @@ describe("Backtest schemas", () => {
       tradesSoFar: 80,
       simulatedTo: "2025-12-31",
     },
+    rootId: "run-001",
+    version: 1,
+    reportKept: true,
   };
 
   const validMetrics: BacktestMetrics = {
@@ -90,6 +93,13 @@ describe("Backtest schemas", () => {
       expect(BacktestRunSchema.safeParse(running).success).toBe(true);
       const queued = { ...running, status: "queued", startedAt: null, progress: null };
       expect(BacktestRunSchema.safeParse(queued).success).toBe(true);
+    });
+
+    it("ties rootId to version 1 (D60)", () => {
+      const v2 = { ...validRun, id: "run-002", version: 2 };
+      expect(BacktestRunSchema.safeParse(v2).success).toBe(true);
+      expect(BacktestRunSchema.safeParse({ ...v2, rootId: "run-002" }).success).toBe(false);
+      expect(BacktestRunSchema.safeParse({ ...validRun, rootId: "run-000" }).success).toBe(false);
     });
 
     it("rejects a completed run whose progress is not done at 100%", () => {

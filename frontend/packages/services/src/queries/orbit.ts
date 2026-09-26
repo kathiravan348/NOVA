@@ -8,17 +8,22 @@ import {
 import type {
   BacktestRun,
   BacktestRunCreate,
+  BacktestVersionCreate,
   StrategyCreate,
   StrategyUpdate,
   StrategyVersionCreate,
 } from "@nova/contracts";
 import {
+  addBacktestVersion,
+  deleteBacktest,
+  deleteBacktests,
   getBacktest,
   getBacktestResult,
   getMe,
   getStrategy,
   listBacktests,
   listBacktestTrades,
+  listBacktestVersions,
   listStrategies,
   listStrategyStats,
   addStrategyVersion,
@@ -172,5 +177,66 @@ export function useQueueBacktest() {
         client.invalidateQueries({ queryKey: queryKeys.backtests.all }),
         client.invalidateQueries({ queryKey: queryKeys.strategies.all }),
       ]),
+  });
+}
+
+/** Every version of the backtest a run belongs to (D60). */
+export function useBacktestVersions(id: string) {
+  return useQuery({
+    queryKey: queryKeys.backtests.versions(id),
+    queryFn: ({ signal }) => listBacktestVersions(id, { signal }),
+    enabled: Boolean(id),
+  });
+}
+
+function useRefreshBacktests() {
+  const client = useQueryClient();
+  return () =>
+    Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.backtests.all }),
+      client.invalidateQueries({ queryKey: queryKeys.strategies.stats }),
+    ]);
+}
+
+/** Queues the next version of a backtest (D60). */
+export function useAddBacktestVersion() {
+  const refresh = useRefreshBacktests();
+  return useMutation({
+    mutationFn: ({ runId, body }: { runId: string; body: BacktestVersionCreate }) =>
+      addBacktestVersion(runId, body),
+    onSuccess: refresh,
+  });
+}
+
+/** After deleting whole backtests: forget their pages (no 404 refetch), refresh lists and stats. */
+function useForgetBacktests() {
+  const client = useQueryClient();
+  return (runIds: string[]) => {
+    for (const runId of runIds)
+      client.removeQueries({ queryKey: queryKeys.backtests.detail(runId) });
+    return Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.backtests.lists }),
+      client.invalidateQueries({ queryKey: queryKeys.strategies.stats }),
+    ]);
+  };
+}
+
+/** Deletes a backtest (`all`) or one older version (`version`) (D60). */
+export function useDeleteBacktest() {
+  const refresh = useRefreshBacktests();
+  const forget = useForgetBacktests();
+  return useMutation({
+    mutationFn: ({ runId, scope }: { runId: string; scope: "all" | "version" }) =>
+      deleteBacktest(runId, scope),
+    onSuccess: (_, { runId, scope }) => (scope === "all" ? forget([runId]) : refresh()),
+  });
+}
+
+/** Deletes several whole backtests (D60). */
+export function useDeleteBacktests() {
+  const forget = useForgetBacktests();
+  return useMutation({
+    mutationFn: (ids: string[]) => deleteBacktests(ids),
+    onSuccess: (_, ids) => forget(ids),
   });
 }

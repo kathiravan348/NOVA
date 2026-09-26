@@ -73,6 +73,8 @@ export const auditActionLabel: Record<AuditAction, string> = {
   "strategy.create": "Strategy created",
   "strategy.update": "Strategy updated",
   "backtest.run": "Backtest run",
+  "backtest.edit": "Backtest edited",
+  "backtest.delete": "Backtest deleted",
   "data_job.create": "Data job created",
   "data_job.cancel": "Data job cancelled",
   "data_job.plan": "Download planned",

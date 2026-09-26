@@ -26,7 +26,10 @@
       "barsTotal": 6750,
       "tradesSoFar": 4,
       "simulatedTo": "2026-06-15"
-    }
+    },
+    "rootId": "run_001",
+    "version": 1,
+    "reportKept": true
   },
   {
     "id": "run_002",
@@ -55,7 +58,10 @@
       "barsTotal": 70000,
       "tradesSoFar": 4,
       "simulatedTo": "2026-08-31"
-    }
+    },
+    "rootId": "run_006",
+    "version": 2,
+    "reportKept": true
   },
   {
     "id": "run_003",
@@ -84,7 +90,10 @@
       "barsTotal": 23250,
       "tradesSoFar": 14,
       "simulatedTo": "2026-03-12"
-    }
+    },
+    "rootId": "run_003",
+    "version": 1,
+    "reportKept": true
   },
   {
     "id": "run_004",
@@ -117,7 +126,10 @@
     "startedAt": null,
     "finishedAt": null,
     "error": null,
-    "progress": null
+    "progress": null,
+    "rootId": "run_004",
+    "version": 1,
+    "reportKept": true
   },
   {
     "id": "run_005",
@@ -146,6 +158,41 @@
       "barsTotal": 0,
       "tradesSoFar": 0,
       "simulatedTo": null
-    }
+    },
+    "rootId": "run_005",
+    "version": 1,
+    "reportKept": true
+  },
+  {
+    "id": "run_006",
+    "strategyId": "stg_001",
+    "strategyVersion": 1,
+    "name": "VWAP Intraday v2 Backtest",
+    "universe": {
+      "type": "index",
+      "index": "NIFTY 50"
+    },
+    "status": "completed",
+    "from": "2026-08-14",
+    "to": "2026-08-31",
+    "initialCapitalPaise": 100000000,
+    "benchmark": null,
+    "createdAt": "2026-08-31T12:00:00Z",
+    "startedAt": "2026-08-31T12:00:04Z",
+    "finishedAt": "2026-08-31T12:01:30Z",
+    "error": null,
+    "progress": {
+      "stage": "done",
+      "percent": 100,
+      "symbolsDone": 50,
+      "symbolsTotal": 50,
+      "barsDone": 70000,
+      "barsTotal": 70000,
+      "tradesSoFar": 4,
+      "simulatedTo": "2026-08-31"
+    },
+    "rootId": "run_006",
+    "version": 1,
+    "reportKept": false
   }
 ]

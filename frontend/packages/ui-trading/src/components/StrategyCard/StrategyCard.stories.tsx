@@ -26,6 +26,7 @@ const withResults: StrategyStats = {
   winRateMaxPercent: 71.5,
   worstDrawdownPercent: -6.2,
   bestNetPnl: { runId: "r1", netPnlPaise: 8_412_550 },
+  byVersion: [{ version: 1, runsCompleted: 9, bestReturnPercent: 8.4, bestRunId: "r1" }],
 };
 
 const noResults: StrategyStats = {
@@ -40,6 +41,7 @@ const noResults: StrategyStats = {
   winRateMaxPercent: null,
   worstDrawdownPercent: null,
   bestNetPnl: null,
+  byVersion: [{ version: 1, runsCompleted: 0, bestReturnPercent: null, bestRunId: null }],
 };
 
 const base = {

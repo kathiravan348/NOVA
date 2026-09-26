@@ -1,20 +1,34 @@
 [
   {
     "strategyId": "stg_001",
-    "runsTotal": 3,
-    "runsCompleted": 2,
+    "runsTotal": 4,
+    "runsCompleted": 3,
     "runsFailed": 0,
     "runsInProgress": 1,
     "lastRunAt": "2026-09-21T06:20:00Z",
     "bestReturnPercent": 0.5,
-    "worstReturnPercent": 0.46,
-    "winRateMinPercent": 75,
+    "worstReturnPercent": 0.21,
+    "winRateMinPercent": 50,
     "winRateMaxPercent": 75,
-    "worstDrawdownPercent": -0.11,
+    "worstDrawdownPercent": -0.18,
     "bestNetPnl": {
       "runId": "run_001",
       "netPnlPaise": 499474
-    }
+    },
+    "byVersion": [
+      {
+        "version": 1,
+        "runsCompleted": 2,
+        "bestReturnPercent": 0.5,
+        "bestRunId": "run_001"
+      },
+      {
+        "version": 2,
+        "runsCompleted": 1,
+        "bestReturnPercent": 0.46,
+        "bestRunId": "run_002"
+      }
+    ]
   },
   {
     "strategyId": "stg_002",
@@ -28,7 +42,15 @@
     "winRateMinPercent": null,
     "winRateMaxPercent": null,
     "worstDrawdownPercent": null,
-    "bestNetPnl": null
+    "bestNetPnl": null,
+    "byVersion": [
+      {
+        "version": 1,
+        "runsCompleted": 0,
+        "bestReturnPercent": null,
+        "bestRunId": null
+      }
+    ]
   },
   {
     "strategyId": "stg_003",
@@ -42,6 +64,14 @@
     "winRateMinPercent": null,
     "winRateMaxPercent": null,
     "worstDrawdownPercent": null,
-    "bestNetPnl": null
+    "bestNetPnl": null,
+    "byVersion": [
+      {
+        "version": 1,
+        "runsCompleted": 0,
+        "bestReturnPercent": null,
+        "bestRunId": null
+      }
+    ]
   }
 ]

@@ -1,12 +1,17 @@
 import {
+  BacktestDeleteResultSchema,
   BacktestResultSchema,
   BacktestRunSchema,
   StrategySchema,
+  BacktestVersionSchema,
   StrategyStatsSchema,
   TradeSchema,
   UserSchema,
   pageSchema,
+  type BacktestDeleteResult,
   type BacktestRunCreate,
+  type BacktestVersion,
+  type BacktestVersionCreate,
   type StrategyCreate,
   type StrategyUpdate,
   type StrategyVersionCreate,
@@ -102,4 +107,39 @@ export function queueBacktest(
   init?: RequestOptions,
 ): Promise<BacktestRun> {
   return apiPost("/backtests", body, BacktestRunSchema, init);
+}
+
+/** Every version of the backtest a run belongs to, newest first (D60). */
+export function listBacktestVersions(
+  runId: string,
+  init?: RequestOptions,
+): Promise<BacktestVersion[]> {
+  return apiGet(`/backtests/${id(runId)}/versions`, BacktestVersionSchema.array(), init);
+}
+
+/** Queues the next version of a backtest: the Edit button (D60). */
+export function addBacktestVersion(
+  runId: string,
+  body: BacktestVersionCreate,
+  init?: RequestOptions,
+): Promise<BacktestRun> {
+  return apiPost(`/backtests/${id(runId)}/versions`, body, BacktestRunSchema, init);
+}
+
+/** `all` deletes the whole backtest (every version); `version` only this older version (D60). */
+export function deleteBacktest(
+  runId: string,
+  scope: "all" | "version" = "all",
+  init?: RequestOptions,
+): Promise<BacktestDeleteResult> {
+  const path = withQuery(`/backtests/${id(runId)}`, { scope });
+  return apiRequest("DELETE", path, undefined, BacktestDeleteResultSchema, init);
+}
+
+/** Deletes whole backtests, every version of each (D60). */
+export function deleteBacktests(
+  ids: string[],
+  init?: RequestOptions,
+): Promise<BacktestDeleteResult> {
+  return apiPost("/backtests/delete", { ids }, BacktestDeleteResultSchema, init);
 }

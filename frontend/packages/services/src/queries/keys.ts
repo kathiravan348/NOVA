@@ -12,6 +12,7 @@ export const queryKeys = {
     detail: (id: string) => ["backtests", id] as const,
     result: (id: string) => ["backtests", id, "result"] as const,
     trades: (id: string) => ["backtests", id, "trades"] as const,
+    versions: (id: string) => ["backtests", id, "versions"] as const,
   },
   brokerAccounts: {
     all: ["broker-accounts"] as const,

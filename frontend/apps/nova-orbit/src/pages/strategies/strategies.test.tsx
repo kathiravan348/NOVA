@@ -30,7 +30,7 @@ describe("Strategies list", () => {
     const list = await screen.findByRole("list", { name: "Strategies" });
     const vwap = within(list).getByRole("link", { name: "VWAP Momentum Intraday" }).closest("li")!;
     await within(vwap).findByText("+0.50%");
-    expect(within(vwap).getByText("+0.46%")).toBeInTheDocument();
+    expect(within(vwap).getByText("+0.21%")).toBeInTheDocument();
     expect(within(vwap).getByRole("link", { name: "+₹4,994.74" })).toHaveAttribute(
       "href",
       "/backtests/run_001",

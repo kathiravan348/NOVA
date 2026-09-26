@@ -209,5 +209,23 @@
         "netPnlPaise": -106482
       }
     ]
+  },
+  {
+    "runId": "run_006",
+    "metrics": {
+      "grossPnlPaise": 240000,
+      "chargesPaise": 29500,
+      "netPnlPaise": 210500,
+      "returnPercent": 0.21,
+      "cagrPercent": 4.6,
+      "maxDrawdownPercent": -0.18,
+      "sharpe": 0.9,
+      "winRatePercent": 50,
+      "tradeCount": 4,
+      "winCount": 2,
+      "lossCount": 2
+    },
+    "equityCurve": [],
+    "bySymbol": []
   }
 ]
