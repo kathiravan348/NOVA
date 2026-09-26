@@ -120,3 +120,21 @@ def test_indices_are_seeded_and_the_stock_list_keeps_its_indices(engine: Engine)
 
     assert len(names) == 19 and {"NIFTY 50", "NIFTY IT", "NIFTY MIDCAP 100"} <= set(names)
     assert "NIFTY 50" in infy.indices and infy.new_listing is False
+
+
+def _job_trigger_exists(engine: Engine) -> bool:
+    with engine.connect() as connection:
+        found = connection.execute(
+            text("SELECT 1 FROM pg_trigger WHERE tgname = 'data_jobs_notify'")
+        ).first()
+    return found is not None
+
+
+def test_data_job_changes_are_announced_until_downgraded(engine: Engine, database_url: str) -> None:
+    assert _job_trigger_exists(engine)
+
+    downgrade(database_url, "0009")
+    assert not _job_trigger_exists(engine)
+
+    upgrade(database_url)
+    assert _job_trigger_exists(engine)

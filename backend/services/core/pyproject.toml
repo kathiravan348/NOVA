@@ -10,6 +10,7 @@ dependencies = [
     "nova-contracts",
     "nova-db",
     "uvicorn==0.53.0",
+    "websockets==17.1",
 ]
 
 [build-system]

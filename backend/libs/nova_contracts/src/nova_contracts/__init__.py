@@ -59,6 +59,7 @@ from nova_contracts.rate_limit import (
     RateLimitUpdate,
     RateLimitWindow,
 )
+from nova_contracts.realtime import DataJobUpdated, RealtimeHello, RealtimeMessage, RealtimePing
 from nova_contracts.recorder import (
     MAX_RECORDER_SYMBOLS,
     RecorderSettings,
@@ -167,6 +168,10 @@ __all__ = [
     "Universe",
     "UniverseEntry",
     "UniverseEntryWrite",
+    "DataJobUpdated",
+    "RealtimeHello",
+    "RealtimeMessage",
+    "RealtimePing",
     "User",
     "UserRole",
     "check_params",

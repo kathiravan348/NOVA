@@ -15,6 +15,9 @@ class CoreSettings(Settings):
     atlas_url: str | None = None
     strategy_url: str | None = None
     backtest_url: str | None = None
+    # WebSocket (D57): keep-alive ping and how often a socket re-checks its session.
+    ws_ping_seconds: float = 25.0
+    ws_session_check_seconds: float = 60.0
 
 
 @lru_cache(maxsize=1)
