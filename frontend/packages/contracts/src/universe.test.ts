@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  InstrumentSyncResultSchema,
-  UniverseEntrySchema,
-  UniverseEntryWriteSchema,
-} from "./universe";
+import { UniverseEntrySchema, UniverseEntryWriteSchema } from "./universe";
 
 const entry = {
   symbol: "M&M",
@@ -18,9 +14,6 @@ describe("universe contracts", () => {
     expect(
       UniverseEntrySchema.parse({ ...entry, synced: false, newListing: true }).newListing,
     ).toBe(true);
-    expect(InstrumentSyncResultSchema.parse({ synced: ["INFY"], missing: [] }).synced).toEqual([
-      "INFY",
-    ]);
   });
 
   it.each([

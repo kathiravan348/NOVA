@@ -28,8 +28,3 @@ class UniverseEntry(UniverseEntryWrite):
 
     synced: bool
     new_listing: bool
-
-
-class InstrumentSyncResult(Contract):
-    synced: list[Symbol]
-    missing: list[Symbol]

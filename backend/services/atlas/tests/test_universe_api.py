@@ -3,8 +3,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 from nova_atlas.jobs import queue_download
-from nova_db.models import AuditEntry, Instrument, UniverseEntry
-from nova_testing.broker import FakeBroker
+from nova_db.models import AuditEntry, Instrument, MarketIndex, UniverseEntry
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
@@ -122,28 +121,67 @@ def test_remove_is_blocked_by_a_waiting_job(client: TestClient, clean: Engine) -
     assert job_id in response.json()["error"]["message"]
 
 
-def test_sync_reports_synced_and_missing_stocks(
+def test_sync_queues_a_job(client: TestClient, clean: Engine, parity: Parity) -> None:
+    response = client.post(SYNC)
+
+    assert response.status_code == 202
+    job = response.json()
+    parity.assert_valid(job, "DataJob")
+    assert job["type"] == "instrument_sync" and job["status"] == "queued" and job["symbols"] == []
+    [entry] = _audit(clean)
+    assert entry.action == "instrument.sync" and entry.target_id == job["id"]
+    assert entry.actor_name == "Aarav Sharma"
+
+    again = client.post(SYNC)
+    assert again.status_code == 400 and job["id"] in again.json()["error"]["message"]
+
+
+def test_list_filters_by_text_index_sector_and_new(client: TestClient, clean: Engine) -> None:
+    with Session(clean) as db:
+        infy = db.get(UniverseEntry, ("NSE", "INFY"))
+        assert infy is not None
+        infy.indices, infy.new_listing = ["NIFTY 50", "NIFTY IT"], True
+        sector = infy.sector
+        db.commit()
+
+    def symbols(**params: str) -> list[str]:
+        return [row["symbol"] for row in client.get(UNIVERSE, params=params).json()]
+
+    assert symbols(q="infos") == ["INFY"]
+    assert symbols(index="NIFTY IT") == ["INFY"]
+    assert symbols(new="true") == ["INFY"]
+    assert "INFY" in symbols(sector=sector) and len(symbols()) == 24
+
+
+def test_mark_a_new_listing_as_seen(client: TestClient, clean: Engine) -> None:
+    with Session(clean) as db:
+        infy = db.get(UniverseEntry, ("NSE", "INFY"))
+        assert infy is not None
+        infy.new_listing = True
+        db.commit()
+
+    response = client.post(f"{UNIVERSE}/INFY/clear-new")
+
+    assert response.status_code == 200 and response.json()["newListing"] is False
+    [entry] = _audit(clean)
+    assert entry.action == "instrument.clear_new" and entry.target_id == "INFY"
+    assert client.post(f"{UNIVERSE}/NOPE/clear-new").status_code == 404
+
+
+def test_indices_are_listed_biggest_first(
     client: TestClient, clean: Engine, parity: Parity
 ) -> None:
-    response = client.post(SYNC)
+    with Session(clean) as db:
+        nifty = db.get(MarketIndex, "NIFTY 500")
+        assert nifty is not None
+        nifty.member_count = 500
+        db.commit()
 
-    assert response.status_code == 200
-    result = response.json()
-    parity.assert_valid(result, "InstrumentSyncResult")
-    assert result["synced"] == ["INFY", "RELIANCE", "TCS"] and len(result["missing"]) == 21
-    [entry] = _audit(clean)
-    assert entry.action == "instrument.sync" and entry.summary.startswith("Synced 3; not on")
-    synced = {row["symbol"] for row in client.get(UNIVERSE).json() if row["synced"]}
-    assert synced == {"INFY", "RELIANCE", "TCS"}
+    body = client.get("/api/v1/market-data/indices").json()
 
-
-def test_sync_shows_broker_errors(client: TestClient, fake_broker: FakeBroker) -> None:
-    fake_broker.error = "Log in to Kite in Relay first"
-
-    response = client.post(SYNC)
-
-    assert response.status_code == 400
-    assert response.json()["error"]["message"] == "Log in to Kite in Relay first"
+    assert len(body) == 19 and body[0]["name"] == "NIFTY 500" and body[0]["members"] == 500
+    for index in body:
+        parity.assert_valid(index, "MarketIndex")
 
 
 def test_needs_the_internal_token(client: TestClient) -> None:

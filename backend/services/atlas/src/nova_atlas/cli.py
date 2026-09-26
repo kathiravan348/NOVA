@@ -12,6 +12,7 @@ from nova_db import create_db_engine, create_session_factory
 
 from nova_atlas.broker_client import BrokerData
 from nova_atlas.settings import get_atlas_settings
+from nova_atlas.sync_job import maybe_queue_daily_sync
 from nova_atlas.worker import run_worker
 
 
@@ -34,6 +35,7 @@ def main(argv: list[str] | None = None) -> int:
             stop,
             settings.worker_poll_seconds,
             archive_dir=settings.archive_dir,
+            schedule=maybe_queue_daily_sync,
         )
     finally:
         engine.dispose()

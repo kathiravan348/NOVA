@@ -75,17 +75,11 @@ describe("Instruments", () => {
     expect(await screen.findByText("Stock removed (demo)")).toBeInTheDocument();
   });
 
-  it("syncs with Kite and lists stocks Kite does not know", async () => {
-    server.use(
-      http.post("*/api/v1/market-data/instruments/sync", () =>
-        HttpResponse.json({ synced: ["INFY"], missing: ["XYZ"] }),
-      ),
-    );
+  it("queues a sync with Kite", async () => {
     renderApp("/instruments");
     await table();
     fireEvent.click(screen.getByRole("button", { name: "Sync with Kite" }));
-    expect(await screen.findByText("Synced 1 stock (demo)")).toBeInTheDocument();
-    expect(screen.getByText(/Not found on NSE: XYZ/)).toBeInTheDocument();
+    expect(await screen.findByText("Sync with Kite queued (demo)")).toBeInTheDocument();
   });
 
   it("shows why a sync failed", async () => {

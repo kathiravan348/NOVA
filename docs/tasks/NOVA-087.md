@@ -1,6 +1,6 @@
 # NOVA-087 — Atlas: sync all NSE stocks + indices as a job; daily auto-sync
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-087 · **Depends on:** NOVA-084, NOVA-085, NOVA-086
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-087 · **Depends on:** NOVA-084, NOVA-085, NOVA-086
 
 ## Goal
 "Sync with Kite" queues an `instrument_sync` job that brings in every NSE stock, marks new listings, and
@@ -51,5 +51,19 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- `universe.sync_instruments` does the whole D56 sync (Kite stocks + index tokens, NSE members, sectors of
+  new/*Unclassified* rows, new listings); `sync_job.py` queues/runs it and holds `maybe_queue_daily_sync`.
+- Worker: `instrument_sync` type; `run_worker(schedule=…)` (the CLI passes the daily check; tests don't,
+  so they never depend on the clock).
+- Changes from the task text: `GET /market-data/universe` stays one array (+ `q`, `index`, `sector`, `new`
+  filters) — ~3,900 rows is small and keeps the download/recorder pickers working. `InstrumentSyncResult`
+  removed (sync returns a `DataJob`). Atlas `create_app` lost its unused broker factory.
+- Also touched (interim until 088): Relay Instruments page queues the sync and opens the job page; job page
+  shows `summary` and hides download fields for syncs; jobs list labels syncs "All NSE stocks".
+- Checks: `pnpm review:check` green; backend gate green (host). Guides: API, USER-GUIDE, CONTRACTS.
+- Real run 26 Sep 2026: 3,862 stocks synced, 3,838 added, 0 NSE failures, 19 index tokens set.
+  3,359 stocks stay *Unclassified* (NSE files cover index members only).
 
 ## Review
+Self-reviewed.

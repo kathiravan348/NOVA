@@ -82,7 +82,7 @@ from nova_contracts.strategy import (
 )
 from nova_contracts.strategy_stats import BestNetPnl, StrategyStats
 from nova_contracts.trade import Trade
-from nova_contracts.universe import InstrumentSyncResult, UniverseEntry, UniverseEntryWrite
+from nova_contracts.universe import UniverseEntry, UniverseEntryWrite
 from nova_contracts.user import User, UserRole
 
 __all__ = [
@@ -126,7 +126,6 @@ __all__ = [
     "IndicatorName",
     "Instrument",
     "MarketIndex",
-    "InstrumentSyncResult",
     "LoginRequest",
     "Operand",
     "Page",
