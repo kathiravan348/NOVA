@@ -4,7 +4,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataJobPlanRequestSchema,
   SegmentSchema,
-  TimeframeSchema,
   type DataJob,
   type DataJobPlan,
   type DownloadMode,
@@ -39,6 +38,8 @@ const columns: ColumnDef<UniverseEntry, unknown>[] = [
 ];
 
 type Draft = DataJob & { plan: DataJobPlan };
+/** Only these are downloaded; 3m–1h candles are built from 1-minute data (D58). */
+const DOWNLOAD_TIMEFRAMES: Timeframe[] = ["1m", "1d"];
 const message = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 
 /** Plan a historical download, check what it costs, then **Start** it (D54, D57). */
@@ -141,8 +142,8 @@ export function NewDownloadPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Select
             label="Timeframe"
-            description="1-minute data is large; the plan shows how large before anything runs."
-            options={TimeframeSchema.options.map((v) => ({ value: v, label: timeframeLabel[v] }))}
+            description="3 to 60-minute candles are built from 1-minute data. 1-minute data is large; the plan shows how large before anything runs."
+            options={DOWNLOAD_TIMEFRAMES.map((v) => ({ value: v, label: timeframeLabel[v] }))}
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value as Timeframe)}
           />

@@ -164,6 +164,14 @@ def test_a_bad_plan_is_refused(synced: Engine, client: TestClient) -> None:
     assert bad_mode.status_code == 400
 
 
+@pytest.mark.parametrize("path", ["/api/v1/data-jobs/plan", "/api/v1/data-jobs"])
+def test_only_1m_and_1d_can_be_downloaded(synced: Engine, client: TestClient, path: str) -> None:
+    response = client.post(path, json=BODY | {"timeframe": "5m"})
+
+    assert response.status_code == 400
+    assert response.json()["error"]["message"] == "Download 1m or 1d; 3m to 1h are built from 1m"
+
+
 def test_an_expired_plan_cannot_start_and_is_cancelled(synced: Engine, client: TestClient) -> None:
     job_id = client.post("/api/v1/data-jobs/plan", json=BODY).json()["id"]
     past = datetime.now(UTC) - timedelta(minutes=1)

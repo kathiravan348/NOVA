@@ -40,6 +40,16 @@ describe("New download", () => {
     expect(await screen.findByRole("table", { name: "Stocks to download" })).toBeInTheDocument();
   });
 
+  it("offers only 1 minute and 1 day", async () => {
+    renderApp("/data-jobs/new");
+    const select = await screen.findByLabelText("Timeframe");
+    const options = within(select)
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(options).toEqual(["1 minute", "1 day"]);
+    expect(select).toHaveValue("1d");
+  });
+
   it("needs a stock and a period in order", async () => {
     renderApp("/data-jobs/new");
     await screen.findByRole("table", { name: "Stocks to download" });
