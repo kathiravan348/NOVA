@@ -65,3 +65,12 @@ export const CandleSchema = z
     path: ["lowPaise"],
   });
 export type Candle = z.infer<typeof CandleSchema>;
+
+/** An NSE index (D56): `members` stocks of the list belong to it. */
+export const MarketIndexSchema = z.strictObject({
+  name: IndexNameSchema,
+  kiteSymbol: z.string().min(1),
+  members: z.number().int().min(0),
+  updatedAt: UtcDateTimeSchema.nullable(),
+});
+export type MarketIndex = z.infer<typeof MarketIndexSchema>;

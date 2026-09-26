@@ -36,6 +36,7 @@ export const jobTypeLabel: Record<DataJobType, string> = {
   historical_download: "Historical download",
   tick_record: "Tick recording",
   archive: "Archive",
+  instrument_sync: "Instrument sync",
 };
 
 export const jobStatusLabel: Record<DataJobStatus, string> = {
@@ -71,6 +72,7 @@ export const auditActionLabel: Record<AuditAction, string> = {
   "instrument.update": "Stock updated",
   "instrument.remove": "Stock removed",
   "instrument.sync": "Stocks synced with Kite",
+  "instrument.clear_new": "Cleared new listing",
   "settings.update": "Settings changed",
 };
 

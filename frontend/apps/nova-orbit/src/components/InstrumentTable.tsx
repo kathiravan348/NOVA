@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { IndexNameSchema, type Instrument } from "@nova/contracts";
+import { DEFAULT_INDEX_NAMES, type Instrument } from "@nova/contracts";
 import { Badge, Checkbox, DataTable, Select } from "@nova/ui-core";
 import { formatPercent, formatPrice, formatQuantity } from "@nova/ui-trading";
 import { formatCalendarDate, formatPeriod } from "../lib/format";
@@ -186,7 +186,7 @@ export function InstrumentTable({
             onChange={(e) => setIndex(e.target.value)}
             options={[
               { value: ALL, label: "All indices" },
-              ...IndexNameSchema.options.map((v) => ({ value: v, label: v })),
+              ...DEFAULT_INDEX_NAMES.map((v) => ({ value: v, label: v })),
             ]}
             containerClassName="md:w-44"
           />

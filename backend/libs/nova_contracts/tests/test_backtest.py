@@ -51,7 +51,7 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
     [
         ("backtestRuns", BacktestRun, {"from": "2027-01-01"}),
         ("backtestRuns", BacktestRun, {"error": "boom"}),
-        ("backtestRuns", BacktestRun, {"universe": {"type": "index", "index": "SENSEX"}}),
+        ("backtestRuns", BacktestRun, {"universe": {"type": "index", "index": "sensex"}}),
         ("trades", Trade, {"netPnlPaise": 1}),
         ("trades", Trade, {"exitPricePaise": None}),
     ],

@@ -21,9 +21,13 @@ class UniverseEntryWrite(Contract):
 
 
 class UniverseEntry(UniverseEntryWrite):
-    """`synced`: Kite knows the symbol (its instrument has a token), so it can be downloaded."""
+    """`synced`: Kite knows the symbol (its instrument has a token), so it can be downloaded.
+
+    `newListing`: a sync added it after an earlier sync, e.g. an IPO (D56).
+    """
 
     synced: bool
+    new_listing: bool
 
 
 class InstrumentSyncResult(Contract):

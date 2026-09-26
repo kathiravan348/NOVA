@@ -128,7 +128,7 @@ describe("Strategy schemas", () => {
     expect(UniverseSchema.safeParse({ type: "index", index: "NIFTY 50" }).success).toBe(true);
     expect(UniverseSchema.safeParse({ type: "symbols", symbols: ["INFY"] }).success).toBe(true);
     expect(UniverseSchema.safeParse({ type: "symbols", symbols: [] }).success).toBe(false);
-    expect(UniverseSchema.safeParse({ type: "index", index: "DOW JONES" }).success).toBe(false);
+    expect(UniverseSchema.safeParse({ type: "index", index: "dow jones" }).success).toBe(false);
   });
 
   it("validates SizingSchema options and boundaries", () => {

@@ -19,6 +19,7 @@ EXPECTED_TABLES = {
     "data_jobs",
     "audit_entries",
     "instruments",
+    "market_indices",
     "candles",
     "auth_sessions",
     "charge_rates",
@@ -108,3 +109,14 @@ def test_kite_app_details_move_from_the_profile_to_each_account(
 
     assert [tuple(row) for row in rows] == [("brk_1", None, "Paid", "203.0.113.5")]
     assert "plan" not in columns and "api_key_last4" not in columns
+
+
+def test_indices_are_seeded_and_the_stock_list_keeps_its_indices(engine: Engine) -> None:
+    with engine.connect() as connection:
+        names = list(connection.execute(text("SELECT name FROM market_indices")).scalars())
+        infy = connection.execute(
+            text("SELECT indices, new_listing FROM universe WHERE symbol = 'INFY'")
+        ).one()
+
+    assert len(names) == 19 and {"NIFTY 50", "NIFTY IT", "NIFTY MIDCAP 100"} <= set(names)
+    assert "NIFTY 50" in infy.indices and infy.new_listing is False

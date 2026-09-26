@@ -1,6 +1,6 @@
 # NOVA-085 — Indices table, open `IndexName`, new-listing flag, `instrument_sync` job type
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-085 · **Depends on:** NOVA-083
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-085 · **Depends on:** NOVA-083
 
 ## Goal
 The database and contracts for D56: indices are rows (not a fixed list of 3), stocks can be flagged as new
@@ -55,5 +55,16 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Migration 0009: `market_indices` (19 seeded), `universe.new_listing`, `data_jobs.summary` + `instrument_sync`
+  type (no symbols), audit `instrument.clear_new`. Downgrade trims universe indices back to the old three.
+- `IndexName` is a checked string in Zod and Pydantic; `DEFAULT_INDEX_NAMES` keeps Orbit's and Relay's
+  pickers working until 088/089.
+- Pulled forward from 087 (the DB CHECK is gone, so the API must guard): universe add/update return 400
+  "Unknown index: …" for names not in `market_indices`. `UniverseEntry` views carry `newListing`; jobs carry `summary`.
+- Also touched: `nova_contracts/audit.py` + `contracts/src/audit.ts` + Relay `labels.ts` (new action, job type label).
+- Checks: `pnpm review:check` green; backend ruff/format + per-package mypy and pytest green (host).
+- Guides: DATABASE (0009), API (universe 400), CONTRACTS.
 
 ## Review
+Self-reviewed. Real stack picks up 0009 on the next `docker compose build` + `up -d` (done with 087).

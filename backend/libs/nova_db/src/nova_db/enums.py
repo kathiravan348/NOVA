@@ -4,7 +4,6 @@ SEGMENTS = ("equity_delivery", "equity_intraday", "futures", "options")
 EXCHANGES = ("NSE", "NFO")
 TIMEFRAMES = ("1m", "3m", "5m", "15m", "30m", "1h", "1d")
 SIDES = ("buy", "sell")
-INDEX_NAMES = ("NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50")
 
 STRATEGY_STATUSES = ("draft", "active", "archived")
 BACKTEST_STATUSES = ("queued", "running", "completed", "failed")
@@ -14,7 +13,7 @@ BROKERS = ("zerodha",)
 RATE_LIMIT_ENDPOINTS = ("quote", "historical", "orders", "other")
 RATE_LIMIT_WINDOWS = ("second", "minute", "day")
 
-DATA_JOB_TYPES = ("historical_download", "tick_record", "archive")
+DATA_JOB_TYPES = ("historical_download", "tick_record", "archive", "instrument_sync")
 DATA_JOB_STATUSES = ("queued", "running", "completed", "failed", "cancelled")
 
 AUDIT_ACTIONS = (
@@ -34,6 +33,7 @@ AUDIT_ACTIONS = (
     "instrument.update",
     "instrument.remove",
     "instrument.sync",
+    "instrument.clear_new",
     "settings.update",
 )
 AUDIT_TARGET_TYPES = (

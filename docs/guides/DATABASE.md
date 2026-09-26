@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 26 Sep 2026 (migrations `0001`–`0008`, NOVA-080). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 26 Sep 2026 (migrations `0001`–`0009`, NOVA-085). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -27,7 +27,7 @@ strategies ── strategy_versions ── backtest_runs ─┬─ backtest_resu
                                                   └─ trades
 charge_rates                                   (fees & taxes used for trades)
 
-universe ─ instruments   candles (hypertable)   ticks (hypertable)   data_jobs
+universe ─ instruments   market_indices   candles (hypertable)   ticks (hypertable)   data_jobs
 ```
 
 ---
@@ -69,17 +69,18 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **universe** | The stock list, edited through the `/market-data/universe` endpoints (seeded in migration 0006 with 24 NSE stocks). Only listed stocks can be synced and downloaded. Removing one keeps its candles and `instruments` row. | PK (`exchange`, `symbol`), `name`, `sector`, `indices` (text[], each a known index), `created_at`, `updated_at` |
+| **universe** | The stock list, edited through the `/market-data/universe` endpoints (seeded in migration 0006 with 24 NSE stocks). Only listed stocks can be synced and downloaded. Removing one keeps its candles and `instruments` row. | PK (`exchange`, `symbol`), `name`, `sector`, `indices` (text[] of `market_indices` names, checked by the API), `new_listing` (added by a sync after an earlier sync: e.g. an IPO), `created_at`, `updated_at` |
+| **market_indices** | NSE indices (migration 0009 seeds 19: NIFTY 50, NEXT 50, 100, 200, 500, MIDCAP 100, SMLCAP 100 and sector indices). Kite gives each one's token; NSE's constituent file gives its members. | PK `name` (= Kite trading symbol), `kite_symbol` (unique), `constituents_file` (e.g. `ind_nifty50list.csv`), `instrument_token`, `member_count`, `updated_at` |
 | **instruments** | Master list of shares/contracts (from the `universe` stock list + Kite, by sync). Prices and stats are **not** stored here; the API computes them from candles. | PK (`exchange`, `symbol`), `name`, `segment`, `sector`, `indices` (text[]), `lot_size`, `instrument_token` (Kite's id, unique), `updated_at` |
 | **candles** | Price bars (OHLCV). **TimescaleDB hypertable** on `ts`, 30-day chunks. Daily bars are stored at 00:00 IST. DB check: high ≥ open/close ≥ low > 0. | PK (`exchange`, `symbol`, `timeframe`, `ts`), `open_paise`, `high_paise`, `low_paise`, `close_paise`, `volume`; `timeframe` ∈ `1m 3m 5m 15m 30m 1h 1d` |
 | **ticks** | Live price updates recorded from Kite's WebSocket during market hours. **Hypertable** on `received_at`, 1-day chunks. Older days are moved to Parquet by `archive-ticks` and then deleted here. | PK (`exchange`, `symbol`, `received_at`), `exchange_ts`, `last_price_paise`, `last_qty`, `volume`, `oi` |
-| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` and `archive` jobs). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`. Checks: downloads need timeframe + period; completed = 100%; errors only when failed. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error` |
+| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` and `archive` jobs). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`, `instrument_sync` (no symbols). Checks: downloads need timeframe + period; symbols required except for `instrument_sync`; `summary` ≤ 500 chars; completed = 100%; errors only when failed. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error`, `summary` (one result line) |
 
 ## 5. Audit
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
+| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `backtest.run`, `data_job.create`, `data_job.cancel`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `instrument.clear_new`, `settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
 
 ## 6. Outside PostgreSQL
 

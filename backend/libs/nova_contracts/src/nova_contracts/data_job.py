@@ -6,7 +6,7 @@ from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Exchange, Id, IsoDate, Segment, Timeframe, UtcDateTime
 
-DataJobType = Literal["historical_download", "tick_record", "archive"]
+DataJobType = Literal["historical_download", "tick_record", "archive", "instrument_sync"]
 DataJobStatus = Literal["queued", "running", "completed", "failed", "cancelled"]
 
 
@@ -16,7 +16,8 @@ class DataJob(Contract):
     status: DataJobStatus
     exchange: Exchange
     segment: Segment
-    symbols: Annotated[list[Annotated[str, Field(min_length=1)]], Field(min_length=1)]
+    # Empty only for `instrument_sync` (D56).
+    symbols: list[Annotated[str, Field(min_length=1)]]
     timeframe: Timeframe | None
     # `from` is a Python keyword: the field is `from_`, the wire name stays `from`.
     from_: IsoDate | None = Field(alias="from")
@@ -27,6 +28,7 @@ class DataJob(Contract):
     started_at: UtcDateTime | None
     finished_at: UtcDateTime | None
     error: str | None
+    summary: Annotated[str, Field(max_length=500)] | None
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
@@ -36,6 +38,8 @@ class DataJob(Contract):
             raise ValueError("historical_download requires timeframe, from and to")
         if self.type == "tick_record" and self.timeframe is not None:
             raise ValueError("tick_record requires timeframe to be null")
+        if not self.symbols and self.type != "instrument_sync":
+            raise ValueError("symbols may be empty only for instrument_sync")
         if (self.from_ is None) != (self.to is None) or (
             self.from_ is not None and self.to is not None and self.from_ > self.to
         ):

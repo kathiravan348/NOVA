@@ -23,6 +23,7 @@ AuditAction = Literal[
     "instrument.update",
     "instrument.remove",
     "instrument.sync",
+    "instrument.clear_new",
     "settings.update",
 ]
 AuditTargetType = Literal[

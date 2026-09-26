@@ -18,6 +18,7 @@ export const AuditActionSchema = z.enum([
   "instrument.update",
   "instrument.remove",
   "instrument.sync",
+  "instrument.clear_new",
   "settings.update",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;

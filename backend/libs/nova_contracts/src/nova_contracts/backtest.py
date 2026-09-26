@@ -5,10 +5,10 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Id, IsoDate, NonNegPaise, Paise, UtcDateTime
+from nova_contracts.market_data import IndexName
 
 BacktestRunStatus = Literal["queued", "running", "completed", "failed"]
 BacktestBenchmark = Literal["NIFTY 50"]
-IndexName = Literal["NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50"]
 Count = Annotated[int, Field(ge=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
 Percent = Annotated[float, Field(ge=0, le=100)]

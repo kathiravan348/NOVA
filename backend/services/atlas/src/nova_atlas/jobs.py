@@ -171,6 +171,7 @@ def to_contract(job: DataJob) -> DataJobContract:
             "started_at": job.started_at,
             "finished_at": job.finished_at,
             "error": job.error,
+            "summary": job.summary,
         }
     )
 

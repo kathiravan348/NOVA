@@ -10,12 +10,14 @@ ENTRY = {"symbol": "M&M", "name": "Mahindra & Mahindra", "sector": "Automobile",
 
 def test_bodies_match_their_schemas(parity: Parity) -> None:
     write = UniverseEntryWrite.model_validate_json(json.dumps(ENTRY)).model_dump(mode="json")
-    listed = UniverseEntry.model_validate(ENTRY | {"synced": True}).model_dump(mode="json")
+    listed = UniverseEntry.model_validate(ENTRY | {"synced": True, "newListing": True})
+    listed_json = listed.model_dump(mode="json")
     result = InstrumentSyncResult.model_validate({"synced": ["INFY"], "missing": ["XYZ"]})
 
     assert write == ENTRY
     parity.assert_valid(write, "UniverseEntryWrite")
-    parity.assert_valid(listed, "UniverseEntry")
+    assert listed_json["newListing"] is True
+    parity.assert_valid(listed_json, "UniverseEntry")
     parity.assert_valid(result.model_dump(mode="json"), "InstrumentSyncResult")
 
 
@@ -26,7 +28,8 @@ def test_bodies_match_their_schemas(parity: Parity) -> None:
         {"symbol": "TOO-LONG-SYMBOL-NAME-X"},
         {"name": " "},
         {"sector": "x" * 81},
-        {"indices": ["SENSEX"]},
+        {"indices": ["nifty it"]},
+        {"indices": ["X" * 41]},
         {"synced": True},
     ],
 )

@@ -17,6 +17,7 @@ from nova_db.models.data import (
     ChargeRate,
     DataJob,
     Instrument,
+    MarketIndex,
     Tick,
     UniverseEntry,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "ChargeRate",
     "DataJob",
     "Instrument",
+    "MarketIndex",
     "RateLimitRule",
     "RecorderSetting",
     "Role",

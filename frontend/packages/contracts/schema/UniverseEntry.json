@@ -20,14 +20,15 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": [
-          "NIFTY 50",
-          "NIFTY BANK",
-          "NIFTY NEXT 50"
-        ]
+        "minLength": 1,
+        "maxLength": 40,
+        "pattern": "^[A-Z0-9 &-]+$"
       }
     },
     "synced": {
+      "type": "boolean"
+    },
+    "newListing": {
       "type": "boolean"
     }
   },
@@ -36,7 +37,8 @@
     "name",
     "sector",
     "indices",
-    "synced"
+    "synced",
+    "newListing"
   ],
   "additionalProperties": false
 }

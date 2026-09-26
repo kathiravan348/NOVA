@@ -25,6 +25,7 @@ describe("DataJob schemas", () => {
     startedAt: "2026-01-01T06:01:00Z",
     finishedAt: "2026-01-01T06:10:00Z",
     error: null,
+    summary: null,
   };
 
   const validRunningTickJob: DataJob = {
@@ -43,6 +44,7 @@ describe("DataJob schemas", () => {
     startedAt: "2026-01-01T09:15:05Z",
     finishedAt: null,
     error: null,
+    summary: null,
   };
 
   describe("DataJobTypeSchema", () => {

@@ -234,6 +234,7 @@ export const relayHandlers = [
       startedAt: null,
       finishedAt: null,
       error: null,
+      summary: null,
     };
     return HttpResponse.json(job, { status: 201 });
   }),
@@ -277,6 +278,7 @@ export const relayHandlers = [
       startedAt: null,
       finishedAt: null,
       error: null,
+      summary: null,
     };
     return HttpResponse.json(job, { status: 201 });
   }),
