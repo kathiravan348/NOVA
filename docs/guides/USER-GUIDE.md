@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-079). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-083). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -191,25 +191,44 @@ Open Relay (http://localhost:3001) and sign in the same way as Orbit. You land o
 
 ### Step 3 — Do the daily Kite login
 Zerodha requires a fresh login every day: a login is valid until **6:00 AM the next morning** (IST).
+The account's Kite app must be set up once first (Step 5, **Kite app**); until then the reminder shows
+**Set up the Kite app** instead of **Log in to Kite**.
 1. On **Overview** or **Broker → an account**, press **Log in to Kite**.
 2. Zerodha's own login page opens. Log in there (NOVA never sees your Zerodha password).
-3. You come back to the account page with a message: **Kite connected** ✓ or **Kite login failed**
-   (the audit log says why, e.g. you logged in with a different Zerodha ID).
+3. You come back to the account page and a **Finish Kite login** box asks for your **passphrase**
+   (the one you chose when you saved the Kite keys). Type it and press **Finish login**.
+4. You see **Kite connected** ✓. If the passphrase is wrong you can try again; after 5 wrong tries, or if
+   you wait more than 2 minutes, you see **Kite login failed**: press **Log in to Kite** again.
+   The audit log says why a login failed (e.g. you logged in with a different Zerodha ID).
 
 ### Step 4 — Broker
 Everything about Zerodha on one page, top to bottom:
 - A warning if any account uses more than **80%** of a request limit. Press the account's name to see its limits.
 - **Broker accounts**: name, client ID, session status and when it expires. Press a name to open the account.
-- Facts about our Zerodha setup: API type, plan, renewal date, API key (**only the last 4 characters**
-  are ever shown), redirect URL, static IP, the session rule, and **Useful links** to Zerodha pages.
+- Facts about Zerodha: the API type, the daily session rule and **Useful links** to Zerodha pages.
+  Each account's own Kite app (keys, plan, static IP) is on the account's page (Step 5).
 
 To add an account, press **Add account**, fill in **Account name** (any name, e.g. *Main*) and
 **Zerodha client ID** (your Zerodha user ID, e.g. *AB1234*), then press **Add account** again.
-The new account starts as **Not logged in**: open it and do the daily Kite login (Step 3).
+The new account starts as **Not logged in**: open it, set up its **Kite app** (Step 5), then do the daily
+Kite login (Step 3).
 Each client ID can be added only once. Adding an account is written in the audit log.
 
 ### Step 5 — One account
-Shows **Logged in**, **Expires** and **Time left** for the Kite session, and the account's **Rate limits**.
+Shows **Logged in**, **Expires** and **Time left** for the Kite session, the account's **Kite app** and its
+**Rate limits**.
+
+**Kite app** (each family member has their own app in the Kite developer console):
+- **API key** shows only the last 4 characters. **API secret** says **Saved, locked by your passphrase** or
+  **Not saved**; NOVA never shows the secret again.
+- **Set key and secret**: paste the **API key** and **API secret** from the Kite developer console, choose
+  a **Passphrase** (at least 12 characters; a short sentence is easy to remember) and type it again in
+  **Confirm passphrase**, then **Save keys**. The passphrase locks the secret: NOVA does not keep it, so
+  **NOVA cannot recover it**. If you forget it, simply enter the key and secret again with a new one.
+  Saving a *different* API key logs the account out of Kite.
+- **Redirect URL**: paste this into your app in the Kite developer console.
+- **Edit details**: plan, renewal date, postback URL and static IP, for your reference.
+- **Test passphrase** checks your passphrase without logging in.
 Zerodha only allows a certain number of requests per second, per minute and per day. For each kind of
 request (quotes, historical data, orders, other) you see:
 - **Broker limit** — Zerodha's maximum;
@@ -259,7 +278,7 @@ files, to keep the database small. Nothing is lost. It runs as a data job.
 
 ### Step 8 — Audit log
 A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, broker
-accounts added, limit changes, stocks added or synced, recording switched on or off, strategies created or saved, backtests queued, downloads queued or cancelled. Each line shows time, who, what, on what, and a
+accounts added, Kite app keys or details changed, limit changes, stocks added or synced, recording switched on or off, strategies created or saved, backtests queued, downloads queued or cancelled. Each line shows time, who, what, on what, and a
 summary. Use **Show** to filter by kind of activity and **Load older entries** to go back in time.
 
 ---
@@ -287,4 +306,6 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |
 | Rate-limit warning above 80% | Press the account's name in the warning to see which limit. Wait for the reset time shown, or lower how much you download at once. |
+| Forgot the Kite passphrase | Open the account, press **Set key and secret** and enter the API key and secret again (from the Kite developer console) with a new passphrase. |
+| **Kite login failed** after entering the passphrase | Too many wrong tries or more than 2 minutes passed. Press **Log in to Kite** again. |
 | **Live prices** says **Log in to Kite first** | Recording is on but today's Kite login is missing. Do the daily login (Step 3); recording starts within a minute. |

@@ -1,6 +1,6 @@
 # NOVA-082 — Relay: Kite app card and the passphrase to finish the login
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-082 · **Depends on:** NOVA-081
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-082 · **Depends on:** NOVA-081
 
 ## Goal
 On the account page the Owner sets the Kite API key, secret and passphrase, edits the app details, tests the
@@ -52,5 +52,16 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. Acceptance checks pass except the real-mode Kite login (below).
+- Services: `getKiteApp`, `saveKiteKeys`, `updateKiteApp`, `checkKitePassphrase`, `finishKiteLogin` + hooks.
+  Hooks carrying a passphrase use `gcTime: 0`; callers `reset()` after each try (test: nothing left in cache).
+- Mocks answer statelessly; demo passphrases `wrong` and `expired` drive the error paths.
+- Account page: `KiteAppCard` (+ keys / details / passphrase-check dialogs), `FinishLoginModal` on `?kite=finish`.
+  `LoginPrompt` shows **Set up the Kite app** when no secret is saved.
+- Not listed but needed: `PassphraseForm.tsx` (shared by the finish and check dialogs).
+- Checks: `pnpm review:check` green (730); checked in the browser at 375px and desktop (mock mode).
+- Not done: the real-mode Kite login with real keys needs the Owner's Zerodha login; Owner to try it.
+- Guides: USER-GUIDE (Relay steps 3–5, audit list, §7).
 
 ## Review
+Self-reviewed. No issues found.

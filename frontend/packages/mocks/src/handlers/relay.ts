@@ -3,10 +3,14 @@ import {
   BrokerAccountCreateSchema,
   ArchiveJobCreateSchema,
   DataJobCreateSchema,
+  KiteAppUpdateSchema,
+  KiteKeysUpdateSchema,
+  KitePassphraseSchema,
   RecorderSettingsUpdateSchema,
   RateLimitUpdateSchema,
   type BrokerAccount,
   type DataJob,
+  type KiteApp,
   type RecorderSettings,
 } from "@nova/contracts";
 import {
@@ -15,6 +19,7 @@ import {
   mockBrokerProfiles,
   mockDataJobs,
   mockInstruments,
+  mockKiteApps,
   mockRateLimits,
 } from "../data";
 import { apiPath, badRequest, notFound, paginate } from "./api";
@@ -31,6 +36,21 @@ let mockRecorder: RecorderSettings = RECORDER_OFF;
 /** Puts the demo recording switch back to off (tests). */
 export function resetMockRecorder(): void {
   mockRecorder = RECORDER_OFF;
+}
+
+/** Demo passphrases (D55): this one is always wrong; `expired` finds no pending login. */
+export const MOCK_WRONG_PASSPHRASE = "wrong";
+export const MOCK_EXPIRED_PASSPHRASE = "expired";
+const NO_KEYS = "Save the Kite API key and secret first";
+const DEMO_SAVED_AT = "2026-09-22T04:30:00Z";
+
+function kiteAppOf(accountId: string): KiteApp | undefined {
+  return mockKiteApps.find((a) => a.accountId === accountId);
+}
+
+async function passphraseOf(request: Request): Promise<string | undefined> {
+  const parsed = KitePassphraseSchema.safeParse(await request.json().catch(() => undefined));
+  return parsed.success ? parsed.data.passphrase : undefined;
 }
 
 export const relayHandlers = [
@@ -67,6 +87,72 @@ export const relayHandlers = [
       return notFound(`Broker account ${id} not found`);
     }
     return HttpResponse.json(account);
+  }),
+
+  http.get(apiPath("/broker/accounts/:id/kite-app"), ({ params }) => {
+    const app = kiteAppOf(params["id"] as string);
+    return app
+      ? HttpResponse.json(app)
+      : notFound(`Broker account ${String(params["id"])} not found`);
+  }),
+
+  // Demo: validates like the server and answers without storing anything (D55).
+  http.put(apiPath("/broker/accounts/:id/kite-app/keys"), async ({ params, request }) => {
+    const app = kiteAppOf(params["id"] as string);
+    if (!app) return notFound(`Broker account ${String(params["id"])} not found`);
+    const parsed = KiteKeysUpdateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) {
+      return badRequest("Body must be { apiKey, apiSecret, passphrase (12+ characters) }");
+    }
+    const saved: KiteApp = {
+      ...app,
+      apiKeyLast4: parsed.data.apiKey.slice(-4),
+      secretSaved: true,
+      updatedAt: DEMO_SAVED_AT,
+    };
+    return HttpResponse.json(saved);
+  }),
+
+  http.patch(apiPath("/broker/accounts/:id/kite-app"), async ({ params, request }) => {
+    const app = kiteAppOf(params["id"] as string);
+    if (!app) return notFound(`Broker account ${String(params["id"])} not found`);
+    const parsed = KiteAppUpdateSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) {
+      return badRequest("Body must be { plan, subscriptionRenewsOn, postbackUrl, staticIp }");
+    }
+    const plan = parsed.data.plan?.trim() ?? null;
+    return HttpResponse.json({ ...app, ...parsed.data, plan, updatedAt: DEMO_SAVED_AT });
+  }),
+
+  http.post(apiPath("/broker/accounts/:id/kite-app/check"), async ({ params, request }) => {
+    const app = kiteAppOf(params["id"] as string);
+    if (!app) return notFound(`Broker account ${String(params["id"])} not found`);
+    const passphrase = await passphraseOf(request);
+    if (passphrase === undefined) return badRequest("Body must be { passphrase }");
+    if (!app.secretSaved) return badRequest(NO_KEYS);
+    if (passphrase === MOCK_WRONG_PASSPHRASE) return badRequest("Wrong passphrase");
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // Demo: any passphrase but the two above finishes the login with an active session.
+  http.post(apiPath("/broker/accounts/:id/login/finish"), async ({ params, request }) => {
+    const account = mockBrokerAccounts.find((a) => a.id === params["id"]);
+    if (!account) return notFound(`Broker account ${String(params["id"])} not found`);
+    const passphrase = await passphraseOf(request);
+    if (passphrase === undefined) return badRequest("Body must be { passphrase }");
+    if (passphrase === MOCK_EXPIRED_PASSPHRASE) {
+      return badRequest("Login expired: log in to Kite again");
+    }
+    if (passphrase === MOCK_WRONG_PASSPHRASE) return badRequest("Wrong passphrase");
+    const connected: BrokerAccount = {
+      ...account,
+      session: {
+        status: "active",
+        loggedInAt: "2026-09-22T03:45:00Z",
+        expiresAt: "2026-09-23T00:30:00Z",
+      },
+    };
+    return HttpResponse.json(connected);
   }),
 
   http.get(apiPath("/broker/rate-limits"), () => {

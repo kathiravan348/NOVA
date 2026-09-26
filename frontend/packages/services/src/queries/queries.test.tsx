@@ -35,6 +35,9 @@ import {
   useAuditEntries,
   useBrokerAccount,
   useBrokerAccounts,
+  useFinishKiteLogin,
+  useKiteApp,
+  useSaveKiteKeys,
   useBrokerProfile,
   useBrokerProfiles,
   useCancelDataJob,
@@ -221,6 +224,47 @@ describe("query hooks", () => {
     await result.current.update.mutateAsync({ enabled: true, symbols: [] });
     await waitFor(() => expect(result.current.recorder.data?.enabled).toBe(true));
     await result.current.update.mutateAsync({ enabled: false, symbols: [] });
+  });
+
+  it("useSaveKiteKeys stores the answered app and refetches the accounts (D55)", async () => {
+    const { result } = renderHook(
+      () => ({ app: useKiteApp("brk_003"), save: useSaveKiteKeys("brk_003") }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.app.data?.secretSaved).toBe(false));
+    await result.current.save.mutateAsync({
+      apiKey: "newkeyZX90",
+      apiSecret: "s3cret",
+      passphrase: "long enough passphrase",
+    });
+    await waitFor(() => expect(result.current.app.data?.apiKeyLast4).toBe("ZX90"));
+  });
+
+  it("keeps no passphrase in the mutation cache after reset (D55)", async () => {
+    const client = createQueryClient();
+    const own = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useFinishKiteLogin("brk_002"), { wrapper: own });
+    await result.current.mutateAsync({ passphrase: "secret passphrase 1" });
+    result.current.reset();
+    await waitFor(() =>
+      expect(
+        JSON.stringify(
+          client
+            .getMutationCache()
+            .getAll()
+            .map((m) => m.state),
+        ),
+      ).not.toContain("secret passphrase 1"),
+    );
+  });
+
+  it("useFinishKiteLogin posts the passphrase and refetches the accounts", async () => {
+    const { result } = renderHook(() => useFinishKiteLogin("brk_002"), { wrapper });
+    requests = [];
+    await result.current.mutateAsync({ passphrase: "any" });
+    expect(requests).toContain("/api/v1/broker/accounts/brk_002/login/finish");
   });
 
   it("useCreateArchiveJob queues an archive", async () => {
