@@ -1,16 +1,19 @@
 """`GET /market-data/instruments` and `GET /market-data/candles` (D11, D17, D32)."""
 
+import time as time_module
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated, Any
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import CallerDep
 from nova_contracts import Candle as CandleContract
 from nova_contracts import Instrument as InstrumentContract
+from nova_contracts import InstrumentCoverage
 from nova_db.enums import TIMEFRAMES
 from nova_db.models import Candle, Instrument
 from nova_db.web import Db
@@ -46,7 +49,45 @@ _DAILY_STATS = text(
     GROUP BY symbol
     """
 )
-_TIMEFRAMES = text("SELECT DISTINCT symbol, timeframe FROM candles WHERE exchange = :exchange")
+_COVERAGE = text(
+    "SELECT symbol, timeframe, min(ts) AS first_ts, max(ts) AS last_ts FROM candles"
+    " WHERE exchange = :exchange GROUP BY symbol, timeframe"
+)
+# The same statistics from intraday bars rolled up per IST day, for stocks without daily bars.
+_INTRADAY_STATS = text(
+    """
+    WITH days AS (
+        SELECT symbol, (ts AT TIME ZONE 'Asia/Kolkata')::date AS day,
+               max(high_paise) AS high_paise, min(low_paise) AS low_paise, sum(volume) AS volume,
+               last(close_paise, ts) AS close_paise
+        FROM candles
+        WHERE exchange = :exchange AND timeframe = :timeframe AND symbol = ANY(:symbols)
+          AND ts >= :since
+        GROUP BY symbol, day
+    ), ranked AS (
+        SELECT *, row_number() OVER (PARTITION BY symbol ORDER BY day DESC) AS rn,
+               max(day) OVER (PARTITION BY symbol) AS last_day
+        FROM days
+    )
+    SELECT symbol,
+           max(close_paise) FILTER (WHERE rn = 1) AS last_close,
+           max(close_paise) FILTER (WHERE rn = 2) AS prev_close,
+           max(high_paise) FILTER (WHERE day > last_day - 365) AS high_52w,
+           min(low_paise) FILTER (WHERE day > last_day - 365) AS low_52w,
+           avg(volume) FILTER (WHERE rn <= 20) AS avg_volume
+    FROM ranked
+    GROUP BY symbol
+    """
+)
+# Finest first: the roll-up reads one intraday timeframe per stock.
+INTRADAY = ("1m", "3m", "5m", "15m", "30m", "1h")
+# A roll-up covers the last year and 20 trading days, with room for holidays.
+ROLL_UP_DAYS = 400
+# Download jobs finishing or being deleted change this; the list is rebuilt only then.
+_SIGNATURE = text(
+    "SELECT count(*), max(finished_at) FROM data_jobs"
+    " WHERE type = 'historical_download' AND status = 'completed'"
+)
 
 
 def _ist_date(moment: datetime) -> date:
@@ -60,21 +101,49 @@ def _change_percent(last: int, previous: int | None) -> float:
     return float(change.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
-@router.get("/instruments")
-def list_instruments(_: CallerDep, db: Db, exchange: str = "NSE") -> JSONResponse:
+def _intraday_stats(
+    db: Db, exchange: str, coverage: dict[str, dict[str, tuple[datetime, datetime]]], skip: set[str]
+) -> dict[str, Any]:
+    """Statistics for stocks without daily bars, from their finest intraday timeframe."""
+    by_timeframe: dict[str, list[str]] = {}
+    for symbol, ranges in coverage.items():
+        if symbol in skip:
+            continue
+        finest = next((t for t in INTRADAY if t in ranges), None)
+        if finest is not None:
+            by_timeframe.setdefault(finest, []).append(symbol)
+    stats: dict[str, Any] = {}
+    for timeframe, symbols in by_timeframe.items():
+        newest = max(coverage[s][timeframe][1] for s in symbols)
+        params = {
+            "exchange": exchange,
+            "timeframe": timeframe,
+            "symbols": symbols,
+            "since": newest - timedelta(days=ROLL_UP_DAYS),
+        }
+        stats.update((row.symbol, row) for row in db.execute(_INTRADAY_STATS, params))
+    return stats
+
+
+def build_instruments(db: Db, exchange: str) -> list[dict[str, Any]]:
+    """Every stock with candles in any timeframe (NOVA-097). Any: JSON bodies."""
+    coverage: dict[str, dict[str, tuple[datetime, datetime]]] = {}
+    for row in db.execute(_COVERAGE, {"exchange": exchange}):
+        coverage.setdefault(row.symbol, {})[row.timeframe] = (row.first_ts, row.last_ts)
     stats: dict[str, Any] = {
         row.symbol: row for row in db.execute(_DAILY_STATS, {"exchange": exchange})
     }
-    timeframes: dict[str, set[str]] = {}
-    for symbol, timeframe in db.execute(_TIMEFRAMES, {"exchange": exchange}).tuples():
-        timeframes.setdefault(symbol, set()).add(timeframe)
+    stats.update(_intraday_stats(db, exchange, coverage, skip=set(stats)))
 
     body = []
     query = select(Instrument).where(Instrument.exchange == exchange).order_by(Instrument.symbol)
     for instrument in db.scalars(query):
         daily = stats.get(instrument.symbol)
-        if daily is None:
-            continue  # no daily bars yet: nothing to show as a last close
+        ranges = coverage.get(instrument.symbol, {})
+        if daily is None or not ranges:
+            continue  # no candles yet: nothing to show or test
+        timeframes = [t for t in TIMEFRAMES if t in ranges]
+        spans = [(t, _ist_date(ranges[t][0]), _ist_date(ranges[t][1])) for t in timeframes]
         contract = InstrumentContract.model_validate(
             {
                 "symbol": instrument.symbol,
@@ -89,13 +158,38 @@ def list_instruments(_: CallerDep, db: Db, exchange: str = "NSE") -> JSONRespons
                 "change_percent": _change_percent(daily.last_close, daily.prev_close),
                 "avg_daily_volume": int(daily.avg_volume),
                 "lot_size": instrument.lot_size,
-                "timeframes": [t for t in TIMEFRAMES if t in timeframes.get(instrument.symbol, ())],
-                "data_from": _ist_date(daily.first_ts),
-                "data_to": _ist_date(daily.last_ts),
+                "timeframes": timeframes,
+                "data_from": min(first for _, first, _ in spans),
+                "data_to": max(last for _, _, last in spans),
+                "coverage": [
+                    InstrumentCoverage.model_validate({"timeframe": t, "from": first, "to": last})
+                    for t, first, last in spans
+                ],
             }
         )
         body.append(contract.model_dump(mode="json"))
-    return JSONResponse(body)
+    return body
+
+
+@dataclass
+class _Cached:
+    signature: tuple[object, ...]
+    at: float
+    body: list[dict[str, Any]]
+
+
+@router.get("/instruments")
+def list_instruments(request: Request, _: CallerDep, db: Db, exchange: str = "NSE") -> JSONResponse:
+    """Rebuilt when a download finishes or is deleted, or after `instruments_cache_seconds`."""
+    ttl: float = request.app.state.settings.instruments_cache_seconds
+    cache: dict[str, _Cached] = request.app.state.instruments_cache
+    signature = tuple(db.execute(_SIGNATURE).one())
+    hit = cache.get(exchange)
+    now = time_module.monotonic()
+    if hit is None or hit.signature != signature or now - hit.at >= ttl:
+        hit = _Cached(signature, now, build_instruments(db, exchange))
+        cache[exchange] = hit
+    return JSONResponse(hit.body)
 
 
 def _window(

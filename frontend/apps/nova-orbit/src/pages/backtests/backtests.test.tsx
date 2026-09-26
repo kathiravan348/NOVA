@@ -144,7 +144,7 @@ describe("New backtest form", () => {
   });
 
   it("filters the picker and asks to drop symbols without data for the period", async () => {
-    renderApp("/backtests/new?strategy=stg_001");
+    renderApp("/backtests/new?strategy=stg_002"); // a daily strategy
     expect(await screen.findByLabelText(/^From/)).toHaveValue("2026-07-18");
     fireEvent.change(screen.getByLabelText("Search"), { target: { value: "dabur" } });
     expect(screen.getAllByText("Partial data").length).toBeGreaterThan(0);
@@ -159,6 +159,15 @@ describe("New backtest form", () => {
     expect(dialog).not.toHaveTextContent("SBIN");
     fireEvent.click(screen.getByRole("button", { name: "Drop and queue" }));
     expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
+  });
+
+  it("checks coverage in the strategy's own timeframe (NOVA-097)", async () => {
+    renderApp("/backtests/new?strategy=stg_001"); // 5-minute candles
+    fireEvent.change(await screen.findByLabelText("Search"), { target: { value: "SBIN" } });
+    expect((await screen.findAllByText("No 5m data")).length).toBeGreaterThan(0); // SBIN: daily only
+    fireEvent.click(screen.getAllByRole("checkbox", { name: "Select SBIN" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    expect(await screen.findByRole("dialog")).toHaveTextContent("SBIN");
   });
 
   it("can test a whole index instead of chosen symbols", async () => {

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-096). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-097). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -153,6 +153,8 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
      index needs prices downloaded for all its shares first.
 5. Press **Queue backtest**. If some shares have no price data for your dates, NOVA marks them
    *Partial data* and asks whether to **Drop and queue** without them.
+   Only prices in the strategy's own candle size count: a 1-minute strategy needs 1-minute prices, so a
+   share with daily prices only shows **No 1m data** and is dropped the same way.
 6. The run goes into a waiting line: status *Queued* → *Running* → *Completed* (or *Failed* with the reason).
 
 ### Step 6 — Read the results
@@ -173,7 +175,8 @@ Go to **Compare**, tick two or more runs. NOVA shows their metrics side by side 
 is marked **Best**) and their equity curves together.
 
 ### Step 8 — Look at market data
-Go to **Market data**. A table lists every share we have prices for: sector, index, last close, day change,
+Go to **Market data**. A table lists every share we have prices for, in any candle size (also shares with
+only 1-minute prices): sector, index, last close, day change,
 52-week range, average volume, F&O lot size, and the dates we have data for. Search or filter, then click a
 symbol to see its **price chart** (pick the **Timeframe**) and key facts.
 

@@ -3,13 +3,16 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
-from nova_db.models import Candle, Instrument
+from nova_atlas.main import create_app
+from nova_atlas.settings import AtlasSettings
+from nova_db.models import Candle, DataJob, Instrument
 from nova_testing.parity import Parity
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 IST = ZoneInfo("Asia/Kolkata")
 INSTRUMENTS = "/api/v1/market-data/instruments"
+TOKEN = "internal-test-token"  # as in conftest
 CANDLES = "/api/v1/market-data/candles"
 
 
@@ -132,3 +135,75 @@ def test_bad_candle_requests_are_invalid(
 
     assert response.status_code == 400
     assert response.json()["error"]["code"] == "invalid_request"
+
+
+def test_coverage_is_listed_per_timeframe(client: TestClient, seeded: Engine) -> None:
+    infy = client.get(INSTRUMENTS).json()[0]
+
+    assert infy["coverage"] == [
+        {"timeframe": "5m", "from": "2026-08-30", "to": "2026-08-30"},
+        {"timeframe": "1d", "from": "2026-08-01", "to": "2026-08-30"},
+    ]
+
+
+def test_a_stock_with_only_intraday_bars_gets_prices_from_them(
+    client: TestClient, seeded: Engine, parity: Parity
+) -> None:
+    with Session(seeded) as db:
+        for offset, day in enumerate((date(2026, 9, 2), date(2026, 9, 3))):
+            open_ = datetime.combine(day, time(9, 15), tzinfo=IST)
+            for minute, close in enumerate((300_000, 301_000 + offset * 5_000)):
+                db.add(_bar("TCS", "1m", open_ + timedelta(minutes=minute), close, volume=10))
+        db.add(
+            _bar("TCS", "5m", datetime(2026, 9, 1, 9, 15, tzinfo=IST), 299_000)
+        )  # coarser: unused
+        db.commit()
+
+    tcs = next(i for i in client.get(INSTRUMENTS).json() if i["symbol"] == "TCS")
+
+    parity.assert_valid(tcs, "Instrument")
+    assert tcs["lastClosePaise"] == 306_000  # last 1m close of the last day
+    assert tcs["changePercent"] == round(5_000 * 100 / 301_000, 2)  # vs the day before's close
+    assert (tcs["low52wPaise"], tcs["high52wPaise"]) == (299_900, 306_100)
+    assert tcs["avgDailyVolume"] == 20
+    assert tcs["timeframes"] == ["1m", "5m"]
+    assert (tcs["dataFrom"], tcs["dataTo"]) == ("2026-09-01", "2026-09-03")
+
+
+def test_the_list_is_cached_until_a_download_finishes(database_url: str, seeded: Engine) -> None:
+    settings = AtlasSettings.model_validate(
+        {
+            "database_url": database_url,
+            "redis_url": "redis://unused:6379/0",
+            "internal_token": TOKEN,
+        }
+    )
+    headers = {
+        "x-nova-internal-token": TOKEN,
+        "x-nova-user-id": "usr_owner",
+        "x-nova-user-name": "Owner",
+    }
+    with TestClient(create_app(settings), headers=headers) as cached:
+        assert [i["symbol"] for i in cached.get(INSTRUMENTS).json()] == ["INFY"]
+        with Session(seeded) as db:
+            db.add(_bar("TCS", "1m", datetime(2026, 9, 2, 9, 15, tzinfo=IST), 300_000))
+            db.commit()
+        assert [i["symbol"] for i in cached.get(INSTRUMENTS).json()] == ["INFY"]  # still cached
+        with Session(seeded) as db:
+            db.add(
+                DataJob(
+                    id="job_done",
+                    type="historical_download",
+                    status="completed",
+                    exchange="NSE",
+                    segment="equity_delivery",
+                    symbols=["TCS"],
+                    timeframe="1m",
+                    date_from=date(2026, 9, 2),
+                    date_to=date(2026, 9, 2),
+                    progress_percent=100,
+                    finished_at=datetime.now(UTC),
+                )
+            )
+            db.commit()
+        assert [i["symbol"] for i in cached.get(INSTRUMENTS).json()] == ["INFY", "TCS"]

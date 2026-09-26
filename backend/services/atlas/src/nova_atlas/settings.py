@@ -14,6 +14,8 @@ class AtlasSettings(Settings):
     worker_poll_seconds: float = 2.0
     # Where old ticks go as Parquet (D49); a volume in compose.
     archive_dir: Path = Path("archive")
+    # The instruments list is rebuilt this often, and when a download finishes or is deleted.
+    instruments_cache_seconds: float = 600.0
 
 
 @lru_cache(maxsize=1)

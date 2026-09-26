@@ -33,6 +33,7 @@ def create_app(
     )
     app.state.settings = settings
     app.state.session_factory = create_session_factory(engine)
+    app.state.instruments_cache = {}
     install_error_handlers(app)
 
     router = APIRouter(prefix=API_PREFIX)

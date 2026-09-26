@@ -58,7 +58,13 @@ from nova_contracts.data_job import (
 )
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.indicators import INDICATORS, Indicator, IndicatorName, check_params
-from nova_contracts.market_data import Candle, IndexName, Instrument, MarketIndex
+from nova_contracts.market_data import (
+    Candle,
+    IndexName,
+    Instrument,
+    InstrumentCoverage,
+    MarketIndex,
+)
 from nova_contracts.page import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, Page
 from nova_contracts.rate_limit import (
     RateLimit,
@@ -149,6 +155,7 @@ __all__ = [
     "Indicator",
     "IndicatorName",
     "Instrument",
+    "InstrumentCoverage",
     "MarketIndex",
     "LoginRequest",
     "Operand",

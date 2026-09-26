@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Instrument } from "@nova/contracts";
+import type { Instrument, Timeframe } from "@nova/contracts";
 import { Badge, Checkbox, DataTable, Select } from "@nova/ui-core";
 import { formatPercent, formatPrice, formatQuantity } from "@nova/ui-trading";
 import { formatCalendarDate, formatPeriod } from "../lib/format";
@@ -9,10 +9,24 @@ import { formatCalendarDate, formatPeriod } from "../lib/format";
 export interface Period {
   from: string;
   to: string;
+  /** The strategy's candle size: only that timeframe's data counts (NOVA-097). */
+  timeframe?: Timeframe;
 }
 
-export const coversPeriod = (i: Instrument, p: Period): boolean =>
-  i.dataFrom <= p.from && i.dataTo >= p.to;
+/** Stored dates of one timeframe (or of any, without one); null when that timeframe has none. */
+export function dataRange(
+  i: Instrument,
+  timeframe?: Timeframe,
+): { from: string; to: string } | null {
+  if (!timeframe) return { from: i.dataFrom, to: i.dataTo };
+  const span = i.coverage.find((c) => c.timeframe === timeframe);
+  return span ? { from: span.from, to: span.to } : null;
+}
+
+export const coversPeriod = (i: Instrument, p: Period): boolean => {
+  const range = dataRange(i, p.timeframe);
+  return range !== null && range.from <= p.from && range.to >= p.to;
+};
 
 export interface InstrumentTableProps {
   instruments: Instrument[];
@@ -112,13 +126,15 @@ function useColumns(
         meta: { mobileLabel: "Data available" },
         cell: ({ row }) => {
           const i = row.original;
-          const range = formatPeriod(i.dataFrom, i.dataTo);
-          if (!period || coversPeriod(i, period)) return range;
+          const range = dataRange(i, period?.timeframe);
+          if (range === null) return <Badge tone="warning">{`No ${period?.timeframe} data`}</Badge>;
+          const text = formatPeriod(range.from, range.to);
+          if (!period || coversPeriod(i, period)) return text;
           return (
             <span className="flex flex-col items-start gap-1">
               <Badge tone="warning">Partial data</Badge>
               <span className="text-body-sm text-text-muted">
-                {`From ${formatCalendarDate(i.dataFrom)}`}
+                {`From ${formatCalendarDate(range.from)}`}
               </span>
             </span>
           );
