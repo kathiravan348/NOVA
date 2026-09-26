@@ -11,6 +11,22 @@ import { UniverseSchema } from "./strategy";
 export const BacktestRunStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
 export type BacktestRunStatus = z.infer<typeof BacktestRunStatusSchema>;
 
+export const BacktestStageSchema = z.enum(["loading", "signals", "simulating", "saving", "done"]);
+export type BacktestStage = z.infer<typeof BacktestStageSchema>;
+
+/** What a started run is doing (D58); a failed run keeps its last progress. */
+export const BacktestProgressSchema = z.strictObject({
+  stage: BacktestStageSchema,
+  percent: z.number().int().min(0).max(100),
+  symbolsDone: z.number().int().min(0),
+  symbolsTotal: z.number().int().min(0),
+  barsDone: z.number().int().min(0),
+  barsTotal: z.number().int().min(0),
+  tradesSoFar: z.number().int().min(0),
+  simulatedTo: IsoDateSchema.nullable(),
+});
+export type BacktestProgress = z.infer<typeof BacktestProgressSchema>;
+
 export const BacktestBenchmarkSchema = z.literal("NIFTY 50");
 export type BacktestBenchmark = z.infer<typeof BacktestBenchmarkSchema>;
 
@@ -30,6 +46,7 @@ export const BacktestRunSchema = z
     startedAt: UtcDateTimeSchema.nullable(),
     finishedAt: UtcDateTimeSchema.nullable(),
     error: z.string().nullable(),
+    progress: BacktestProgressSchema.nullable(),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
@@ -38,7 +55,13 @@ export const BacktestRunSchema = z
   .refine((data) => data.error === null || data.status === "failed", {
     message: "error is set only when status is failed",
     path: ["error"],
-  });
+  })
+  .refine(
+    (data) =>
+      data.status !== "completed" ||
+      (data.progress?.stage === "done" && data.progress.percent === 100),
+    { message: "a completed run has progress done at 100 percent", path: ["progress"] },
+  );
 export type BacktestRun = z.infer<typeof BacktestRunSchema>;
 
 export const BacktestMetricsSchema = z

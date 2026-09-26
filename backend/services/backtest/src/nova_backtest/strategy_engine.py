@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from nova_backtest.bars import IST, Bar
 from nova_backtest.engine import EngineError
 from nova_backtest.metrics import summarize
+from nova_backtest.progress import ProgressSink
 from nova_backtest.rules import RuleSignals
 from nova_backtest.sandbox import PythonSignals, run_python
 from nova_backtest.simulate import Signals, simulate
@@ -83,11 +84,13 @@ class StrategyEngine:
         timeframe: str,
         span: tuple[datetime, datetime],
         limit: int,
+        progress: ProgressSink,
     ) -> dict[str, list[Bar]]:
         """Loads one symbol at a time and stops as soon as the run passes the bar limit (D59)."""
+        progress.stage("loading", len(symbols))
         bars: dict[str, list[Bar]] = {}
         total = 0
-        for symbol in symbols:
+        for done, symbol in enumerate(symbols, start=1):
             bars[symbol] = _bars(db, symbol, timeframe, *span)
             total += len(bars[symbol])
             if total > limit:
@@ -95,9 +98,10 @@ class StrategyEngine:
                     f"This run needs more than {limit:,} price bars (stopped at {symbol}). "
                     "Pick fewer stocks or a shorter period."
                 )
+            progress.advance(done)
         return bars
 
-    def run(self, db: Session, run_id: str) -> None:
+    def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         run = db.get(BacktestRun, run_id)
         if run is None:
             raise EngineError(f"Backtest run {run_id} not found")
@@ -107,7 +111,7 @@ class StrategyEngine:
         end = _ist_midnight(run.date_to + timedelta(days=1))
         warm_up = timedelta(days=WARM_UP_DAYS.get(spec.timeframe, INTRADAY_WARM_UP_DAYS))
         limit = self.max_bars if isinstance(spec, StrategySpecVisual) else self.max_bars_python
-        bars = self._load(db, symbols, spec.timeframe, (start - warm_up, end), limit)
+        bars = self._load(db, symbols, spec.timeframe, (start - warm_up, end), limit, progress)
         missing = [s for s, series in bars.items() if not any(b.ts >= start for b in series)]
         if missing:
             raise EngineError(
@@ -126,11 +130,18 @@ class StrategyEngine:
                     raise EngineError(str(exc)) from exc
             return trade_charges(rates[day], "buy", qty, entry, exit_)
 
-        signals: Signals = (
-            RuleSignals(bars, spec.entry, spec.exit)
-            if isinstance(spec, StrategySpecVisual)
-            else PythonSignals(run_python(spec.code, bars))
-        )
+        signals: Signals
+        if isinstance(spec, StrategySpecVisual):
+            signals = RuleSignals(bars, spec.entry, spec.exit)
+        else:
+            progress.stage("signals", 1)
+            signals = PythonSignals(run_python(spec.code, bars))
+            progress.advance(1)
+
+        def on_bar(done: int, ts: datetime, trades: int) -> None:
+            progress.advance(done, max(ts, start).astimezone(IST).date(), trades)
+
+        progress.stage("simulating", sum(len(series) for series in bars.values()))
         result = simulate(
             bars,
             signals,
@@ -141,6 +152,7 @@ class StrategyEngine:
             charges,
             square_off=SQUARE_OFF if spec.segment == "equity_intraday" else None,
             averaging=spec.averaging,
+            on_bar=on_bar,
         )
         summary = summarize(
             result.trades,
@@ -163,6 +175,7 @@ class StrategyEngine:
         )
         wire = contract.model_dump(mode="json")
 
+        progress.stage("saving", len(result.trades))
         db.execute(delete(Trade).where(Trade.run_id == run.id))
         db.execute(delete(BacktestResult).where(BacktestResult.run_id == run.id))
         for trade in result.trades:
@@ -213,4 +226,7 @@ class StrategyEngine:
         )
         run.status = "completed"
         run.finished_at = datetime.now(UTC)
+        run.stage = "done"
+        run.progress_percent = 100
+        run.trades_so_far = len(result.trades)
         db.commit()

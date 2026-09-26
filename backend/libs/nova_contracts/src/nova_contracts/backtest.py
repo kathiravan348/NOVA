@@ -8,6 +8,7 @@ from nova_contracts.common import Contract, Id, IsoDate, NonNegPaise, Paise, Utc
 from nova_contracts.market_data import IndexName
 
 BacktestRunStatus = Literal["queued", "running", "completed", "failed"]
+BacktestStage = Literal["loading", "signals", "simulating", "saving", "done"]
 BacktestBenchmark = Literal["NIFTY 50"]
 Count = Annotated[int, Field(ge=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
@@ -38,6 +39,19 @@ class _Period(Contract):
         return self
 
 
+class BacktestProgress(Contract):
+    """What a started run is doing (D58); a failed run keeps its last progress."""
+
+    stage: BacktestStage
+    percent: Annotated[int, Field(ge=0, le=100)]
+    symbols_done: Count
+    symbols_total: Count
+    bars_done: Count
+    bars_total: Count
+    trades_so_far: Count
+    simulated_to: IsoDate | None
+
+
 class BacktestRun(_Period):
     id: Id
     strategy_id: Id
@@ -51,11 +65,22 @@ class BacktestRun(_Period):
     started_at: UtcDateTime | None
     finished_at: UtcDateTime | None
     error: str | None
+    progress: BacktestProgress | None
 
     @model_validator(mode="after")
     def _error_only_failed(self) -> Self:
         if self.error is not None and self.status != "failed":
             raise ValueError("error is set only when status is failed")
+        return self
+
+    @model_validator(mode="after")
+    def _completed_is_done(self) -> Self:
+        done = self.progress is not None and (self.progress.stage, self.progress.percent) == (
+            "done",
+            100,
+        )
+        if self.status == "completed" and not done:
+            raise ValueError("a completed run has progress done at 100 percent")
         return self
 
 

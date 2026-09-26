@@ -52,6 +52,23 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
         ("backtestRuns", BacktestRun, {"from": "2027-01-01"}),
         ("backtestRuns", BacktestRun, {"error": "boom"}),
         ("backtestRuns", BacktestRun, {"universe": {"type": "index", "index": "sensex"}}),
+        ("backtestRuns", BacktestRun, {"progress": None}),  # completed needs done at 100%
+        (
+            "backtestRuns",
+            BacktestRun,
+            {
+                "progress": {
+                    "stage": "simulating",
+                    "percent": 40,
+                    "symbolsDone": 3,
+                    "symbolsTotal": 3,
+                    "barsDone": 10,
+                    "barsTotal": 20,
+                    "tradesSoFar": 0,
+                    "simulatedTo": None,
+                }
+            },
+        ),
         ("trades", Trade, {"netPnlPaise": 1}),
         ("trades", Trade, {"exitPricePaise": None}),
     ],

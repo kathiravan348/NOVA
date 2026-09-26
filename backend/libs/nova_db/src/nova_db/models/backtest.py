@@ -10,11 +10,22 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Integer,
+    SmallInteger,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from nova_db.enums import BACKTEST_STATUSES, BENCHMARKS, EXCHANGES, SEGMENTS, SIDES, sql_in
+from nova_db.enums import (
+    BACKTEST_STAGES,
+    BACKTEST_STATUSES,
+    BENCHMARKS,
+    EXCHANGES,
+    SEGMENTS,
+    SIDES,
+    sql_in,
+)
 from nova_db.models.base import Base, Json, JsonList, check_in, created_at_column
+
+PROGRESS_COUNTS = ("symbols_done", "symbols_total", "bars_done", "bars_total", "trades_so_far")
 
 
 class BacktestRun(Base):
@@ -31,6 +42,9 @@ class BacktestRun(Base):
         CheckConstraint("date_from <= date_to", name="period"),
         CheckConstraint("initial_capital_paise > 0", name="initial_capital"),
         CheckConstraint("error IS NULL OR status = 'failed'", name="error_only_failed"),
+        check_in("stage", "stage", BACKTEST_STAGES),
+        CheckConstraint("progress_percent BETWEEN 0 AND 100", name="progress_percent"),
+        CheckConstraint(" AND ".join(f"{c} >= 0" for c in PROGRESS_COUNTS), name="progress_counts"),
         Index(None, "created_at", "id"),
         Index(None, "strategy_id", "created_at", "id"),
     )
@@ -49,6 +63,15 @@ class BacktestRun(Base):
     started_at: Mapped[datetime | None]
     finished_at: Mapped[datetime | None]
     error: Mapped[str | None]
+    # Progress while the worker runs it (D58); `stage` stays null until it starts.
+    stage: Mapped[str | None]
+    progress_percent: Mapped[int] = mapped_column(SmallInteger, server_default="0")
+    symbols_done: Mapped[int] = mapped_column(Integer, server_default="0")
+    symbols_total: Mapped[int] = mapped_column(Integer, server_default="0")
+    bars_done: Mapped[int] = mapped_column(Integer, server_default="0")
+    bars_total: Mapped[int] = mapped_column(Integer, server_default="0")
+    trades_so_far: Mapped[int] = mapped_column(Integer, server_default="0")
+    simulated_to: Mapped[date | None]
 
 
 class BacktestResult(Base):
