@@ -1,6 +1,6 @@
 # NOVA-091 — Frontend: realtime client; data-job screens update live, polling as fallback
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-091 · **Depends on:** NOVA-084, NOVA-090
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-091 · **Depends on:** NOVA-084, NOVA-090
 
 ## Goal
 Relay keeps one WebSocket open while signed in; the Data jobs list and job page change the moment the
@@ -44,5 +44,13 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** `RealtimeProvider` + `useRealtimeStatus` (real mode, signed in), job cache updates from `data_job.updated`, polling only while not `open`, header badge **Connecting… / Live / Reconnecting…**.
+**Files changed:** as listed, except `mocks/src/browser.ts` and `queries.test.tsx` (mock mode keeps polling; polling tests live in `realtime.test.ts`).
+**Commands run:** `pnpm review:check` → pass. Real stack: socket hello, live job update, 4401 without cookie; header at 360px light + desktop dark.
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** USER-GUIDE.
+**Known gaps:** Orbit does not open the socket (out of scope).
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Fixed directly:** first connect shows neutral **Connecting…** instead of **Reconnecting…**.
+**Guides checked:** USER-GUIDE matches. **Rulebook issues found:** none. **Follow-up tasks created:** none.

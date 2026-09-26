@@ -2,7 +2,7 @@ import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createBrowserRouter } from "react-router";
 import { ToastProvider } from "@nova/ui-core";
-import { createQueryClient } from "@nova/services";
+import { RealtimeProvider, createQueryClient } from "@nova/services";
 import { routes } from "./routes";
 
 export function App() {
@@ -10,9 +10,11 @@ export function App() {
   const [router] = useState(() => createBrowserRouter(routes));
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <RouterProvider router={router} />
-      </ToastProvider>
+      <RealtimeProvider>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </RealtimeProvider>
     </QueryClientProvider>
   );
 }

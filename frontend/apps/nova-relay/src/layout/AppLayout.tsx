@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useMatches, useNavigate } from "react-router";
 import { Database, Landmark, LayoutDashboard, ListOrdered, LogOut, ScrollText } from "lucide-react";
 import { brand } from "@nova/brand";
-import { AppShell, DemoBanner, IconButton, NavItem, ThemeToggle } from "@nova/ui-core";
-import { getDataMode, signOut, useSession } from "@nova/services";
+import { AppShell, DemoBanner, IconButton, NavItem, StatusBadge, ThemeToggle } from "@nova/ui-core";
+import { getDataMode, signOut, useRealtimeStatus, useSession } from "@nova/services";
 
 const product = brand.products.relay;
 
@@ -20,6 +20,22 @@ const isActive = (pathname: string, to: string) =>
 
 export interface RouteHandle {
   title: string;
+}
+
+/** Live-updates dot (D57): shown only while the app keeps a socket (real mode, signed in). */
+function LiveStatus() {
+  const status = useRealtimeStatus();
+  if (status === "off") return null;
+  const badge = {
+    connecting: { tone: "neutral", label: "Connecting…", title: "Starting live updates" },
+    open: { tone: "success", label: "Live", title: "Job updates appear as they happen" },
+    down: {
+      tone: "warning",
+      label: "Reconnecting…",
+      title: "Live updates paused; the page refreshes every few seconds",
+    },
+  } as const;
+  return <StatusBadge {...badge[status]} />;
 }
 
 function usePageTitle(): string {
@@ -53,6 +69,7 @@ export function AppLayout() {
       ))}
       actions={
         <>
+          <LiveStatus />
           <span className="hidden sm:inline text-body-sm text-text-secondary">
             {session?.displayName}
           </span>
