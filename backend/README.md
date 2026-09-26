@@ -17,10 +17,8 @@ docker compose build
 | `docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"` | create the super-admin (asks for the password) |
 | `docker compose exec broker python -m nova_broker add-account --label "Main" --client-id AB1234` | add a Zerodha account |
 | `docker compose run --rm broker python -m nova_broker new-token-key` | a value for `NOVA_BROKER_TOKEN_KEY` |
-| `docker compose exec atlas python -m nova_atlas sync-instruments` | instruments from the stock list (`universe` table) + Kite (needs a Kite login); also **Instruments → Sync with Kite** in Relay |
-| `docker compose exec atlas python -m nova_atlas download --symbols INFY,TCS --timeframe 1d --from 2025-01-01 --to 2025-12-31` | queue a candle download |
+| Relay: **Instruments → Sync with Kite**, **Data jobs → New download**, **Data jobs → Archive old ticks** | stock sync, candle downloads and tick archives (no command line, D55) |
 | `docker compose exec broker python -m nova_broker record-ticks --symbols INFY` | record live ticks right now, by hand, until 15:30 IST (no data job). Normally the always-on `tick-recorder` container records while the switch in Relay is on (`PUT /broker/recorder`) |
-| `docker compose exec atlas-worker python -m nova_atlas archive-ticks --before 2026-09-01` | move older ticks to Parquet in the `tick-archive` volume right away (Relay: Data jobs → **Archive old ticks** queues the same as a job) |
 | `NOVA_API_DOCS=true` in `.env`, then `docker compose up -d` | Swagger UI on http://127.0.0.1:8000/api/v1/docs (D50, dev only); sign in with `POST /api/v1/auth/login` there, then "Try it out" uses the session cookie |
 | `docker compose down` | stop everything (data stays in the `db-data` volume) |
 | `docker compose build` | rebuild the image after `uv.lock` changes |
