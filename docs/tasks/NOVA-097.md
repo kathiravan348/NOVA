@@ -1,6 +1,6 @@
 # NOVA-097 — Instruments from any timeframe; backtest coverage by the strategy's timeframe
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-097 · **Depends on:** NOVA-098
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-097 · **Depends on:** NOVA-098
 
 ## Goal
 A stock with only intraday candles (e.g. 1 year of 1m) appears on Market data and in **Run backtest**, and
@@ -42,5 +42,14 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** `Instrument.coverage` per timeframe; intraday-only stocks listed with prices rolled up per IST day (TimescaleDB `last()`), list cached until a download completes or is deleted (10 min max); backtest form checks coverage and the default end date in the strategy's timeframe ("No 5m data" badge).
+**Files changed:** as listed; plus `settings.py`, `main.py` (cache), `marketData.test.ts`, `jsonSchema` output.
+**Commands run:** backend-check (665 passed) · `pnpm review:check` → pass.
+**Owner stack:** 63 stocks with only 1m data now listed in Run backtest; list build 0.5–1 s, then cached.
+**New dependencies:** none. **Maps updated:** CONTRACTS. **Guides updated:** API, USER-GUIDE.
+**Deviations from task:** added a cache (the roll-up of a year of 1m bars would run on every page load).
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Fixed directly:** roll-up with `array_agg(... ORDER BY)` took 4 s on 58 lakh rows → `last(close, ts)` 0.5 s.
+**Guides checked:** API, USER-GUIDE, CONTRACTS match. **Rulebook issues found:** none. **Follow-up tasks created:** none.

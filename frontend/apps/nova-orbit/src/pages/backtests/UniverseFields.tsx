@@ -1,5 +1,5 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { MarketIndex } from "@nova/contracts";
+import type { MarketIndex, Timeframe } from "@nova/contracts";
 import { Card, Select } from "@nova/ui-core";
 import { useInstruments, useMarketIndices } from "@nova/services";
 import { InstrumentTable } from "../../components/InstrumentTable";
@@ -7,7 +7,14 @@ import { QueryError } from "../../components/QueryState";
 import type { BacktestForm } from "./backtestForm";
 
 /** Symbols card of the run form: a whole index, or symbols picked from the instrument list (R2). */
-export function UniverseFields({ form }: { form: UseFormReturn<BacktestForm> }) {
+export function UniverseFields({
+  form,
+  timeframe,
+}: {
+  form: UseFormReturn<BacktestForm>;
+  /** The chosen strategy version's candle size; coverage is checked for it. */
+  timeframe?: Timeframe;
+}) {
   const { register, control, watch, formState } = form;
   const instruments = useInstruments();
   const indices = useMarketIndices();
@@ -63,7 +70,7 @@ export function UniverseFields({ form }: { form: UseFormReturn<BacktestForm> }) 
                   }
                   selected={field.value}
                   onSelectedChange={field.onChange}
-                  period={from && to ? { from, to } : undefined}
+                  period={from && to ? { from, to, timeframe } : undefined}
                   pageSize={8}
                 />
               )}

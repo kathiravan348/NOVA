@@ -14,7 +14,19 @@
     "lotSize": 250,
     "timeframes": ["1d", "5m"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      },
+      {
+        "timeframe": "5m",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "TCS",
@@ -31,7 +43,19 @@
     "lotSize": 175,
     "timeframes": ["1d", "5m"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      },
+      {
+        "timeframe": "5m",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "INFY",
@@ -48,7 +72,19 @@
     "lotSize": 400,
     "timeframes": ["1d", "5m"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      },
+      {
+        "timeframe": "5m",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "HDFCBANK",
@@ -65,7 +101,14 @@
     "lotSize": 550,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "ICICIBANK",
@@ -82,7 +125,14 @@
     "lotSize": 700,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "SBIN",
@@ -99,7 +149,14 @@
     "lotSize": 750,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "KOTAKBANK",
@@ -116,7 +173,14 @@
     "lotSize": 400,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "AXISBANK",
@@ -133,7 +197,14 @@
     "lotSize": 625,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "ITC",
@@ -150,7 +221,14 @@
     "lotSize": 1600,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "LT",
@@ -167,7 +245,14 @@
     "lotSize": 175,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "BHARTIARTL",
@@ -184,7 +269,14 @@
     "lotSize": 475,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "HINDUNILVR",
@@ -201,7 +293,14 @@
     "lotSize": 300,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "BAJFINANCE",
@@ -218,7 +317,14 @@
     "lotSize": 125,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "MARUTI",
@@ -235,7 +341,14 @@
     "lotSize": 50,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "SUNPHARMA",
@@ -252,7 +365,14 @@
     "lotSize": 350,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "TITAN",
@@ -269,7 +389,14 @@
     "lotSize": 175,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "ASIANPAINT",
@@ -286,7 +413,14 @@
     "lotSize": 200,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "WIPRO",
@@ -303,7 +437,14 @@
     "lotSize": 1500,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "HCLTECH",
@@ -320,7 +461,14 @@
     "lotSize": 350,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "NTPC",
@@ -337,7 +485,14 @@
     "lotSize": null,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "DMART",
@@ -354,7 +509,14 @@
     "lotSize": null,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "PIDILITIND",
@@ -371,7 +533,14 @@
     "lotSize": null,
     "timeframes": ["1d"],
     "dataFrom": "2026-08-03",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-08-03",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "HAVELLS",
@@ -388,7 +557,14 @@
     "lotSize": null,
     "timeframes": ["1d"],
     "dataFrom": "2026-06-29",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-06-29",
+        "to": "2026-09-18"
+      }
+    ]
   },
   {
     "symbol": "DABUR",
@@ -405,6 +581,13 @@
     "lotSize": null,
     "timeframes": ["1d"],
     "dataFrom": "2026-08-03",
-    "dataTo": "2026-09-18"
+    "dataTo": "2026-09-18",
+    "coverage": [
+      {
+        "timeframe": "1d",
+        "from": "2026-08-03",
+        "to": "2026-09-18"
+      }
+    ]
   }
 ]

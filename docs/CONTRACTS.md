@@ -8,7 +8,7 @@
 > `KitePassphrase` to `POST /api/v1/broker/accounts/{id}/login/finish` → `BrokerAccount` (D55).
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, KiteApp(+Update, KiteKeysUpdate, KitePassphrase), RateLimit, RateLimitUpdate, RecorderSettings(+Update), DataJob(+Create, ArchiveJobCreate, DataJobPlan, DataJobPlanRequest, DownloadSettings(+Update), UniverseSector, DataJobDeleteResult), Instrument, Candle, UniverseEntry(+Write), MarketIndex, RealtimeMessage, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, KiteApp(+Update, KiteKeysUpdate, KitePassphrase), RateLimit, RateLimitUpdate, RecorderSettings(+Update), DataJob(+Create, ArchiveJobCreate, DataJobPlan, DataJobPlanRequest, DownloadSettings(+Update), UniverseSector, DataJobDeleteResult), Instrument(+Coverage), Candle, UniverseEntry(+Write), MarketIndex, RealtimeMessage, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
@@ -43,7 +43,7 @@
 | UniverseSector | `GET /api/v1/market-data/universe/sectors` → `UniverseSector[]` (D57 bulk pick) | — | Relay |
 | RealtimeMessage | WebSocket `/api/v1/ws`: `hello` · `ping` · `data_job.updated {data: DataJob}` · `data_job.deleted {data: {id}}` (D57) | — (no mock socket) | Relay (NOVA-091) |
 | AuditEntry | `GET /api/v1/audit?limit=&cursor=` → `Page<AuditEntry>` | `data/auditEntries.json` | Relay |
-| Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range) |
+| Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range, coverage per timeframe — NOVA-097) |
 | UniverseEntry | `GET /api/v1/market-data/universe` → `UniverseEntry[]`; `POST` → 201, `PUT /{symbol}` → 200, `DELETE /{symbol}` → 204 (400 duplicate, symbol change or used by a waiting job; 404) | — | Relay |
 | UniverseEntryWrite | body of `POST /api/v1/market-data/universe` and `PUT /api/v1/market-data/universe/{symbol}` | — | Relay |
 | MarketIndex | contract only so far `GET /api/v1/market-data/indices` → `MarketIndex[]`. `IndexName` is any 1–40 char name of capitals, digits, spaces, `&`, `-`; Atlas checks it exists in `market_indices` | — | Relay, Orbit |

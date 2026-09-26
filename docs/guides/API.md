@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-095). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-097). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -116,7 +116,7 @@ No delete in Phase 1 (runs refer to versions).
 
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
-| `GET /market-data/instruments` | Every instrument that has daily candles, with stats computed from them: last close, day change %, 52-week high/low, 20-day average volume, lot size, sector, indices, available timeframes, data from/to (IST dates). | `exchange` (default `NSE`) | `Instrument[]` |
+| `GET /market-data/instruments` | Every instrument that has candles in any timeframe (NOVA-097), with stats: last close, day change %, 52-week high/low, 20-day average volume — from daily bars, or, for a stock with only intraday bars, from its finest intraday timeframe rolled up per IST day. Also lot size, sector, indices, `timeframes`, `coverage` (first and last IST date per timeframe, finest first) and `dataFrom`/`dataTo` (widest over all timeframes). Cached in Atlas: rebuilt when a download completes or is deleted, else every 10 min (`NOVA_INSTRUMENTS_CACHE_SECONDS`). | `exchange` (default `NSE`) | `Instrument[]` |
 | `GET /market-data/candles` | OHLCV bars for one symbol and timeframe (`1m 3m 5m 15m 30m 1h 1d`). Default range: last 365 days (daily) or 5 days (intraday). Max 3,660 days daily / 60 days intraday. Daily bars carry an IST date, intraday a UTC time. | `symbol`, `timeframe`, `from?`, `to?`, `exchange?` | `Candle[]`; 404 unknown symbol; `[]` if no bars |
 | `GET /market-data/universe` | The stock list (every NSE stock after a sync, ~3,900), by symbol. `synced` = Kite knows the stock (its instrument has a token); `newListing` = a sync added it after an earlier sync (an IPO or other new listing). Sent whole, no paging. | `q` (symbol or name contains), `index` (member of), `sector` (exact), `new=true` (new listings only) | `UniverseEntry[]` |
 | `GET /market-data/universe/sectors` | Every sector of the stock list with its stock count, A–Z, for picking stocks in bulk (D57). | — | `UniverseSector[] {sector, count}` |

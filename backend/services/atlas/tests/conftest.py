@@ -83,6 +83,7 @@ def client(database_url: str, clean: Engine) -> Iterator[TestClient]:
             "database_url": database_url,
             "redis_url": "redis://unused:6379/0",
             "internal_token": TOKEN,
+            "instruments_cache_seconds": 0,
         }
     )
     headers = {

@@ -8,6 +8,18 @@ import {
 } from "./common";
 import { IndexNameSchema } from "./strategy";
 
+/** Stored candles of one timeframe: first and last IST date (NOVA-097). */
+export const InstrumentCoverageSchema = z.strictObject({
+  timeframe: TimeframeSchema,
+  from: IsoDateSchema,
+  to: IsoDateSchema,
+});
+export type InstrumentCoverage = z.infer<typeof InstrumentCoverageSchema>;
+
+/**
+ * A stock with candles in any timeframe. Prices come from daily bars, or from intraday bars rolled up
+ * per IST day when there are none; `dataFrom`/`dataTo` span every timeframe (NOVA-097).
+ */
 export const InstrumentSchema = z
   .strictObject({
     symbol: z.string().min(1),
@@ -25,6 +37,15 @@ export const InstrumentSchema = z
     timeframes: z.array(TimeframeSchema).min(1),
     dataFrom: IsoDateSchema,
     dataTo: IsoDateSchema,
+    coverage: z.array(InstrumentCoverageSchema).min(1),
+  })
+  .refine((i) => i.coverage.map((c) => c.timeframe).join() === i.timeframes.join(), {
+    message: "coverage must list the timeframes in the same order",
+    path: ["coverage"],
+  })
+  .refine((i) => i.coverage.every((c) => c.from <= c.to), {
+    message: "coverage from must be on or before to",
+    path: ["coverage"],
   })
   .refine((i) => new Set(i.timeframes).size === i.timeframes.length, {
     message: "timeframes must be unique",

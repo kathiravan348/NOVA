@@ -12,7 +12,19 @@ PositivePaise = Annotated[int, Field(gt=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
 
 
+class InstrumentCoverage(Contract):
+    """Stored candles of one timeframe: first and last IST date (NOVA-097)."""
+
+    timeframe: Timeframe
+    from_: IsoDate = Field(alias="from")
+    to: IsoDate
+
+
 class Instrument(Contract):
+    """A stock with candles in any timeframe. Prices come from daily bars, or from intraday bars
+    rolled up per IST day when there are none (NOVA-097); `dataFrom`/`dataTo` span every timeframe.
+    """
+
     symbol: NonEmpty
     name: NonEmpty
     exchange: Exchange
@@ -28,11 +40,16 @@ class Instrument(Contract):
     timeframes: Annotated[list[Timeframe], Field(min_length=1)]
     data_from: IsoDate
     data_to: IsoDate
+    coverage: Annotated[list[InstrumentCoverage], Field(min_length=1)]
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
         if len(set(self.timeframes)) != len(self.timeframes):
             raise ValueError("timeframes must be unique")
+        if [c.timeframe for c in self.coverage] != self.timeframes:
+            raise ValueError("coverage must list the timeframes in the same order")
+        if any(c.from_ > c.to for c in self.coverage):
+            raise ValueError("coverage from must be on or before to")
         if self.data_from > self.data_to:
             raise ValueError("dataFrom must be on or before dataTo")
         if len(set(self.indices)) != len(self.indices):

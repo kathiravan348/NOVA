@@ -17,6 +17,10 @@ const instrument = {
   timeframes: ["1d", "5m"],
   dataFrom: "2026-06-01",
   dataTo: "2026-09-18",
+  coverage: [
+    { timeframe: "1d", from: "2026-06-01", to: "2026-09-18" },
+    { timeframe: "5m", from: "2026-09-14", to: "2026-09-18" },
+  ],
 };
 
 const candle = {
@@ -33,6 +37,19 @@ describe("InstrumentSchema", () => {
     expect(InstrumentSchema.parse(instrument)).toEqual(instrument);
     expect(InstrumentSchema.parse({ ...instrument, lotSize: null }).lotSize).toBeNull();
     expect(InstrumentSchema.parse({ ...instrument, indices: [] }).indices).toEqual([]);
+  });
+
+  it("needs coverage matching the timeframes", () => {
+    expect(InstrumentSchema.safeParse({ ...instrument, coverage: [] }).success).toBe(false);
+    expect(
+      InstrumentSchema.safeParse({ ...instrument, coverage: instrument.coverage.slice(0, 1) })
+        .success,
+    ).toBe(false);
+    const backwards = [
+      { timeframe: "1d", from: "2026-09-18", to: "2026-06-01" },
+      instrument.coverage[1],
+    ];
+    expect(InstrumentSchema.safeParse({ ...instrument, coverage: backwards }).success).toBe(false);
   });
 
   it("rejects duplicate indices", () => {

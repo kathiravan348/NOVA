@@ -15,7 +15,7 @@ import {
   useToast,
 } from "@nova/ui-core";
 import { getDataMode, useInstruments, useQueueBacktest, useStrategies } from "@nova/services";
-import { coversPeriod } from "../../components/InstrumentTable";
+import { coversPeriod, dataRange } from "../../components/InstrumentTable";
 import { QueryError } from "../../components/QueryState";
 import {
   BacktestFormSchema,
@@ -48,6 +48,9 @@ function BacktestFormView({
   const { errors } = formState;
   const strategyId = watch("strategyId");
   const strategy = strategies.find((s) => s.id === strategyId);
+  // Coverage is checked for the candle size of the chosen version (NOVA-097).
+  const version = watch("version");
+  const timeframe = strategy?.versions.find((v) => String(v.version) === version)?.spec.timeframe;
 
   // A new strategy starts on its latest version and a matching name.
   useEffect(() => {
@@ -83,7 +86,7 @@ function BacktestFormView({
   // Symbols whose data does not cover the period must be dropped before queueing (R2).
   const onValid = (values: BacktestForm) => {
     if (values.universeType === "symbols") {
-      const period = { from: values.from, to: values.to };
+      const period = { from: values.from, to: values.to, timeframe };
       const missing = values.symbols.filter((symbol) => {
         const instrument = instruments.data?.find((i) => i.symbol === symbol);
         return !instrument || !coversPeriod(instrument, period);
@@ -191,7 +194,7 @@ function BacktestFormView({
           />
         </div>
       </Card>
-      <UniverseFields form={form} />
+      <UniverseFields form={form} timeframe={timeframe} />
       <div className="flex flex-wrap gap-3">
         <Button type="submit">Queue backtest</Button>
         <Button asChild variant="secondary">
@@ -227,8 +230,11 @@ export function NewBacktestPage() {
   if (query.isError) return <QueryError error={query.error} onRetry={() => void query.refetch()} />;
   const usable = query.data.filter((s) => s.status !== "archived");
   const preselected = usable.find((s) => s.id === params.get("strategy"));
-  const latestData = instruments.data
-    ?.map((i) => i.dataTo)
+  // Default end date: the newest data in the preselected strategy's timeframe, else in any.
+  const latest = preselected?.versions.find((v) => v.version === preselected.latestVersion);
+  const latestData = (instruments.data ?? [])
+    .map((i) => dataRange(i, latest?.spec.timeframe)?.to)
+    .filter((to): to is string => to !== undefined)
     .sort()
     .at(-1);
   return <BacktestFormView strategies={usable} preselected={preselected} latestData={latestData} />;
