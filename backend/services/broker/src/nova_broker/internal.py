@@ -6,17 +6,20 @@ Every call takes a rate-limiter slot first (D40) and uses the first enabled, log
 import hmac
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 from nova_common import ApiException
-from nova_db.models import BrokerAccount, BrokerSession, RateLimitRule
+from nova_db.models import BrokerAccount, BrokerKiteApp, BrokerSession, RateLimitRule
 from nova_db.web import Db
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from nova_broker.deps import AppSettings, Cipher, Kite
+from nova_broker.crypto import TokenCipher
+from nova_broker.deps import AppSettings, Cipher, kite_for
 from nova_broker.kite import INTERVALS, KiteError
 from nova_broker.limiter import RateLimiter
 
@@ -35,23 +38,35 @@ def require_service(request: Request, settings: AppSettings) -> None:
 Service = Annotated[None, Depends(require_service)]
 
 
-def active_session(db: Db, cipher: Cipher) -> tuple[str, str]:
-    """The account id and decrypted access token of the first enabled, logged-in account."""
+@dataclass(frozen=True)
+class ActiveSession:
+    account_id: str
+    api_key: str
+    access_token: str
+
+
+def active_session(db: Session, cipher: TokenCipher) -> ActiveSession:
+    """The first enabled, logged-in account: its id, own API key (D55) and decrypted token."""
     row = db.execute(
-        select(BrokerAccount.id, BrokerSession.access_token_encrypted)
+        select(BrokerAccount.id, BrokerKiteApp.api_key, BrokerSession.access_token_encrypted)
         .join(BrokerSession, BrokerSession.account_id == BrokerAccount.id)
-        .where(BrokerAccount.enabled, BrokerSession.expires_at > datetime.now(UTC))
+        .join(BrokerKiteApp, BrokerKiteApp.account_id == BrokerAccount.id)
+        .where(
+            BrokerAccount.enabled,
+            BrokerSession.expires_at > datetime.now(UTC),
+            BrokerKiteApp.api_key.is_not(None),
+        )
         .order_by(BrokerAccount.created_at)
         .limit(1)
     ).first()
-    if row is None or row[1] is None:
+    if row is None or row[1] is None or row[2] is None:
         raise ApiException(
             400, "invalid_request", "Log in to Kite in Relay first: no account has a live session"
         )
-    return row[0], cipher.decrypt(row[1])
+    return ActiveSession(row[0], row[1], cipher.decrypt(row[2]))
 
 
-def wait_for_slot(request: Request, db: Db, account_id: str, endpoint: str) -> None:
+def wait_for_slot(request: Request, db: Session, account_id: str, endpoint: str) -> None:
     limiter: RateLimiter = request.app.state.limiter
     sleep: Callable[[float], None] = request.app.state.sleep
     limits = {
@@ -77,16 +92,19 @@ def wait_for_slot(request: Request, db: Db, account_id: str, endpoint: str) -> N
 
 @router.get("/instruments/{exchange}")
 def instruments(
-    exchange: str, request: Request, _: Service, db: Db, kite: Kite, cipher: Cipher
+    exchange: str, request: Request, _: Service, db: Db, cipher: Cipher
 ) -> PlainTextResponse:
     if exchange not in EXCHANGES:
         raise ApiException(
             400, "invalid_request", f"Exchange must be one of {', '.join(EXCHANGES)}"
         )
-    account_id, token = active_session(db, cipher)
-    wait_for_slot(request, db, account_id, "other")
+    live = active_session(db, cipher)
+    wait_for_slot(request, db, live.account_id, "other")
+    kite = kite_for(request, live.api_key)
     try:
-        return PlainTextResponse(kite.instruments(exchange, token), media_type="text/csv")
+        return PlainTextResponse(
+            kite.instruments(exchange, live.access_token), media_type="text/csv"
+        )
     except KiteError as exc:
         raise ApiException(502, "internal", str(exc)) from exc
 
@@ -96,7 +114,6 @@ def historical(
     request: Request,
     _: Service,
     db: Db,
-    kite: Kite,
     cipher: Cipher,
     instrument_token: Annotated[int, Query(gt=0)],
     interval: str,
@@ -111,10 +128,11 @@ def historical(
         raise ApiException(
             400, "invalid_request", "start and end must be ordered, with a time zone"
         )
-    account_id, token = active_session(db, cipher)
-    wait_for_slot(request, db, account_id, "historical")
+    live = active_session(db, cipher)
+    wait_for_slot(request, db, live.account_id, "historical")
+    kite = kite_for(request, live.api_key)
     try:
-        candles = kite.historical(instrument_token, interval, start, end, token)
+        candles = kite.historical(instrument_token, interval, start, end, live.access_token)
     except KiteError as exc:
         raise ApiException(502, "internal", str(exc)) from exc
     return JSONResponse({"candles": candles})

@@ -27,11 +27,9 @@ def require_caller(request: Request, settings: AppSettings) -> Caller:
 CallerDep = Annotated[Caller, Depends(require_caller)]
 
 
-def get_kite(request: Request) -> KiteClient:
-    kite: KiteClient | None = request.app.state.kite
-    if kite is None:
-        raise ApiException(500, "internal", "Kite API key and secret are not configured")
-    return kite
+def kite_for(request: Request, api_key: str) -> KiteClient:
+    """A Kite client with one account's API key (D55), on the app's shared connection pool."""
+    return KiteClient(api_key, request.app.state.kite_http)
 
 
 def get_cipher(settings: AppSettings) -> TokenCipher:
@@ -46,5 +44,4 @@ def state_key(settings: BrokerSettings) -> bytes:
     return hashlib.sha256(b"nova-broker-login-state:" + secret).digest()
 
 
-Kite = Annotated[KiteClient, Depends(get_kite)]
 Cipher = Annotated[TokenCipher, Depends(get_cipher)]

@@ -59,6 +59,11 @@ This does everything in order:
 
 The super-admin is the account you sign in with. If you skip it, run `pnpm real:admin` later.
 
+Then set up Zerodha in Relay (no `.env` editing, D55): **Broker → Add account**, open the account, and under
+**Kite app** press **Set key and secret**. Enter the API key and secret from your Kite developer console and
+choose a passphrase (at least 12 characters). NOVA cannot recover the passphrase: if you forget it, enter the
+key and secret again. Paste the **Redirect URL** shown there into your Kite app.
+
 **Every day:**
 
 ```bash
@@ -108,8 +113,8 @@ Docker volumes (`db-data`, `tick-archive`). Only `docker compose down -v` delete
 | `docker compose down`                   | Stop everything (data is kept)                                       |
 
 `docker compose` commands use the **service** name (`core`, `db`, `broker`); Docker Desktop shows the
-**container** name (`nova-core-api`, `nova-postgres`, `nova-broker-kite`). More commands (Kite accounts,
-instrument sync, downloads, Swagger UI): [`backend/README.md`](backend/README.md).
+**container** name (`nova-core-api`, `nova-postgres`, `nova-broker-kite`). More commands (setup,
+Swagger UI): [`backend/README.md`](backend/README.md).
 
 What is built today, kept up to date with every task: [user guide](docs/guides/USER-GUIDE.md) (plain language),
 [API reference](docs/guides/API.md), [database tables](docs/guides/DATABASE.md).

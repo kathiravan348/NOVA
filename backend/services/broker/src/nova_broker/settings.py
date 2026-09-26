@@ -1,4 +1,4 @@
-"""Broker service settings (`NOVA_*`). Kite values are optional: the service starts without them."""
+"""Broker service settings (`NOVA_*`): infrastructure only. Kite apps live in the database (D55)."""
 
 from datetime import time
 from functools import lru_cache
@@ -9,8 +9,6 @@ from pydantic import SecretStr
 
 class BrokerSettings(Settings):
     internal_token: SecretStr
-    kite_api_key: SecretStr | None = None
-    kite_api_secret: SecretStr | None = None
     # Fernet key (urlsafe base64 of 32 bytes) that encrypts access tokens at rest (D39).
     broker_token_key: SecretStr | None = None
     # Where the browser returns after the Kite login. The Kite redirect URL is derived from it:

@@ -15,10 +15,8 @@ docker compose build
 | `docker compose run --rm migrate python -m nova_db check` | models vs database: exit 1 on drift |
 | `docker compose run --rm backend-check` | ruff, format check, mypy strict, pytest (the gate) |
 | `docker compose exec core python -m nova_core create-admin --email you@example.com --name "You"` | create the super-admin (asks for the password) |
-| `docker compose exec broker python -m nova_broker add-account --label "Main" --client-id AB1234` | add a Zerodha account |
 | `docker compose run --rm broker python -m nova_broker new-token-key` | a value for `NOVA_BROKER_TOKEN_KEY` |
-| Relay: **Instruments → Sync with Kite**, **Data jobs → New download**, **Data jobs → Archive old ticks** | stock sync, candle downloads and tick archives (no command line, D55) |
-| `docker compose exec broker python -m nova_broker record-ticks --symbols INFY` | record live ticks right now, by hand, until 15:30 IST (no data job). Normally the always-on `tick-recorder` container records while the switch in Relay is on (`PUT /broker/recorder`) |
+| Relay: **Broker → Add account**, the account's **Kite app**, **Instruments → Sync with Kite**, **Data jobs → New download** / **Archive old ticks** | accounts, Kite keys (secret sealed by your passphrase), stock sync, candle downloads, tick archives (no command line, D55) |
 | `NOVA_API_DOCS=true` in `.env`, then `docker compose up -d` | Swagger UI on http://127.0.0.1:8000/api/v1/docs (D50, dev only); sign in with `POST /api/v1/auth/login` there, then "Try it out" uses the session cookie |
 | `docker compose down` | stop everything (data stays in the `db-data` volume) |
 | `docker compose build` | rebuild the image after `uv.lock` changes |

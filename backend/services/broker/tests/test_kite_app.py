@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from nova_broker.vault import unseal
 from nova_db.models import AuditEntry, BrokerKiteApp, BrokerSession
 from nova_testing.parity import Parity
-from sqlalchemy import Engine, select
+from sqlalchemy import Engine, delete, select
 from sqlalchemy.orm import Session
 
 PASSPHRASE = "correct horse battery"
@@ -16,6 +16,15 @@ DETAILS = {
     "postbackUrl": "https://example.com/postback",
     "staticIp": "203.0.113.5",
 }
+
+
+@pytest.fixture
+def bare(account_id: str, clean: Engine) -> str:
+    """The test account without its Kite app row (the fixture saves one)."""
+    with Session(clean) as db:
+        db.execute(delete(BrokerKiteApp))
+        db.commit()
+    return account_id
 
 
 def _url(account_id: str, path: str = "") -> str:
@@ -33,8 +42,9 @@ def _audits(engine: Engine) -> list[str]:
 
 
 def test_an_account_without_an_app_row_has_empty_values(
-    client: TestClient, account_id: str, parity: Parity
+    client: TestClient, bare: str, parity: Parity
 ) -> None:
+    account_id = bare
     body = client.get(_url(account_id)).json()
 
     parity.assert_valid(body, "KiteApp")
@@ -115,13 +125,14 @@ def test_details_are_saved_without_touching_the_keys(
     assert _audits(clean)[-1] == "Updated Kite app details for Primary"
 
 
-def test_details_can_be_saved_before_the_keys(client: TestClient, account_id: str) -> None:
-    body = client.patch(_url(account_id), json=DETAILS | {"plan": None}).json()
+def test_details_can_be_saved_before_the_keys(client: TestClient, bare: str) -> None:
+    body = client.patch(_url(bare), json=DETAILS | {"plan": None}).json()
 
     assert (body["plan"], body["apiKeyLast4"], body["secretSaved"]) == (None, None, False)
 
 
-def test_passphrase_check(client: TestClient, account_id: str) -> None:
+def test_passphrase_check(client: TestClient, bare: str) -> None:
+    account_id = bare
     no_keys = client.post(_url(account_id, "/check"), json={"passphrase": PASSPHRASE})
     assert no_keys.status_code == 400
     assert no_keys.json()["error"]["message"] == "Save the Kite API key and secret first"

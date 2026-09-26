@@ -11,6 +11,8 @@ import httpx2
 
 API_KEY = "kitekeyAB12"
 API_SECRET = "kite-secret"
+# Seals API_SECRET in test accounts' Kite apps (D55).
+PASSPHRASE = "correct horse battery"
 ACCESS_TOKEN = "kite-access-token-secret"
 
 _HEADER = (

@@ -1,6 +1,6 @@
 # NOVA-081 — Broker: Kite login finished with the passphrase; Kite keys leave `.env`
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-081 · **Depends on:** NOVA-080, NOVA-083 (README overlap)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-081 · **Depends on:** NOVA-080, NOVA-083 (README overlap)
 
 ## Goal
 The daily login uses the account's own Kite app. After Kite, Relay sends the passphrase to finish the login,
@@ -51,5 +51,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- `KiteClient(api_key, http)` on one shared pool (`kite_http`, `app.state.kite_http`); `exchange(token, secret)`.
+- `pending_login.py` (Redis, 120 s, 5 tries); callback → `/broker/{id}?kite=finish`; `POST …/login/finish`.
+- `active_session` returns `ActiveSession(account_id, api_key, access_token)`; internal + recorder use it.
+- Settings/env/Compose: no `NOVA_KITE_API_KEY/SECRET`. CLI: `new-token-key`, `recorder` only.
+- Tests seal `API_SECRET` with `nova_testing.kite.PASSPHRASE` in the `account_id` fixture.
+- Not listed but needed: `tests/test_units.py`, `tests/test_kite_app.py` (fixture now has keys),
+  `libs/nova_testing/.../kite.py` (PASSPHRASE), `docs/CONTRACTS.md` (callback note).
+- Checks: `backend-check` green (560). Guides: API; READMEs (setup via Relay).
 
 ## Review
+Self-reviewed. Merged just before NOVA-082 (the login needs its prompt).

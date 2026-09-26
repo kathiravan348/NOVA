@@ -11,9 +11,10 @@ from nova_broker.accounts import add_account
 from nova_broker.crypto import TokenCipher, new_key
 from nova_broker.main import create_app
 from nova_broker.settings import BrokerSettings
-from nova_db.models import BrokerSession, Instrument, User
+from nova_broker.vault import seal
+from nova_db.models import BrokerKiteApp, BrokerSession, Instrument, User
 from nova_testing.db import database_url, engine, session
-from nova_testing.kite import ACCESS_TOKEN, API_KEY, API_SECRET, FakeKite
+from nova_testing.kite import ACCESS_TOKEN, API_KEY, API_SECRET, PASSPHRASE, FakeKite
 from nova_testing.parity import Parity
 from nova_testing.redis import redis_client
 from redis import Redis
@@ -30,8 +31,6 @@ def make_settings(database: str, **overrides: object) -> BrokerSettings:
         "database_url": database,
         "redis_url": "redis://unused:6379/0",
         "internal_token": TOKEN,
-        "kite_api_key": API_KEY,
-        "kite_api_secret": API_SECRET,
         "broker_token_key": new_key(),
         "relay_url": "http://relay.test",
     }
@@ -60,6 +59,13 @@ def clean(engine: Engine) -> Engine:
 def account_id(clean: Engine) -> str:
     with Session(clean) as db:
         account = add_account(db, label="Primary", client_id="AB1234")
+        db.add(
+            BrokerKiteApp(
+                account_id=account.id,
+                api_key=API_KEY,
+                api_secret_sealed=seal(API_SECRET, PASSPHRASE, account.id),
+            )
+        )
         db.commit()
         return account.id
 

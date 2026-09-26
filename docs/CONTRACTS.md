@@ -4,7 +4,8 @@
 > Source: `frontend/packages/contracts/src/`. Mock: `frontend/packages/mocks/data/`. Handlers live in `mocks/src/handlers/`.
 > JSON Schema (generated, D34): `frontend/packages/contracts/schema/<Contract>.json` — `pnpm --filter @nova/contracts schema:update`.
 > Browser navigations, not JSON (D39): `GET /api/v1/broker/accounts/{id}/login` → 302 to Kite;
-> `GET /api/v1/broker/kite/callback` → 302 back to Relay `/accounts/{id}?kite=connected|failed`.
+> `GET /api/v1/broker/kite/callback` → 302 back to Relay `/broker/{id}?kite=finish|failed`; Relay then posts
+> `KitePassphrase` to `POST /api/v1/broker/accounts/{id}/login/finish` → `BrokerAccount` (D55).
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
 > Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, KiteApp(+Update, KiteKeysUpdate, KitePassphrase), RateLimit, RateLimitUpdate, RecorderSettings(+Update), DataJob(+Create, ArchiveJobCreate), Instrument, Candle, UniverseEntry(+Write), InstrumentSyncResult, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
