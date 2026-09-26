@@ -5,6 +5,7 @@ import { RouterProvider, createMemoryRouter } from "react-router";
 import { setupServer } from "msw/node";
 import { handlers, mockUser } from "@nova/mocks";
 import { createQueryClient, signOut } from "@nova/services";
+import { ToastProvider } from "@nova/ui-core";
 import { routes } from "./routes";
 
 const server = setupServer(...handlers);
@@ -21,7 +22,9 @@ function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </QueryClientProvider>,
   );
   return router;

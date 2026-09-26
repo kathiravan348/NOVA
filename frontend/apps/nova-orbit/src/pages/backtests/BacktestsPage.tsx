@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import { BarChart3, Play } from "lucide-react";
 import { Button, DataTable, EmptyState, LoadMore } from "@nova/ui-core";
 import { useBacktests } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
+import { DeleteSelectedButton } from "./DeleteBacktestButton";
 import { useRunColumns } from "./runColumns";
 
 export function BacktestsPage() {
   const query = useBacktests();
   const columns = useRunColumns();
+  const [selected, setSelected] = useState<string[]>([]);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
@@ -24,6 +27,10 @@ export function BacktestsPage() {
         data={query.data ?? []}
         getRowId={(r) => r.id}
         initialSort={[{ id: "createdAt", desc: true }]}
+        selectedIds={selected}
+        onSelectedIdsChange={setSelected}
+        isRowSelectable={(r) => r.status !== "running"}
+        toolbar={<DeleteSelectedButton ids={selected} onDeleted={() => setSelected([])} />}
         loading={query.isPending}
         error={
           query.isError ? (

@@ -95,6 +95,7 @@ export function useBacktest(id: string) {
       if (before && isRunActive(before) && !isRunActive(run)) {
         void client.invalidateQueries({ queryKey: queryKeys.backtests.lists });
         void client.invalidateQueries({ queryKey: queryKeys.strategies.stats });
+        void client.invalidateQueries({ queryKey: queryKeys.backtests.versions(id) });
       }
       return run;
     },

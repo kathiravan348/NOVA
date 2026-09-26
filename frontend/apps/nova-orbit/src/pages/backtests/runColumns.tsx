@@ -23,6 +23,9 @@ export function useRunColumns({ withStrategy = true } = {}): ColumnDef<BacktestR
           className="font-medium text-action-text hover:underline"
         >
           {row.original.name}
+          {row.original.version > 1 && (
+            <span className="font-normal text-text-muted"> · v{row.original.version}</span>
+          )}
         </Link>
       ),
     },

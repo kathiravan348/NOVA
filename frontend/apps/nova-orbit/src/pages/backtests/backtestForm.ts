@@ -2,7 +2,9 @@ import { z } from "zod";
 import { formatInTimeZone } from "date-fns-tz";
 import {
   IndexNameSchema,
+  type BacktestRun,
   type BacktestRunCreate,
+  type BacktestVersionCreate,
   type Strategy,
   type Universe,
 } from "@nova/contracts";
@@ -95,5 +97,35 @@ export function toRunCreate(form: BacktestForm): BacktestRunCreate {
     to: form.to,
     initialCapitalPaise: Math.round(Number(form.capitalRupees) * 100),
     benchmark: form.benchmark ? "NIFTY 50" : null,
+  };
+}
+
+/** The form for Edit (D60): every setting of `run`, ready to queue as the next version. */
+export function defaultsFromRun(run: BacktestRun): BacktestForm {
+  return {
+    strategyId: run.strategyId,
+    version: String(run.strategyVersion),
+    name: run.name,
+    universeType: run.universe.type,
+    symbols: run.universe.type === "symbols" ? run.universe.symbols : [],
+    index: run.universe.type === "index" ? run.universe.index : "NIFTY 50",
+    from: run.from,
+    to: run.to,
+    capitalRupees: String(run.initialCapitalPaise / 100),
+    benchmark: run.benchmark !== null,
+  };
+}
+
+/** The `POST /backtests/{id}/versions` body: the run body without the (fixed) strategy. */
+export function toVersionCreate(form: BacktestForm): BacktestVersionCreate {
+  const run = toRunCreate(form);
+  return {
+    strategyVersion: run.strategyVersion,
+    name: run.name,
+    universe: run.universe,
+    from: run.from,
+    to: run.to,
+    initialCapitalPaise: run.initialCapitalPaise,
+    benchmark: run.benchmark,
   };
 }

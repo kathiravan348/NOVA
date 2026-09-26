@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import type { Strategy } from "@nova/contracts";
+import type { BacktestRun, Strategy } from "@nova/contracts";
 import {
   Button,
   Card,
@@ -14,35 +14,49 @@ import {
   Switch,
   useToast,
 } from "@nova/ui-core";
-import { getDataMode, useInstruments, useQueueBacktest, useStrategies } from "@nova/services";
+import {
+  getDataMode,
+  useAddBacktestVersion,
+  useInstruments,
+  useQueueBacktest,
+  useStrategies,
+} from "@nova/services";
 import { coversPeriod, dataRange } from "../../components/InstrumentTable";
 import { QueryError } from "../../components/QueryState";
 import {
   BacktestFormSchema,
   defaultsFor,
+  defaultsFromRun,
   todayIst,
   toRunCreate,
+  toVersionCreate,
   type BacktestForm,
 } from "./backtestForm";
 import { UniverseFields } from "./UniverseFields";
 
-function BacktestFormView({
+/** The new-backtest form; with `editing` it queues the next version of that run (D60). */
+export function BacktestFormView({
   strategies,
   preselected,
   latestData,
+  editing,
 }: {
   strategies: Strategy[];
   preselected?: Strategy;
   latestData?: string;
+  editing?: BacktestRun;
 }) {
   const toast = useToast();
   const navigate = useNavigate();
   const instruments = useInstruments();
   const queueRun = useQueueBacktest();
+  const addVersion = useAddBacktestVersion();
   const [uncovered, setUncovered] = useState<string[]>([]);
   const form = useForm<BacktestForm>({
     resolver: zodResolver(BacktestFormSchema),
-    defaultValues: defaultsFor(preselected, todayIst(), latestData),
+    defaultValues: editing
+      ? defaultsFromRun(editing)
+      : defaultsFor(preselected, todayIst(), latestData),
   });
   const { register, control, handleSubmit, watch, setValue, setError, formState } = form;
   const { errors } = formState;
@@ -59,7 +73,29 @@ function BacktestFormView({
     setValue("name", `${strategy.name} backtest`);
   }, [strategy, formState.dirtyFields.strategyId, setValue]);
 
+  const failed = (err: Error) =>
+    toast.show({ title: "Could not queue the backtest", description: err.message, tone: "danger" });
+
   const queue = () => {
+    if (editing) {
+      const body = toVersionCreate(form.getValues());
+      addVersion.mutate(
+        { runId: editing.id, body },
+        {
+          onSuccess: (run) => {
+            const demo = getDataMode() !== "real";
+            toast.show({
+              title: `Version ${run.version} queued${demo ? " (demo)" : ""}`,
+              description: demo ? "Mock mode runs nothing." : run.name,
+              tone: "success",
+            });
+            navigate(demo ? `/backtests/${editing.id}` : `/backtests/${run.id}`);
+          },
+          onError: failed,
+        },
+      );
+      return;
+    }
     queueRun.mutate(toRunCreate(form.getValues()), {
       onSuccess: (run) => {
         if (getDataMode() === "real") {
@@ -74,12 +110,7 @@ function BacktestFormView({
         });
         navigate("/backtests");
       },
-      onError: (err) =>
-        toast.show({
-          title: "Could not queue the backtest",
-          description: err.message,
-          tone: "danger",
-        }),
+      onError: failed,
     });
   };
 
@@ -116,13 +147,18 @@ function BacktestFormView({
     <form onSubmit={handleSubmit(onValid)} noValidate className="flex max-w-5xl flex-col gap-6">
       <Card title="Strategy">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select
-            label="Strategy"
-            placeholder="Choose a strategy"
-            options={strategies.map((s) => ({ value: s.id, label: s.name }))}
-            error={errors.strategyId?.message}
-            {...register("strategyId")}
-          />
+          {editing ? (
+            // A new version keeps its strategy; only the strategy version may change (D60).
+            <Input label="Strategy" value={strategy?.name ?? editing.strategyId} readOnly />
+          ) : (
+            <Select
+              label="Strategy"
+              placeholder="Choose a strategy"
+              options={strategies.map((s) => ({ value: s.id, label: s.name }))}
+              error={errors.strategyId?.message}
+              {...register("strategyId")}
+            />
+          )}
           <Select
             label="Version"
             placeholder="Choose a version"
@@ -196,9 +232,11 @@ function BacktestFormView({
       </Card>
       <UniverseFields form={form} timeframe={timeframe} />
       <div className="flex flex-wrap gap-3">
-        <Button type="submit">Queue backtest</Button>
+        <Button type="submit" loading={queueRun.isPending || addVersion.isPending}>
+          {editing ? "Queue new version" : "Queue backtest"}
+        </Button>
         <Button asChild variant="secondary">
-          <Link to="/backtests">Cancel</Link>
+          <Link to={editing ? `/backtests/${editing.id}` : "/backtests"}>Cancel</Link>
         </Button>
       </div>
       <Modal

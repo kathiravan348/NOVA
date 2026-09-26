@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-102). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-107). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -175,6 +175,19 @@ Open a run from **Backtests**. You see:
 How the pretend trading works (so results are fair): a rule is checked when a candle closes and the trade
 happens at the next candle's opening price, so NOVA never "peeks into the future". Intraday trades are
 closed at 15:20 like Zerodha MIS.
+
+**Change a backtest and run it again (versions).** Press **Edit** on a finished run: the form opens with its
+settings (the strategy stays the same; you can pick another strategy version, other stocks, dates, capital or
+name). **Queue new version** runs it as the next *version* of the same backtest (v2, v3…). The **Backtests**
+list shows only the newest version, with "· v3" after its name. On the run page, the **Versions** table lists
+every version with its settings and key numbers (Net P&L, Return, Win rate, Max drawdown, Trades), so you
+can see which change helped. To save space, only the newest finished version keeps its full report; an
+older version keeps just its numbers ("Older version: only the summary is kept").
+
+**Delete backtests you don't want.** On a run's page press **Delete** (you are asked first): the backtest
+and all its versions, trades and results are gone for good. In the **Versions** table the bin button deletes
+just that one older version. In the **Backtests** list, tick several runs and press **Delete selected**.
+A run that is still **Running** cannot be deleted or edited; wait for it to finish.
 
 ### Step 7 — Compare runs
 Go to **Compare**, tick two or more runs. NOVA shows their metrics side by side (the best value in each row
@@ -354,6 +367,9 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | A download is **Planned** but never ran | A plan waits for **Start**. Open it and press **Start** (plans older than 24 hours are cancelled; check the plan again). |
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). Under it, **Stopped while** says what the run was doing and how far it got. |
+| **Edit** is missing on a backtest | It is still queued or running: edit it when it has finished. |
+| An old version has no trades or chart | Only the newest finished version keeps its full report; older versions keep their numbers. Open the newest from the **Versions** table. |
+| **Could not delete**: *A running backtest cannot be deleted* | Wait until it finishes (or fails), then delete it. |
 | A backtest stays **Waiting to start** | Another run is still going; runs go one at a time. If nothing is **Running** for minutes, NOVA's backtest part is not running: start the NOVA stack again. |
 | Backtest *Failed* with *needs more than … price bars* | The test is too big for NOVA in one go. Pick fewer stocks or a shorter period: 1-minute prices add up fast (one stock has about 375 bars a day). |
 | Backtest *Failed* with *The backtest worker stopped during this run* | NOVA's backtest part stopped in the middle (often it ran out of memory) and has restarted. Run it again; if it stops again, pick fewer stocks or a shorter period. |
