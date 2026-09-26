@@ -172,3 +172,21 @@ def test_paused_jobs_become_cancelled_and_drafts_go_on_downgrade(
     upgrade(database_url)
 
     assert [tuple(row) for row in rows] == [("job_p", "cancelled")]
+
+
+def _trigger_events(engine: Engine) -> str:
+    with engine.connect() as connection:
+        definition = connection.execute(
+            text("SELECT pg_get_triggerdef(oid) FROM pg_trigger WHERE tgname = 'data_jobs_notify'")
+        ).scalar_one()
+    return str(definition)
+
+
+def test_deletes_are_announced_until_downgraded(engine: Engine, database_url: str) -> None:
+    assert "OR DELETE" in _trigger_events(engine)
+
+    downgrade(database_url, "0011")
+    assert "OR DELETE" not in _trigger_events(engine)
+
+    upgrade(database_url)
+    assert "OR DELETE" in _trigger_events(engine)

@@ -195,3 +195,10 @@ export type DownloadSettingsUpdate = z.infer<typeof DownloadSettingsUpdateSchema
 /** Request body for `POST /data-jobs/archive` (D54): move ticks received before `before` (IST). */
 export const ArchiveJobCreateSchema = z.strictObject({ before: IsoDateSchema });
 export type ArchiveJobCreate = z.infer<typeof ArchiveJobCreateSchema>;
+
+/** Answer of `DELETE /data-jobs/{id}?candles=` (NOVA-095). */
+export const DataJobDeleteResultSchema = z.strictObject({
+  id: IdSchema,
+  candlesDeleted: z.number().int().min(0),
+});
+export type DataJobDeleteResult = z.infer<typeof DataJobDeleteResultSchema>;

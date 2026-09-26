@@ -1,6 +1,6 @@
 # NOVA-095 — Atlas: delete finished data jobs, optionally with their candles
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-095 · **Depends on:** NOVA-093
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-095 · **Depends on:** NOVA-093
 
 ## Goal
 The Owner can remove test or unwanted jobs over HTTP (Owner request 2026-09-26): a finished job row goes, and
@@ -46,5 +46,11 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** `DELETE /data-jobs/{id}?candles=` (+ audit), migration 0012 (delete notify), Core `data_job.deleted`, contracts `DataJobDeleteResult` and the realtime member.
+**Files changed:** as listed. **Commands run:** backend-check (661 passed) · `pnpm review:check` → pass.
+**New dependencies:** none. **Maps updated:** CONTRACTS. **Guides updated:** API, DATABASE.
+**Deviations from task:** none. **Known gaps:** screens and cache handling (096).
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Guides checked:** API, DATABASE, CONTRACTS match. **Rulebook issues found:** none. **Follow-up tasks created:** none.

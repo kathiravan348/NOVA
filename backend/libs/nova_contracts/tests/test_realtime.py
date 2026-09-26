@@ -31,3 +31,14 @@ def test_data_job_updated_carries_a_full_job(parity: Parity) -> None:
 def test_unknown_or_broken_messages_are_rejected(raw: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         MESSAGE.validate_json(json.dumps(raw))
+
+
+def test_a_deleted_job_carries_only_its_id(parity: Parity) -> None:
+    raw = {"type": "data_job.deleted", "data": {"id": "job_1"}}
+
+    dumped = MESSAGE.dump_python(MESSAGE.validate_json(json.dumps(raw)), mode="json")
+
+    assert dumped == raw
+    parity.assert_valid(dumped, "RealtimeMessage")
+    with pytest.raises(ValidationError):
+        MESSAGE.validate_json(json.dumps(raw | {"data": {"id": "job_1", "status": "x"}}))

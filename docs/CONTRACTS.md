@@ -8,7 +8,7 @@
 > `KitePassphrase` to `POST /api/v1/broker/accounts/{id}/login/finish` → `BrokerAccount` (D55).
 > Pagination (D32): `Page<T>` = `{ items: T[], nextCursor: string | null }`; `limit` 1–200 (default 50), opaque `cursor`;
 > bad values → 400 `invalid_request`. Other lists are bare arrays. Helpers: `pageSchema`, `PageQuery` in `common.ts`.
-> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, KiteApp(+Update, KiteKeysUpdate, KitePassphrase), RateLimit, RateLimitUpdate, RecorderSettings(+Update), DataJob(+Create, ArchiveJobCreate, DataJobPlan, DataJobPlanRequest, DownloadSettings(+Update), UniverseSector), Instrument, Candle, UniverseEntry(+Write), MarketIndex, RealtimeMessage, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
+> Pydantic mirrors: `backend/libs/nova_contracts` (so far: User, ApiError, LoginRequest, AuditEntry, Page, BrokerAccount(+Create), BrokerProfile, KiteApp(+Update, KiteKeysUpdate, KitePassphrase), RateLimit, RateLimitUpdate, RecorderSettings(+Update), DataJob(+Create, ArchiveJobCreate, DataJobPlan, DataJobPlanRequest, DownloadSettings(+Update), UniverseSector, DataJobDeleteResult), Instrument, Candle, UniverseEntry(+Write), MarketIndex, RealtimeMessage, Charges, Strategy (+ spec tree, write bodies), StrategyStats, BacktestRun(+Create), BacktestResult, Trade), checked with `nova_testing.parity`.
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
@@ -38,9 +38,10 @@
 | DataJobCreate | `POST /api/v1/data-jobs` → 201 `DataJob` `queued` (400 `invalid_request` bad body, unknown symbol) | — (mock: validated, not stored) | Relay |
 | ArchiveJobCreate | `POST /api/v1/data-jobs/archive` → 201 `DataJob` `archive` (400 future date or no ticks before it) | — | Relay |
 | DataJobPlan / DataJobPlanRequest | `POST /api/v1/data-jobs/plan` → 201 `DataJob` `draft` with `plan`; `POST …/{id}/start|pause|resume` → `DataJob` (D57) | — | Relay |
+| DataJobDeleteResult | `DELETE /api/v1/data-jobs/{id}?candles=` → `{id, candlesDeleted}` (NOVA-095) | — | Relay |
 | DownloadSettings | Pace during market hours (`slow`/`full`, D57). `GET`/`PATCH /api/v1/data-jobs/settings` | — | Relay |
 | UniverseSector | `GET /api/v1/market-data/universe/sectors` → `UniverseSector[]` (D57 bulk pick) | — | Relay |
-| RealtimeMessage | WebSocket `/api/v1/ws`: `hello` · `ping` · `data_job.updated {data: DataJob}` (D57) | — (no mock socket) | Relay (NOVA-091) |
+| RealtimeMessage | WebSocket `/api/v1/ws`: `hello` · `ping` · `data_job.updated {data: DataJob}` · `data_job.deleted {data: {id}}` (D57) | — (no mock socket) | Relay (NOVA-091) |
 | AuditEntry | `GET /api/v1/audit?limit=&cursor=` → `Page<AuditEntry>` | `data/auditEntries.json` | Relay |
 | Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range) |
 | UniverseEntry | `GET /api/v1/market-data/universe` → `UniverseEntry[]`; `POST` → 201, `PUT /{symbol}` → 200, `DELETE /{symbol}` → 204 (400 duplicate, symbol change or used by a waiting job; 404) | — | Relay |

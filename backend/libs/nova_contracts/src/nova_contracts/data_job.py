@@ -141,3 +141,10 @@ class DownloadSettings(Contract):
 
 class DownloadSettingsUpdate(DownloadSettings):
     """Body of `PATCH /data-jobs/settings`."""
+
+
+class DataJobDeleteResult(Contract):
+    """Answer of `DELETE /data-jobs/{id}` (NOVA-095): the job is gone, with this many candles."""
+
+    id: Id
+    candles_deleted: Count
