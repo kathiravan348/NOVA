@@ -5,6 +5,7 @@ from nova_db.models.backtest import BacktestResult, BacktestRun, Trade
 from nova_db.models.base import Base
 from nova_db.models.broker import (
     BrokerAccount,
+    BrokerKiteApp,
     BrokerProfile,
     BrokerSession,
     RateLimitRule,
@@ -28,6 +29,7 @@ __all__ = [
     "BacktestRun",
     "Base",
     "BrokerAccount",
+    "BrokerKiteApp",
     "BrokerProfile",
     "BrokerSession",
     "Candle",

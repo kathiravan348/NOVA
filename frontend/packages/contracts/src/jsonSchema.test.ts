@@ -4,7 +4,15 @@ import { ApiErrorSchema } from "./error";
 import { LoginRequestSchema } from "./auth";
 import { AuditEntrySchema } from "./audit";
 import { BacktestResultSchema, BacktestRunCreateSchema, BacktestRunSchema } from "./backtest";
-import { BrokerAccountCreateSchema, BrokerAccountSchema, BrokerProfileSchema } from "./broker";
+import {
+  BrokerAccountCreateSchema,
+  BrokerAccountSchema,
+  BrokerProfileSchema,
+  KiteAppSchema,
+  KiteAppUpdateSchema,
+  KiteKeysUpdateSchema,
+  KitePassphraseSchema,
+} from "./broker";
 import { ArchiveJobCreateSchema, DataJobCreateSchema, DataJobSchema } from "./dataJob";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema } from "./marketData";
@@ -42,6 +50,10 @@ const contracts: Record<string, z.ZodType> = {
   DataJobCreate: DataJobCreateSchema,
   Instrument: InstrumentSchema,
   InstrumentSyncResult: InstrumentSyncResultSchema,
+  KiteApp: KiteAppSchema,
+  KiteAppUpdate: KiteAppUpdateSchema,
+  KiteKeysUpdate: KiteKeysUpdateSchema,
+  KitePassphrase: KitePassphraseSchema,
   LoginRequest: LoginRequestSchema,
   RateLimit: RateLimitSchema,
   RateLimitUpdate: RateLimitUpdateSchema,

@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-083). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-080). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -51,7 +51,11 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | `GET /broker/accounts/{id}` | One account, same shape. | path `id` | `BrokerAccount`; 404 |
 | `GET /broker/accounts/{id}/login` | **Browser navigation, not JSON.** Starts the daily Kite login: redirects (302) to Zerodha's login page with a signed `state`. 400 if the account is disabled. | path `id` | 302 → Kite |
 | `GET /broker/kite/callback` | **Kite sends the browser here after login.** Checks `state`, swaps `request_token` for an access token, checks the Zerodha user ID matches the account, stores the token **encrypted**, sets expiry to the next 06:00 IST. Audit: `broker.login` (success or failure with reason). | query `state`, `status`, `request_token` | 302 → Relay `/accounts/{id}?kite=connected\|failed` |
-| `GET /broker/profiles` | Zerodha setup facts: API, plan, renewal, API key last 4 characters, redirect/postback URL, static IP, session rule, useful links. | — | `BrokerProfile[]` |
+| `GET /broker/accounts/{id}/kite-app` | The account's own Kite app (D55): API key **last 4 characters**, whether a secret is saved (never the secret), plan, renewal date, redirect URL (`{NOVA_RELAY_URL}/api/v1/broker/kite/callback`, to paste into the Kite developer console), postback URL, static IP. Empty values until saved. | path `id` | `KiteApp`; 404 |
+| `PUT /broker/accounts/{id}/kite-app/keys` | Saves the API key and secret together; the secret is sealed with the passphrase (scrypt + AES-GCM, bound to the account) and the passphrase is not kept. A **different** API key ends the account's Kite session. Audit: `broker.kite_app_update` ("Saved Kite API key …AB12 and secret for Main"). | `KiteKeysUpdate {apiKey (6–64 letters/digits), apiSecret (no spaces, ≤ 128), passphrase (12–128)}` | `KiteApp`; 400 bad body; 404 |
+| `PATCH /broker/accounts/{id}/kite-app` | Saves the app details (all nullable): plan (trimmed), renewal date, postback URL, static IP. Keys untouched. Audit: `broker.kite_app_update` ("Updated Kite app details for Main"). | `KiteAppUpdate {plan (≤ 60), subscriptionRenewsOn, postbackUrl, staticIp}` | `KiteApp`; 400; 404 |
+| `POST /broker/accounts/{id}/kite-app/check` | Tests the passphrase: opens the sealed secret and forgets it. Not audited. | `KitePassphrase {passphrase}` | 204; 400 "Wrong passphrase" or "Save the Kite API key and secret first"; 404 |
+| `GET /broker/profiles` | Zerodha facts from the repo data file: API, session rule, useful links. App details are per account (above). | — | `BrokerProfile[]` |
 | `GET /broker/profiles/{broker}` | One profile (`zerodha`). | path | `BrokerProfile`; 404 |
 | `GET /broker/rate-limits` | For each account × endpoint (`quote`, `historical`, `orders`, `other`): one rule per window (`second`, `minute`, `day`) with `brokerLimit`, `novaLimit`, `used` (live from Redis), `resetsAt` (day window), plus `throttledToday`. | — | `RateLimit[]` |
 | `PATCH /broker/rate-limits/{accountId}/{endpoint}` | Changes NOVA's own limit for one window. Must be ≥ 1 and ≤ the broker limit. Audit: `broker.rate_limit_update` ("orders per day: 4,500 → 4,200"). | `RateLimitUpdate {window, novaLimit}` | 204; 400 above broker limit; 404 |

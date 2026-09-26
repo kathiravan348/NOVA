@@ -12,7 +12,7 @@ from nova_db.models import BrokerAccount
 from redis import Redis
 from sqlalchemy import select
 
-from nova_broker import accounts, internal, profiles, rate_limits, recorder_settings
+from nova_broker import accounts, internal, kite_app, profiles, rate_limits, recorder_settings
 from nova_broker.kite import KiteClient
 from nova_broker.limiter import RateLimiter
 from nova_broker.limits import ensure_rules
@@ -45,7 +45,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         with session_factory() as db:
-            profiles.sync_profile(db, settings)
+            profiles.sync_profile(db)
             for account_id in db.scalars(select(BrokerAccount.id)).all():
                 ensure_rules(db, account_id)
             db.commit()
@@ -75,6 +75,7 @@ def create_app(
         return {"status": "ok"}
 
     router.include_router(accounts.router)
+    router.include_router(kite_app.router)
     router.include_router(profiles.router)
     router.include_router(rate_limits.router)
     router.include_router(recorder_settings.router)

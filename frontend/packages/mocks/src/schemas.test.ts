@@ -4,6 +4,7 @@ import {
   BacktestRunSchema,
   BrokerAccountSchema,
   DataJobSchema,
+  KiteAppSchema,
   RateLimitSchema,
   StrategySchema,
   TradeSchema,
@@ -19,6 +20,7 @@ import {
   mockDataJobs,
   mockRateLimits,
   mockBrokerProfiles,
+  mockKiteApps,
   mockStrategies,
   mockTrades,
   mockUser,
@@ -47,6 +49,11 @@ describe("Mock data schemas and general conventions", () => {
 
   it("validates mockBrokerAccounts against BrokerAccountSchema array", () => {
     expect(BrokerAccountSchema.array().safeParse(mockBrokerAccounts).success).toBe(true);
+  });
+
+  it("has one valid Kite app per mock account (D55)", () => {
+    expect(KiteAppSchema.array().safeParse(mockKiteApps).success).toBe(true);
+    expect(mockKiteApps.map((a) => a.accountId)).toEqual(mockBrokerAccounts.map((b) => b.id));
   });
 
   it("validates mockRateLimits against RateLimitSchema array", () => {
@@ -206,6 +213,7 @@ describe("Mock data schemas and general conventions", () => {
       mockBrokerAccounts,
       mockRateLimits,
       mockBrokerProfiles,
+      mockKiteApps,
       mockDataJobs,
       mockAuditEntries,
     });

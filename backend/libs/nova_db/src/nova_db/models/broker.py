@@ -1,4 +1,4 @@
-"""Broker accounts, sessions (token encrypted in NOVA-049), profiles (D28), rate limits (D27)."""
+"""Broker accounts, sessions (NOVA-049), Kite apps (D55), profiles (D28), rate limits (D27)."""
 
 from datetime import date, datetime
 
@@ -45,22 +45,40 @@ class BrokerSession(Base):
     expires_at: Mapped[datetime | None]
 
 
-class BrokerProfile(Base):
-    __tablename__ = "broker_profiles"
+class BrokerKiteApp(Base):
+    """The Kite Connect app of one account (D55): each family member has their own.
+
+    The API key is plain (it is public in the login URL); the secret is sealed with the Owner's
+    passphrase (`nova_broker.vault`). Key and secret are saved together.
+    """
+
+    __tablename__ = "broker_kite_apps"
     __table_args__ = (
-        check_in("broker", "broker", BROKERS),
-        CheckConstraint("api_key_last4 ~ '^[A-Za-z0-9]{4}$'", name="api_key_last4"),
+        CheckConstraint("(api_key IS NULL) = (api_secret_sealed IS NULL)", name="keys_together"),
+        CheckConstraint("api_key ~ '^[A-Za-z0-9]{6,64}$'", name="api_key"),
     )
+
+    account_id: Mapped[str] = mapped_column(
+        ForeignKey("broker_accounts.id", ondelete="CASCADE"), primary_key=True
+    )
+    api_key: Mapped[str | None]
+    api_secret_sealed: Mapped[bytes | None] = mapped_column(LargeBinary)
+    plan: Mapped[str | None]
+    subscription_renews_on: Mapped[date | None]
+    postback_url: Mapped[str | None]
+    static_ip: Mapped[str | None]
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class BrokerProfile(Base):
+    """Broker facts from the repo data file (D28); app details live in `broker_kite_apps` (D55)."""
+
+    __tablename__ = "broker_profiles"
+    __table_args__ = (check_in("broker", "broker", BROKERS),)
 
     broker: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
     api: Mapped[str]
-    plan: Mapped[str]
-    subscription_renews_on: Mapped[date | None]
-    api_key_last4: Mapped[str]
-    redirect_url: Mapped[str]
-    postback_url: Mapped[str | None]
-    static_ip: Mapped[str | None]
     session_rule: Mapped[str]
     links: Mapped[JsonList] = mapped_column(server_default="[]")
 

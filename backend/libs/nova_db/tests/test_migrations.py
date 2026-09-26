@@ -13,6 +13,7 @@ EXPECTED_TABLES = {
     "trades",
     "broker_accounts",
     "broker_sessions",
+    "broker_kite_apps",
     "broker_profiles",
     "rate_limit_rules",
     "data_jobs",
@@ -76,3 +77,34 @@ def test_tick_recording_starts_switched_off(engine: Engine) -> None:
         rows = connection.execute(text("SELECT id, enabled, symbols FROM recorder_settings")).all()
 
     assert [tuple(row) for row in rows] == [(1, False, [])]
+
+
+def test_kite_app_details_move_from_the_profile_to_each_account(
+    engine: Engine, database_url: str
+) -> None:
+    downgrade(database_url, "0007")
+    with engine.begin() as connection:
+        connection.execute(text("TRUNCATE broker_accounts, broker_profiles CASCADE"))
+        connection.execute(
+            text(
+                "INSERT INTO broker_profiles (broker, name, api, plan, api_key_last4, redirect_url,"
+                " static_ip, session_rule) VALUES ('zerodha', 'Zerodha', 'Kite Connect v3', 'Paid',"
+                " 'AB12', 'http://localhost', '203.0.113.5', 'Daily login')"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO broker_accounts (id, broker, label, client_id)"
+                " VALUES ('brk_1', 'zerodha', 'Main', 'AB1234')"
+            )
+        )
+    upgrade(database_url)
+    with engine.begin() as connection:
+        rows = connection.execute(
+            text("SELECT account_id, api_key, plan, static_ip FROM broker_kite_apps")
+        ).all()
+        columns = {c["name"] for c in inspect(connection).get_columns("broker_profiles")}
+        connection.execute(text("TRUNCATE broker_accounts, broker_profiles CASCADE"))
+
+    assert [tuple(row) for row in rows] == [("brk_1", None, "Paid", "203.0.113.5")]
+    assert "plan" not in columns and "api_key_last4" not in columns

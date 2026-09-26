@@ -10,28 +10,27 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 
-def test_profile_is_synced_at_start_with_the_key_last4_only(
-    client: TestClient, parity: Parity
-) -> None:
+def test_profile_is_synced_at_start_without_app_details(client: TestClient, parity: Parity) -> None:
     profiles = client.get("/api/v1/broker/profiles").json()
     zerodha = client.get("/api/v1/broker/profiles/zerodha").json()
 
     assert profiles == [zerodha]
     parity.assert_valid(zerodha, "BrokerProfile")
-    assert zerodha["apiKeyLast4"] == "AB12"
+    assert "apiKeyLast4" not in zerodha and "plan" not in zerodha
     assert "kitekey" not in str(zerodha) and "kite-secret" not in str(zerodha)
     assert {link["kind"] for link in zerodha["links"]} >= {"docs", "rate_limits", "console"}
 
 
-def test_without_a_key_there_is_no_profile(settings: BrokerSettings) -> None:
+def test_without_env_keys_the_profile_exists_but_login_is_refused(
+    settings: BrokerSettings,
+) -> None:
     bare = settings.model_copy(update={"kite_api_key": None, "kite_api_secret": None})
     headers = {"x-nova-internal-token": "internal-test-token", "x-nova-user-id": "usr_owner"}
     headers["x-nova-user-name"] = "Owner"
     app = create_app(bare, kite_transport=httpx2.MockTransport(lambda r: httpx2.Response(500)))
 
     with TestClient(app, headers=headers) as client:
-        assert client.get("/api/v1/broker/profiles").json() == []
-        assert client.get("/api/v1/broker/profiles/zerodha").status_code == 404
+        assert client.get("/api/v1/broker/profiles/zerodha").status_code == 200
         login = client.get("/api/v1/broker/accounts/brk_x/login")
         assert login.status_code == 500
         assert "not configured" in login.json()["error"]["message"]

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "apiKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]{6,64}$"
+    },
+    "apiSecret": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^\\S+$"
+    },
+    "passphrase": {
+      "type": "string",
+      "minLength": 12,
+      "maxLength": 128
+    }
+  },
+  "required": [
+    "apiKey",
+    "apiSecret",
+    "passphrase"
+  ],
+  "additionalProperties": false
+}

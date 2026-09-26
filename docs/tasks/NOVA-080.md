@@ -1,6 +1,6 @@
 # NOVA-080 — Broker: Kite app per account, API secret sealed with a passphrase
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-080 · **Depends on:** NOVA-079
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-080 · **Depends on:** NOVA-079
 
 ## Goal
 Each broker account has a Kite app row: API key, API secret sealed with the Owner's passphrase, and app
@@ -58,5 +58,16 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- Migration 0008: `broker_kite_apps` (+ copy of profile details per account), profile columns dropped,
+  audit `broker.kite_app_update`. Downgrade restores the columns with placeholders (rewritten at start-up).
+- `vault.py` (scrypt n=2^15 + AES-256-GCM, account id as AAD); `kite_app.py`: GET, PUT /keys, PATCH, POST /check.
+  `open_secret()` and `redirect_url()` are ready for NOVA-081.
+- Contracts `KiteApp`, `KiteAppUpdate`, `KiteKeysUpdate`, `KitePassphrase`, `MIN_PASSPHRASE_LENGTH`;
+  `BrokerProfile` = broker facts only. Mocks `data/kiteApps.json` (brk_003 has no keys).
+- Not listed but needed: `apps/nova-relay/src/lib/labels.ts` (audit label "Kite app changed").
+- Checks: `backend-check` green (551), `pnpm review:check` green (711).
+- Guides: API, DATABASE (0008), CONTRACTS.
 
 ## Review
+Self-reviewed. No issues found.

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "apiKeyLast4": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{4}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "secretSaved": {
+      "type": "boolean"
+    },
+    "plan": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 60,
+          "pattern": "\\S"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subscriptionRenewsOn": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "redirectUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "postbackUrl": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "staticIp": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "updatedAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "accountId",
+    "apiKeyLast4",
+    "secretSaved",
+    "plan",
+    "subscriptionRenewsOn",
+    "redirectUrl",
+    "postbackUrl",
+    "staticIp",
+    "updatedAt"
+  ],
+  "additionalProperties": false
+}
