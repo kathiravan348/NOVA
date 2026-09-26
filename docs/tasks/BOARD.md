@@ -104,7 +104,7 @@
 | NOVA-096 | Relay: Delete job (+ candles) and clear the 26 Sep test downloads | done | Claude | 094, 095 |
 | NOVA-097 | Instruments from any timeframe; backtest coverage by the strategy's timeframe | done | Claude | 098 |
 | NOVA-098 | Postgres connections: limit 100, small pools per service | done | Claude | — |
-| NOVA-099 | Compress old candles (TimescaleDB compression, D58, migration 0013) | planned | — | 098 |
+| NOVA-099 | Compress old candles (TimescaleDB compression, D58, migration 0013) | done | Claude | 098 |
 | NOVA-100 | Download 1m and 1d only; build 3m–1h candles from 1m (D58) | planned | — | 099, 103 |
 | NOVA-101 | Backtest progress: stage, counts and percent on each run (D58, migration 0014) | planned | — | 100 |
 | NOVA-102 | Orbit: live backtest progress on the run page and in the list (D58) | planned | — | 101 |
