@@ -15,7 +15,9 @@ const entry = {
 describe("universe contracts", () => {
   it("accepts a stock and its listed form", () => {
     expect(UniverseEntryWriteSchema.parse(entry)).toEqual(entry);
-    expect(UniverseEntrySchema.parse({ ...entry, synced: false }).synced).toBe(false);
+    expect(
+      UniverseEntrySchema.parse({ ...entry, synced: false, newListing: true }).newListing,
+    ).toBe(true);
     expect(InstrumentSyncResultSchema.parse({ synced: ["INFY"], missing: [] }).synced).toEqual([
       "INFY",
     ]);
@@ -26,7 +28,7 @@ describe("universe contracts", () => {
     { symbol: "TOO-LONG-SYMBOL-NAME-X" },
     { name: " " },
     { sector: "x".repeat(81) },
-    { indices: ["SENSEX"] },
+    { indices: ["nifty it"] },
     { synced: true },
   ])("rejects %o in a write body", (change) => {
     expect(UniverseEntryWriteSchema.safeParse({ ...entry, ...change }).success).toBe(false);

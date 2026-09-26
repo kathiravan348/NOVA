@@ -8,7 +8,12 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 
-export const DataJobTypeSchema = z.enum(["historical_download", "tick_record", "archive"]);
+export const DataJobTypeSchema = z.enum([
+  "historical_download",
+  "tick_record",
+  "archive",
+  "instrument_sync",
+]);
 export type DataJobType = z.infer<typeof DataJobTypeSchema>;
 
 export const DataJobStatusSchema = z.enum([
@@ -27,7 +32,8 @@ export const DataJobSchema = z
     status: DataJobStatusSchema,
     exchange: ExchangeSchema,
     segment: SegmentSchema,
-    symbols: z.array(z.string().min(1)).min(1),
+    // Empty only for `instrument_sync` (D56).
+    symbols: z.array(z.string().min(1)),
     timeframe: TimeframeSchema.nullable(),
     from: IsoDateSchema.nullable(),
     to: IsoDateSchema.nullable(),
@@ -37,6 +43,7 @@ export const DataJobSchema = z
     startedAt: UtcDateTimeSchema.nullable(),
     finishedAt: UtcDateTimeSchema.nullable(),
     error: z.string().nullable(),
+    summary: z.string().max(500).nullable(),
   })
   .refine(
     (data) => {
@@ -63,6 +70,10 @@ export const DataJobSchema = z
       path: ["from"],
     },
   )
+  .refine((data) => data.symbols.length > 0 || data.type === "instrument_sync", {
+    message: "symbols may be empty only for instrument_sync",
+    path: ["symbols"],
+  })
   .refine((data) => data.error === null || data.status === "failed", {
     message: "error is set only when status is failed",
     path: ["error"],

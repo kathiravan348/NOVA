@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  IndexNameSchema,
+  DEFAULT_INDEX_NAMES,
   UniverseEntryWriteSchema,
   type IndexName,
   type UniverseEntry,
@@ -108,7 +108,7 @@ function EntryForm({ entry, onDone }: { entry: UniverseEntry | null; onDone: () 
       />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-body-sm font-medium text-text-primary">Indices</legend>
-        {IndexNameSchema.options.map((index) => (
+        {DEFAULT_INDEX_NAMES.map((index) => (
           <Checkbox
             key={index}
             label={index}

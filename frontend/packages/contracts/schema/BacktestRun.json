@@ -52,11 +52,9 @@
             },
             "index": {
               "type": "string",
-              "enum": [
-                "NIFTY 50",
-                "NIFTY BANK",
-                "NIFTY NEXT 50"
-              ]
+              "minLength": 1,
+              "maxLength": 40,
+              "pattern": "^[A-Z0-9 &-]+$"
             }
           },
           "required": [

@@ -1,5 +1,5 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
-import { IndexNameSchema } from "@nova/contracts";
+import { DEFAULT_INDEX_NAMES } from "@nova/contracts";
 import { Card, Select } from "@nova/ui-core";
 import { useInstruments } from "@nova/services";
 import { InstrumentTable } from "../../components/InstrumentTable";
@@ -30,7 +30,7 @@ export function UniverseFields({ form }: { form: UseFormReturn<BacktestForm> }) 
           {universeType === "index" && (
             <Select
               label="Index"
-              options={IndexNameSchema.options.map((v) => ({ value: v, label: v }))}
+              options={DEFAULT_INDEX_NAMES.map((v) => ({ value: v, label: v }))}
               {...register("index")}
             />
           )}

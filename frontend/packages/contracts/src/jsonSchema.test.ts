@@ -15,7 +15,7 @@ import {
 } from "./broker";
 import { ArchiveJobCreateSchema, DataJobCreateSchema, DataJobSchema } from "./dataJob";
 import { INDICATORS } from "./indicators";
-import { CandleSchema, InstrumentSchema } from "./marketData";
+import { CandleSchema, InstrumentSchema, MarketIndexSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
 import { RecorderSettingsSchema, RecorderSettingsUpdateSchema } from "./recorder";
 import {
@@ -66,6 +66,7 @@ const contracts: Record<string, z.ZodType> = {
   StrategyStats: StrategyStatsSchema,
   Trade: TradeSchema,
   UniverseEntry: UniverseEntrySchema,
+  MarketIndex: MarketIndexSchema,
   UniverseEntryWrite: UniverseEntryWriteSchema,
   User: UserSchema,
 };

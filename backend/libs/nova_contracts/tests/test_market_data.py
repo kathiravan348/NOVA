@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from nova_contracts import Candle, Instrument
+from nova_contracts import Candle, Instrument, MarketIndex
 from nova_testing.parity import Parity
 from pydantic import ValidationError
 
@@ -42,7 +42,7 @@ def test_intraday_candle_time_is_a_utc_datetime() -> None:
         {"lastClosePaise": 999_999_999},
         {"timeframes": ["1d", "1d"]},
         {"dataFrom": "2027-01-01"},
-        {"indices": ["SENSEX"]},
+        {"indices": ["sensex"]},
     ],
 )
 def test_bad_instrument_is_rejected(parity: Parity, change: dict[str, object]) -> None:
@@ -58,3 +58,11 @@ def test_bad_candle_is_rejected(parity: Parity, change: dict[str, object]) -> No
 
     with pytest.raises(ValidationError):
         Candle.model_validate_json(json.dumps(raw))
+
+
+def test_market_index_matches_its_schema(parity: Parity) -> None:
+    index = MarketIndex.model_validate(
+        {"name": "NIFTY IT", "kiteSymbol": "NIFTY IT", "members": 10, "updatedAt": None}
+    )
+
+    parity.assert_valid(index.model_dump(mode="json"), "MarketIndex")

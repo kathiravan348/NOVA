@@ -11,7 +11,8 @@
       "enum": [
         "historical_download",
         "tick_record",
-        "archive"
+        "archive",
+        "instrument_sync"
       ]
     },
     "status": {
@@ -41,7 +42,6 @@
       ]
     },
     "symbols": {
-      "minItems": 1,
       "type": "array",
       "items": {
         "type": "string",
@@ -135,6 +135,17 @@
         "string",
         "null"
       ]
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 500
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [
@@ -152,7 +163,8 @@
     "createdAt",
     "startedAt",
     "finishedAt",
-    "error"
+    "error",
+    "summary"
   ],
   "additionalProperties": false
 }

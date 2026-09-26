@@ -11,10 +11,11 @@ export const mockUniverse: UniverseEntry[] = mockInstruments
     sector: i.sector,
     indices: i.indices,
     synced: true,
+    newListing: false,
   }))
   .sort((a, b) => a.symbol.localeCompare(b.symbol));
 
-const trimmed = (e: Omit<UniverseEntry, "synced">) => ({
+const trimmed = (e: Omit<UniverseEntry, "synced" | "newListing">) => ({
   ...e,
   name: e.name.trim(),
   sector: e.sector.trim(),
@@ -51,7 +52,7 @@ export const marketDataHandlers = [
     if (mockUniverse.some((e) => e.symbol === parsed.data.symbol)) {
       return badRequest(`${parsed.data.symbol} is already in the stock list`);
     }
-    const entry: UniverseEntry = { ...trimmed(parsed.data), synced: false };
+    const entry: UniverseEntry = { ...trimmed(parsed.data), synced: false, newListing: false };
     return HttpResponse.json(entry, { status: 201 });
   }),
 
@@ -68,7 +69,11 @@ export const marketDataHandlers = [
     if (parsed.data.symbol !== symbol) {
       return badRequest("The symbol cannot be changed");
     }
-    return HttpResponse.json({ ...trimmed(parsed.data), synced: existing.synced });
+    return HttpResponse.json({
+      ...trimmed(parsed.data),
+      synced: existing.synced,
+      newListing: existing.newListing,
+    });
   }),
 
   http.delete(apiPath("/market-data/universe/:symbol"), ({ params }) => {

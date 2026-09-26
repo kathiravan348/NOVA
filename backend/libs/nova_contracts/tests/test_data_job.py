@@ -23,6 +23,8 @@ def test_every_mock_job_round_trips_and_matches_schema(parity: Parity) -> None:
         {"error": "boom"},
         {"progressPercent": 50},
         {"status": "queued"},
+        {"symbols": []},
+        {"summary": "x" * 501},
     ],
 )
 def test_broken_rules_are_rejected(parity: Parity, change: dict[str, object]) -> None:
@@ -56,3 +58,18 @@ def test_bad_create_body_is_rejected(change: dict[str, object]) -> None:
 
     with pytest.raises(ValidationError):
         DataJobCreate.model_validate_json(json.dumps(body | change))
+
+
+def test_an_instrument_sync_job_has_no_symbols(parity: Parity) -> None:
+    raw = parity.mock("dataJobs")[0] | {
+        "type": "instrument_sync",
+        "symbols": [],
+        "timeframe": None,
+        "from": None,
+        "to": None,
+        "summary": "2,431 stocks, 3 new listings",
+    }
+
+    dumped = DataJob.model_validate_json(json.dumps(raw)).model_dump(mode="json")
+
+    parity.assert_valid(dumped, "DataJob")

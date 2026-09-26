@@ -1,12 +1,13 @@
 """Instrument and Candle: mirror `frontend/packages/contracts/src/marketData.ts`."""
 
-from typing import Annotated, Literal, Self
+from typing import Annotated, Self
 
 from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Exchange, IsoDate, Segment, Timeframe, UtcDateTime
 
-IndexName = Literal["NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50"]
+# Any `market_indices` row (D56); the API checks the name exists on write.
+IndexName = Annotated[str, Field(min_length=1, max_length=40, pattern=r"^[A-Z0-9 &-]+$")]
 PositivePaise = Annotated[int, Field(gt=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
 
@@ -58,3 +59,12 @@ class Candle(Contract):
         if self.low_paise > min(self.open_paise, self.close_paise):
             raise ValueError("lowPaise must be at most open and close")
         return self
+
+
+class MarketIndex(Contract):
+    """An NSE index (D56): `members` stocks of the list belong to it."""
+
+    name: IndexName
+    kite_symbol: NonEmpty
+    members: Annotated[int, Field(ge=0)]
+    updated_at: UtcDateTime | None

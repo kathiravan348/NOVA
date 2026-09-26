@@ -197,6 +197,7 @@ CASES: list[tuple[str, Factory, dict[str, Any]]] = [
     ("job completed at 100", _job, {"progress_percent": Decimal("99")}),
     ("job queued not started", _job, {"status": "queued", "progress_percent": Decimal("0")}),
     ("job no symbols", _job, {"symbols": []}),
+    ("job summary length", _job, {"summary": "x" * 501}),
     ("job tick record timeframe", _job, {"type": "tick_record"}),
     ("audit action", _audit, {"action": "backtest.delete"}),
     ("audit target pair", _audit, {"target_id": None}),
@@ -236,3 +237,17 @@ def test_bad_row_is_rejected(seeded: Session, factory: Factory, overrides: dict[
     with pytest.raises(IntegrityError), seeded.begin_nested():
         seeded.add(factory(**overrides))
         seeded.flush()
+
+
+def test_an_instrument_sync_job_needs_no_symbols(seeded: Session) -> None:
+    seeded.add(
+        _job(
+            type="instrument_sync",
+            symbols=[],
+            timeframe=None,
+            date_from=None,
+            date_to=None,
+            summary="2,431 stocks",
+        )
+    )
+    seeded.flush()

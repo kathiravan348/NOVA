@@ -63,6 +63,7 @@ def test_add_stores_a_trimmed_stock_and_audits_it(
         NEW | {"symbol": "INFY"},
         NEW | {"symbol": "m&m"},
         NEW | {"indices": ["SENSEX"]},
+        NEW | {"indices": ["nifty it"]},
         NEW | {"name": ""},
     ],
 )

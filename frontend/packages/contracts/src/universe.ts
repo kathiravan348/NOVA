@@ -18,10 +18,12 @@ export const UniverseEntryWriteSchema = z.strictObject({
 });
 export type UniverseEntryWrite = z.infer<typeof UniverseEntryWriteSchema>;
 
-/** One stock of the list; `synced` = Kite knows it (it has an instrument token). */
+/** One stock of the list; `synced` = Kite knows it (it has an instrument token); `newListing` = a
+ * sync added it after an earlier sync, e.g. an IPO (D56). */
 export const UniverseEntrySchema = z.strictObject({
   ...UniverseEntryWriteSchema.shape,
   synced: z.boolean(),
+  newListing: z.boolean(),
 });
 export type UniverseEntry = z.infer<typeof UniverseEntrySchema>;
 

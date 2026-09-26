@@ -20,7 +20,6 @@ from nova_db.enums import (
     DATA_JOB_STATUSES,
     DATA_JOB_TYPES,
     EXCHANGES,
-    INDEX_NAMES,
     SEGMENTS,
     TIMEFRAMES,
     sql_in,
@@ -38,7 +37,8 @@ class DataJob(Base):
         CheckConstraint(
             f"timeframe IS NULL OR {sql_in('timeframe', TIMEFRAMES)}", name="timeframe"
         ),
-        CheckConstraint("cardinality(symbols) >= 1", name="symbols"),
+        CheckConstraint("type = 'instrument_sync' OR cardinality(symbols) >= 1", name="symbols"),
+        CheckConstraint("summary IS NULL OR char_length(summary) <= 500", name="summary"),
         CheckConstraint(
             "type <> 'historical_download' OR"
             " (timeframe IS NOT NULL AND date_from IS NOT NULL AND date_to IS NOT NULL)",
@@ -79,6 +79,8 @@ class DataJob(Base):
     started_at: Mapped[datetime | None]
     finished_at: Mapped[datetime | None]
     error: Mapped[str | None]
+    # One line about the result, e.g. an instrument sync's counts (D56).
+    summary: Mapped[str | None]
 
 
 class AuditEntry(Base):
@@ -190,18 +192,32 @@ class UniverseEntry(Base):
     """The stock list the Owner edits in Relay (D54); `sync` adds Kite tokens to `instruments`."""
 
     __tablename__ = "universe"
-    __table_args__ = (
-        check_in("exchange", "exchange", EXCHANGES),
-        CheckConstraint(
-            "indices <@ ARRAY[" + ", ".join(f"'{i}'" for i in INDEX_NAMES) + "]::text[]",
-            name="indices",
-        ),
-    )
+    __table_args__ = (check_in("exchange", "exchange", EXCHANGES),)
 
     exchange: Mapped[str] = mapped_column(primary_key=True)
     symbol: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
     sector: Mapped[str]
+    # Names of `market_indices` rows; checked by the API on write (D56).
     indices: Mapped[list[str]] = mapped_column(server_default="{}")
+    # Added by a sync after an earlier sync completed: a new listing such as an IPO (D56).
+    new_listing: Mapped[bool] = mapped_column(server_default="false")
     created_at: Mapped[datetime] = created_at_column()
     updated_at: Mapped[datetime] = created_at_column()
+
+
+class MarketIndex(Base):
+    """An NSE index (D56): Kite gives its token, NSE's constituent file gives its members."""
+
+    __tablename__ = "market_indices"
+    __table_args__ = (
+        CheckConstraint("char_length(name) BETWEEN 1 AND 40", name="name"),
+        CheckConstraint("member_count >= 0", name="member_count"),
+    )
+
+    name: Mapped[str] = mapped_column(primary_key=True)
+    kite_symbol: Mapped[str] = mapped_column(unique=True)
+    constituents_file: Mapped[str]
+    instrument_token: Mapped[int | None] = mapped_column(BigInteger)
+    member_count: Mapped[int] = mapped_column(Integer, server_default="0")
+    updated_at: Mapped[datetime | None]

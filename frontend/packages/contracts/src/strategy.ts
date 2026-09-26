@@ -70,7 +70,14 @@ export const RuleGroupSchema = z.strictObject({
 });
 export type RuleGroup = z.infer<typeof RuleGroupSchema>;
 
-export const IndexNameSchema = z.enum(["NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50"]);
+/** Any row of `market_indices` (D56); the server checks the name exists on write. */
+export const IndexNameSchema = z
+  .string()
+  .min(1)
+  .max(40)
+  .regex(/^[A-Z0-9 &-]+$/, "Capital letters, digits, spaces, & or -");
+/** The indices NOVA started with; screens load the full list from the API. */
+export const DEFAULT_INDEX_NAMES = ["NIFTY 50", "NIFTY BANK", "NIFTY NEXT 50"] as const;
 export type IndexName = z.infer<typeof IndexNameSchema>;
 
 export const UniverseSymbolsSchema = z.strictObject({

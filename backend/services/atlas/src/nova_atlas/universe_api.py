@@ -10,7 +10,7 @@ from nova_common import ApiException
 from nova_common.internal import Caller, CallerDep
 from nova_contracts import InstrumentSyncResult, UniverseEntry, UniverseEntryWrite
 from nova_db.audit import record_audit
-from nova_db.models import DataJob, Instrument
+from nova_db.models import DataJob, Instrument, MarketIndex
 from nova_db.models import UniverseEntry as UniverseRow
 from nova_db.web import Db
 from sqlalchemy import select
@@ -37,6 +37,7 @@ def _view(row: UniverseRow, synced: bool) -> dict[str, object]:
             "sector": row.sector,
             "indices": row.indices,
             "synced": synced,
+            "newListing": row.new_listing,
         }
     )
     return entry.model_dump(mode="json")
@@ -69,10 +70,15 @@ def _audit(db: Session, caller: Caller, action: str, symbol: str, summary: str) 
     )
 
 
-def _fill(row: UniverseRow, body: UniverseEntryWrite) -> None:
+def _fill(db: Session, row: UniverseRow, body: UniverseEntryWrite) -> None:
+    indices = list(dict.fromkeys(body.indices))
+    known = set(db.scalars(select(MarketIndex.name).where(MarketIndex.name.in_(indices))))
+    unknown = [name for name in indices if name not in known]
+    if unknown:
+        raise ApiException(400, "invalid_request", f"Unknown index: {', '.join(unknown)}")
     row.name = body.name.strip()
     row.sector = body.sector.strip()
-    row.indices = list(dict.fromkeys(body.indices))
+    row.indices = indices
     row.updated_at = datetime.now(UTC)
 
 
@@ -87,7 +93,7 @@ def add_entry(body: UniverseEntryWrite, caller: CallerDep, db: Db) -> JSONRespon
     if db.get(UniverseRow, (EXCHANGE, body.symbol)) is not None:
         raise ApiException(400, "invalid_request", f"{body.symbol} is already in the stock list")
     row = UniverseRow(exchange=EXCHANGE, symbol=body.symbol)
-    _fill(row, body)
+    _fill(db, row, body)
     db.add(row)
     _audit(db, caller, "instrument.add", row.symbol, f"Added {row.symbol} ({row.name})")
     db.commit()
@@ -99,7 +105,7 @@ def update_entry(symbol: str, body: UniverseEntryWrite, caller: CallerDep, db: D
     if body.symbol != symbol:
         raise ApiException(400, "invalid_request", "The symbol cannot be changed")
     row = _row(db, symbol)
-    _fill(row, body)
+    _fill(db, row, body)
     _audit(db, caller, "instrument.update", symbol, f"Updated {symbol} ({row.name})")
     db.commit()
     return JSONResponse(_view(row, symbol in _synced(db)))
