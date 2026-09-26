@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import type {
   ArchiveJobCreate,
   BrokerAccountCreate,
+  DataJob,
   DataJobCreate,
   KiteAppUpdate,
   KiteKeysUpdate,
@@ -155,21 +156,41 @@ export function useBrokerProfile(broker: string) {
   });
 }
 
-/** Data jobs, one page at a time; `fetchNextPage` loads more. */
+/** How often job screens refresh while a job is queued or running (D56 (5)). */
+export const JOB_POLL_MS = { detail: 3_000, list: 5_000 };
+
+function isActive(job: Pick<DataJob, "status">): boolean {
+  return job.status === "queued" || job.status === "running";
+}
+
+/** Data jobs, one page at a time; `fetchNextPage` loads more. Refreshes while any job is active. */
 export function useDataJobs() {
   return useInfiniteQuery({
     queryKey: queryKeys.dataJobs.list,
     queryFn: ({ signal, pageParam }) => listDataJobs(cursorQuery(pageParam), { signal }),
     ...pagedListOptions,
     select: flattenPages,
+    refetchInterval: (query) =>
+      query.state.data?.pages.some((page) => page.items.some(isActive)) ? JOB_POLL_MS.list : false,
   });
 }
 
+/** One job; refreshes while it is queued or running, and refreshes the list when its status changes. */
 export function useDataJob(id: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: queryKeys.dataJobs.detail(id),
-    queryFn: ({ signal }) => getDataJob(id, { signal }),
+    queryFn: async ({ signal }) => {
+      const before = queryClient.getQueryData<DataJob>(queryKeys.dataJobs.detail(id));
+      const job = await getDataJob(id, { signal });
+      if (before && before.status !== job.status) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.list });
+      }
+      return job;
+    },
     enabled: Boolean(id),
+    refetchInterval: (query) =>
+      query.state.data && isActive(query.state.data) ? JOB_POLL_MS.detail : false,
   });
 }
 

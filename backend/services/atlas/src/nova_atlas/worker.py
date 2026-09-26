@@ -20,6 +20,14 @@ WORKER_TYPES = ("historical_download", "archive")
 OWNED = DataJob.type.in_(WORKER_TYPES)
 
 
+def crash_message(exc: BaseException) -> str:
+    """Class + first line only: SQLAlchemy puts the SQL and its parameters on later lines."""
+    lines = str(exc).strip().splitlines()
+    first = lines[0][:120] if lines else ""
+    detail = f": {first}" if first else ""
+    return f"Unexpected error ({type(exc).__name__}){detail}. The worker log has details."
+
+
 def _run(db: Session, job_id: str, broker: BrokerData, archive_dir: Path) -> None:
     job = db.get(DataJob, job_id)
     if job is not None and job.type == "archive":
@@ -48,11 +56,11 @@ def run_worker(
                 logger.info("Running data job %s", job_id)
                 try:
                     _run(db, job_id, broker, archive_dir)
-                except Exception:
+                except Exception as exc:
                     # Anything unexpected fails this job only; the worker keeps serving the queue.
                     logger.exception("Data job %s crashed", job_id)
                     db.rollback()
-                    fail_job(db, job_id, "Unexpected error; see the worker log")
+                    fail_job(db, job_id, crash_message(exc))
                 continue
         if on_idle is not None:
             on_idle()

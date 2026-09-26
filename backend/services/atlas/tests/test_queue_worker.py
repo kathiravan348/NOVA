@@ -87,7 +87,7 @@ def test_worker_survives_a_broken_job(
     (job_id,) = _queue(clean, 1)
 
     def crash(*_: object) -> None:
-        raise RuntimeError("bug")
+        raise RuntimeError("bug in step\n[SQL: INSERT INTO candles ...]\n[parameters: secret]")
 
     monkeypatch.setattr("nova_atlas.worker.run_download", crash)
     stop = threading.Event()
@@ -97,7 +97,7 @@ def test_worker_survives_a_broken_job(
     with Session(clean) as db:
         job = db.get(DataJob, job_id)
     assert job is not None and job.status == "failed"
-    assert job.error == "Unexpected error; see the worker log"
+    assert job.error == "Unexpected error (RuntimeError): bug in step. The worker log has details."
 
 
 def test_worker_leaves_tick_recordings_to_the_broker(
