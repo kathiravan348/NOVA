@@ -7,6 +7,8 @@ import { QueryState } from "../../components/QueryState";
 import { formatIstDateTime, formatPeriod } from "../../lib/format";
 import { jobStatusLabel, jobStatusTone, jobTypeLabel, segmentLabel } from "../../lib/labels";
 import { CancelJobButton } from "./CancelJobButton";
+import { PauseResumeButton } from "./PauseResumeButton";
+import { planItems } from "./PlanReview";
 
 const orDash = (utc: string | null) => (utc ? formatIstDateTime(utc) : "—");
 
@@ -29,9 +31,12 @@ export function DataJobDetailPage() {
                     tone={jobStatusTone[job.status]}
                     label={jobStatusLabel[job.status]}
                   />
-                  {(job.status === "queued" || job.status === "running") && (
-                    <CancelJobButton jobId={job.id} />
-                  )}
+                  <span className="flex flex-wrap gap-2 sm:ml-auto">
+                    <PauseResumeButton job={job} />
+                    {["draft", "queued", "running", "paused"].includes(job.status) && (
+                      <CancelJobButton jobId={job.id} />
+                    )}
+                  </span>
                 </div>
                 <Meter
                   label="Progress"
@@ -41,6 +46,19 @@ export function DataJobDetailPage() {
                   warnAt={2}
                   dangerAt={2}
                 />
+                {job.stepsTotal > 0 && (
+                  <p className="text-body-sm text-text-muted">
+                    {formatQuantity(job.stepsDone)} of {formatQuantity(job.stepsTotal)} steps done
+                    {job.status === "paused"
+                      ? " — paused; Resume continues from the next step."
+                      : ""}
+                  </p>
+                )}
+                {job.status === "draft" && job.expiresAt && (
+                  <p className="text-body-sm text-text-muted">
+                    Planned, not started. The plan expires {formatIstDateTime(job.expiresAt)}.
+                  </p>
+                )}
                 {job.summary && <p className="text-body text-text-primary">{job.summary}</p>}
                 <DescriptionList
                   columns={2}
@@ -69,6 +87,11 @@ export function DataJobDetailPage() {
                 />
               </div>
             </Card>
+            {job.plan && (
+              <Card title="Plan">
+                <DescriptionList columns={2} items={planItems(job.plan)} />
+              </Card>
+            )}
             {job.status === "failed" && (
               <EmptyState
                 tone="error"

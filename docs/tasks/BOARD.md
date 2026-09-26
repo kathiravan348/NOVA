@@ -99,7 +99,7 @@
 | NOVA-091 | Frontend: realtime client; data-job screens update live, polling as fallback (D57) | done | Claude | 084, 090 |
 | NOVA-092 | Download plans: draft/paused statuses, job steps, market-hours setting (D57, migration 0011) | done | Claude | 090 |
 | NOVA-093 | Atlas: plan, coverage check, Start/Pause/Resume, step-by-step worker, market-hours pace (D57) | done | Claude | 087, 092 |
-| NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | planned | — | 088, 091, 093, 095 |
+| NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | done | Claude | 088, 091, 093, 095 |
 | NOVA-095 | Atlas: delete finished data jobs, optionally with their candles; `data_job.deleted` event (migration 0012) | done | Claude | 093 |
 | NOVA-096 | Relay: Delete job (+ candles) and clear the 26 Sep test downloads | planned | — | 094, 095 |
 

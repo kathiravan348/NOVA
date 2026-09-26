@@ -13,6 +13,8 @@ import { useSession } from "./session";
 export type RealtimeStatus = "off" | "connecting" | "open" | "down";
 
 export const RECONNECT_MS = { first: 1_000, max: 30_000, jitter: 500 };
+/** A handshake that hangs (e.g. a stuck dev proxy) is closed and retried after this long. */
+export const CONNECT_TIMEOUT_MS = 10_000;
 
 let status: RealtimeStatus = "off";
 const listeners = new Set<() => void>();
@@ -71,6 +73,25 @@ export function applyJobUpdate(queryClient: QueryClient, job: DataJob): void {
   }
 }
 
+/** Drops a deleted job from the detail cache, the loaded list pages and the latest-sync slot. */
+export function removeJobFromCache(queryClient: QueryClient, jobId: string): void {
+  queryClient.removeQueries({ queryKey: queryKeys.dataJobs.detail(jobId), exact: true });
+  queryClient.setQueryData<InfiniteData<Page<DataJob>>>(queryKeys.dataJobs.list, (data) =>
+    data
+      ? {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            items: page.items.filter((item) => item.id !== jobId),
+          })),
+        }
+      : data,
+  );
+  queryClient.setQueryData<DataJob | null>(queryKeys.dataJobs.latestSync, (current) =>
+    current?.id === jobId ? null : current,
+  );
+}
+
 /**
  * Opens the socket and keeps it open (backoff 1 s → 30 s + jitter). Returns a function that closes
  * it for good. Events missed while down are fetched once on reconnect.
@@ -89,7 +110,11 @@ export function connectRealtime(queryClient: QueryClient): () => void {
     setStatus(attempt === 0 && !wasOpen ? "connecting" : "down");
     const ws = new WebSocket(realtimeUrl());
     socket = ws;
+    const hung = setTimeout(() => {
+      if (ws.readyState === WebSocket.CONNECTING) ws.close();
+    }, CONNECT_TIMEOUT_MS);
     ws.onopen = () => {
+      clearTimeout(hung);
       attempt = 0;
       setStatus("open");
       if (wasOpen) refreshJobs();
@@ -107,8 +132,11 @@ export function connectRealtime(queryClient: QueryClient): () => void {
       const message = parsed.data;
       if (message.type === "ping") ws.send(JSON.stringify({ type: "pong" }));
       else if (message.type === "data_job.updated") applyJobUpdate(queryClient, message.data);
+      else if (message.type === "data_job.deleted")
+        removeJobFromCache(queryClient, message.data.id);
     };
     ws.onclose = () => {
+      clearTimeout(hung);
       if (stopped || socket !== ws) return;
       socket = null;
       if (status === "open") refreshJobs(); // polling takes over from the current state

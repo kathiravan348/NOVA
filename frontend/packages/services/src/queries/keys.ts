@@ -17,6 +17,7 @@ export const queryKeys = {
     detail: (id: string) => ["broker-accounts", id] as const,
   },
   recorder: ["recorder"] as const,
+  downloadSettings: ["download-settings"] as const,
   kiteApp: (accountId: string) => ["kite-app", accountId] as const,
   rateLimits: {
     all: ["rate-limits"] as const,

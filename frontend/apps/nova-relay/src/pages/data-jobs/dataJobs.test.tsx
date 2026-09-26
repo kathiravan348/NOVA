@@ -129,57 +129,6 @@ describe("Data jobs", () => {
   });
 });
 
-describe("New download", () => {
-  it("opens from the jobs list", async () => {
-    renderApp("/data-jobs");
-    fireEvent.click(await screen.findByRole("link", { name: "New download" }));
-    expect(await screen.findByRole("table", { name: "Stocks to download" })).toBeInTheDocument();
-  });
-
-  it("needs a stock and a period in order", async () => {
-    renderApp("/data-jobs/new");
-    await screen.findByRole("table", { name: "Stocks to download" });
-    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-12-01" } });
-    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-01-01" } });
-    fireEvent.click(screen.getByRole("button", { name: "Queue download" }));
-    expect(await screen.findByText("Pick at least one stock")).toBeInTheDocument();
-    expect(screen.getByText("From must be on or before To")).toBeInTheDocument();
-  });
-
-  it("queues the chosen stocks and returns to the list", async () => {
-    renderApp("/data-jobs/new");
-    const table = await screen.findByRole("table", { name: "Stocks to download" });
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search stocks" }), {
-      target: { value: "INFY" },
-    });
-    const row = (await within(table).findByText("INFY")).closest("tr")!;
-    fireEvent.click(within(row).getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Queue download" }));
-    expect(await screen.findByText("Download queued (demo)")).toBeInTheDocument();
-    expect(await screen.findByRole("table", { name: "Data jobs" })).toBeInTheDocument();
-  });
-
-  it("shows a server error", async () => {
-    server.use(
-      http.post("*/api/v1/data-jobs", () =>
-        HttpResponse.json(
-          { error: { code: "invalid_request", message: "Not in the stock list: INFY" } },
-          { status: 400 },
-        ),
-      ),
-    );
-    renderApp("/data-jobs/new");
-    const table = await screen.findByRole("table", { name: "Stocks to download" });
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search stocks" }), {
-      target: { value: "INFY" },
-    });
-    const row = (await within(table).findByText("INFY")).closest("tr")!;
-    fireEvent.click(within(row).getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Queue download" }));
-    expect(await screen.findByText("Not in the stock list: INFY")).toBeInTheDocument();
-  });
-});
-
 describe("Live prices", () => {
   it("switches recording on and shows its state", async () => {
     renderApp("/data-jobs");

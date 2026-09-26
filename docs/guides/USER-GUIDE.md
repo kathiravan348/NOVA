@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-091). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-094). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -273,12 +273,26 @@ pages change the moment the work moves on, with no reload. If it shows **Reconne
 dropped for a moment; the pages then refresh every few seconds until **Live** is back.
 
 **To download past prices:** press **New download**, choose the **Timeframe** (the size of each price bar,
-from **1 minute** to **1 day**), the **From** and **To** dates and the stocks (tick the boxes; use the search
-box to find one), then **Queue download**. The job starts within seconds and shows its progress. Only stocks
-*synced* with Kite can be ticked. 1-minute data is large: start with a few stocks.
+from **1 minute** to **1 day**), the **From** and **To** dates and the stocks. Tick stocks one by one (use the
+search box), or add a whole group with **Add index…** (for example all of NIFTY BANK) or **Add sector…**;
+**Clear** empties the list. Only stocks *synced* with Kite can be picked. Then press **Check plan**.
 
-**To stop a job** that is waiting or running, open it and press **Cancel job**, then confirm. Prices already
-saved stay.
+**Check the plan before it runs.** Nothing is downloaded yet. The plan shows, for each stock, the prices
+already stored and how many *steps* (one request to Zerodha each) are still needed, plus the total rows, the
+size on disk, about how long it takes and when it starts (**Now**, or after the jobs ahead). With **Skip
+data already there** (the default) stored prices are not fetched again; choose **Overwrite** to fetch
+everything again. If all of it is stored you see **Nothing to download**. Press **Start** to begin, or
+**Back** to change the stocks or dates. A plan you leave without starting shows as **Planned** in the list
+and can be started from its page within 24 hours.
+
+**To pause a download**, open it and press **Pause**: it stops after the step it is on, and every finished
+step is kept. **Resume** continues from the next step, even after the computer was restarted.
+
+**To stop a job** that is planned, waiting, running or paused, open it and press **Cancel job**, then
+confirm. Prices already saved stay.
+
+**Download pace** (the card at the top): during market hours (weekdays 09:15–15:30) downloads **Slow down**
+to one request a second, so live prices keep flowing. Choose **Full pace** to download at full speed all day.
 
 **Live prices** (the card at the top): turn on **Record live prices** and NOVA records every price change
 (*ticks*) of the chosen stocks every weekday from 09:15 to 15:30, by itself, until you turn it off. Past
@@ -320,6 +334,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | A download *Failed* with *Kite refused the request* | Zerodha said no (the reason follows). Often it is busy: wait a minute and queue it again. |
 | A download *Failed* with *Unexpected error* | Something broke inside NOVA. Queue it again once; if it fails the same way, send the message to the Owner. |
 | A job page shows an old status | With **Live** at the top right it updates at once. With **Reconnecting…** (or in Demo) it refreshes every few seconds while a job is **Queued** or **Running**. If **Reconnecting…** stays for minutes, check that NOVA is running, then reload the page. |
+| A download shows **Paused** | It was paused and keeps its finished steps. Open it and press **Resume**. |
+| A download is **Planned** but never ran | A plan waits for **Start**. Open it and press **Start** (plans older than 24 hours are cancelled; check the plan again). |
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |

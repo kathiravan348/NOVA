@@ -27,7 +27,7 @@ export function CancelJobButton({ jobId }: { jobId: string }) {
 
   return (
     <>
-      <Button variant="secondary" size="sm" className="sm:ml-auto" onClick={() => setOpen(true)}>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
         Cancel job
       </Button>
       <Modal

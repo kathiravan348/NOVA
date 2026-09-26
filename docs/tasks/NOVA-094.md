@@ -1,6 +1,6 @@
 # NOVA-094 — Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-094 · **Depends on:** NOVA-088, NOVA-091, NOVA-093
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-094 · **Depends on:** NOVA-088, NOVA-091, NOVA-093, NOVA-095
 
 ## Goal
 New download shows the plan (what is already stored, requests, rows, size, time, start) and waits for
@@ -48,5 +48,15 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** New download = pick (Add index… / Add sector… / Clear) → **Check plan** → plan review (per stock, totals, warnings, Skip/Overwrite re-plans) → **Start**; Pause/Resume/Start on the job page, steps and plan card; Download pace card; recorder modal uses the bulk picker.
+**Files changed:** as listed; plus `services/src/{api,queries}/downloads.ts` (new, keeps `relay.ts` small), `http.ts` (DELETE), `realtime.ts` (cache removal, 10 s handshake timeout), `mocks/src/handlers/downloads.ts` + test, `lib/plan.ts` + test, `downloads.test.tsx` (New download tests moved there).
+**Commands run:** `pnpm review:check` → pass. Real stack: plan of 6 stocks (1 step already stored), Start, Pause at 2/12, worker restart, Resume → completed, 11 Kite requests for 11 steps.
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (real mode); mock mode by tests.
+**New dependencies:** none. **Guides updated:** USER-GUIDE.
+**Deviations from task:** Skip/Overwrite and pace are `Select`s (no radio in ui-core; no new component needed). Chosen stocks show as the table selection plus a count, not chips. Bulk counts come from the loaded stock list, so `/universe/sectors` is not called. Back and re-plan delete the draft (NOVA-095) instead of leaving it to expire.
+**Known gaps:** none.
 
 ## Review
+**Result:** done (built and merged by Claude at the Owner's request).
+**Fixed directly:** stuck "Connecting…" after a backend restart (Vite proxy hung the handshake) → client closes a handshake after 10 s and retries; "1 steps" wording.
+**Guides checked:** USER-GUIDE matches. **Rulebook issues found:** none. **Follow-up tasks created:** none.
