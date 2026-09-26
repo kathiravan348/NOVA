@@ -1,6 +1,6 @@
 # NOVA-098 — Postgres connections: limit 100, small pools per service
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-098 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-098 · **Depends on:** —
 
 ## Goal
 The stack never runs out of database connections. Today TimescaleDB's tuner set `max_connections = 25`
@@ -35,5 +35,9 @@ Create:
 ## Questions
 
 ## Handoff
+**Done:** `db` runs with `max_connections=100`; engines use `pool_size=2`, `max_overflow=6`.
+**Commands run:** backend-check with the app stack running (662 passed; before, it needed the stack stopped).
+**Owner stack:** `SHOW max_connections` = 100; 13 connections after start. **Guides updated:** DATABASE.
 
 ## Review
+**Result:** done (Claude, Owner request). **Rulebook issues found:** none.
