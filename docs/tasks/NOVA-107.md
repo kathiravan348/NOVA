@@ -1,6 +1,6 @@
 # NOVA-107 — Orbit: delete backtests, Edit as a new version, Versions table (D60)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-107 · **Depends on:** NOVA-104
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-107 · **Depends on:** NOVA-104
 
 ## Goal
 From Orbit the Owner deletes one or many backtests, edits a backtest (which queues its next version), sees
@@ -51,5 +51,17 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. `DeleteBacktestButton.tsx` (run page Delete, per-version bin, `DeleteSelectedButton` for the list),
+`VersionsTable.tsx`, `EditBacktestPage.tsx` (`/backtests/:id/edit`), `BacktestFormView` exported with `editing`
+(strategy read-only, **Queue new version**), `defaultsFromRun`/`toVersionCreate`; run page header "· v2", Edit,
+Delete, Versions table, summary-only view for older versions (no Compare button there); list tick boxes +
+**Delete selected (n)** (running rows not selectable), "· v3" in names; Compare shows "No equity curve (older
+version)" for an empty curve. USER-GUIDE Step 6 + §7.
+- New tests in `versions.test.tsx` (kept `backtests.test.tsx` under 300 lines); `routes.test.tsx` now wraps the
+  router in `ToastProvider` (the list page uses toasts).
+- `useBacktest` also refreshes the versions table when a run finishes.
+- Checked in a demo Orbit at 1280 px (dark) and 360 px (light): no side scroll, the Versions table stacks.
+Guides: USER-GUIDE.
 
 ## Review
+Built and reviewed by Claude. `pnpm review:check` passed. Merged.

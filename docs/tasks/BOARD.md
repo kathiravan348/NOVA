@@ -112,7 +112,7 @@
 | NOVA-104 | Contracts, mocks, services: backtest versions and delete, stats by version (D60) | done | Claude | 102 |
 | NOVA-105 | Backtest service: versions, delete, slim history (D60, migration 0015) | done | Claude | 104 |
 | NOVA-106 | Strategy stats per strategy version (D60) | done | Claude | 104 |
-| NOVA-107 | Orbit: delete backtests, Edit as a new version, Versions table (D60) | planned | — | 104 (merge after 105) |
+| NOVA-107 | Orbit: delete backtests, Edit as a new version, Versions table (D60) | done | Claude | 104 (merge after 105) |
 | NOVA-108 | Orbit: view any strategy version and compare two side by side (D60) | planned | — | 104 (merge after 106) |
 
 ## Parallel lanes (tasks that can run at the same time)

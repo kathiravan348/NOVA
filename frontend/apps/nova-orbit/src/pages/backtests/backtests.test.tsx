@@ -29,8 +29,10 @@ afterAll(() => server.close());
 describe("Backtests list", () => {
   it("lists every run with its status", async () => {
     renderApp("/backtests");
-    for (const run of mockBacktestRuns) {
-      expect((await screen.findAllByRole("link", { name: run.name })).length).toBeGreaterThan(0);
+    // Only the newest version of each backtest is listed (D60): run_006 is v1 of run_002.
+    for (const run of mockBacktestRuns.filter((r) => r.id !== "run_006")) {
+      const name = run.version > 1 ? `${run.name} · v${run.version}` : run.name;
+      expect((await screen.findAllByRole("link", { name })).length).toBeGreaterThan(0);
     }
     for (const label of ["Completed", "Queued", "Failed"]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);

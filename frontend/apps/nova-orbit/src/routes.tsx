@@ -4,6 +4,7 @@ import { RequireAuth } from "./layout/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { BacktestResultPage } from "./pages/backtests/BacktestResultPage";
 import { BacktestsPage } from "./pages/backtests/BacktestsPage";
+import { EditBacktestPage } from "./pages/backtests/EditBacktestPage";
 import { NewBacktestPage } from "./pages/backtests/NewBacktestPage";
 import { ComparePage } from "./pages/compare/ComparePage";
 import { MarketDataPage } from "./pages/market-data/MarketDataPage";
@@ -49,6 +50,11 @@ export const routes: RouteObject[] = [
             path: "/backtests/new",
             handle: { title: "Run backtest" } satisfies RouteHandle,
             element: <NewBacktestPage />,
+          },
+          {
+            path: "/backtests/:id/edit",
+            handle: { title: "Edit backtest" } satisfies RouteHandle,
+            element: <EditBacktestPage />,
           },
           {
             path: "/backtests/:id",

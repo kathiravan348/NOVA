@@ -76,12 +76,16 @@ export function ComparePage() {
                     </span>
                   }
                 >
-                  <EquityCurve
-                    points={data.equityCurve}
-                    initialCapitalPaise={source.initialCapitalPaise}
-                    height={220}
-                    ariaLabel={`Equity curve for ${run.name}`}
-                  />
+                  {data.equityCurve.length === 0 ? (
+                    <p className="text-body-sm text-text-muted">No equity curve (older version)</p>
+                  ) : (
+                    <EquityCurve
+                      points={data.equityCurve}
+                      initialCapitalPaise={source.initialCapitalPaise}
+                      height={220}
+                      ariaLabel={`Equity curve for ${run.name}`}
+                    />
+                  )}
                 </Card>
               );
             })}

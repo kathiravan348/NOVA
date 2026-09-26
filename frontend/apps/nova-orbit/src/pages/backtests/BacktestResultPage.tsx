@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
-import { AlertTriangle, GitCompare } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
+import { AlertTriangle, GitCompare, Pencil } from "lucide-react";
 import type { BacktestRun } from "@nova/contracts";
 import {
   Button,
@@ -12,32 +12,62 @@ import {
   LoadMore,
 } from "@nova/ui-core";
 import { EquityCurve, formatInr } from "@nova/ui-trading";
-import { useBacktest, useBacktestResult, useBacktestTrades, useStrategy } from "@nova/services";
+import {
+  useBacktest,
+  useBacktestResult,
+  useBacktestTrades,
+  useBacktestVersions,
+  useStrategy,
+} from "@nova/services";
 import { QueryError, QueryState } from "../../components/QueryState";
 import { formatIstDateTime, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
 import { describeUniverse } from "../../lib/strategyText";
+import { DeleteBacktestButton } from "./DeleteBacktestButton";
 import { MetricsGrid } from "./MetricsGrid";
 import { RunProgress } from "./RunProgress";
 import { progressLine } from "./progressText";
 import { SymbolBreakdown } from "./SymbolBreakdown";
 import { TradesTable } from "./TradesTable";
+import { VersionsTable } from "./VersionsTable";
 
 function RunHeader({ run }: { run: BacktestRun }) {
   const strategy = useStrategy(run.strategyId);
+  const navigate = useNavigate();
+  const active = run.status === "queued" || run.status === "running";
   return (
     <Card>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-page-title text-text-primary">{run.name}</h2>
+          <h2 className="text-page-title text-text-primary">
+            {run.name}
+            {run.version > 1 && <span className="text-text-muted"> · v{run.version}</span>}
+          </h2>
           <StatusBadge tone={runStatusTone[run.status]} label={runStatusLabel[run.status]} />
-          {run.status === "completed" && (
-            <Button asChild variant="secondary" size="sm" className="sm:ml-auto">
-              <Link to={`/compare?runs=${run.id}`}>
-                <GitCompare className="h-4 w-4" aria-hidden="true" />
-                Compare
-              </Link>
-            </Button>
-          )}
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            {run.status === "completed" && run.reportKept && (
+              <Button asChild variant="secondary" size="sm">
+                <Link to={`/compare?runs=${run.id}`}>
+                  <GitCompare className="h-4 w-4" aria-hidden="true" />
+                  Compare
+                </Link>
+              </Button>
+            )}
+            {!active && (
+              <Button asChild variant="secondary" size="sm">
+                <Link to={`/backtests/${run.id}/edit`}>
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
+              </Button>
+            )}
+            {run.status !== "running" && (
+              <DeleteBacktestButton
+                runId={run.id}
+                name={run.name}
+                onDeleted={() => navigate("/backtests")}
+              />
+            )}
+          </div>
         </div>
         <DescriptionList
           columns={2}
@@ -127,7 +157,34 @@ function CompletedRun({ run }: { run: BacktestRun }) {
   );
 }
 
-function RunBody({ run }: { run: BacktestRun }) {
+/** An older version keeps only its metrics (D60). */
+function SummaryOnly({ run, newestId }: { run: BacktestRun; newestId?: string }) {
+  const result = useBacktestResult(run.id);
+  return (
+    <>
+      <p className="text-body text-text-secondary">
+        Older version: only the summary is kept. The newest version has the full report.{" "}
+        {newestId && newestId !== run.id && (
+          <Link to={`/backtests/${newestId}`} className="text-action-text hover:underline">
+            Open the newest version
+          </Link>
+        )}
+      </p>
+      {result.isPending ? (
+        <Skeleton className="h-32 w-full" />
+      ) : result.isError ? (
+        <QueryError error={result.error} onRetry={() => void result.refetch()} />
+      ) : (
+        <MetricsGrid metrics={result.data.metrics} />
+      )}
+    </>
+  );
+}
+
+function RunBody({ run, newestId }: { run: BacktestRun; newestId?: string }) {
+  if (run.status === "completed" && !run.reportKept) {
+    return <SummaryOnly run={run} newestId={newestId} />;
+  }
   if (run.status === "completed") return <CompletedRun run={run} />;
   if (run.status === "failed") {
     const stopped = run.progress
@@ -153,12 +210,15 @@ function RunBody({ run }: { run: BacktestRun }) {
 export function BacktestResultPage() {
   const { id = "" } = useParams();
   const query = useBacktest(id);
+  const versions = useBacktestVersions(id);
+  const history = versions.data ?? [];
   return (
     <QueryState query={query} back={{ to: "/backtests", label: "Back to backtests" }}>
       {(run) => (
         <div className="flex flex-col gap-6">
           <RunHeader run={run} />
-          <RunBody run={run} />
+          {history.length > 1 && <VersionsTable versions={history} currentId={run.id} />}
+          <RunBody run={run} newestId={history[0]?.runId} />
         </div>
       )}
     </QueryState>
