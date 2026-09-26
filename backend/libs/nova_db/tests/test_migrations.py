@@ -47,6 +47,28 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
+def test_head_revision_is_0013(engine: Engine) -> None:
+    with engine.connect() as connection:
+        head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+
+    assert head == "0013"
+
+
+def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:
+    query = text(
+        "SELECT compression_enabled FROM timescaledb_information.hypertables"
+        " WHERE hypertable_name = 'candles'"
+    )
+    downgrade(database_url, "0012")
+    with engine.connect() as connection:
+        before = connection.execute(query).scalar_one()
+    upgrade(database_url)
+    with engine.connect() as connection:
+        after = connection.execute(query).scalar_one()
+
+    assert (before, after) == (False, True)
+
+
 def test_super_admin_role_is_seeded(engine: Engine) -> None:
     with engine.connect() as connection:
         roles = connection.execute(text("SELECT id FROM roles")).scalars()

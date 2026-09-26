@@ -1,6 +1,6 @@
 # NOVA-099 — Compress old candles (TimescaleDB compression, migration 0013)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-099 · **Depends on:** NOVA-098
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-099 · **Depends on:** NOVA-098
 
 ## Goal
 `candles` chunks older than 30 days are compressed automatically (D58), so 5 years of 1m bars for 1,000
@@ -53,5 +53,14 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. Migration `0013` + `test_compression.py` (read, overwrite upsert, delete one stock, policy row) and two
+migration tests (head `0013`; downgrade to `0012` turns compression off). No service code changed.
+- Owner stack (63 stocks, 5.8 M 1m rows): the policy started compressing on `migrate`; after the manual
+  `compress_chunk` 11 of 13 chunks are compressed: **706 MB → 42 MB** (`hypertable_compression_stats`);
+  the whole table went 825 MB → 161 MB (two newest chunks stay plain).
+- Candles endpoint returns 375 1m bars for INFY on 2 Mar 2026 (compressed); a 5-stock SMA backtest
+  Feb–Apr 2026 completed (197 trades). Test runs deleted afterwards.
+Guides: DATABASE.
 
 ## Review
+Built and reviewed by Claude. `backend-check` 676 passed. Merged.
