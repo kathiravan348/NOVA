@@ -1,6 +1,6 @@
 # NOVA-084 — Data jobs: batched candle writes, clear failure reasons, job screens refresh
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-084 · **Depends on:** NOVA-083
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-084 · **Depends on:** NOVA-083
 
 ## Goal
 A 1-year 1-minute download completes (today it crashes: one INSERT carries > 65,535 values). Every failed
@@ -48,5 +48,16 @@ Modify:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request.
+- `upsert_candles` writes `CANDLE_BATCH = 5000` rows per INSERT (root cause of the AXISBANK failures:
+  a 60-day 1m chunk × 8 columns > 65,535 values).
+- `broker_client.explain()` maps broker answers to plain messages (`NOT_LOGGED_IN`, `NO_ANSWER`, "Kite refused
+  the request: …"); `worker.crash_message()` keeps the class and first line only.
+- `useDataJob` polls 3 s / `useDataJobs` 5 s while active (`JOB_POLL_MS`, exported so tests can shorten it);
+  a detail status change invalidates the list.
+- Also touched: `libs/nova_testing/.../broker.py` (`error_status`). `queries.test.tsx` not needed: the Relay test covers polling.
+- Checks: `pnpm review:check` green; backend ruff/format/mypy clean, every package's pytest green (host).
+- Guides: USER-GUIDE ("what do I do if" rows).
 
 ## Review
+Self-reviewed. Real stack: the failed AXISBANK 1y 1m job re-run on the rebuilt worker → completed, 91,723 rows.

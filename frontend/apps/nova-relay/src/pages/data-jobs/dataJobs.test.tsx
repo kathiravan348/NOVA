@@ -2,7 +2,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { handlers, resetMockRecorder } from "@nova/mocks";
+import { handlers, mockDataJobs, resetMockRecorder } from "@nova/mocks";
+import { JOB_POLL_MS } from "@nova/services";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -59,6 +60,38 @@ describe("Data jobs", () => {
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel job" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Job is already completed");
+  });
+
+  it("refreshes a queued job until it finishes, then stops", async () => {
+    const saved = { ...JOB_POLL_MS };
+    JOB_POLL_MS.detail = 20;
+    const statuses = ["queued", "running", "completed"] as const;
+    let calls = 0;
+    server.use(
+      http.get("*/api/v1/data-jobs/job_002", () => {
+        const status = statuses[Math.min(calls, statuses.length - 1)];
+        calls += 1;
+        const done = status === "completed";
+        return HttpResponse.json({
+          ...mockDataJobs.find((job) => job.id === "job_002"),
+          status,
+          progressPercent: done ? 100 : 0,
+          startedAt: status === "queued" ? null : "2026-09-26T05:20:00Z",
+          finishedAt: done ? "2026-09-26T05:21:00Z" : null,
+          error: null,
+        });
+      }),
+    );
+    try {
+      renderApp("/data-jobs/job_002");
+      expect(await screen.findByText("Queued")).toBeInTheDocument();
+      expect(await screen.findByText("Completed")).toBeInTheDocument();
+      const settled = calls;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(calls).toBe(settled);
+    } finally {
+      Object.assign(JOB_POLL_MS, saved);
+    }
   });
 
   it("shows Not found for an unknown job", async () => {

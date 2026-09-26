@@ -15,13 +15,14 @@ class FakeBroker:
         self.internal_token = internal_token
         self.history_calls: list[httpx2.Request] = []
         self.error: str | None = None
+        self.error_status = 400
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
         if request.headers.get("x-nova-internal-token") != self.internal_token:
             return httpx2.Response(401, json={"error": {"code": "unauthorized", "message": "no"}})
         if self.error:
             body = {"error": {"code": "invalid_request", "message": self.error}}
-            return httpx2.Response(400, json=body)
+            return httpx2.Response(self.error_status, json=body)
         path = request.url.path
         if path.startswith("/internal/kite/instruments/"):
             return httpx2.Response(200, text=INSTRUMENTS_CSV.get(path.rsplit("/", 1)[1], ""))

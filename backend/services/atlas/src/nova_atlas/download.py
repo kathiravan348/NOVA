@@ -26,6 +26,8 @@ KITE_INTERVAL = {
 # Most days Kite returns per historical request, by timeframe.
 CHUNK_DAYS = {"1m": 60, "3m": 100, "5m": 100, "15m": 200, "30m": 200, "1h": 400, "1d": 2000}
 ERROR_LENGTH = 300
+# Rows per INSERT: Postgres takes at most 65,535 values per statement (8 columns → 40,000).
+CANDLE_BATCH = 5000
 
 
 @dataclass(frozen=True)
@@ -88,15 +90,14 @@ def to_row(exchange: str, symbol: str, timeframe: str, bar: list[Any]) -> dict[s
 
 def upsert_candles(db: Session, rows: list[dict[str, Any]]) -> int:
     """Any: rows built by `to_row`."""
-    if not rows:
-        return 0
-    statement = insert(Candle).values(rows)
     prices = ("open_paise", "high_paise", "low_paise", "close_paise", "volume")
-    statement = statement.on_conflict_do_update(
-        index_elements=["exchange", "symbol", "timeframe", "ts"],
-        set_={name: statement.excluded[name] for name in prices},
-    )
-    db.execute(statement)
+    for first in range(0, len(rows), CANDLE_BATCH):
+        statement = insert(Candle).values(rows[first : first + CANDLE_BATCH])
+        statement = statement.on_conflict_do_update(
+            index_elements=["exchange", "symbol", "timeframe", "ts"],
+            set_={name: statement.excluded[name] for name in prices},
+        )
+        db.execute(statement)
     return len(rows)
 
 
@@ -132,7 +133,7 @@ def run_download(db: Session, job_id: str, broker: BrokerData) -> None:
         finish_job(
             db,
             job,
-            f"Unknown instruments: {', '.join(missing)} (sync the stock list with Kite first)",
+            f"Not synced with Kite: {', '.join(missing)}. Run Sync with Kite on Instruments first.",
         )
         return
 

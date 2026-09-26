@@ -89,7 +89,7 @@
 | NOVA-081 | Broker: login finished with the passphrase; Kite keys leave `.env`; broker CLI trimmed (D55) | done | Claude | 080, 083 |
 | NOVA-082 | Relay: Kite app card + passphrase to finish the login (D55) | done | Claude | 081 (merge with 081) |
 | NOVA-083 | Atlas: remove CLI commands Relay covers (D55) | done | Claude | 078 |
-| NOVA-084 | Data jobs: batched candle writes, clear failure reasons, job screens refresh (D56) | planned | — | 083 |
+| NOVA-084 | Data jobs: batched candle writes, clear failure reasons, job screens refresh (D56) | done | Claude | 083 |
 | NOVA-085 | Indices table, open `IndexName`, new-listing flag, `instrument_sync` job type (D56, migration 0009) | planned | — | 083 |
 | NOVA-086 | Broker: NSE index constituents + session status over `/internal` (D56) | planned | — | 083 |
 | NOVA-087 | Atlas: sync all NSE stocks + indices as a job; daily auto-sync (D56) | planned | — | 084, 085, 086 |

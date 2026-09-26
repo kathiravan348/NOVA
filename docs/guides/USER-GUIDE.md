@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-083). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-084). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -300,7 +300,12 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 |---|---|
 | Yellow bar at the top | You are in demo mode: nothing you do is saved. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
-| A download *Failed* with *Unknown instruments* | The stock is not synced with Kite yet. Press **Sync with Kite** on the Instruments page, then queue it again. |
+| A download *Failed* with *Not synced with Kite* | The stock is not synced with Kite yet. Press **Sync with Kite** on the Instruments page, then queue it again. |
+| A download *Failed* with *Kite is not logged in today* | Do the daily Kite login on the **Broker** page, then queue the download again. |
+| A download *Failed* with *The broker service did not answer* | NOVA's broker part is not running. Start the whole NOVA stack again, then queue the download again. |
+| A download *Failed* with *Kite refused the request* | Zerodha said no (the reason follows). Often it is busy: wait a minute and queue it again. |
+| A download *Failed* with *Unexpected error* | Something broke inside NOVA. Queue it again once; if it fails the same way, send the message to the Owner. |
+| A job page shows an old status | It refreshes by itself every few seconds while a job is **Queued** or **Running**. |
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |

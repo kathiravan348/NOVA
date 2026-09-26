@@ -51,11 +51,26 @@ class BrokerData:
         try:
             response = self._http.get(path, params=params)
         except httpx2.HTTPError as exc:
-            raise BrokerDataError("The broker service did not answer") from exc
+            raise BrokerDataError(NO_ANSWER) from exc
         if response.status_code >= 400:
             try:
                 message = str(response.json()["error"]["message"])
             except (ValueError, KeyError, TypeError):
                 message = f"The broker answered {response.status_code}"
-            raise BrokerDataError(message)
+            raise BrokerDataError(explain(response.status_code, message))
         return response
+
+
+NO_ANSWER = "The broker service did not answer. Check that the stack is running, then try again."
+NOT_LOGGED_IN = "Kite is not logged in today. Log in on the Broker page, then try again."
+# Kite's words for a missing or expired access token (TokenException).
+_SESSION_HINTS = ("live session", "access_token", "api_key", "token")
+
+
+def explain(status: int, message: str) -> str:
+    """A job-safe message saying what went wrong and what to do (D56 (5))."""
+    if status in (400, 502) and any(hint in message.lower() for hint in _SESSION_HINTS):
+        return NOT_LOGGED_IN
+    if status in (400, 401, 404):
+        return message
+    return f"Kite refused the request: {message}"[:200]
