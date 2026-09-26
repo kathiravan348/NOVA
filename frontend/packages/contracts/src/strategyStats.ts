@@ -7,6 +7,22 @@ export const BestNetPnlSchema = z.strictObject({
 });
 export type BestNetPnl = z.infer<typeof BestNetPnlSchema>;
 
+/** Completed runs and best return of one strategy version (D60). */
+export const VersionStatsSchema = z
+  .strictObject({
+    version: z.number().int().min(1),
+    runsCompleted: z.number().int().min(0),
+    bestReturnPercent: z.number().nullable(),
+    bestRunId: IdSchema.nullable(),
+  })
+  .refine(
+    (v) =>
+      (v.bestReturnPercent !== null) === v.runsCompleted > 0 &&
+      (v.bestRunId !== null) === v.runsCompleted > 0,
+    { message: "best fields are set exactly when a run completed", path: ["bestRunId"] },
+  );
+export type VersionStats = z.infer<typeof VersionStatsSchema>;
+
 /**
  * Backtest summary per strategy (D26), computed by the backend; screens never aggregate runs.
  * The result fields are null when the strategy has no completed run.
@@ -26,10 +42,15 @@ export const StrategyStatsSchema = z
     winRateMaxPercent: z.number().min(0).max(100).nullable(),
     worstDrawdownPercent: z.number().lte(0).nullable(),
     bestNetPnl: BestNetPnlSchema.nullable(),
+    byVersion: z.array(VersionStatsSchema),
   })
   .refine((s) => s.runsTotal === s.runsCompleted + s.runsFailed + s.runsInProgress, {
     message: "runsTotal must equal completed + failed + in progress",
     path: ["runsTotal"],
+  })
+  .refine((s) => s.byVersion.every((v, i) => i === 0 || v.version > s.byVersion[i - 1]!.version), {
+    message: "byVersion lists each version once, ascending",
+    path: ["byVersion"],
   })
   .refine((s) => (s.runsTotal === 0) === (s.lastRunAt === null), {
     message: "lastRunAt is set exactly when there is a run",

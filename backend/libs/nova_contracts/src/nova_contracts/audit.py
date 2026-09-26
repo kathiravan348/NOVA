@@ -17,6 +17,8 @@ AuditAction = Literal[
     "strategy.create",
     "strategy.update",
     "backtest.run",
+    "backtest.edit",
+    "backtest.delete",
     "data_job.create",
     "data_job.cancel",
     "data_job.plan",

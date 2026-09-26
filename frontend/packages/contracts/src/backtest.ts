@@ -47,6 +47,11 @@ export const BacktestRunSchema = z
     finishedAt: UtcDateTimeSchema.nullable(),
     error: z.string().nullable(),
     progress: BacktestProgressSchema.nullable(),
+    /** D60: versions of one backtest share `rootId` (the first run's id). */
+    rootId: IdSchema,
+    version: z.number().int().min(1),
+    /** False for an older version trimmed to its summary (no trades, curve or per-symbol rows). */
+    reportKept: z.boolean(),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
@@ -61,7 +66,11 @@ export const BacktestRunSchema = z
       data.status !== "completed" ||
       (data.progress?.stage === "done" && data.progress.percent === 100),
     { message: "a completed run has progress done at 100 percent", path: ["progress"] },
-  );
+  )
+  .refine((data) => (data.version === 1) === (data.rootId === data.id), {
+    message: "rootId equals id exactly for version 1",
+    path: ["rootId"],
+  });
 export type BacktestRun = z.infer<typeof BacktestRunSchema>;
 
 export const BacktestMetricsSchema = z
@@ -141,3 +150,59 @@ export const BacktestRunCreateSchema = z
     path: ["from"],
   });
 export type BacktestRunCreate = z.infer<typeof BacktestRunCreateSchema>;
+
+/** Body of `POST /backtests/{id}/versions` (D60): the next version of the same strategy. */
+export const BacktestVersionCreateSchema = z
+  .strictObject({
+    strategyVersion: z.number().int().min(1),
+    name: z.string().min(1),
+    universe: UniverseSchema,
+    from: IsoDateSchema,
+    to: IsoDateSchema,
+    initialCapitalPaise: z.number().int().positive(),
+    benchmark: BacktestBenchmarkSchema.nullable(),
+  })
+  .refine((data) => data.from <= data.to, {
+    message: "from date must be less than or equal to to date",
+    path: ["from"],
+  });
+export type BacktestVersionCreate = z.infer<typeof BacktestVersionCreateSchema>;
+
+/** One version of a backtest in its history (D60); metrics only when completed. */
+export const BacktestVersionSchema = z
+  .strictObject({
+    runId: IdSchema,
+    version: z.number().int().min(1),
+    status: BacktestRunStatusSchema,
+    strategyVersion: z.number().int().min(1),
+    name: z.string().min(1),
+    universe: UniverseSchema,
+    from: IsoDateSchema,
+    to: IsoDateSchema,
+    initialCapitalPaise: z.number().int().positive(),
+    benchmark: BacktestBenchmarkSchema.nullable(),
+    createdAt: UtcDateTimeSchema,
+    error: z.string().nullable(),
+    reportKept: z.boolean(),
+    metrics: BacktestMetricsSchema.nullable(),
+  })
+  .refine((data) => data.from <= data.to, {
+    message: "from date must be less than or equal to to date",
+    path: ["from"],
+  })
+  .refine((data) => (data.metrics !== null) === (data.status === "completed"), {
+    message: "metrics are set exactly when the version completed",
+    path: ["metrics"],
+  });
+export type BacktestVersion = z.infer<typeof BacktestVersionSchema>;
+
+/** Body of `POST /backtests/delete` (D60): whole backtests, every version. */
+export const BacktestDeleteRequestSchema = z.strictObject({
+  ids: z.array(IdSchema).min(1).max(100),
+});
+export type BacktestDeleteRequest = z.infer<typeof BacktestDeleteRequestSchema>;
+
+export const BacktestDeleteResultSchema = z.strictObject({
+  deletedRuns: z.number().int().min(0),
+});
+export type BacktestDeleteResult = z.infer<typeof BacktestDeleteResultSchema>;

@@ -3,6 +3,8 @@
 from nova_contracts.audit import AuditAction, AuditEntry, AuditTargetType
 from nova_contracts.auth import LoginRequest
 from nova_contracts.backtest import (
+    BacktestDeleteRequest,
+    BacktestDeleteResult,
     BacktestMetrics,
     BacktestProgress,
     BacktestResult,
@@ -10,6 +12,8 @@ from nova_contracts.backtest import (
     BacktestRunCreate,
     BacktestRunStatus,
     BacktestStage,
+    BacktestVersion,
+    BacktestVersionCreate,
     EquityPoint,
     SymbolBreakdown,
     Universe,
@@ -103,7 +107,7 @@ from nova_contracts.strategy import (
     StrategyVersion,
     StrategyVersionCreate,
 )
-from nova_contracts.strategy_stats import BestNetPnl, StrategyStats
+from nova_contracts.strategy_stats import BestNetPnl, StrategyStats, VersionStats
 from nova_contracts.trade import Trade
 from nova_contracts.universe import UniverseEntry, UniverseEntryWrite, UniverseSector
 from nova_contracts.user import User, UserRole
@@ -117,6 +121,8 @@ __all__ = [
     "AuditAction",
     "AuditEntry",
     "AuditTargetType",
+    "BacktestDeleteRequest",
+    "BacktestDeleteResult",
     "BacktestMetrics",
     "BacktestProgress",
     "BacktestResult",
@@ -124,6 +130,8 @@ __all__ = [
     "BacktestRunCreate",
     "BacktestRunStatus",
     "BacktestStage",
+    "BacktestVersion",
+    "BacktestVersionCreate",
     "BestNetPnl",
     "Broker",
     "BrokerAccount",
@@ -191,6 +199,7 @@ __all__ = [
     "StrategySpecPython",
     "StrategySpecVisual",
     "StrategyStats",
+    "VersionStats",
     "StrategyStatus",
     "StrategyUpdate",
     "StrategyVersion",

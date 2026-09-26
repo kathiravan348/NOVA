@@ -66,6 +66,16 @@ class BacktestRun(_Period):
     finished_at: UtcDateTime | None
     error: str | None
     progress: BacktestProgress | None
+    # D60: versions of one backtest share `root_id` (the first run's id).
+    root_id: Id
+    version: Annotated[int, Field(ge=1)]
+    report_kept: bool
+
+    @model_validator(mode="after")
+    def _root_is_first_version(self) -> Self:
+        if (self.version == 1) != (self.root_id == self.id):
+            raise ValueError("rootId equals id exactly for version 1")
+        return self
 
     @model_validator(mode="after")
     def _error_only_failed(self) -> Self:
@@ -93,6 +103,26 @@ class BacktestRunCreate(_Period):
     universe: Universe
     initial_capital_paise: Annotated[int, Field(gt=0)]
     benchmark: BacktestBenchmark | None
+
+
+class BacktestVersionCreate(_Period):
+    """Body of `POST /backtests/{id}/versions` (D60): the next version of the same strategy."""
+
+    strategy_version: Annotated[int, Field(ge=1)]
+    name: NonEmpty
+    universe: Universe
+    initial_capital_paise: Annotated[int, Field(gt=0)]
+    benchmark: BacktestBenchmark | None
+
+
+class BacktestDeleteRequest(Contract):
+    """Body of `POST /backtests/delete` (D60): whole backtests, every version."""
+
+    ids: Annotated[list[Id], Field(min_length=1, max_length=100)]
+
+
+class BacktestDeleteResult(Contract):
+    deleted_runs: Count
 
 
 class BacktestMetrics(Contract):
@@ -148,4 +178,27 @@ class BacktestResult(Contract):
     def _unique_symbols(self) -> Self:
         if len({row.symbol for row in self.by_symbol}) != len(self.by_symbol):
             raise ValueError("bySymbol must list each symbol once")
+        return self
+
+
+class BacktestVersion(_Period):
+    """One version of a backtest in its history (D60); metrics only when completed."""
+
+    run_id: Id
+    version: Annotated[int, Field(ge=1)]
+    status: BacktestRunStatus
+    strategy_version: Annotated[int, Field(ge=1)]
+    name: NonEmpty
+    universe: Universe
+    initial_capital_paise: Annotated[int, Field(gt=0)]
+    benchmark: BacktestBenchmark | None
+    created_at: UtcDateTime
+    error: str | None
+    report_kept: bool
+    metrics: BacktestMetrics | None
+
+    @model_validator(mode="after")
+    def _metrics_when_completed(self) -> Self:
+        if (self.metrics is not None) != (self.status == "completed"):
+            raise ValueError("metrics are set exactly when the version completed")
         return self

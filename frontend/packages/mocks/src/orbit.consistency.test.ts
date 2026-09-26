@@ -7,6 +7,10 @@ import {
   mockTrades,
 } from "./data";
 
+// Older versions keep only their metrics (D60): trade, curve and per-symbol checks use full reports.
+const fullIds = new Set(mockBacktestRuns.filter((r) => r.reportKept).map((r) => r.id));
+const fullResults = mockBacktestResults.filter((r) => fullIds.has(r.runId));
+
 describe("Strategy stats match the runs and results (D26)", () => {
   it("has one entry per strategy", () => {
     expect(mockStrategyStats.map((s) => s.strategyId).sort()).toEqual(
@@ -43,6 +47,45 @@ describe("Strategy stats match the runs and results (D26)", () => {
       );
       const best = [...metrics].sort((a, b) => b.m.netPnlPaise - a.m.netPnlPaise)[0]!;
       expect(stats.bestNetPnl).toEqual({ runId: best.runId, netPnlPaise: best.m.netPnlPaise });
+    }
+  });
+
+  it("stats by version agree with the runs (D60)", () => {
+    for (const stats of mockStrategyStats) {
+      const strategy = mockStrategies.find((s) => s.id === stats.strategyId)!;
+      expect(stats.byVersion.map((v) => v.version)).toEqual(
+        strategy.versions.map((v) => v.version),
+      );
+      for (const row of stats.byVersion) {
+        const done = mockBacktestRuns.filter(
+          (r) =>
+            r.strategyId === stats.strategyId &&
+            r.strategyVersion === row.version &&
+            r.status === "completed",
+        );
+        expect(row.runsCompleted).toBe(done.length);
+        const returns = done.map(
+          (r) => mockBacktestResults.find((x) => x.runId === r.id)!.metrics.returnPercent,
+        );
+        expect(row.bestReturnPercent).toBe(returns.length ? Math.max(...returns) : null);
+      }
+    }
+  });
+
+  it("slim versions have no trades, curve or per-symbol rows, and chains are consistent", () => {
+    for (const run of mockBacktestRuns.filter((r) => !r.reportKept)) {
+      expect(mockTrades.some((t) => t.runId === run.id)).toBe(false);
+      const result = mockBacktestResults.find((r) => r.runId === run.id)!;
+      expect([result.equityCurve.length, result.bySymbol.length]).toEqual([0, 0]);
+      const newer = mockBacktestRuns.filter(
+        (r) => r.rootId === run.rootId && r.version > run.version,
+      );
+      expect(newer.some((r) => r.status === "completed")).toBe(true);
+    }
+    for (const run of mockBacktestRuns) {
+      const root = mockBacktestRuns.find((r) => r.id === run.rootId)!;
+      expect(root.version).toBe(1);
+      expect(root.strategyId).toBe(run.strategyId);
     }
   });
 });
@@ -192,7 +235,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures completed runs have 4-8 trades with at least one sell and one losing trade", () => {
-    const completedRuns = mockBacktestRuns.filter((r) => r.status === "completed");
+    const completedRuns = mockBacktestRuns.filter((r) => r.status === "completed" && r.reportKept);
     for (const run of completedRuns) {
       const runTrades = mockTrades.filter((t) => t.runId === run.id);
       expect(runTrades.length).toBeGreaterThanOrEqual(4);
@@ -203,7 +246,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures backtest metrics gross, charges and net match the sum of trades", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const runTrades = mockTrades.filter((t) => t.runId === result.runId);
       const sumGross = runTrades.reduce((acc, t) => acc + t.grossPnlPaise, 0);
       const sumCharges = runTrades.reduce((acc, t) => acc + t.charges.totalPaise, 0);
@@ -216,7 +259,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures bySymbol matches the run's trades and adds up to the run metrics", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const runTrades = mockTrades.filter((t) => t.runId === result.runId);
       const symbols = [...new Set(runTrades.map((t) => t.symbol))].sort();
       expect(result.bySymbol.map((b) => b.symbol).sort()).toEqual(symbols);
@@ -235,7 +278,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures backtest metrics tradeCount, winCount, and lossCount match trade outcomes", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const runTrades = mockTrades.filter((t) => t.runId === result.runId);
       const wins = runTrades.filter((t) => t.netPnlPaise > 0).length;
       const losses = runTrades.filter((t) => t.netPnlPaise < 0).length;
@@ -247,7 +290,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures winRatePercent and returnPercent are close to calculated values", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const run = mockBacktestRuns.find((r) => r.id === result.runId);
       expect(run).toBeDefined();
 
@@ -261,7 +304,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures equity curve has 10–30 points with strictly ascending dates", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       expect(result.equityCurve.length).toBeGreaterThanOrEqual(10);
       expect(result.equityCurve.length).toBeLessThanOrEqual(30);
 
@@ -274,7 +317,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures first equity point equals run from date with initial capital", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const run = mockBacktestRuns.find((r) => r.id === result.runId);
       const firstPoint = result.equityCurve[0];
       expect(firstPoint?.date).toBe(run?.from);
@@ -283,7 +326,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures last equity point equals run to date with initial capital + net PnL", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const run = mockBacktestRuns.find((r) => r.id === result.runId);
       const lastPoint = result.equityCurve[result.equityCurve.length - 1];
       const expectedEndEquity = (run?.initialCapitalPaise as number) + result.metrics.netPnlPaise;
@@ -293,7 +336,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures benchmarkPaise is set iff run has benchmark, with first value = initial capital", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       const run = mockBacktestRuns.find((r) => r.id === result.runId);
       const hasBenchmark = run?.benchmark !== null;
 
@@ -319,7 +362,7 @@ describe("Orbit consistency rules", () => {
     const dates = [
       ...mockBacktestRuns.flatMap((r) => [r.from, r.to]),
       ...mockTrades.flatMap((t) => [t.entryAt, t.exitAt as string]),
-      ...mockBacktestResults.flatMap((r) => r.equityCurve.map((p) => p.date)),
+      ...fullResults.flatMap((r) => r.equityCurve.map((p) => p.date)),
     ];
     for (const date of dates) {
       expect(isWeekday(date), date).toBe(true);
@@ -327,7 +370,7 @@ describe("Orbit consistency rules", () => {
   });
 
   it("ensures maxDrawdownPercent matches the deepest drop in the equity curve", () => {
-    for (const result of mockBacktestResults) {
+    for (const result of fullResults) {
       let peak = 0;
       let deepest = 0;
       for (const pt of result.equityCurve) {

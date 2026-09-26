@@ -1,7 +1,16 @@
 import json
 
 import pytest
-from nova_contracts import BacktestResult, BacktestRun, BacktestRunCreate, Trade
+from nova_contracts import (
+    BacktestDeleteRequest,
+    BacktestDeleteResult,
+    BacktestResult,
+    BacktestRun,
+    BacktestRunCreate,
+    BacktestVersion,
+    BacktestVersionCreate,
+    Trade,
+)
 from nova_testing.parity import Parity
 from pydantic import ValidationError
 
@@ -53,6 +62,7 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
         ("backtestRuns", BacktestRun, {"error": "boom"}),
         ("backtestRuns", BacktestRun, {"universe": {"type": "index", "index": "sensex"}}),
         ("backtestRuns", BacktestRun, {"progress": None}),  # completed needs done at 100%
+        ("backtestRuns", BacktestRun, {"version": 2}),  # v2 cannot be its own root (D60)
         (
             "backtestRuns",
             BacktestRun,
@@ -90,3 +100,43 @@ def test_result_rules_are_enforced(parity: Parity) -> None:
     for broken in (bad_metrics, twice):
         with pytest.raises(ValidationError):
             BacktestResult.model_validate_json(json.dumps(broken))
+
+
+def test_version_bodies_match_their_schemas(parity: Parity) -> None:
+    runs = {r["id"]: r for r in parity.mock("backtestRuns")}
+    results = {r["runId"]: r for r in parity.mock("backtestResults")}
+    old = runs["run_006"]
+    version = {
+        "runId": old["id"],
+        "version": old["version"],
+        "status": old["status"],
+        "strategyVersion": old["strategyVersion"],
+        "name": old["name"],
+        "universe": old["universe"],
+        "from": old["from"],
+        "to": old["to"],
+        "initialCapitalPaise": old["initialCapitalPaise"],
+        "benchmark": old["benchmark"],
+        "createdAt": old["createdAt"],
+        "error": old["error"],
+        "reportKept": old["reportKept"],
+        "metrics": results["run_006"]["metrics"],
+    }
+    edit = {k: version[k] for k in ("strategyVersion", "name", "universe", "from", "to")} | {
+        "initialCapitalPaise": old["initialCapitalPaise"],
+        "benchmark": None,
+    }
+    for model, body, schema in (
+        (BacktestVersion, version, "BacktestVersion"),
+        (BacktestVersionCreate, edit, "BacktestVersionCreate"),
+        (BacktestDeleteRequest, {"ids": ["run_001", "run_006"]}, "BacktestDeleteRequest"),
+        (BacktestDeleteResult, {"deletedRuns": 2}, "BacktestDeleteResult"),
+    ):
+        dumped = model.model_validate_json(json.dumps(body)).model_dump(mode="json")
+        assert dumped == body
+        parity.assert_valid(dumped, schema)
+
+    with pytest.raises(ValidationError):  # a completed version carries its metrics
+        BacktestVersion.model_validate_json(json.dumps(version | {"metrics": None}))
+    with pytest.raises(ValidationError):
+        BacktestDeleteRequest.model_validate_json(json.dumps({"ids": []}))

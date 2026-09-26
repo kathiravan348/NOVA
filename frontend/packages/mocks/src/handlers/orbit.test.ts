@@ -3,7 +3,9 @@ import { setupServer } from "msw/node";
 import {
   ApiErrorSchema,
   BacktestResultSchema,
+  BacktestDeleteResultSchema,
   BacktestRunSchema,
+  BacktestVersionSchema,
   StrategySchema,
   StrategyStatsSchema,
   TradeSchema,
@@ -21,6 +23,8 @@ import {
 import { orbitHandlers } from "./orbit";
 
 const server = setupServer(...orbitHandlers);
+// The list shows only the newest version of each backtest (D60): run_006 is v1 of run_002.
+const listed = mockBacktestRuns.filter((r) => r.id !== "run_006");
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -77,7 +81,7 @@ describe("Orbit MSW handlers", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(pageSchema(BacktestRunSchema).parse(data)).toEqual({
-      items: mockBacktestRuns,
+      items: listed,
       nextCursor: null,
     });
   });
@@ -96,15 +100,15 @@ describe("Orbit MSW handlers", () => {
       cursor = page.nextCursor;
       pages += 1;
     } while (cursor !== null && pages < 100);
-    expect(seen).toEqual(mockBacktestRuns.map((r) => r.id));
+    expect(seen).toEqual(listed.map((r) => r.id));
   });
 
   it("GET /api/v1/backtests?strategyId= returns only that strategy's runs", async () => {
     const strategyId = mockBacktestRuns[0]!.strategyId;
     const res = await fetch(`http://localhost/api/v1/backtests?strategyId=${strategyId}`);
     const page = pageSchema(BacktestRunSchema).parse(await res.json());
-    expect(page.items).toEqual(mockBacktestRuns.filter((r) => r.strategyId === strategyId));
-    expect(page.items.length).toBeLessThan(mockBacktestRuns.length);
+    expect(page.items).toEqual(listed.filter((r) => r.strategyId === strategyId));
+    expect(page.items.length).toBeLessThan(listed.length);
   });
 
   it.each(["limit=0", "limit=201", "limit=abc", "limit=1.5", "cursor=nope", "cursor=b2Zmc2V0Ojk5"])(
@@ -246,5 +250,65 @@ describe("Orbit MSW handlers", () => {
       body: JSON.stringify({ ...body, strategyId: "nope" }),
     });
     expect(bad.status).toBe(404);
+  });
+
+  it("GET /api/v1/backtests/:id/versions lists a backtest's versions, newest first (D60)", async () => {
+    const res = await fetch("http://localhost/api/v1/backtests/run_002/versions");
+    const versions = BacktestVersionSchema.array().parse(await res.json());
+    expect(versions.map((v) => [v.runId, v.version, v.reportKept])).toEqual([
+      ["run_002", 2, true],
+      ["run_006", 1, false],
+    ]);
+    expect(versions[1]!.metrics?.returnPercent).toBe(0.21);
+  });
+
+  it("POST /api/v1/backtests/:id/versions queues the next version", async () => {
+    const body = {
+      strategyVersion: 2,
+      name: "VWAP v3",
+      universe: { type: "symbols", symbols: ["INFY"] },
+      from: "2025-01-01",
+      to: "2025-06-30",
+      initialCapitalPaise: 10_000_000,
+      benchmark: null,
+    };
+    const post = (id: string) =>
+      fetch(`http://localhost/api/v1/backtests/${id}/versions`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    const res = await post("run_006");
+    expect(res.status).toBe(201);
+    expect(BacktestRunSchema.parse(await res.json())).toMatchObject({
+      rootId: "run_006",
+      version: 3,
+      strategyId: "stg_001",
+      status: "queued",
+    });
+    expect((await post("run_003")).status).toBe(400); // run_003 is still running
+  });
+
+  it("DELETE /api/v1/backtests/:id removes a backtest or one old version", async () => {
+    const del = (path: string) =>
+      fetch(`http://localhost/api/v1/backtests/${path}`, { method: "DELETE" });
+    const all = BacktestDeleteResultSchema.parse(await (await del("run_002")).json());
+    expect(all.deletedRuns).toBe(2);
+    const one = BacktestDeleteResultSchema.parse(await (await del("run_006?scope=version")).json());
+    expect(one.deletedRuns).toBe(1);
+    expect((await del("run_002?scope=version")).status).toBe(400);
+    expect((await del("run_003")).status).toBe(400);
+    expect((await del("nope")).status).toBe(404);
+  });
+
+  it("POST /api/v1/backtests/delete removes whole backtests", async () => {
+    const post = (ids: string[]) =>
+      fetch("http://localhost/api/v1/backtests/delete", {
+        method: "POST",
+        body: JSON.stringify({ ids }),
+      });
+    const res = await post(["run_002", "run_005"]);
+    expect(BacktestDeleteResultSchema.parse(await res.json()).deletedRuns).toBe(3);
+    expect((await post(["run_003"])).status).toBe(400);
+    expect((await post([])).status).toBe(400);
   });
 });

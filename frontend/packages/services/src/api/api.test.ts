@@ -55,6 +55,11 @@ afterAll(() => server.close());
 
 const strategy = mockStrategies[0]!;
 const run = mockBacktestRuns[0]!;
+/** The list shows only the newest version of each backtest (D60). */
+const listedRuns = mockBacktestRuns.filter(
+  (r) => !mockBacktestRuns.some((o) => o.rootId === r.rootId && o.version > r.version),
+);
+
 const result = mockBacktestResults[0]!;
 const account = mockBrokerAccounts[0]!;
 const job = mockDataJobs[0]!;
@@ -65,7 +70,7 @@ describe("Orbit api", () => {
     await expect(listStrategies()).resolves.toEqual(mockStrategies);
     await expect(listStrategyStats()).resolves.toEqual(mockStrategyStats);
     await expect(getStrategy(strategy.id)).resolves.toEqual(strategy);
-    await expect(listBacktests()).resolves.toEqual({ items: mockBacktestRuns, nextCursor: null });
+    await expect(listBacktests()).resolves.toEqual({ items: listedRuns, nextCursor: null });
     await expect(getBacktest(run.id)).resolves.toEqual(run);
     await expect(getBacktestResult(result.runId)).resolves.toEqual(result);
     await expect(listBacktestTrades(result.runId)).resolves.toEqual({
@@ -77,8 +82,8 @@ describe("Orbit api", () => {
   it("sends strategyId, limit and cursor as query parameters", async () => {
     const strategyId = run.strategyId;
     const first = await listBacktests({ strategyId, limit: 1 });
-    expect(first.items).toEqual([mockBacktestRuns.find((r) => r.strategyId === strategyId)]);
-    const all = mockBacktestRuns.filter((r) => r.strategyId === strategyId);
+    expect(first.items).toEqual([listedRuns.find((r) => r.strategyId === strategyId)]);
+    const all = listedRuns.filter((r) => r.strategyId === strategyId);
     if (all.length > 1) {
       const next = await listBacktests({ strategyId, limit: 1, cursor: first.nextCursor! });
       expect(next.items).toEqual([all[1]]);

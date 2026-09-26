@@ -1,11 +1,15 @@
 import { http, HttpResponse } from "msw";
 import {
+  BacktestDeleteRequestSchema,
   BacktestRunCreateSchema,
+  BacktestVersionCreateSchema,
   LoginRequestSchema,
   StrategyCreateSchema,
   StrategyUpdateSchema,
   StrategyVersionCreateSchema,
+  type BacktestDeleteResult,
   type BacktestRun,
+  type BacktestVersion,
   type Strategy,
 } from "@nova/contracts";
 import {
@@ -20,6 +24,46 @@ import { apiPath, badRequest, notFound, paginate } from "./api";
 
 /** Mock writes (D43) answer with the resulting strategy; nothing is stored. */
 const MOCK_NOW = "2026-09-22T04:30:00Z";
+
+/** Every version of the backtest `run` belongs to, newest first (D60). */
+function chainOf(run: BacktestRun): BacktestRun[] {
+  return mockBacktestRuns
+    .filter((r) => r.rootId === run.rootId)
+    .sort((a, b) => b.version - a.version);
+}
+
+function isNewest(run: BacktestRun): boolean {
+  return chainOf(run)[0]!.id === run.id;
+}
+
+function toVersion(run: BacktestRun): BacktestVersion {
+  const result = mockBacktestResults.find((r) => r.runId === run.id);
+  return {
+    runId: run.id,
+    version: run.version,
+    status: run.status,
+    strategyVersion: run.strategyVersion,
+    name: run.name,
+    universe: run.universe,
+    from: run.from,
+    to: run.to,
+    initialCapitalPaise: run.initialCapitalPaise,
+    benchmark: run.benchmark,
+    createdAt: run.createdAt,
+    error: run.error,
+    reportKept: run.reportKept,
+    metrics: run.status === "completed" && result ? result.metrics : null,
+  };
+}
+
+/** Mock deletes answer with the count; nothing is removed (D60). */
+function deleted(targets: BacktestRun[]): Response {
+  if (targets.some((r) => r.status === "running")) {
+    return badRequest("A running backtest cannot be deleted");
+  }
+  const body: BacktestDeleteResult = { deletedRuns: targets.length };
+  return HttpResponse.json(body);
+}
 
 export const orbitHandlers = [
   http.get(apiPath("/me"), () => {
@@ -97,9 +141,8 @@ export const orbitHandlers = [
 
   http.get(apiPath("/backtests"), ({ request }) => {
     const strategyId = new URL(request.url).searchParams.get("strategyId");
-    const runs = strategyId
-      ? mockBacktestRuns.filter((r) => r.strategyId === strategyId)
-      : mockBacktestRuns;
+    const newest = mockBacktestRuns.filter(isNewest);
+    const runs = strategyId ? newest.filter((r) => r.strategyId === strategyId) : newest;
     return paginate(runs, request.url);
   }),
 
@@ -117,8 +160,67 @@ export const orbitHandlers = [
       finishedAt: null,
       error: null,
       progress: null,
+      rootId: "run_new",
+      version: 1,
+      reportKept: true,
     };
     return HttpResponse.json(queued, { status: 201 });
+  }),
+
+  http.post(apiPath("/backtests/delete"), async ({ request }) => {
+    const parsed = BacktestDeleteRequestSchema.safeParse(
+      await request.json().catch(() => undefined),
+    );
+    if (!parsed.success) return badRequest("Body must be { ids } with 1-100 run ids");
+    const runs = parsed.data.ids.map((id) => mockBacktestRuns.find((r) => r.id === id));
+    const missing = parsed.data.ids.filter((_, i) => runs[i] === undefined);
+    if (missing.length) return notFound(`Backtest run ${missing[0]} not found`);
+    const roots = new Set(runs.map((r) => r!.rootId));
+    return deleted(mockBacktestRuns.filter((r) => roots.has(r.rootId)));
+  }),
+
+  http.get(apiPath("/backtests/:id/versions"), ({ params }) => {
+    const run = mockBacktestRuns.find((r) => r.id === params["id"]);
+    if (!run) return notFound(`Backtest run ${String(params["id"])} not found`);
+    return HttpResponse.json(chainOf(run).map(toVersion));
+  }),
+
+  http.post(apiPath("/backtests/:id/versions"), async ({ params, request }) => {
+    const run = mockBacktestRuns.find((r) => r.id === params["id"]);
+    if (!run) return notFound(`Backtest run ${String(params["id"])} not found`);
+    const parsed = BacktestVersionCreateSchema.safeParse(
+      await request.json().catch(() => undefined),
+    );
+    if (!parsed.success) return badRequest("Body must be a valid BacktestVersionCreate");
+    const chain = chainOf(run);
+    if (chain.some((r) => r.status === "queued" || r.status === "running")) {
+      return badRequest("Wait for the running version to finish");
+    }
+    const queued: BacktestRun = {
+      id: "run_new_version",
+      strategyId: run.strategyId,
+      ...parsed.data,
+      status: "queued",
+      createdAt: MOCK_NOW,
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+      progress: null,
+      rootId: run.rootId,
+      version: chain[0]!.version + 1,
+      reportKept: true,
+    };
+    return HttpResponse.json(queued, { status: 201 });
+  }),
+
+  http.delete(apiPath("/backtests/:id"), ({ params, request }) => {
+    const run = mockBacktestRuns.find((r) => r.id === params["id"]);
+    if (!run) return notFound(`Backtest run ${String(params["id"])} not found`);
+    if (new URL(request.url).searchParams.get("scope") === "version") {
+      if (isNewest(run)) return badRequest("Delete the whole backtest instead");
+      return deleted([run]);
+    }
+    return deleted(chainOf(run));
   }),
 
   http.get(apiPath("/backtests/:id"), ({ params }) => {

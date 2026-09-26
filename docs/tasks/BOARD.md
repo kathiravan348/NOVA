@@ -109,7 +109,7 @@
 | NOVA-101 | Backtest progress: stage, counts and percent on each run (D58, migration 0014) | done | Claude | 100 |
 | NOVA-102 | Orbit: live backtest progress on the run page and in the list (D58) | done | Claude | 101 |
 | NOVA-103 | Backtest worker: no stuck runs, restart after a crash, bar limit (D59) | done | Claude | — |
-| NOVA-104 | Contracts, mocks, services: backtest versions and delete, stats by version (D60) | planned | — | 102 |
+| NOVA-104 | Contracts, mocks, services: backtest versions and delete, stats by version (D60) | in-progress | Claude | 102 |
 | NOVA-105 | Backtest service: versions, delete, slim history (D60, migration 0015) | planned | — | 104 |
 | NOVA-106 | Strategy stats per strategy version (D60) | planned | — | 104 |
 | NOVA-107 | Orbit: delete backtests, Edit as a new version, Versions table (D60) | planned | — | 104 (merge after 105) |

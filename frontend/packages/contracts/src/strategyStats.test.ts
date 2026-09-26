@@ -14,6 +14,10 @@ const withRuns: StrategyStats = {
   winRateMaxPercent: 75,
   worstDrawdownPercent: -0.11,
   bestNetPnl: { runId: "run_001", netPnlPaise: 499474 },
+  byVersion: [
+    { version: 1, runsCompleted: 2, bestReturnPercent: 0.5, bestRunId: "run_001" },
+    { version: 2, runsCompleted: 0, bestReturnPercent: null, bestRunId: null },
+  ],
 };
 
 const noCompleted: StrategyStats = {
@@ -29,6 +33,7 @@ const noCompleted: StrategyStats = {
   winRateMaxPercent: null,
   worstDrawdownPercent: null,
   bestNetPnl: null,
+  byVersion: [{ version: 1, runsCompleted: 0, bestReturnPercent: null, bestRunId: null }],
 };
 
 describe("StrategyStatsSchema", () => {
@@ -70,5 +75,14 @@ describe("StrategyStatsSchema", () => {
       StrategyStatsSchema.safeParse({ ...noCompleted, runsTotal: 0, runsInProgress: 0 }).success,
     ).toBe(false);
     expect(StrategyStatsSchema.safeParse({ ...withRuns, extra: 1 }).success).toBe(false);
+  });
+
+  it("rejects byVersion out of order or with best fields but no completed run (D60)", () => {
+    const [v1, v2] = withRuns.byVersion;
+    expect(StrategyStatsSchema.safeParse({ ...withRuns, byVersion: [v2, v1] }).success).toBe(false);
+    const bad = { ...v2!, bestReturnPercent: 1 };
+    expect(StrategyStatsSchema.safeParse({ ...withRuns, byVersion: [v1, bad] }).success).toBe(
+      false,
+    );
   });
 });
