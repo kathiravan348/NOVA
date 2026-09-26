@@ -1,17 +1,63 @@
 """Backtest versions, delete and slim history over HTTP (D60)."""
 
 import threading
+from datetime import date, datetime, time, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
+from nova_backtest.bars import IST
 from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_worker
-from nova_db.models import AuditEntry, BacktestResult, BacktestRun, Trade
+from nova_db.models import AuditEntry, BacktestResult, BacktestRun, Candle, StrategyVersion, Trade
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, func, select, update
 from sqlalchemy.orm import Session, sessionmaker
-from test_engine import seeded  # noqa: F401 - fixture: INFY/TCS candles, strategy v2
 
-__all__ = ["seeded"]
+RULE = {"left": {"kind": "price", "field": "close"}, "right": {"kind": "number", "value": 0}}
+# Daily closes: INFY buys once at 107 and sells at 98; TCS never signals.
+CLOSES = {"INFY": [100, 106, 107, 99, 98], "TCS": [50] * 5}
+
+
+@pytest.fixture
+def seeded(clean: Engine) -> Engine:
+    """Strategy v2: buy above 105, sell below 100 (daily); five days of INFY and TCS."""
+    spec = {
+        "mode": "visual",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "sizing": {"type": "fixed_qty", "qty": 10},
+        "risk": {"stopLossPercent": None, "targetPercent": None},
+        "entry": {
+            "combinator": "all",
+            "conditions": [RULE | {"op": "gt", "right": {"kind": "number", "value": 105}}],
+        },
+        "exit": {
+            "combinator": "all",
+            "conditions": [RULE | {"op": "lt", "right": {"kind": "number", "value": 100}}],
+        },
+    }
+    with Session(clean) as db:
+        db.add(StrategyVersion(strategy_id="stg_1", version=2, spec=spec))
+        for symbol, closes in CLOSES.items():
+            for i, close in enumerate(closes):
+                ts = datetime.combine(date(2025, 1, 1) + timedelta(days=i), time(0), tzinfo=IST)
+                db.add(
+                    Candle(
+                        exchange="NSE",
+                        symbol=symbol,
+                        timeframe="1d",
+                        ts=ts,
+                        open_paise=close * 100,
+                        high_paise=close * 100 + 100,
+                        low_paise=close * 100 - 100,
+                        close_paise=close * 100,
+                        volume=1_000,
+                    )
+                )
+        db.commit()
+    return clean
+
 
 BACKTESTS = "/api/v1/backtests"
 
@@ -49,7 +95,7 @@ def _count(engine: Engine, model: type[Trade] | type[BacktestRun], run_id: str) 
 
 
 def test_edit_queues_the_next_version_and_the_list_shows_only_it(
-    seeded: Engine,  # noqa: F811
+    seeded: Engine,
     factory: sessionmaker[Session],
     client: TestClient,
     parity: Parity,
@@ -72,7 +118,7 @@ def test_edit_queues_the_next_version_and_the_list_shows_only_it(
 
 
 def test_a_completed_version_trims_the_older_ones(
-    seeded: Engine,  # noqa: F811
+    seeded: Engine,
     factory: sessionmaker[Session],
     client: TestClient,
     parity: Parity,
@@ -102,7 +148,7 @@ def test_a_completed_version_trims_the_older_ones(
 
 
 def test_delete_a_whole_backtest_or_one_old_version(
-    seeded: Engine,  # noqa: F811
+    seeded: Engine,
     factory: sessionmaker[Session],
     client: TestClient,
     parity: Parity,
@@ -127,11 +173,14 @@ def test_delete_a_whole_backtest_or_one_old_version(
             .where(AuditEntry.action == "backtest.delete")
             .order_by(AuditEntry.at)
         ).all()
-    assert summaries == ["Deleted v1 of backtest IT basket", "Deleted backtest IT basket (1 version)"]
+    assert summaries == [
+        "Deleted v1 of backtest IT basket",
+        "Deleted backtest IT basket (1 version)",
+    ]
 
 
 def test_bulk_delete_removes_every_version_and_refuses_running_runs(
-    seeded: Engine,  # noqa: F811
+    seeded: Engine,
     factory: sessionmaker[Session],
     client: TestClient,
 ) -> None:

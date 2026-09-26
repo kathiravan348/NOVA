@@ -28,6 +28,7 @@ from nova_db.enums import (
 )
 from nova_db.models.base import Base, Json, JsonList, check_in, created_at_column
 
+
 def _own_id(context: DefaultExecutionContext) -> str:
     """A new run without a `root_id` starts its own chain (version 1)."""
     return str(context.get_current_parameters()["id"])  # type: ignore[no-untyped-call]

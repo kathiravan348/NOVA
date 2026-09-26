@@ -240,7 +240,7 @@ CASES: list[tuple[str, Factory, dict[str, Any]]] = [
     ("step period", _step, {"end_at": NOW - timedelta(days=90)}),
     ("step finished pair", _step, {"status": "pending"}),
     ("step rows", _step, {"rows_written": -1}),
-    ("audit action", _audit, {"action": "backtest.delete"}),
+    ("audit action", _audit, {"action": "order.place"}),
     ("audit target pair", _audit, {"target_id": None}),
     ("candle high", _candle, {"high_paise": 150_500}),
     ("candle low", _candle, {"low_paise": 151_500}),

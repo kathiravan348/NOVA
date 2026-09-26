@@ -83,8 +83,6 @@ def downgrade() -> None:
     op.execute("DELETE FROM backtest_runs WHERE version > 1")
     op.drop_constraint(op.f("ck_backtest_runs_root_first"), "backtest_runs", type_="check")
     op.drop_constraint(op.f("ck_backtest_runs_version"), "backtest_runs", type_="check")
-    op.drop_constraint(
-        op.f("uq_backtest_runs_root_id_version"), "backtest_runs", type_="unique"
-    )
+    op.drop_constraint(op.f("uq_backtest_runs_root_id_version"), "backtest_runs", type_="unique")
     for name in ("report_kept", "version", "root_id"):
         op.drop_column("backtest_runs", name)

@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-101). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 27 Sep 2026 (NOVA-106). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -81,7 +81,7 @@ rate-limiter slot first (up to 20 s, else 503).
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
 | `GET /strategies` | All strategies with every version (oldest first). | — | `Strategy[]` |
-| `GET /strategies/stats` | Per strategy, computed in SQL from its backtests: runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L (+ run id). Powers the strategy cards. | — | `StrategyStats[]` |
+| `GET /strategies/stats` | Per strategy, computed in SQL from its backtests: runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L (+ run id). Powers the strategy cards. `byVersion` (D60): for every strategy version, ascending, its completed runs and best return with that run id (null when none); runs of every backtest version count. | — | `StrategyStats[]` |
 | `GET /strategies/{id}` | One strategy with versions. | path | `Strategy`; 404 |
 | `POST /strategies` | Creates a strategy as `draft`, version 1 (note "First version"). Audit: `strategy.create`. | `StrategyCreate {name, description, spec}` | 201 `Strategy` |
 | `POST /strategies/{id}/versions` | Saves a **new immutable version** (latest + 1). Old versions never change. Audit: `strategy.update`. | `StrategyVersionCreate {note, spec}` | 201 `Strategy` |
@@ -106,11 +106,15 @@ No delete in Phase 1 (runs refer to versions).
 
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
-| `GET /backtests` | Runs, newest first, paged; optional filter by strategy. | `strategyId`, `limit`, `cursor` | `Page<BacktestRun>` |
+| `GET /backtests` | Runs, newest first, paged; optional filter by strategy. Only the **newest version** of each backtest is listed (D60); older versions come from `/versions`. | `strategyId`, `limit`, `cursor` | `Page<BacktestRun>` |
 | `GET /backtests/{id}` | One run: status (`queued` → `running` → `completed` / `failed`), universe, period, capital, benchmark, times, error, and `progress` (D58): `null` until the worker starts it, else `{stage, percent, symbolsDone, symbolsTotal, barsDone, barsTotal, tradesSoFar, simulatedTo}`. Stages and percent bands: `loading` 0–20 (per stock), `signals` 20–30 (Python only), `simulating` 30–95 (per bar event, warm-up included; `simulatedTo` = IST date reached), `saving` 95–100, `done` 100 (always for `completed`). Written at most once a second; a failed run keeps its last progress. The list returns the same field. | path | `BacktestRun`; 404 |
 | `GET /backtests/{id}/result` | Metrics (gross/charges/net P&L, return, CAGR, max drawdown, Sharpe, win rate, trade/win/loss counts), equity curve, per-symbol breakdown. Only once completed. | path | `BacktestResult`; 404 until done |
 | `GET /backtests/{id}/trades` | Simulated trades, oldest first, paged, each with the full charges breakdown. | `limit`, `cursor` | `Page<Trade>` |
 | `POST /backtests` | Queues a run. Checks the strategy version exists and every symbol is a known NSE instrument. The **backtest worker** picks it up from the Postgres queue and fills result + trades. Audit: `backtest.run`. | `BacktestRunCreate {strategyId, strategyVersion, name, universe (symbols or index), from, to, initialCapitalPaise, benchmark?}` | 201 `BacktestRun` (`queued`); 400 unknown symbols; 404 |
+| `GET /backtests/{id}/versions` | Every version of the backtest the run belongs to, newest first (D60): settings, status, error, `reportKept`, and `metrics` when completed. A backtest is a chain of runs sharing `rootId` (the first run's id), numbered by `version`. | path | `BacktestVersion[]`; 404 |
+| `POST /backtests/{id}/versions` | **Edit**: queues the next version of the backtest (same strategy; strategy version, stocks, period, capital, benchmark, name from the body). When a version completes, older completed versions keep only their metrics: trades deleted, result `equityCurve`/`bySymbol` emptied, `reportKept` false. Audit: `backtest.edit` ("Queued v2 of backtest IT basket"). | `BacktestVersionCreate` | 201 `BacktestRun` (`queued`); 400 "Wait for the running version to finish" (a version is queued or running), unknown symbols; 404 |
+| `DELETE /backtests/{id}` | `scope=all` (default): deletes the whole backtest, every version with its trades and results. `scope=version`: only this older version. Audit: `backtest.delete` ("Deleted backtest IT basket (3 versions)" / "Deleted v1 of backtest IT basket"). | path, `scope` | `BacktestDeleteResult {deletedRuns}`; 400 "A running backtest cannot be deleted", "Delete the whole backtest instead" (`scope=version` on the newest); 404 |
+| `POST /backtests/delete` | Deletes several whole backtests (every version of each id's backtest), all or nothing. Audit: `backtest.delete` ("Deleted 2 backtests (3 versions)"). | `BacktestDeleteRequest {ids (1–100)}` | `BacktestDeleteResult`; 400 a target is running; 404 unknown id |
 
 ## 5. NOVA Atlas — market data and data jobs
 

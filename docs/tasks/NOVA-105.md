@@ -1,6 +1,6 @@
 # NOVA-105 — Backtest service: versions, delete, slim history (D60, migration 0015)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-105 · **Depends on:** NOVA-104
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-105 · **Depends on:** NOVA-104
 
 ## Goal
 The backtest service stores backtests as version chains, queues an edited version, deletes backtests or old
@@ -54,5 +54,13 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. Migration `0015` (`root_id` backfilled to `id`, `version`, `report_kept`, unique (root_id, version), check
+`(version = 1) = (root_id = id)`, audit actions). `versions.py`: list/add/delete/trim; routes for the four endpoints;
+list shows newest versions only; engine trims older completed versions in its final commit.
+- `BacktestRun.root_id` has a Python-side default (= own `id`), so older code/tests that create runs still work.
+- `test_versions.py` has its own small data fixture (test modules cannot import each other here).
+- `test_constraints.py`: the "bad audit action" example was `backtest.delete`, now valid; changed to `order.place`.
+Guides: API, DATABASE.
 
 ## Review
+Built and reviewed by Claude. `backend-check` 698 passed; `pnpm review:check` passed. Merged.

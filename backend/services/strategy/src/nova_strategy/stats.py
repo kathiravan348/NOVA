@@ -32,12 +32,41 @@ _STATS = text(
 )
 
 
+# D60: per strategy version, its completed runs and the best return (ties: lowest run id).
+_BY_VERSION = text(
+    """
+    SELECT v.strategy_id, v.version,
+           count(res.run_id) AS runs_completed,
+           max(res.return_percent) AS best_return,
+           (array_agg(res.run_id ORDER BY res.return_percent DESC, res.run_id)
+               FILTER (WHERE res.run_id IS NOT NULL))[1] AS best_run_id
+    FROM strategy_versions v
+    LEFT JOIN backtest_runs r
+        ON r.strategy_id = v.strategy_id AND r.strategy_version = v.version
+        AND r.status = 'completed'
+    LEFT JOIN backtest_results res ON res.run_id = r.id
+    GROUP BY v.strategy_id, v.version
+    ORDER BY v.strategy_id, v.version
+    """
+)
+
+
 def _number(value: Any) -> float | None:
     """Any: numeric columns arrive as Decimal or None."""
     return None if value is None else float(value)
 
 
 def strategy_stats(db: Session) -> list[StrategyStats]:
+    by_version: dict[str, list[dict[str, Any]]] = {}
+    for row in db.execute(_BY_VERSION):
+        by_version.setdefault(row.strategy_id, []).append(
+            {
+                "version": row.version,
+                "runs_completed": row.runs_completed,
+                "best_return_percent": _number(row.best_return),
+                "best_run_id": row.best_run_id,
+            }
+        )
     return [
         StrategyStats.model_validate(
             {
@@ -57,6 +86,7 @@ def strategy_stats(db: Session) -> list[StrategyStats]:
                     if row.best_run_id is not None
                     else None
                 ),
+                "by_version": by_version.get(row.strategy_id, []),
             }
         )
         for row in db.execute(_STATS)

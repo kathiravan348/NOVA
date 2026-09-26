@@ -1,6 +1,6 @@
 # NOVA-104 — Contracts, mocks and services for backtest versions and delete (D60)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-104 · **Depends on:** NOVA-102
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-104 · **Depends on:** NOVA-102
 
 ## Goal
 The wire shapes of D60 exist in Zod and Pydantic, mocks and MSW serve them, and `@nova/services` has hooks,
@@ -52,5 +52,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. Contracts (Zod + Pydantic + schema files): `BacktestRun.rootId/version/reportKept`, `BacktestVersion`,
+`BacktestVersionCreate`, `BacktestDeleteRequest/Result`, `StrategyStats.byVersion` (`VersionStats`), audit actions
+`backtest.edit`/`backtest.delete`. Mocks: `run_006` = slim v1 of `run_002`; consistency tests skip slim runs and check
+`byVersion`. MSW: newest-only list, versions, add version, delete (one/all/bulk). Services: 4 API functions + hooks
+(`useDeleteBacktest` forgets a deleted backtest's cached pages instead of refetching them into a 404).
+- Extra files touched: `services/src/api/api.test.ts` (list = newest versions), `ui-trading` StrategyCard story/test
+  and Relay `labels.ts` (new audit labels), `strategies.test.tsx` (worst return now includes `run_006`).
+- Merged together with 105 and 106: the new required contract fields break the services until both exist.
+Guides: none (CONTRACTS.md updated).
 
 ## Review
+Built and reviewed by Claude. `backend-check` 698 passed; `pnpm review:check` passed. Merged.

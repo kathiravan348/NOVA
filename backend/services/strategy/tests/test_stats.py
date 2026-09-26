@@ -11,11 +11,11 @@ STATS = "/api/v1/strategies/stats"
 T0 = datetime(2026, 9, 1, tzinfo=UTC)
 
 
-def _run(run_id: str, strategy_id: str, status: str, minutes: int) -> BacktestRun:
+def _run(run_id: str, strategy_id: str, status: str, minutes: int, version: int = 1) -> BacktestRun:
     return BacktestRun(
         id=run_id,
         strategy_id=strategy_id,
-        strategy_version=1,
+        strategy_version=version,
         name=run_id,
         universe={"type": "index", "index": "NIFTY 50"},
         status=status,
@@ -93,7 +93,49 @@ def test_stats_summarise_runs_per_strategy(
         "winRateMaxPercent": 60.0,
         "worstDrawdownPercent": -15.5,
         "bestNetPnl": {"runId": "run_a", "netPnlPaise": 1_250_000},
+        "byVersion": [
+            {"version": 1, "runsCompleted": 2, "bestReturnPercent": 12.5, "bestRunId": "run_a"}
+        ],
     }
     assert body[idle]["runsTotal"] == 0 and body[idle]["lastRunAt"] is None
     assert body[failing]["runsFailed"] == 1 and body[failing]["bestNetPnl"] is None
     assert list(body) == ids
+
+
+def test_stats_by_version_follow_each_strategy_version(
+    client: TestClient, spec: dict[str, object], clean: Engine, parity: Parity
+) -> None:
+    created = client.post(
+        "/api/v1/strategies", json={"name": "Tuned", "description": "", "spec": spec}
+    ).json()
+    sid = created["id"]
+    assert (
+        client.post(
+            f"/api/v1/strategies/{sid}/versions", json={"spec": spec, "note": "tuned"}
+        ).status_code
+        == 201
+    )
+    with Session(clean) as db:
+        db.add_all(
+            [
+                _run("run_x", sid, "completed", 1),
+                _run("run_y", sid, "completed", 2),
+                _run("run_z", sid, "failed", 3, version=2),
+            ]
+        )
+        db.flush()
+        db.add_all(
+            [
+                _result("run_x", "2", "50", "-1", 20_000),
+                _result("run_y", "5", "50", "-1", 50_000),
+            ]
+        )
+        db.commit()
+
+    row = next(r for r in client.get(STATS).json() if r["strategyId"] == sid)
+
+    parity.assert_valid(row, "StrategyStats")
+    assert row["byVersion"] == [
+        {"version": 1, "runsCompleted": 2, "bestReturnPercent": 5.0, "bestRunId": "run_y"},
+        {"version": 2, "runsCompleted": 0, "bestReturnPercent": None, "bestRunId": None},
+    ]

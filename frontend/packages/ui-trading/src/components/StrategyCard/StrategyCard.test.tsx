@@ -16,6 +16,7 @@ const stats: StrategyStats = {
   winRateMaxPercent: 75,
   worstDrawdownPercent: -0.11,
   bestNetPnl: { runId: "run_001", netPnlPaise: 499474 },
+  byVersion: [{ version: 1, runsCompleted: 2, bestReturnPercent: 0.5, bestRunId: "run_001" }],
 };
 
 const props = {
