@@ -2,6 +2,7 @@ import threading
 from datetime import date
 
 from nova_backtest.engine import BacktestEngine, EngineError, PendingEngine
+from nova_backtest.progress import ProgressSink
 from nova_backtest.worker import STOPPED_MESSAGE, run_worker
 from nova_db.models import BacktestRun
 from sqlalchemy import Engine, select, update
@@ -56,20 +57,21 @@ def test_pending_engine_fails_runs_with_a_clear_message(
 
 
 class CompletingEngine:
-    def run(self, db: Session, run_id: str) -> None:
+    def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         run = db.get(BacktestRun, run_id)
         assert run is not None
         run.status = "completed"
+        run.stage, run.progress_percent = "done", 100
         db.commit()
 
 
 class CrashingEngine:
-    def run(self, db: Session, run_id: str) -> None:
+    def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         raise RuntimeError("secret detail")
 
 
 class RefusingEngine:
-    def run(self, db: Session, run_id: str) -> None:
+    def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         raise EngineError("No candles for INFY")
 
 

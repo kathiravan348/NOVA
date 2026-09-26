@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-100). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-101). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -107,7 +107,7 @@ No delete in Phase 1 (runs refer to versions).
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
 | `GET /backtests` | Runs, newest first, paged; optional filter by strategy. | `strategyId`, `limit`, `cursor` | `Page<BacktestRun>` |
-| `GET /backtests/{id}` | One run: status (`queued` → `running` → `completed` / `failed`), universe, period, capital, benchmark, times, error. | path | `BacktestRun`; 404 |
+| `GET /backtests/{id}` | One run: status (`queued` → `running` → `completed` / `failed`), universe, period, capital, benchmark, times, error, and `progress` (D58): `null` until the worker starts it, else `{stage, percent, symbolsDone, symbolsTotal, barsDone, barsTotal, tradesSoFar, simulatedTo}`. Stages and percent bands: `loading` 0–20 (per stock), `signals` 20–30 (Python only), `simulating` 30–95 (per bar event, warm-up included; `simulatedTo` = IST date reached), `saving` 95–100, `done` 100 (always for `completed`). Written at most once a second; a failed run keeps its last progress. The list returns the same field. | path | `BacktestRun`; 404 |
 | `GET /backtests/{id}/result` | Metrics (gross/charges/net P&L, return, CAGR, max drawdown, Sharpe, win rate, trade/win/loss counts), equity curve, per-symbol breakdown. Only once completed. | path | `BacktestResult`; 404 until done |
 | `GET /backtests/{id}/trades` | Simulated trades, oldest first, paged, each with the full charges breakdown. | `limit`, `cursor` | `Page<Trade>` |
 | `POST /backtests` | Queues a run. Checks the strategy version exists and every symbol is a known NSE instrument. The **backtest worker** picks it up from the Postgres queue and fills result + trades. Audit: `backtest.run`. | `BacktestRunCreate {strategyId, strategyVersion, name, universe (symbols or index), from, to, initialCapitalPaise, benchmark?}` | 201 `BacktestRun` (`queued`); 400 unknown symbols; 404 |

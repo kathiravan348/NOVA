@@ -23,6 +23,18 @@ def run_contract(row: BacktestRun) -> RunContract:
             "started_at": row.started_at,
             "finished_at": row.finished_at,
             "error": row.error,
+            "progress": None
+            if row.stage is None
+            else {
+                "stage": row.stage,
+                "percent": row.progress_percent,
+                "symbols_done": row.symbols_done,
+                "symbols_total": row.symbols_total,
+                "bars_done": row.bars_done,
+                "bars_total": row.bars_total,
+                "trades_so_far": row.trades_so_far,
+                "simulated_to": row.simulated_to,
+            },
         }
     )
 

@@ -116,6 +116,7 @@ export const orbitHandlers = [
       startedAt: null,
       finishedAt: null,
       error: null,
+      progress: null,
     };
     return HttpResponse.json(queued, { status: 201 });
   }),

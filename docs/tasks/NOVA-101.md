@@ -1,6 +1,6 @@
 # NOVA-101 — Backtest progress: stage, counts and percent on each run (migration 0014)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-101 · **Depends on:** NOVA-100
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-101 · **Depends on:** NOVA-100
 
 ## Goal
 While a backtest runs, `GET /backtests/{id}` (and the list) reports what it is doing: stage, stocks loaded,
@@ -53,5 +53,14 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. Migration `0014` (+ `BACKTEST_STAGES`; completed runs backfilled to `done`/100), `progress.py`
+(`Progress`, `NullProgress`, `ProgressSink`), engine/worker/simulate wiring, `BacktestProgress` contract
+(Zod + Pydantic + schema + mocks + MSW POST), API/DATABASE/CONTRACTS docs.
+- Mapping to the contract lives in `convert.run_contract` (routes use it), not `routes.py`.
+- `nova_contracts/__init__.py` exports `BacktestProgress`, `BacktestStage`.
+- Owner stack: a 20-stock 1m SMA run (1.41 M bars) moved loading 0→16%, simulating 39→83% with
+  `simulated_to` advancing, then `done` 100% (516 trades). Test run deleted.
+Guides: API, DATABASE.
 
 ## Review
+Built and reviewed by Claude. `backend-check` 691 passed; `pnpm review:check` passed. Merged.

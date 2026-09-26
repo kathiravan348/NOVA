@@ -27,6 +27,16 @@ describe("Backtest schemas", () => {
     startedAt: "2026-01-01T00:01:00Z",
     finishedAt: "2026-01-01T00:05:00Z",
     error: null,
+    progress: {
+      stage: "done",
+      percent: 100,
+      symbolsDone: 50,
+      symbolsTotal: 50,
+      barsDone: 12400,
+      barsTotal: 12400,
+      tradesSoFar: 80,
+      simulatedTo: "2025-12-31",
+    },
   };
 
   const validMetrics: BacktestMetrics = {
@@ -68,6 +78,24 @@ describe("Backtest schemas", () => {
   describe("BacktestRunSchema", () => {
     it("accepts a valid completed run", () => {
       expect(BacktestRunSchema.safeParse(validRun).success).toBe(true);
+    });
+
+    it("accepts a running run with progress and a queued run without", () => {
+      const running: BacktestRun = {
+        ...validRun,
+        status: "running",
+        finishedAt: null,
+        progress: { ...validRun.progress!, stage: "simulating", percent: 40, barsDone: 5000 },
+      };
+      expect(BacktestRunSchema.safeParse(running).success).toBe(true);
+      const queued = { ...running, status: "queued", startedAt: null, progress: null };
+      expect(BacktestRunSchema.safeParse(queued).success).toBe(true);
+    });
+
+    it("rejects a completed run whose progress is not done at 100%", () => {
+      const partial = { ...validRun, progress: { ...validRun.progress!, percent: 40 } };
+      expect(BacktestRunSchema.safeParse(partial).success).toBe(false);
+      expect(BacktestRunSchema.safeParse({ ...validRun, progress: null }).success).toBe(false);
     });
 
     it("accepts a valid failed run with error message", () => {

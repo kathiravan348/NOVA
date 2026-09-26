@@ -19,6 +19,9 @@ from nova_backtest.bars import IST, Bar
 
 # (qty, entry price, exit price, entry time) → charges of the whole trade.
 ChargesFn = Callable[[int, int, int, datetime], Charges]
+# (bar events done, time of the last one, trades closed so far) → progress (D58).
+OnBar = Callable[[int, datetime, int], None]
+ON_BAR_EVERY = 1_000
 
 
 class Signals(Protocol):
@@ -99,6 +102,7 @@ def simulate(
     charges: ChargesFn,
     square_off: time | None = None,
     averaging: Averaging | None = None,
+    on_bar: OnBar | None = None,
 ) -> Simulation:
     events = sorted(
         ((bar.ts, symbol, i) for symbol, series in bars.items() for i, bar in enumerate(series)),
@@ -147,7 +151,9 @@ def simulate(
             cash -= qty * fill
 
     day: date | None = None
-    for ts, symbol, i in events:
+    for done, (ts, symbol, i) in enumerate(events):
+        if on_bar is not None and done and done % ON_BAR_EVERY == 0:
+            on_bar(done, ts, len(trades))
         bar = bars[symbol][i]
         if ts < start:
             last_close[symbol] = bar.close
@@ -201,4 +207,6 @@ def simulate(
         close(symbol, final.ts, final.close)
     if day is not None:
         equity.append((day, worth()))
+    if on_bar is not None and events:
+        on_bar(len(events), events[-1][0], len(trades))
     return Simulation(trades=trades, equity=equity)

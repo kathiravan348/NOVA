@@ -1,14 +1,17 @@
 """The visual engine through the worker, on seeded candles and Zerodha rates (D42, D45, D46)."""
 
+import itertools
 import threading
 from datetime import date, datetime, time, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 from nova_backtest.bars import IST
+from nova_backtest.progress import Progress
 from nova_backtest.strategy_engine import StrategyEngine
-from nova_backtest.worker import run_worker
+from nova_backtest.worker import run_one, run_worker
 from nova_db.models import BacktestRun, Candle, StrategyVersion
+from nova_db.queue import claim_next
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, update
 from sqlalchemy.orm import Session, sessionmaker
@@ -249,3 +252,112 @@ def test_an_intraday_run_squares_off_and_pays_intraday_charges(
     assert trade["exitAt"] == "2025-01-02T09:50:00Z"  # 15:20 IST
     # Intraday: brokerage 0.03% per order (₹0.318 + ₹0.309), no DP, STT 0.025% on ₹1,030 → ₹0.
     assert trade["charges"]["dpPaise"] == 0 and trade["charges"]["brokeragePaise"] == 63
+
+
+class Recording(Progress):
+    """Keeps every write: (stage, percent, symbols done/total, bars done/total, trades)."""
+
+    def __init__(self, factory: sessionmaker[Session], run_id: str) -> None:
+        ticks = itertools.count(step=2)  # every advance is a second later: every call writes
+        super().__init__(factory, run_id, clock=lambda: float(next(ticks)))
+        self.writes: list[tuple[object, ...]] = []
+
+    def _write(self) -> None:
+        super()._write()
+        v = self.values
+        self.writes.append(
+            (self._stage, self.percent, v["symbols_done"], v["symbols_total"], v["bars_done"])
+            + (v["bars_total"], v["trades_so_far"])
+        )
+
+
+def _run_recorded(factory: sessionmaker[Session], engine: StrategyEngine) -> Recording:
+    with factory() as db:
+        run_id = claim_next(db, BacktestRun)
+        assert run_id is not None
+        recording = Recording(factory, run_id)
+        engine.run(db, run_id, recording)
+    return recording
+
+
+def _add_wipro(engine: Engine) -> None:
+    with Session(engine) as db:
+        for i in range(5):
+            ts = datetime.combine(date(2025, 1, 1) + timedelta(days=i), time(0), tzinfo=IST)
+            db.add(
+                Candle(
+                    exchange="NSE",
+                    symbol="WIPRO",
+                    timeframe="1d",
+                    ts=ts,
+                    open_paise=3_000,
+                    high_paise=3_100,
+                    low_paise=2_900,
+                    close_paise=3_000,
+                    volume=10,
+                )
+            )
+        db.commit()
+
+
+def test_a_run_reports_loading_simulating_and_done(
+    seeded: Engine, factory: sessionmaker[Session], client: TestClient, parity: Parity
+) -> None:
+    _add_wipro(seeded)
+    _queue(seeded, symbols=("INFY", "TCS", "WIPRO"))
+
+    writes = _run_recorded(factory, StrategyEngine()).writes
+
+    assert writes[0] == ("loading", 0, 0, 3, 0, 0, 0)
+    assert ("loading", 20, 3, 3, 0, 0, 0) in writes
+    assert "signals" not in [w[0] for w in writes]  # visual rules need no Python step
+    simulating = [w for w in writes if w[0] == "simulating"]
+    assert simulating[0][4:6] == (0, 15) and simulating[-1] == ("simulating", 95, 3, 3, 15, 15, 1)
+    assert writes[-1] == ("saving", 95, 3, 3, 15, 15, 1)
+    run = client.get("/api/v1/backtests/run_e2e").json()
+    parity.assert_valid(run, "BacktestRun")
+    assert run["status"] == "completed"
+    assert run["progress"] == {
+        "stage": "done",
+        "percent": 100,
+        "symbolsDone": 3,
+        "symbolsTotal": 3,
+        "barsDone": 15,
+        "barsTotal": 15,
+        "tradesSoFar": 1,
+        "simulatedTo": "2025-01-05",
+    }
+
+
+def test_a_python_run_passes_through_signals(
+    seeded: Engine, factory: sessionmaker[Session]
+) -> None:
+    code = "class Strategy:\n    def on_bar(self, ctx):\n        return None\n"
+    spec = _spec(mode="python", code=code)
+    spec.pop("entry")
+    spec.pop("exit")
+    with Session(seeded) as db:
+        db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
+        db.commit()
+    _queue(seeded)
+
+    stages = [w[:2] for w in _run_recorded(factory, StrategyEngine()).writes]
+
+    assert ("signals", 20) in stages and ("signals", 30) in stages
+    assert stages.index(("signals", 20)) < stages.index(("simulating", 30))
+
+
+def test_a_failed_run_keeps_its_last_progress(
+    seeded: Engine, factory: sessionmaker[Session], client: TestClient
+) -> None:
+    _queue(seeded)
+
+    with factory() as db:
+        run_id = claim_next(db, BacktestRun)
+        assert run_id is not None
+        run_one(db, run_id, StrategyEngine(max_bars=7), Recording(factory, run_id))  # fails at TCS
+
+    run = client.get("/api/v1/backtests/run_e2e").json()
+    assert run["status"] == "failed"
+    progress = run["progress"]
+    assert (progress["stage"], progress["percent"], progress["symbolsDone"]) == ("loading", 10, 1)

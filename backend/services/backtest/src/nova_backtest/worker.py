@@ -10,6 +10,7 @@ from nova_db.queue import claim_next, fail_running
 from sqlalchemy.orm import Session, sessionmaker
 
 from nova_backtest.engine import BacktestEngine, EngineError
+from nova_backtest.progress import Progress, ProgressSink
 
 logger = logging.getLogger("nova.backtest.worker")
 ERROR_LENGTH = 300
@@ -29,10 +30,10 @@ def fail_run(db: Session, run_id: str, message: str) -> None:
         db.commit()
 
 
-def run_one(db: Session, run_id: str, engine: BacktestEngine) -> None:
+def run_one(db: Session, run_id: str, engine: BacktestEngine, progress: ProgressSink) -> None:
     """Runs one claimed run; any failure ends as a `failed` run, never a crashed worker."""
     try:
-        engine.run(db, run_id)
+        engine.run(db, run_id, progress)
     except EngineError as exc:
         db.rollback()
         fail_run(db, run_id, str(exc))
@@ -59,7 +60,7 @@ def run_worker(
             run_id = claim_next(db, BacktestRun)
             if run_id is not None:
                 logger.info("Running backtest %s", run_id)
-                run_one(db, run_id, engine)
+                run_one(db, run_id, engine, Progress(session_factory, run_id))
                 continue
         if on_idle is not None:
             on_idle()
