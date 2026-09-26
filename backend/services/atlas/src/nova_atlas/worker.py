@@ -2,6 +2,7 @@
 
 import logging
 import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -12,12 +13,17 @@ from sqlalchemy.orm import Session, sessionmaker
 from nova_atlas.archive import run_archive
 from nova_atlas.broker_client import BrokerData
 from nova_atlas.download import fail_job, run_download
+from nova_atlas.sync_job import run_instrument_sync
 
 logger = logging.getLogger("nova.atlas.worker")
 
 # Job types this worker runs; `tick_record` jobs belong to the broker's recorder (D54).
-WORKER_TYPES = ("historical_download", "archive")
+WORKER_TYPES = ("historical_download", "archive", "instrument_sync")
 OWNED = DataJob.type.in_(WORKER_TYPES)
+# How often an idle worker checks whether the daily sync is due (D56).
+SCHEDULE_EVERY_SECONDS = 60.0
+# Queues timed jobs; True when it queued one.
+Schedule = Callable[[Session, BrokerData], bool]
 
 
 def crash_message(exc: BaseException) -> str:
@@ -32,6 +38,8 @@ def _run(db: Session, job_id: str, broker: BrokerData, archive_dir: Path) -> Non
     job = db.get(DataJob, job_id)
     if job is not None and job.type == "archive":
         run_archive(db, job_id, archive_dir)
+    elif job is not None and job.type == "instrument_sync":
+        run_instrument_sync(db, job_id, broker)
     else:
         run_download(db, job_id, broker)
 
@@ -43,12 +51,18 @@ def run_worker(
     poll_seconds: float,
     on_idle: Callable[[], None] | None = None,
     archive_dir: Path = Path("archive"),
+    schedule: Schedule | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> None:
-    """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there)."""
+    """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there).
+
+    `schedule` queues timed jobs (the daily sync, D56); it runs at most once a minute while idle.
+    """
     with session_factory() as db:
         requeued = requeue_running(db, DataJob, OWNED)
     if requeued:
         logger.info("Requeued %s interrupted job(s)", requeued)
+    next_schedule_check = clock()
     while not stop.is_set():
         with session_factory() as db:
             job_id = claim_next(db, DataJob, OWNED)
@@ -62,6 +76,15 @@ def run_worker(
                     db.rollback()
                     fail_job(db, job_id, crash_message(exc))
                 continue
+            if schedule is not None and clock() >= next_schedule_check:
+                next_schedule_check = clock() + SCHEDULE_EVERY_SECONDS
+                try:
+                    if schedule(db, broker):
+                        logger.info("Queued the daily instrument sync")
+                        continue
+                except Exception:
+                    logger.exception("Daily sync check failed")
+                    db.rollback()
         if on_idle is not None:
             on_idle()
         stop.wait(poll_seconds)

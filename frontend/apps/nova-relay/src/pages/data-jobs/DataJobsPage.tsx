@@ -29,7 +29,11 @@ const columns: ColumnDef<DataJob, unknown>[] = [
         >
           {jobTypeLabel[row.original.type]}
         </Link>
-        <span className="text-body-sm text-text-muted">{row.original.timeframe ?? "Ticks"}</span>
+        <span className="text-body-sm text-text-muted">
+          {row.original.type === "instrument_sync"
+            ? "All NSE stocks"
+            : (row.original.timeframe ?? "Ticks")}
+        </span>
       </span>
     ),
   },
@@ -44,7 +48,11 @@ const columns: ColumnDef<DataJob, unknown>[] = [
       />
     ),
   },
-  { id: "symbols", header: "Symbols", accessorFn: (j) => symbolsText(j.symbols) },
+  {
+    id: "symbols",
+    header: "Symbols",
+    accessorFn: (j) => (j.symbols.length ? symbolsText(j.symbols) : "All"),
+  },
   {
     id: "period",
     header: "Period",

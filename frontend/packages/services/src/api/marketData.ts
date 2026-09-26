@@ -1,11 +1,11 @@
 import {
   CandleSchema,
   InstrumentSchema,
-  InstrumentSyncResultSchema,
+  DataJobSchema,
   UniverseEntrySchema,
   type Candle,
   type Instrument,
-  type InstrumentSyncResult,
+  type DataJob,
   type Timeframe,
   type UniverseEntry,
   type UniverseEntryWrite,
@@ -53,6 +53,7 @@ export function deleteUniverseEntry(symbol: string, init?: RequestOptions): Prom
 }
 
 /** Asks Kite for tokens and lot sizes of every listed stock (needs a Kite login). */
-export function syncInstruments(init?: RequestOptions): Promise<InstrumentSyncResult> {
-  return apiPost("/market-data/instruments/sync", undefined, InstrumentSyncResultSchema, init);
+/** Queues an `instrument_sync` data job (D56). */
+export function syncInstruments(init?: RequestOptions): Promise<DataJob> {
+  return apiPost("/market-data/instruments/sync", undefined, DataJobSchema, init);
 }

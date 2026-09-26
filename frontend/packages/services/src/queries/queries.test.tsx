@@ -273,15 +273,14 @@ describe("query hooks", () => {
     expect(job.type).toBe("archive");
   });
 
-  it("useSyncInstruments posts the sync and refetches the stock list", async () => {
+  it("useSyncInstruments queues a sync job", async () => {
     const { result } = renderHook(() => ({ list: useUniverse(), sync: useSyncInstruments() }), {
       wrapper,
     });
     await waitFor(() => expect(result.current.list.isSuccess).toBe(true));
     requests = [];
-    const synced = await result.current.sync.mutateAsync();
-    expect(synced.missing).toEqual([]);
-    await waitFor(() => expect(requests).toContain("/api/v1/market-data/universe"));
+    const job = await result.current.sync.mutateAsync();
+    expect(job.type).toBe("instrument_sync");
     expect(requests[0]).toBe("/api/v1/market-data/instruments/sync");
   });
 });

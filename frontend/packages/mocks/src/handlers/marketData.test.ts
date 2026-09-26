@@ -4,7 +4,7 @@ import {
   ApiErrorSchema,
   CandleSchema,
   InstrumentSchema,
-  InstrumentSyncResultSchema,
+  DataJobSchema,
   UniverseEntrySchema,
 } from "@nova/contracts";
 import { mockCandles, mockInstruments } from "../data";
@@ -94,9 +94,10 @@ describe("Market data MSW handlers", () => {
       expect((await send("DELETE", "universe/NOPE")).status).toBe(404);
     });
 
-    it("syncs every mock stock", async () => {
+    it("queues a sync job", async () => {
       const res = await send("POST", "instruments/sync");
-      expect(InstrumentSyncResultSchema.parse(await res.json()).missing).toEqual([]);
+      expect(res.status).toBe(202);
+      expect(DataJobSchema.parse(await res.json()).type).toBe("instrument_sync");
     });
   });
 });

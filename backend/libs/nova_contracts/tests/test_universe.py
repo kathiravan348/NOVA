@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from nova_contracts import InstrumentSyncResult, UniverseEntry, UniverseEntryWrite
+from nova_contracts import UniverseEntry, UniverseEntryWrite
 from nova_testing.parity import Parity
 from pydantic import ValidationError
 
@@ -12,13 +12,11 @@ def test_bodies_match_their_schemas(parity: Parity) -> None:
     write = UniverseEntryWrite.model_validate_json(json.dumps(ENTRY)).model_dump(mode="json")
     listed = UniverseEntry.model_validate(ENTRY | {"synced": True, "newListing": True})
     listed_json = listed.model_dump(mode="json")
-    result = InstrumentSyncResult.model_validate({"synced": ["INFY"], "missing": ["XYZ"]})
 
     assert write == ENTRY
     parity.assert_valid(write, "UniverseEntryWrite")
     assert listed_json["newListing"] is True
     parity.assert_valid(listed_json, "UniverseEntry")
-    parity.assert_valid(result.model_dump(mode="json"), "InstrumentSyncResult")
 
 
 @pytest.mark.parametrize(

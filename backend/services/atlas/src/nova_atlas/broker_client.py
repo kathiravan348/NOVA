@@ -1,5 +1,6 @@
 """Kite data through the broker's internal endpoints (D35, D41). Atlas never calls Kite itself."""
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
@@ -10,6 +11,13 @@ TIMEOUT_SECONDS = 60.0
 
 class BrokerDataError(Exception):
     """The broker refused or failed the request; the message is safe to show in a data job."""
+
+
+@dataclass(frozen=True)
+class Constituent:
+    symbol: str
+    company: str
+    industry: str
 
 
 class BrokerData:
@@ -28,6 +36,17 @@ class BrokerData:
 
     def instruments(self, exchange: str) -> str:
         return self._get(f"/internal/kite/instruments/{exchange}").text
+
+    def logged_in(self) -> bool:
+        """Whether a Kite session is live; no Kite call (D56 daily sync)."""
+        return bool(self._get("/internal/kite/session").json().get("loggedIn"))
+
+    def constituents(self, file: str) -> list[Constituent]:
+        """One NSE index's members, from its constituent file (fetched by the broker, D35)."""
+        rows = self._get("/internal/nse/constituents", params={"file": file}).json()
+        if not isinstance(rows, list):
+            raise BrokerDataError("Unexpected index member list from the broker")
+        return [Constituent(str(r["symbol"]), str(r["company"]), str(r["industry"])) for r in rows]
 
     def historical(
         self, instrument_token: int, interval: str, start: datetime, end: datetime
@@ -64,7 +83,7 @@ class BrokerData:
 NO_ANSWER = "The broker service did not answer. Check that the stack is running, then try again."
 NOT_LOGGED_IN = "Kite is not logged in today. Log in on the Broker page, then try again."
 # Kite's words for a missing or expired access token (TokenException).
-_SESSION_HINTS = ("live session", "access_token", "api_key", "token")
+_SESSION_HINTS = ("log in to kite", "live session", "access_token", "api_key", "token")
 
 
 def explain(status: int, message: str) -> str:

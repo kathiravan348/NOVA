@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-084). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-087). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -245,12 +245,19 @@ belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its price
 
 - **Add stock**: type the NSE symbol (e.g. **INFY**), the name and the sector, tick its indices, then
   **Add stock**. A new stock shows **Not synced**.
-- **Sync with Kite**: asks Zerodha about every stock in the list (do the daily Kite login first). Symbols
-  Zerodha does not know are listed in yellow: check their spelling.
+- **Sync with Kite**: brings in **every stock listed on the NSE** (about 3,900, including small SME
+  companies and ETFs) and updates which stocks belong to which index (NIFTY 50, NIFTY IT, NIFTY MIDCAP 100
+  and 16 more). It runs as a job: NOVA opens its page, where you see the progress and, at the end, one line
+  such as "3,860 stocks synced; 2 new listing(s): ABC, XYZ". Do the daily Kite login first.
+- NOVA also syncs **by itself every weekday from 08:45**, as soon as the Kite login of the day is done.
+- A **new listing** is a stock that appeared since the previous sync, for example a company that just
+  had its IPO (its first day of trading). An IPO shows up on its listing day, not before: Zerodha only
+  lists a stock once it trades.
 - **Edit** changes the name, sector or indices. **Remove** takes a stock off the list; prices already
   downloaded stay.
 
-The usual order for a new stock: **Add stock** → **Sync with Kite** → **New download** in Data jobs.
+You rarely need **Add stock** now: the sync adds NSE stocks by itself. Then queue a **New download** in
+Data jobs.
 
 ### Step 7 — Data jobs
 Background work that fills our price database: **historical downloads** (past candles from Zerodha),

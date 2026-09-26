@@ -59,6 +59,12 @@ def clean(engine: Engine, seeded_universe: list[dict[str, Any]]) -> Engine:
             )
         )
         connection.execute(insert(UniverseEntry), seeded_universe)
+        connection.execute(
+            text(
+                "UPDATE market_indices"
+                " SET member_count = 0, instrument_token = NULL, updated_at = NULL"
+            )
+        )
     with Session(engine) as db:
         db.add(User(id="usr_owner", name="Aarav Sharma", email="a@example.com", password_hash="x"))
         db.commit()
@@ -71,7 +77,7 @@ def factory(clean: Engine) -> sessionmaker[Session]:
 
 
 @pytest.fixture
-def client(database_url: str, clean: Engine, fake_broker: FakeBroker) -> Iterator[TestClient]:
+def client(database_url: str, clean: Engine) -> Iterator[TestClient]:
     settings = AtlasSettings.model_validate(
         {
             "database_url": database_url,
@@ -84,7 +90,7 @@ def client(database_url: str, clean: Engine, fake_broker: FakeBroker) -> Iterato
         "x-nova-user-id": "usr_owner",
         "x-nova-user-name": "Aarav%20Sharma",
     }
-    app = create_app(settings, broker_factory=lambda: _fake_client(fake_broker))
+    app = create_app(settings)
     with TestClient(app, headers=headers) as test_client:
         yield test_client
 

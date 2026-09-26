@@ -26,10 +26,3 @@ export const UniverseEntrySchema = z.strictObject({
   newListing: z.boolean(),
 });
 export type UniverseEntry = z.infer<typeof UniverseEntrySchema>;
-
-/** Response of `POST /market-data/instruments/sync`. */
-export const InstrumentSyncResultSchema = z.strictObject({
-  synced: z.array(UniverseSymbolSchema),
-  missing: z.array(UniverseSymbolSchema),
-});
-export type InstrumentSyncResult = z.infer<typeof InstrumentSyncResultSchema>;

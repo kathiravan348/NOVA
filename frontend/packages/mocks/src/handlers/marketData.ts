@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { UniverseEntryWriteSchema, type UniverseEntry } from "@nova/contracts";
+import { UniverseEntryWriteSchema, type DataJob, type UniverseEntry } from "@nova/contracts";
 import { mockCandles, mockInstruments } from "../data";
 import { apiPath, badRequest, notFound } from "./api";
 
@@ -84,7 +84,26 @@ export const marketDataHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  // Queues an instrument sync (D56); the mock job is not stored.
   http.post(apiPath("/market-data/instruments/sync"), () => {
-    return HttpResponse.json({ synced: mockUniverse.map((e) => e.symbol), missing: [] });
+    const job: DataJob = {
+      id: "job_sync_demo",
+      type: "instrument_sync",
+      status: "queued",
+      exchange: "NSE",
+      segment: "equity_delivery",
+      symbols: [],
+      timeframe: null,
+      from: null,
+      to: null,
+      progressPercent: 0,
+      rowsWritten: 0,
+      createdAt: new Date().toISOString(),
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+      summary: null,
+    };
+    return HttpResponse.json(job, { status: 202 });
   }),
 ];

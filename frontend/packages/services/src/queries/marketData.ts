@@ -63,15 +63,11 @@ export function useDeleteUniverseEntry() {
   });
 }
 
-/** Syncs the stock list with Kite; refreshes the list and the market-data instruments. */
+/** Queues a sync with Kite (a data job, D56); refreshes the data-jobs list. */
 export function useSyncInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => syncInstruments(),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.marketData.universe }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.marketData.instruments }),
-      ]),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.all }),
   });
 }

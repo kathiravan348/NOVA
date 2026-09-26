@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ListOrdered } from "lucide-react";
-import type { InstrumentSyncResult, UniverseEntry } from "@nova/contracts";
+import type { UniverseEntry } from "@nova/contracts";
 import { Badge, Button, DataTable, EmptyState, useToast } from "@nova/ui-core";
 import { getDataMode, useSyncInstruments, useUniverse } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
@@ -15,26 +16,23 @@ export function InstrumentsPage() {
   const toast = useToast();
   const query = useUniverse();
   const sync = useSyncInstruments();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState<Editing>(null);
   const [removing, setRemoving] = useState<string | null>(null);
-  const [lastSync, setLastSync] = useState<InstrumentSyncResult | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const runSync = async () => {
     setSyncError(null);
     try {
-      const result = await sync.mutateAsync();
-      setLastSync(result);
+      const job = await sync.mutateAsync();
       const demo = getDataMode() === "mock";
       toast.show({
-        title: `Synced ${result.synced.length} ${result.synced.length === 1 ? "stock" : "stocks"}${demo ? " (demo)" : ""}`,
-        description: result.missing.length
-          ? `${result.missing.length} not found on NSE.`
-          : "Every stock is known to Kite.",
+        title: `Sync with Kite queued${demo ? " (demo)" : ""}`,
+        description: "It adds every NSE stock and refreshes index members.",
         tone: "success",
       });
+      if (!demo) void navigate(`/data-jobs/${job.id}`);
     } catch (err) {
-      setLastSync(null);
       setSyncError(err instanceof Error ? err.message : "Could not sync with Kite");
     }
   };
@@ -119,11 +117,6 @@ export function InstrumentsPage() {
       {syncError && (
         <p role="alert" className="text-body-sm text-loss">
           {syncError}
-        </p>
-      )}
-      {lastSync && lastSync.missing.length > 0 && (
-        <p role="alert" className="text-body-sm text-warning-text">
-          Not found on NSE: {lastSync.missing.join(", ")}. Check the symbol.
         </p>
       )}
       <DataTable

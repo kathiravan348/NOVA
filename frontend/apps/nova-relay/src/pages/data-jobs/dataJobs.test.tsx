@@ -94,6 +94,35 @@ describe("Data jobs", () => {
     }
   });
 
+  it("shows an instrument sync's summary without download fields", async () => {
+    server.use(
+      http.get("*/api/v1/data-jobs/job_sync", () =>
+        HttpResponse.json({
+          ...mockDataJobs.find((job) => job.id === "job_002"),
+          id: "job_sync",
+          type: "instrument_sync",
+          status: "completed",
+          symbols: [],
+          timeframe: null,
+          from: null,
+          to: null,
+          progressPercent: 100,
+          rowsWritten: 3860,
+          startedAt: "2026-09-26T05:20:00Z",
+          finishedAt: "2026-09-26T05:21:00Z",
+          error: null,
+          summary: "3,860 stocks synced; 2 new listing(s): ABC, XYZ",
+        }),
+      ),
+    );
+    renderApp("/data-jobs/job_sync");
+    expect(
+      await screen.findByText("3,860 stocks synced; 2 new listing(s): ABC, XYZ"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Stocks synced")).toBeInTheDocument();
+    expect(screen.queryByText("Timeframe")).not.toBeInTheDocument();
+  });
+
   it("shows Not found for an unknown job", async () => {
     renderApp("/data-jobs/nope");
     expect(await screen.findByText("Not found")).toBeInTheDocument();
