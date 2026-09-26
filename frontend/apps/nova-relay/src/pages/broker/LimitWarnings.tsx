@@ -8,12 +8,13 @@ import { OWN_LIMIT_LABEL, WARN_PERCENT, hotWindows, windowLabel } from "../../li
 export interface LimitWarningsProps {
   limits: RateLimit[];
   accounts: BrokerAccount[];
-  /** Adds a link to the rate limits page (overview). */
-  withLink?: boolean;
 }
 
-/** Lists windows above 80% of the own limit (R3); renders nothing when all are below. */
-export function LimitWarnings({ limits, accounts, withLink = false }: LimitWarningsProps) {
+/**
+ * Lists windows above 80% of the own limit (R3); renders nothing when all are below.
+ * Each account name links to its page, where the limits are edited.
+ */
+export function LimitWarnings({ limits, accounts }: LimitWarningsProps) {
   const hot = hotWindows(limits);
   if (hot.length === 0) return null;
   const labelOf = (id: string) => accounts.find((a) => a.id === id)?.label ?? id;
@@ -28,17 +29,14 @@ export function LimitWarnings({ limits, accounts, withLink = false }: LimitWarni
         <ul className="flex flex-col gap-1 text-body-sm text-text-secondary">
           {hot.map((w) => (
             <li key={`${w.accountId}:${w.endpoint}:${w.window}`}>
-              {labelOf(w.accountId)} · {endpointLabel[w.endpoint]} ·{" "}
-              {windowLabel[w.window].toLowerCase()}:{" "}
+              <Link to={`/broker/${w.accountId}`} className="text-action-text hover:underline">
+                {labelOf(w.accountId)}
+              </Link>{" "}
+              · {endpointLabel[w.endpoint]} · {windowLabel[w.window].toLowerCase()}:{" "}
               <span className="font-mono">{Math.round(w.percent)}%</span>
             </li>
           ))}
         </ul>
-        {withLink && (
-          <Link to="/rate-limits" className="text-body-sm text-action-text hover:underline">
-            View rate limits
-          </Link>
-        )}
       </div>
     </Card>
   );

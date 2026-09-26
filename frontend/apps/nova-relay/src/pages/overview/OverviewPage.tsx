@@ -5,7 +5,7 @@ import { useAuditEntries, useBrokerAccounts, useRateLimits } from "@nova/service
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
 import { needsLogin } from "../../lib/session";
-import { LimitWarnings } from "../rate-limits/LimitWarnings";
+import { LimitWarnings } from "../broker/LimitWarnings";
 import { LoginPrompt } from "./LoginPrompt";
 import { RecorderWaiting } from "./RecorderWaiting";
 
@@ -83,7 +83,7 @@ export function OverviewPage() {
           </p>
         </Card>
       )}
-      <LimitWarnings limits={limits.data ?? []} accounts={list} withLink />
+      <LimitWarnings limits={limits.data ?? []} accounts={list} />
       <RecentActivity />
     </div>
   );

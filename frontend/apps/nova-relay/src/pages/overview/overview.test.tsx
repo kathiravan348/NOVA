@@ -47,14 +47,15 @@ describe("Relay overview", () => {
     );
   });
 
-  it("warns about rate limits above 80% with a link to the rate limits page", async () => {
+  it("warns about rate limits above 80% with a link to the account's page", async () => {
     renderApp("/");
     const warning = await screen.findByRole("status");
     expect(warning).toHaveTextContent(/above 80%/);
-    expect(within(warning).getByRole("link", { name: "View rate limits" })).toHaveAttribute(
-      "href",
-      "/rate-limits",
-    );
+    for (const link of within(warning).getAllByRole("link", {
+      name: "Secondary Algorithmic Account",
+    })) {
+      expect(link).toHaveAttribute("href", "/broker/brk_002");
+    }
   });
 
   it("says when live recording waits for the Kite login", async () => {

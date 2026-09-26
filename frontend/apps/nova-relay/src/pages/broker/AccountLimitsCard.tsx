@@ -6,7 +6,8 @@ import { endpointLabel } from "../../lib/labels";
 import { OWN_LIMIT_LABEL, WARN_PERCENT, usagePercent, windowLabel } from "../../lib/rateLimits";
 
 export interface AccountLimitsCardProps {
-  title: string;
+  /** Names the account in the Edit buttons' accessible names. */
+  accountLabel: string;
   limits: RateLimit[];
   /** Opens the edit dialog for one endpoint; omit to hide the button. */
   onEdit?: (limit: RateLimit) => void;
@@ -42,14 +43,14 @@ function WindowRow({ rule }: { rule: RateLimitRule }) {
 }
 
 /** One account's limits per endpoint and window (R3): usage against the own limit, broker limit, reset. */
-export function AccountLimitsCard({ title, limits, onEdit }: AccountLimitsCardProps) {
+export function AccountLimitsCard({ accountLabel, limits, onEdit }: AccountLimitsCardProps) {
   const updated = limits
     .map((l) => l.updatedAt)
     .sort()
     .at(-1);
   return (
     <Card
-      title={title}
+      title="Rate limits"
       actions={
         updated && (
           <span className="text-body-sm text-text-muted">Updated {formatIstShort(updated)}</span>
@@ -73,7 +74,7 @@ export function AccountLimitsCard({ title, limits, onEdit }: AccountLimitsCardPr
                   <Button
                     variant="secondary"
                     size="sm"
-                    aria-label={`Edit ${endpointLabel[l.endpoint]} limits for ${title}`}
+                    aria-label={`Edit ${endpointLabel[l.endpoint]} limits for ${accountLabel}`}
                     onClick={() => onEdit(l)}
                   >
                     Edit limits

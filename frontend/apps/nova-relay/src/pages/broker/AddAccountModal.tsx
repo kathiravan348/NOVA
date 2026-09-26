@@ -52,7 +52,7 @@ function AddAccountForm({ onDone }: { onDone: () => void }) {
         tone: "success",
       });
       onDone();
-      if (!demo) void navigate(`/accounts/${account.id}`);
+      if (!demo) void navigate(`/broker/${account.id}`);
     } catch (err) {
       setFailed(err instanceof Error ? err.message : "Could not add the account");
     }
