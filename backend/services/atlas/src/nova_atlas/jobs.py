@@ -1,5 +1,6 @@
 """Data jobs (D32, D41, D54): list, one job, queue a download, cancel."""
 
+import json
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
 
@@ -13,6 +14,7 @@ from nova_contracts import (
     PAGE_LIMIT_MAX,
     ArchiveJobCreate,
     DataJobCreate,
+    DataJobPlan,
     Page,
 )
 from nova_contracts import DataJob as DataJobContract
@@ -173,6 +175,12 @@ def to_contract(job: DataJob) -> DataJobContract:
             "finished_at": job.finished_at,
             "error": job.error,
             "summary": job.summary,
+            "mode": job.mode,
+            # Stored as the contract's JSON (camelCase), so it is read back the same way.
+            "plan": DataJobPlan.model_validate_json(json.dumps(job.plan)) if job.plan else None,
+            "steps_done": job.steps_done,
+            "steps_total": job.steps_total,
+            "expires_at": job.expires_at,
         }
     )
 

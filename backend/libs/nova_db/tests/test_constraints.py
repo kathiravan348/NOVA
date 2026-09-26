@@ -16,11 +16,13 @@ from nova_db.models import (
     BrokerSession,
     Candle,
     DataJob,
+    DataJobStep,
     RateLimitRule,
     Strategy,
     StrategyVersion,
     Trade,
 )
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -143,6 +145,20 @@ def _job(**over: Any) -> DataJob:
     return DataJob(**(fields | over))
 
 
+def _step(**over: Any) -> DataJobStep:
+    fields: dict[str, Any] = {
+        "job_id": "job_1",
+        "seq": 0,
+        "symbol": "INFY",
+        "start_at": NOW - timedelta(days=60),
+        "end_at": NOW,
+        "status": "done",
+        "rows_written": 40,
+        "finished_at": NOW,
+    }
+    return DataJobStep(**(fields | over))
+
+
 def _audit(**over: Any) -> AuditEntry:
     fields: dict[str, Any] = {
         "id": "aud_1",
@@ -168,6 +184,20 @@ def _candle(**over: Any) -> Candle:
         "volume": 1_000_000,
     }
     return Candle(**(fields | over))
+
+
+def _draft(**over: Any) -> dict[str, Any]:
+    fields: dict[str, Any] = {
+        "status": "draft",
+        "progress_percent": Decimal("0"),
+        "rows_written": 0,
+        "started_at": None,
+        "finished_at": None,
+        "mode": "skip_existing",
+        "plan": {"steps": 1},
+        "expires_at": NOW + timedelta(hours=24),
+    }
+    return fields | over
 
 
 Factory = Callable[..., Base]
@@ -199,6 +229,17 @@ CASES: list[tuple[str, Factory, dict[str, Any]]] = [
     ("job no symbols", _job, {"symbols": []}),
     ("job summary length", _job, {"summary": "x" * 501}),
     ("job tick record timeframe", _job, {"type": "tick_record"}),
+    ("job status", _job, {"status": "stopped"}),
+    ("job mode", _job, {"mode": "append"}),
+    ("job mode only downloads", _job, {"type": "archive", "timeframe": None, "mode": "overwrite"}),
+    ("job draft needs expiry", _job, _draft(expires_at=None)),
+    ("job draft needs plan", _job, _draft(plan=None)),
+    ("job draft not started", _job, _draft(started_at=NOW)),
+    ("job expiry only on drafts", _job, {"expires_at": NOW}),
+    ("step status", _step, {"status": "running"}),
+    ("step period", _step, {"end_at": NOW - timedelta(days=90)}),
+    ("step finished pair", _step, {"status": "pending"}),
+    ("step rows", _step, {"rows_written": -1}),
     ("audit action", _audit, {"action": "backtest.delete"}),
     ("audit target pair", _audit, {"target_id": None}),
     ("candle high", _candle, {"high_paise": 150_500}),
@@ -233,6 +274,9 @@ def test_bad_row_is_rejected(seeded: Session, factory: Factory, overrides: dict[
     if factory in (_result, _trade):
         seeded.add(_run())
         seeded.flush()
+    if factory is _step:
+        seeded.add(_job())
+        seeded.flush()
 
     with pytest.raises(IntegrityError), seeded.begin_nested():
         seeded.add(factory(**overrides))
@@ -251,3 +295,31 @@ def test_an_instrument_sync_job_needs_no_symbols(seeded: Session) -> None:
         )
     )
     seeded.flush()
+
+
+def test_a_draft_and_a_paused_download_with_steps_are_accepted(seeded: Session) -> None:
+    seeded.add(_job(id="job_1", **_draft()))
+    seeded.add(
+        _job(
+            id="job_2",
+            status="paused",
+            progress_percent=Decimal("50"),
+            finished_at=None,
+            mode="overwrite",
+        )
+    )
+    seeded.flush()
+    seeded.add_all([_step(), _step(seq=1, status="pending", finished_at=None, rows_written=0)])
+    seeded.add(_step(job_id="job_2", status="skipped"))
+    seeded.flush()
+
+
+def test_deleting_a_job_deletes_its_steps(seeded: Session) -> None:
+    seeded.add(_job())
+    seeded.flush()
+    seeded.add(_step())
+    seeded.flush()
+
+    seeded.execute(delete(DataJob).where(DataJob.id == "job_1"))
+
+    assert seeded.scalars(select(DataJobStep)).all() == []

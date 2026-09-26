@@ -10,8 +10,10 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
+    SmallInteger,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nova_db.enums import (
@@ -19,7 +21,10 @@ from nova_db.enums import (
     AUDIT_TARGET_TYPES,
     DATA_JOB_STATUSES,
     DATA_JOB_TYPES,
+    DOWNLOAD_MODES,
     EXCHANGES,
+    JOB_STEP_STATUSES,
+    MARKET_HOURS_MODES,
     SEGMENTS,
     TIMEFRAMES,
     sql_in,
@@ -61,6 +66,19 @@ class DataJob(Base):
         CheckConstraint(
             "status <> 'queued' OR (started_at IS NULL AND finished_at IS NULL)", name="queued"
         ),
+        CheckConstraint(
+            "mode IS NULL OR (type = 'historical_download' AND "
+            + sql_in("mode", DOWNLOAD_MODES)
+            + ")",
+            name="mode",
+        ),
+        CheckConstraint(
+            "status <> 'draft' OR (started_at IS NULL AND finished_at IS NULL"
+            " AND expires_at IS NOT NULL AND plan IS NOT NULL)",
+            name="draft",
+        ),
+        CheckConstraint("expires_at IS NULL OR status = 'draft'", name="expires_only_draft"),
+        CheckConstraint("steps_done BETWEEN 0 AND steps_total", name="steps"),
         Index(None, "created_at", "id"),
     )
 
@@ -81,6 +99,53 @@ class DataJob(Base):
     error: Mapped[str | None]
     # One line about the result, e.g. an instrument sync's counts (D56).
     summary: Mapped[str | None]
+    # Planned downloads (D57): `skip_existing` or `overwrite`; the `DataJobPlan` shown before Start;
+    # drafts not started by `expires_at` are removed.
+    mode: Mapped[str | None]
+    plan: Mapped[Json | None] = mapped_column(JSONB(none_as_null=True))
+    expires_at: Mapped[datetime | None]
+    # Kept in step with `data_job_steps` by the worker, so every step also announces the job.
+    steps_total: Mapped[int] = mapped_column(Integer, server_default="0")
+    steps_done: Mapped[int] = mapped_column(Integer, server_default="0")
+
+
+class DataJobStep(Base):
+    """One Kite-sized request of a download (stock × date chunk), saved as it finishes (D57)."""
+
+    __tablename__ = "data_job_steps"
+    __table_args__ = (
+        check_in("status", "status", JOB_STEP_STATUSES),
+        CheckConstraint("start_at < end_at", name="period"),
+        CheckConstraint("seq >= 0 AND rows_written >= 0", name="counts"),
+        CheckConstraint("(status = 'pending') = (finished_at IS NULL)", name="finished"),
+        Index(None, "job_id", "status", "seq"),
+    )
+
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("data_jobs.id", ondelete="CASCADE"), primary_key=True
+    )
+    seq: Mapped[int] = mapped_column(Integer, primary_key=True)
+    symbol: Mapped[str]
+    start_at: Mapped[datetime]
+    end_at: Mapped[datetime]
+    status: Mapped[str] = mapped_column(server_default="pending")
+    rows_written: Mapped[int] = mapped_column(Integer, server_default="0")
+    finished_at: Mapped[datetime | None]
+
+
+class DownloadSetting(Base):
+    """The one row (id 1) of download settings (D57): pace during market hours."""
+
+    __tablename__ = "download_settings"
+    __table_args__ = (
+        CheckConstraint("id = 1", name="single_row"),
+        check_in("market_hours_mode", "market_hours_mode", MARKET_HOURS_MODES),
+    )
+
+    id: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
+    market_hours_mode: Mapped[str] = mapped_column(server_default="slow")
+    updated_at: Mapped[datetime] = created_at_column()
+    updated_by: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
 
 
 class AuditEntry(Base):

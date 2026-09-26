@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 import psycopg
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from nova_contracts import DataJob as DataJobContract
-from nova_contracts import DataJobUpdated
+from nova_contracts import DataJobPlan, DataJobUpdated
 from nova_db.models import DataJob
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
@@ -53,6 +53,12 @@ def job_contract(job: DataJob) -> DataJobContract:
             "finished_at": job.finished_at,
             "error": job.error,
             "summary": job.summary,
+            "mode": job.mode,
+            # Stored as the contract's JSON (camelCase), so it is read back the same way.
+            "plan": DataJobPlan.model_validate_json(json.dumps(job.plan)) if job.plan else None,
+            "steps_done": job.steps_done,
+            "steps_total": job.steps_total,
+            "expires_at": job.expires_at,
         }
     )
 

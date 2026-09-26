@@ -13,7 +13,14 @@ import {
   KiteKeysUpdateSchema,
   KitePassphraseSchema,
 } from "./broker";
-import { ArchiveJobCreateSchema, DataJobCreateSchema, DataJobSchema } from "./dataJob";
+import {
+  ArchiveJobCreateSchema,
+  DataJobCreateSchema,
+  DataJobPlanRequestSchema,
+  DataJobPlanSchema,
+  DataJobSchema,
+  DownloadSettingsSchema,
+} from "./dataJob";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema, MarketIndexSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
@@ -45,6 +52,9 @@ const contracts: Record<string, z.ZodType> = {
   Candle: CandleSchema,
   DataJob: DataJobSchema,
   DataJobCreate: DataJobCreateSchema,
+  DataJobPlan: DataJobPlanSchema,
+  DataJobPlanRequest: DataJobPlanRequestSchema,
+  DownloadSettings: DownloadSettingsSchema,
   Instrument: InstrumentSchema,
   KiteApp: KiteAppSchema,
   KiteAppUpdate: KiteAppUpdateSchema,

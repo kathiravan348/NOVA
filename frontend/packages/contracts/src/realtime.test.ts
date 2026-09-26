@@ -19,6 +19,11 @@ const job: DataJob = {
   finishedAt: null,
   error: null,
   summary: null,
+  mode: null,
+  plan: null,
+  stepsDone: 0,
+  stepsTotal: 0,
+  expiresAt: null,
 };
 
 describe("RealtimeMessageSchema", () => {
