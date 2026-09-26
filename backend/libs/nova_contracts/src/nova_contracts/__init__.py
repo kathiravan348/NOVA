@@ -82,6 +82,7 @@ from nova_contracts.strategy import (
 )
 from nova_contracts.strategy_stats import BestNetPnl, StrategyStats
 from nova_contracts.trade import Trade
+from nova_contracts.realtime import DataJobUpdated, RealtimeHello, RealtimeMessage, RealtimePing
 from nova_contracts.universe import UniverseEntry, UniverseEntryWrite
 from nova_contracts.user import User, UserRole
 
@@ -167,6 +168,10 @@ __all__ = [
     "Universe",
     "UniverseEntry",
     "UniverseEntryWrite",
+    "DataJobUpdated",
+    "RealtimeHello",
+    "RealtimeMessage",
+    "RealtimePing",
     "User",
     "UserRole",
     "check_params",

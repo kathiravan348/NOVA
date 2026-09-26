@@ -568,6 +568,7 @@ dependencies = [
     { name = "nova-contracts" },
     { name = "nova-db" },
     { name = "uvicorn" },
+    { name = "websockets" },
 ]
 
 [package.metadata]
@@ -578,6 +579,7 @@ requires-dist = [
     { name = "nova-contracts", editable = "libs/nova_contracts" },
     { name = "nova-db", editable = "libs/nova_db" },
     { name = "uvicorn", specifier = "==0.53.0" },
+    { name = "websockets", specifier = "==17.1" },
 ]
 
 [[package]]
