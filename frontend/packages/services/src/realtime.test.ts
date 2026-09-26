@@ -171,6 +171,24 @@ describe("realtime client", () => {
     expect(getRealtimeStatus()).toBe("off");
   });
 
+  it("removes a deleted job from the list and its page", () => {
+    const client = createQueryClient();
+    const page: Page<DataJob> = { items: [running], nextCursor: null };
+    client.setQueryData<InfiniteData<Page<DataJob>>>(queryKeys.dataJobs.list, {
+      pages: [page],
+      pageParams: [undefined],
+    });
+    client.setQueryData(queryKeys.dataJobs.detail(running.id), running);
+    disconnect = connectRealtime(client);
+    FakeSocket.last().open();
+
+    FakeSocket.last().message({ type: "data_job.deleted", data: { id: running.id } });
+
+    const data = client.getQueryData<InfiniteData<Page<DataJob>>>(queryKeys.dataJobs.list);
+    expect(data?.pages[0]?.items).toEqual([]);
+    expect(client.getQueryData(queryKeys.dataJobs.detail(running.id))).toBeUndefined();
+  });
+
   it("closes a handshake that hangs and tries again", () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0);

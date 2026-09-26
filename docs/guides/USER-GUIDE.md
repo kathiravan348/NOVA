@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-094). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-096). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -290,6 +290,12 @@ step is kept. **Resume** continues from the next step, even after the computer w
 
 **To stop a job** that is planned, waiting, running or paused, open it and press **Cancel job**, then
 confirm. Prices already saved stay.
+
+**To delete a job** you no longer want (for example a test), open it and press **Delete job**. This works
+for planned, completed, failed and cancelled jobs; stop a running one first. For a download you can tick
+**Also delete the candles it downloaded**: that removes every stored price of those stocks, that timeframe
+and those dates, even prices another download saved there. Leave it unticked to keep the prices. The audit
+log keeps a line about every delete.
 
 **Download pace** (the card at the top): during market hours (weekdays 09:15–15:30) downloads **Slow down**
 to one request a second, so live prices keep flowing. Choose **Full pace** to download at full speed all day.

@@ -7,6 +7,7 @@ import { QueryState } from "../../components/QueryState";
 import { formatIstDateTime, formatPeriod } from "../../lib/format";
 import { jobStatusLabel, jobStatusTone, jobTypeLabel, segmentLabel } from "../../lib/labels";
 import { CancelJobButton } from "./CancelJobButton";
+import { DELETABLE, DeleteJobButton } from "./DeleteJobButton";
 import { PauseResumeButton } from "./PauseResumeButton";
 import { planItems } from "./PlanReview";
 
@@ -36,6 +37,7 @@ export function DataJobDetailPage() {
                     {["draft", "queued", "running", "paused"].includes(job.status) && (
                       <CancelJobButton jobId={job.id} />
                     )}
+                    {DELETABLE.includes(job.status) && <DeleteJobButton job={job} />}
                   </span>
                 </div>
                 <Meter
