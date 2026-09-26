@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 26 Sep 2026 (migrations `0001`–`0009`, NOVA-085). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 26 Sep 2026 (migrations `0001`–`0010`, NOVA-090). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -74,7 +74,7 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 | **instruments** | Master list of shares/contracts (from the `universe` stock list + Kite, by sync). Prices and stats are **not** stored here; the API computes them from candles. | PK (`exchange`, `symbol`), `name`, `segment`, `sector`, `indices` (text[]), `lot_size`, `instrument_token` (Kite's id, unique), `updated_at` |
 | **candles** | Price bars (OHLCV). **TimescaleDB hypertable** on `ts`, 30-day chunks. Daily bars are stored at 00:00 IST. DB check: high ≥ open/close ≥ low > 0. | PK (`exchange`, `symbol`, `timeframe`, `ts`), `open_paise`, `high_paise`, `low_paise`, `close_paise`, `volume`; `timeframe` ∈ `1m 3m 5m 15m 30m 1h 1d` |
 | **ticks** | Live price updates recorded from Kite's WebSocket during market hours. **Hypertable** on `received_at`, 1-day chunks. Older days are moved to Parquet by `archive-ticks` and then deleted here. | PK (`exchange`, `symbol`, `received_at`), `exchange_ts`, `last_price_paise`, `last_qty`, `volume`, `oi` |
-| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` and `archive` jobs). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`, `instrument_sync` (no symbols). Checks: downloads need timeframe + period; symbols required except for `instrument_sync`; `summary` ≤ 500 chars; completed = 100%; errors only when failed. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error`, `summary` (one result line) |
+| **data_jobs** | Background data work **and the job queue** for the Atlas worker (it runs `historical_download` and `archive` jobs). Types: `historical_download`, `tick_record` (one per recording session, written by the broker's recorder; progress = share of the 09:15–15:30 session), `archive`, `instrument_sync` (no symbols). Checks: downloads need timeframe + period; symbols required except for `instrument_sync`; `summary` ≤ 500 chars; completed = 100%; errors only when failed. Trigger `data_jobs_notify` (0010) sends `pg_notify('nova_events', {"type":"data_job.updated","id":…})` after every insert or update; NOVA Core listens and pushes the job to open WebSockets. | `id`, `type`, `status` (`queued`/`running`/`completed`/`failed`/`cancelled`), `exchange`, `segment`, `symbols` (text[]), `timeframe`, `date_from`, `date_to`, `progress_percent`, `rows_written`, `created_at`, `started_at`, `finished_at`, `error`, `summary` (one result line) |
 
 ## 5. Audit
 
@@ -88,4 +88,4 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 |---|---|
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
-| **alembic_version** (table) | The migration the database is on (currently `0008`). Managed by Alembic only. |
+| **alembic_version** (table) | The migration the database is on (currently `0010`). Managed by Alembic only. |

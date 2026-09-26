@@ -59,6 +59,7 @@ from nova_contracts.rate_limit import (
     RateLimitUpdate,
     RateLimitWindow,
 )
+from nova_contracts.realtime import DataJobUpdated, RealtimeHello, RealtimeMessage, RealtimePing
 from nova_contracts.recorder import (
     MAX_RECORDER_SYMBOLS,
     RecorderSettings,
@@ -82,7 +83,6 @@ from nova_contracts.strategy import (
 )
 from nova_contracts.strategy_stats import BestNetPnl, StrategyStats
 from nova_contracts.trade import Trade
-from nova_contracts.realtime import DataJobUpdated, RealtimeHello, RealtimeMessage, RealtimePing
 from nova_contracts.universe import UniverseEntry, UniverseEntryWrite
 from nova_contracts.user import User, UserRole
 

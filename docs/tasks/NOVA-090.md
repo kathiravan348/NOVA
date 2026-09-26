@@ -1,6 +1,6 @@
 # NOVA-090 — Core: WebSocket `/api/v1/ws` with data-job events from Postgres NOTIFY
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-090 · **Depends on:** NOVA-085
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-090 · **Depends on:** NOVA-085
 
 ## Goal
 A signed-in screen opens one WebSocket to NOVA Core and receives `data_job.updated` whenever any data job
@@ -47,5 +47,16 @@ Modify:
 ## Questions
 
 ## Handoff
+**Done:** `/api/v1/ws` with hello/ping/`data_job.updated` from a `data_jobs` NOTIFY trigger (0010), 250 ms coalescing, 4401 close.
+**Files changed:** as listed; plus `backend/services/core/pyproject.toml`, `backend/uv.lock`, `frontend/packages/contracts/schema/RealtimeMessage.json`.
+**Commands run:** backend-check (613 passed) · `pnpm review:check` → all pass.
+**New dependencies:** `websockets==17.1` (uvicorn needs it to serve WebSockets; D57).
+**Maps updated:** CONTRACTS. **Guides updated:** API, DATABASE.
+**Deviations from task:** settings `ws_ping_seconds` / `ws_session_check_seconds` (env-overridable) so tests run fast; DataJob→contract mapping duplicated in Core (Core cannot import Atlas).
+**Known gaps:** no screen uses the socket yet (091); Vite dev proxy needs `ws: true` (091).
 
 ## Review
+**Result:** done (Owner asked Claude to build and merge the remaining work directly).
+**Fixed directly:** coalescing timestamp taken before the row load (insert + burst gave 3 messages).
+**Guides checked:** API, DATABASE, CONTRACTS, ARCHITECTURE match the diff.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
