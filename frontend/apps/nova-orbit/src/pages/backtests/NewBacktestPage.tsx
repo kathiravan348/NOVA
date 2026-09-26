@@ -40,11 +40,14 @@ export function BacktestFormView({
   preselected,
   latestData,
   editing,
+  preselectedVersion,
 }: {
   strategies: Strategy[];
   preselected?: Strategy;
   latestData?: string;
   editing?: BacktestRun;
+  /** `?version=` from a strategy version page (D60). */
+  preselectedVersion?: number;
 }) {
   const toast = useToast();
   const navigate = useNavigate();
@@ -56,7 +59,10 @@ export function BacktestFormView({
     resolver: zodResolver(BacktestFormSchema),
     defaultValues: editing
       ? defaultsFromRun(editing)
-      : defaultsFor(preselected, todayIst(), latestData),
+      : {
+          ...defaultsFor(preselected, todayIst(), latestData),
+          ...(preselectedVersion ? { version: String(preselectedVersion) } : {}),
+        },
   });
   const { register, control, handleSubmit, watch, setValue, setError, formState } = form;
   const { errors } = formState;
@@ -268,6 +274,10 @@ export function NewBacktestPage() {
   if (query.isError) return <QueryError error={query.error} onRetry={() => void query.refetch()} />;
   const usable = query.data.filter((s) => s.status !== "archived");
   const preselected = usable.find((s) => s.id === params.get("strategy"));
+  const asked = Number(params.get("version"));
+  const preselectedVersion = preselected?.versions.some((v) => v.version === asked)
+    ? asked
+    : undefined;
   // Default end date: the newest data in the preselected strategy's timeframe, else in any.
   const latest = preselected?.versions.find((v) => v.version === preselected.latestVersion);
   const latestData = (instruments.data ?? [])
@@ -275,5 +285,12 @@ export function NewBacktestPage() {
     .filter((to): to is string => to !== undefined)
     .sort()
     .at(-1);
-  return <BacktestFormView strategies={usable} preselected={preselected} latestData={latestData} />;
+  return (
+    <BacktestFormView
+      strategies={usable}
+      preselected={preselected}
+      latestData={latestData}
+      preselectedVersion={preselectedVersion}
+    />
+  );
 }

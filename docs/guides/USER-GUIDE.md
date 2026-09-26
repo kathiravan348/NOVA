@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-107). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-108). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -83,9 +83,18 @@ Use **Status** to show only drafts/active/archived, and **Sort by** to order by 
 Click a card. You see:
 - the **rules written in plain words** (e.g. "Enter when Close crosses above SMA(20)");
 - a **Backtests** tab: every test run of this strategy;
-- a **Versions** tab: every saved copy with its date and note.
+- a **Versions** tab: every saved copy with its date, note and its **Backtests** record (how many finished
+  test runs used that version and its best return, which opens that run).
 
 Buttons: **Edit** and **Run backtest**.
+
+**Look at an older version.** On the **Versions** tab, press a version number (e.g. **v1**): you see that
+version's full rules, its note and date, and its backtest record. **Run backtest** there tests that exact version.
+
+**Compare two versions.** Tick two versions and press **Compare versions**. The two versions stand side by
+side, older on the left, one line per setting or rule. Lines that differ are highlighted and marked
+**Changed**, **Added** or **Removed**; **Show changes only** hides the lines that are the same. The top of
+the page shows each version's backtest record, so you can see which change made the strategy better.
 
 ### Step 4 — Create or edit a strategy (visual rules — no coding)
 Go to **Strategies → New strategy** (or **Edit** on an existing one).

@@ -1,6 +1,7 @@
-import { Link, useParams } from "react-router";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BarChart3, Pencil, Play } from "lucide-react";
+import { BarChart3, GitCompare, Pencil, Play } from "lucide-react";
 import type { Strategy, StrategyVersion } from "@nova/contracts";
 import {
   Button,
@@ -23,14 +24,25 @@ import {
 } from "../../lib/format";
 import { useRunColumns } from "../backtests/runColumns";
 import { StrategySpecCard } from "./StrategySpecCard";
+import { VersionRecord, useVersionStats } from "./StrategyVersionPage";
 
-const versionColumns: ColumnDef<StrategyVersion, unknown>[] = [
+const versionColumns = (
+  strategyId: string,
+  records: ReturnType<typeof useVersionStats>,
+): ColumnDef<StrategyVersion, unknown>[] => [
   {
     id: "version",
     header: "Version",
     accessorKey: "version",
     meta: { numeric: true, primary: true },
-    cell: ({ getValue }) => `v${String(getValue())}`,
+    cell: ({ row }) => (
+      <Link
+        to={`/strategies/${strategyId}/versions/${row.original.version}`}
+        className="font-medium text-action-text hover:underline"
+      >
+        v{row.original.version}
+      </Link>
+    ),
   },
   {
     id: "createdAt",
@@ -45,7 +57,51 @@ const versionColumns: ColumnDef<StrategyVersion, unknown>[] = [
     accessorFn: (v) => (v.spec.mode === "visual" ? "Visual" : "Python"),
   },
   { id: "note", header: "Note", accessorKey: "note" },
+  {
+    id: "record",
+    header: "Backtests",
+    enableSorting: false,
+    cell: ({ row }) => <VersionRecord stats={records.get(row.original.version)} />,
+  },
 ];
+
+/** Every version: open one, or tick two and compare them side by side (D60). */
+function StrategyVersions({ strategy }: { strategy: Strategy }) {
+  const navigate = useNavigate();
+  const records = useVersionStats(strategy.id);
+  const [picked, setPicked] = useState<string[]>([]);
+  const two = picked.length === 2;
+  return (
+    <DataTable
+      caption="Versions"
+      columns={versionColumns(strategy.id, records)}
+      data={strategy.versions}
+      getRowId={(v) => String(v.version)}
+      initialSort={[{ id: "version", desc: true }]}
+      selectedIds={picked}
+      onSelectedIdsChange={(ids) => setPicked(ids.slice(-2))}
+      toolbar={
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!two}
+            onClick={() => {
+              const [a, b] = [...picked].map(Number).sort((x, y) => x - y);
+              navigate(`/strategies/${strategy.id}/compare?a=${a}&b=${b}`);
+            }}
+          >
+            <GitCompare className="h-4 w-4" aria-hidden="true" />
+            Compare versions
+          </Button>
+          {!two && (
+            <span className="text-body-sm text-text-muted">Tick two versions to compare.</span>
+          )}
+        </div>
+      }
+    />
+  );
+}
 
 function StatsCard({ strategyId }: { strategyId: string }) {
   const query = useStrategyStats();
@@ -160,15 +216,7 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
           {
             value: "versions",
             label: `Versions (${strategy.versions.length})`,
-            content: (
-              <DataTable
-                caption="Versions"
-                columns={versionColumns}
-                data={strategy.versions}
-                getRowId={(v) => String(v.version)}
-                initialSort={[{ id: "version", desc: true }]}
-              />
-            ),
+            content: <StrategyVersions strategy={strategy} />,
           },
         ]}
       />

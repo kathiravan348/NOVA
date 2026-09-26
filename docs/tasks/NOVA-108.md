@@ -1,6 +1,6 @@
 # NOVA-108 — Orbit: view any strategy version and compare two side by side (D60)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-108 · **Depends on:** NOVA-104
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-108 · **Depends on:** NOVA-104
 
 ## Goal
 On a strategy's **Versions** tab the Owner opens any version's full rules, and compares two versions side by
@@ -47,5 +47,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. `lib/specLines.ts` (+ test): `specLines` (settings, entry/exit rows or Python code lines) and `diffLines`
+(pairs by key, keeps added rows next to their neighbour). `StrategyVersionPage` (`/strategies/:id/versions/:v`,
+exports `VersionRecord`, `useVersionStats`), `CompareVersionsPage` (`/strategies/:id/compare?a=&b=`, "Show
+changes only", rows stack at 360 px). Versions tab: version links, **Backtests** record column, tick two (the
+latest two ticks win) → **Compare versions**. USER-GUIDE Step 3.
+- Stop-loss and target are separate rows (clearer changes than one "Risk" line).
+- Extra file: `NewBacktestPage.tsx` reads `?version=` so **Run backtest** on a version page preselects it.
+- Checked in a demo Orbit at 360 px (dark) and 1100 px (light).
+Guides: USER-GUIDE.
 
 ## Review
+Built and reviewed by Claude. `pnpm review:check` passed. Merged.
