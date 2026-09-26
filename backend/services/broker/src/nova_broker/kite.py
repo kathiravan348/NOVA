@@ -30,21 +30,22 @@ class KiteSession:
     login_time: datetime
 
 
-class KiteClient:
-    def __init__(
-        self, api_key: str, api_secret: str, transport: httpx2.BaseTransport | None = None
-    ) -> None:
-        self._api_key = api_key
-        self._api_secret = api_secret
-        self._http = httpx2.Client(
-            base_url=API_BASE,
-            transport=transport,
-            timeout=TIMEOUT_SECONDS,
-            headers={"X-Kite-Version": "3"},
-        )
+def kite_http(transport: httpx2.BaseTransport | None = None) -> httpx2.Client:
+    """One connection pool for every account's calls; `transport` replaces the network in tests."""
+    return httpx2.Client(
+        base_url=API_BASE,
+        transport=transport,
+        timeout=TIMEOUT_SECONDS,
+        headers={"X-Kite-Version": "3"},
+    )
 
-    def close(self) -> None:
-        self._http.close()
+
+class KiteClient:
+    """Kite calls with one account's API key (D55). The secret is passed only to `exchange`."""
+
+    def __init__(self, api_key: str, http: httpx2.Client) -> None:
+        self._api_key = api_key
+        self._http = http
 
     def login_url(self, state: str) -> str:
         """Kite sends `state` back to the callback through `redirect_params`."""
@@ -53,9 +54,9 @@ class KiteClient:
         )
         return f"{LOGIN_BASE}?{query}"
 
-    def exchange(self, request_token: str) -> KiteSession:
+    def exchange(self, request_token: str, api_secret: str) -> KiteSession:
         """Turns the one-time `request_token` from the login redirect into an access token."""
-        raw = self._api_key + request_token + self._api_secret
+        raw = self._api_key + request_token + api_secret
         checksum = hashlib.sha256(raw.encode("utf-8")).hexdigest()
         data = self._call(
             "POST",

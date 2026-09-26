@@ -13,7 +13,7 @@ from redis import Redis
 from sqlalchemy import select
 
 from nova_broker import accounts, internal, kite_app, profiles, rate_limits, recorder_settings
-from nova_broker.kite import KiteClient
+from nova_broker.kite import kite_http
 from nova_broker.limiter import RateLimiter
 from nova_broker.limits import ensure_rules
 from nova_broker.settings import BrokerSettings, get_broker_settings
@@ -32,15 +32,7 @@ def create_app(
     engine = create_db_engine(settings.database_url.get_secret_value())
     session_factory = create_session_factory(engine)
     redis = redis or Redis.from_url(settings.redis_url.get_secret_value())
-    kite = (
-        KiteClient(
-            settings.kite_api_key.get_secret_value(),
-            settings.kite_api_secret.get_secret_value(),
-            transport=kite_transport,
-        )
-        if settings.kite_api_key and settings.kite_api_secret
-        else None
-    )
+    http = kite_http(kite_transport)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -50,8 +42,7 @@ def create_app(
                 ensure_rules(db, account_id)
             db.commit()
         yield
-        if kite is not None:
-            kite.close()
+        http.close()
         engine.dispose()
 
     app = FastAPI(
@@ -63,7 +54,8 @@ def create_app(
     )
     app.state.settings = settings
     app.state.session_factory = session_factory
-    app.state.kite = kite
+    app.state.kite_http = http
+    app.state.redis = redis
     app.state.limiter = RateLimiter(redis, settings.kite_daily_reset)
     app.state.sleep = time.sleep
     install_error_handlers(app)

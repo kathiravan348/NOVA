@@ -54,12 +54,14 @@ def make_loop(
     def record(
         url: str, tokens: dict[int, str], sink: Sink, should_stop: Callable[[], bool]
     ) -> None:
-        assert "access_token=" in url and sorted(tokens.values()) == ["INFY", "TCS"]
+        assert "api_key=kitekeyAB12&access_token=" in url and sorted(tokens.values()) == [
+            "INFY",
+            "TCS",
+        ]
         script(sink, should_stop, clock)
 
     return RecorderLoop(
         factory=sessionmaker(bind=engine, expire_on_commit=False),
-        api_key="kite-key",
         cipher=TokenCipher(settings.broker_token_key.get_secret_value()),
         stop=threading.Event(),
         record=record,

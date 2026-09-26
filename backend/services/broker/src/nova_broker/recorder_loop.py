@@ -99,10 +99,12 @@ def record_with_kite(
 
 @dataclass
 class RecorderLoop:
-    """`api_key` / `cipher` are None when Kite is not configured: the loop then only idles."""
+    """`cipher` is None without `NOVA_BROKER_TOKEN_KEY`: the loop then only idles.
+
+    The API key comes from the logged-in account's own Kite app (D55).
+    """
 
     factory: sessionmaker[Session]
-    api_key: str | None
     cipher: TokenCipher | None
     stop: threading.Event
     record: Record = record_with_kite
@@ -128,7 +130,7 @@ class RecorderLoop:
     def step(self) -> str | None:
         """Starts and runs one recording when it should; returns its job id, or None."""
         now = self.now()
-        if self.api_key is None or self.cipher is None:
+        if self.cipher is None:
             return None
         if self.retry_at is not None and now < self.retry_at:
             return None
@@ -138,7 +140,7 @@ class RecorderLoop:
             if not setting.enabled or not in_market_hours(now):
                 return None
             try:
-                _, access_token = active_session(db, self.cipher)
+                live = active_session(db, self.cipher)
                 tokens = tick_symbols(db, list(setting.symbols))
             except (ApiException, ValueError) as exc:
                 logger.info("Not recording: %s", exc)
@@ -158,7 +160,7 @@ class RecorderLoop:
             db.commit()
             job_id = job.id
         logger.info("Recording %s symbol(s) as %s", len(tokens), job_id)
-        self._record(job_id, kite_url(self.api_key, access_token), tokens)
+        self._record(job_id, kite_url(live.api_key, live.access_token), tokens)
         return job_id
 
     def _record(self, job_id: str, url: str, tokens: dict[int, str]) -> None:

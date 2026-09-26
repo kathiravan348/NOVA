@@ -66,8 +66,6 @@ services:
       NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
       NOVA_API_DOCS: ${NOVA_API_DOCS:-false}
       NOVA_INTERNAL_TOKEN: ${NOVA_INTERNAL_TOKEN:?set in .env}
-      NOVA_KITE_API_KEY: ${NOVA_KITE_API_KEY:-}
-      NOVA_KITE_API_SECRET: ${NOVA_KITE_API_SECRET:-}
       NOVA_BROKER_TOKEN_KEY: ${NOVA_BROKER_TOKEN_KEY:-}
       NOVA_RELAY_URL: ${NOVA_RELAY_URL:-http://localhost:3001}
       NOVA_KITE_DAILY_RESET: ${NOVA_KITE_DAILY_RESET:-}
@@ -152,7 +150,6 @@ services:
       NOVA_REDIS_URL: redis://redis:6379/0
       NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
       NOVA_INTERNAL_TOKEN: ${NOVA_INTERNAL_TOKEN:?set in .env}
-      NOVA_KITE_API_KEY: ${NOVA_KITE_API_KEY:-}
       NOVA_BROKER_TOKEN_KEY: ${NOVA_BROKER_TOKEN_KEY:-}
     depends_on:
       migrate:

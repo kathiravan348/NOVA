@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-080). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-081). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -47,10 +47,11 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
 | `GET /broker/accounts` | Lists Zerodha accounts with their session status (`active` / `expired` / `not_logged_in`), login and expiry times. Notices newly expired sessions (audit `broker.session_expired`). | — | `BrokerAccount[]` |
-| `POST /broker/accounts` | Adds a Zerodha account (not logged in) and its default rate-limit rules, like the `add-account` command. The label is stored trimmed and the client ID upper-cased. Audit: `broker.account_create` ("Added Main (AB1234)"). | `BrokerAccountCreate {label (≤ 60, not blank), clientId (4–12 letters/digits)}` | 201 `BrokerAccount`; 400 bad body or client ID already exists |
+| `POST /broker/accounts` | Adds a Zerodha account (not logged in) and its default rate-limit rules. The label is stored trimmed and the client ID upper-cased. Audit: `broker.account_create` ("Added Main (AB1234)"). | `BrokerAccountCreate {label (≤ 60, not blank), clientId (4–12 letters/digits)}` | 201 `BrokerAccount`; 400 bad body or client ID already exists |
 | `GET /broker/accounts/{id}` | One account, same shape. | path `id` | `BrokerAccount`; 404 |
-| `GET /broker/accounts/{id}/login` | **Browser navigation, not JSON.** Starts the daily Kite login: redirects (302) to Zerodha's login page with a signed `state`. 400 if the account is disabled. | path `id` | 302 → Kite |
-| `GET /broker/kite/callback` | **Kite sends the browser here after login.** Checks `state`, swaps `request_token` for an access token, checks the Zerodha user ID matches the account, stores the token **encrypted**, sets expiry to the next 06:00 IST. Audit: `broker.login` (success or failure with reason). | query `state`, `status`, `request_token` | 302 → Relay `/accounts/{id}?kite=connected\|failed` |
+| `GET /broker/accounts/{id}/login` | **Browser navigation, not JSON.** Starts the daily Kite login: redirects (302) to Zerodha's login page with the account's **own API key** (D55) and a signed `state`. 400 if the account is disabled or has no saved Kite keys. | path `id` | 302 → Kite |
+| `GET /broker/kite/callback` | **Kite sends the browser here after login.** Checks `state`, keeps `request_token` in Redis for 2 minutes (one use) and sends the browser back to Relay to ask the passphrase. A cancelled login is audited `broker.login` (failure). | query `state`, `status`, `request_token` | 302 → Relay `/broker/{id}?kite=finish\|failed` |
+| `POST /broker/accounts/{id}/login/finish` | Finishes the login: the passphrase opens the sealed API secret for this request only, the pending token is exchanged, the Zerodha user ID must match the account, the access token is stored **encrypted** until the next 06:00 IST. Audit: `broker.login` (success or failure with reason). A wrong passphrase can be retried; the 5th wrong one drops the pending login. | `KitePassphrase {passphrase}` | `BrokerAccount`; 400 "Wrong passphrase", "Login expired: log in to Kite again", Kite error or other user; 404 |
 | `GET /broker/accounts/{id}/kite-app` | The account's own Kite app (D55): API key **last 4 characters**, whether a secret is saved (never the secret), plan, renewal date, redirect URL (`{NOVA_RELAY_URL}/api/v1/broker/kite/callback`, to paste into the Kite developer console), postback URL, static IP. Empty values until saved. | path `id` | `KiteApp`; 404 |
 | `PUT /broker/accounts/{id}/kite-app/keys` | Saves the API key and secret together; the secret is sealed with the passphrase (scrypt + AES-GCM, bound to the account) and the passphrase is not kept. A **different** API key ends the account's Kite session. Audit: `broker.kite_app_update` ("Saved Kite API key …AB12 and secret for Main"). | `KiteKeysUpdate {apiKey (6–64 letters/digits), apiSecret (no spaces, ≤ 128), passphrase (12–128)}` | `KiteApp`; 400 bad body; 404 |
 | `PATCH /broker/accounts/{id}/kite-app` | Saves the app details (all nullable): plan (trimmed), renewal date, postback URL, static IP. Keys untouched. Audit: `broker.kite_app_update` ("Updated Kite app details for Main"). | `KiteAppUpdate {plan (≤ 60), subscriptionRenewsOn, postbackUrl, staticIp}` | `KiteApp`; 400; 404 |
@@ -132,9 +133,7 @@ No delete in Phase 1 (runs refer to versions).
 | Command | Does |
 |---|---|
 | `python -m nova_core create-admin` | Creates the super-admin user (asks for the password). |
-| `python -m nova_broker add-account` | Adds a Zerodha account (+ its default rate-limit rules). |
 | `python -m nova_broker new-token-key` | Makes the key used to encrypt Kite tokens. |
-| `python -m nova_broker record-ticks` | Records live ticks now, by hand, until 15:30 IST (no data job). |
 | `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session. |
 | `python -m nova_atlas worker` | The data-job worker (Compose service `atlas-worker`): downloads, archives. Syncing, downloads and archives are started from Relay (D55). |
 | `python -m nova_db upgrade \| check` | Runs migrations / checks models match the database. |

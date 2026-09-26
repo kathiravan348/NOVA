@@ -8,13 +8,13 @@ import httpx2
 import pytest
 from nova_broker import login_state
 from nova_broker.crypto import TokenCipher, new_key
-from nova_broker.kite import KiteClient, KiteError
+from nova_broker.kite import KiteClient, KiteError, kite_http
 from nova_broker.sessions import expiry_after, status_of
 from nova_db.models import BrokerSession
 
 
 def _client(handler: httpx2.MockTransport) -> KiteClient:
-    return KiteClient("key1", "secret1", transport=handler)
+    return KiteClient("key1", kite_http(handler))
 
 
 def test_login_url_carries_the_key_and_state() -> None:
@@ -34,7 +34,7 @@ def test_exchange_sends_the_checksum_and_version_header() -> None:
         data = {"user_id": "AB1234", "access_token": "tok", "login_time": "2026-09-24 09:15:00"}
         return httpx2.Response(200, json={"status": "success", "data": data})
 
-    session = _client(httpx2.MockTransport(handle)).exchange("req1")
+    session = _client(httpx2.MockTransport(handle)).exchange("req1", "secret1")
 
     form = parse_qs(seen[0].content.decode())
     assert form["checksum"] == [hashlib.sha256(b"key1req1secret1").hexdigest()]
@@ -55,7 +55,7 @@ def test_exchange_sends_the_checksum_and_version_header() -> None:
 )
 def test_kite_errors_become_kite_error(response: httpx2.Response) -> None:
     with pytest.raises(KiteError):
-        _client(httpx2.MockTransport(lambda r: response)).exchange("req1")
+        _client(httpx2.MockTransport(lambda r: response)).exchange("req1", "secret1")
 
 
 def test_network_failure_becomes_kite_error() -> None:
@@ -63,7 +63,7 @@ def test_network_failure_becomes_kite_error() -> None:
         raise httpx2.ConnectError("refused", request=request)
 
     with pytest.raises(KiteError, match="could not be reached"):
-        _client(httpx2.MockTransport(refuse)).exchange("req1")
+        _client(httpx2.MockTransport(refuse)).exchange("req1", "secret1")
 
 
 def test_kite_client_has_no_order_code() -> None:
