@@ -89,6 +89,17 @@
 | NOVA-081 | Broker: login finished with the passphrase; Kite keys leave `.env`; broker CLI trimmed (D55) | done | Claude | 080, 083 |
 | NOVA-082 | Relay: Kite app card + passphrase to finish the login (D55) | done | Claude | 081 (merge with 081) |
 | NOVA-083 | Atlas: remove CLI commands Relay covers (D55) | done | Claude | 078 |
+| NOVA-084 | Data jobs: batched candle writes, clear failure reasons, job screens refresh (D56) | planned | — | 083 |
+| NOVA-085 | Indices table, open `IndexName`, new-listing flag, `instrument_sync` job type (D56, migration 0009) | planned | — | 083 |
+| NOVA-086 | Broker: NSE index constituents + session status over `/internal` (D56) | planned | — | 083 |
+| NOVA-087 | Atlas: sync all NSE stocks + indices as a job; daily auto-sync (D56) | planned | — | 084, 085, 086 |
+| NOVA-088 | Relay: Instruments for ~2,500 stocks (search, index filter, New listings, sync job) (D56) | planned | — | 087 |
+| NOVA-089 | Orbit: index choices from the indices list (D56) | planned | — | 085 |
+| NOVA-090 | Core: WebSocket `/api/v1/ws` with data-job events from Postgres NOTIFY (D57, migration 0010) | planned | — | 085 |
+| NOVA-091 | Frontend: realtime client; data-job screens update live, polling as fallback (D57) | planned | — | 084, 090 |
+| NOVA-092 | Download plans: draft/paused statuses, job steps, market-hours setting (D57, migration 0011) | planned | — | 090 |
+| NOVA-093 | Atlas: plan, coverage check, Start/Pause/Resume, step-by-step worker, market-hours pace (D57) | planned | — | 087, 092 |
+| NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | planned | — | 088, 091, 093 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -99,3 +110,5 @@
 - Stage B (after 022): lane A = 043 → 044 / 047 (backend); lane B = 045 → 046 (frontend) runs alongside. Then 048 → 049 → 050 → 051; 053 and 054 can overlap 049–051.
 - Relay control panel (D54): backend 072 → 074 → 076 → 077; frontend 073 (after 074) → 075 → 078 runs alongside the backend lane.
 - Kite keys in Relay (D55): 079 → 080 → 081 → 082 (081 and 082 merge together); 083 runs alongside 079/080.
+- Stock list (D56): 084 (live bug), 085 and 086 touch different files and can run in parallel → 087 (after 084 too: both edit `worker.py`) → 088; 089 after 085, alongside 087/088.
+- Realtime + planned downloads (D57): 090 after 085 (both migrate `data_jobs`) → 091 (frontend) and 092 (backend) in parallel → 093 (after 087) → 094 (after 088).
