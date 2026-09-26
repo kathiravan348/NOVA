@@ -1,6 +1,6 @@
 # NOVA-100 — Download 1m and 1d only; build 3m–1h candles from 1m
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-100 · **Depends on:** NOVA-099
+**Status:** planned · **Owner:** — · **Branch:** task/NOVA-100 · **Depends on:** NOVA-099, NOVA-103
 
 ## Goal
 New downloads accept only `1m` and `1d` (D58). Charts, instrument coverage and backtests get `3m 5m 15m 30m 1h`

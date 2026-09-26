@@ -66,7 +66,7 @@ Caches live on the Dev Drive `E:` (`E:\caches\pnpm-store`, `E:\caches\uv`); Dock
   is not used by NOVA: uv provides 3.12 from `backend/.python-version`.
 - **Backend checks:** Docker is the gate (`docker compose run --rm backend-check`). While working, fast checks on
   the host are allowed: `uv run --directory backend pytest <package>` (same pins, same `uv.lock`).
-- **Docker:** every port binds to `127.0.0.1`; every Compose service has a `mem_limit` (whole stack ≤ 4 GB);
+- **Docker:** every port binds to `127.0.0.1`; every Compose service has a `mem_limit` (whole stack ≤ 7 GB, D59);
   run `docker compose down` when finished. Never prune images/volumes or change Docker/WSL settings (Owner only).
 - PowerShell 5.1 is the default shell: no `&&` there; `package.json` scripts stay shell-neutral (§8).
 
