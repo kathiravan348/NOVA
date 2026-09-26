@@ -107,7 +107,9 @@ services:
       migrate:
         condition: service_completed_successfully
     stop_grace_period: 30s
-    mem_limit: 512m
+    # D59: room for the bar limits (1.5 M visual, 750 k Python); restarts itself after a crash.
+    mem_limit: 1536m
+    restart: unless-stopped
 
   # NOVA Atlas API: data jobs and market data. No host port.
   atlas:

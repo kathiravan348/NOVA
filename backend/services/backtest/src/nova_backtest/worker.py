@@ -6,13 +6,18 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from nova_db.models import BacktestRun
-from nova_db.queue import claim_next, requeue_running
+from nova_db.queue import claim_next, fail_running
 from sqlalchemy.orm import Session, sessionmaker
 
 from nova_backtest.engine import BacktestEngine, EngineError
 
 logger = logging.getLogger("nova.backtest.worker")
 ERROR_LENGTH = 300
+# D59: a crash (often out of memory) would repeat if the run were requeued, so it fails instead.
+STOPPED_MESSAGE = (
+    "The backtest worker stopped during this run (often: not enough memory). Run it again; "
+    "if it stops again, pick fewer stocks or a shorter period."
+)
 
 
 def fail_run(db: Session, run_id: str, message: str) -> None:
@@ -46,9 +51,9 @@ def run_worker(
 ) -> None:
     """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there)."""
     with session_factory() as db:
-        requeued = requeue_running(db, BacktestRun)
-    if requeued:
-        logger.info("Requeued %s interrupted run(s)", requeued)
+        failed = fail_running(db, BacktestRun, STOPPED_MESSAGE)
+    if failed:
+        logger.info("Failed %s run(s) interrupted by a worker stop", failed)
     while not stop.is_set():
         with session_factory() as db:
             run_id = claim_next(db, BacktestRun)

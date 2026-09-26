@@ -80,6 +80,31 @@ def _ist_midnight(day: date) -> datetime:
 
 
 class StrategyEngine:
+    def __init__(self, max_bars: int = 1_500_000, max_bars_python: int = 750_000) -> None:
+        self.max_bars = max_bars
+        self.max_bars_python = max_bars_python
+
+    def _load(
+        self,
+        db: Session,
+        symbols: list[str],
+        timeframe: str,
+        span: tuple[datetime, datetime],
+        limit: int,
+    ) -> dict[str, list[Bar]]:
+        """Loads one symbol at a time and stops as soon as the run passes the bar limit (D59)."""
+        bars: dict[str, list[Bar]] = {}
+        total = 0
+        for symbol in symbols:
+            bars[symbol] = _bars(db, symbol, timeframe, *span)
+            total += len(bars[symbol])
+            if total > limit:
+                raise EngineError(
+                    f"This run needs more than {limit:,} price bars (stopped at {symbol}). "
+                    "Pick fewer stocks or a shorter period."
+                )
+        return bars
+
     def run(self, db: Session, run_id: str) -> None:
         run = db.get(BacktestRun, run_id)
         if run is None:
@@ -89,7 +114,8 @@ class StrategyEngine:
         start = _ist_midnight(run.date_from)
         end = _ist_midnight(run.date_to + timedelta(days=1))
         warm_up = timedelta(days=WARM_UP_DAYS.get(spec.timeframe, INTRADAY_WARM_UP_DAYS))
-        bars = {s: _bars(db, s, spec.timeframe, start - warm_up, end) for s in symbols}
+        limit = self.max_bars if isinstance(spec, StrategySpecVisual) else self.max_bars_python
+        bars = self._load(db, symbols, spec.timeframe, (start - warm_up, end), limit)
         missing = [s for s, series in bars.items() if not any(b.ts >= start for b in series)]
         if missing:
             raise EngineError(
