@@ -4,6 +4,11 @@ import {
   type BrokerAccountCreate,
   BrokerProfileSchema,
   DataJobSchema,
+  KiteAppSchema,
+  type KiteApp,
+  type KiteAppUpdate,
+  type KiteKeysUpdate,
+  type KitePassphrase,
   type DataJobCreate,
   RateLimitSchema,
   RecorderSettingsSchema,
@@ -58,6 +63,58 @@ export function updateRateLimit(
 /** Page that starts the daily Kite login (a browser navigation, not a fetch; D39). */
 export function brokerLoginUrl(accountId: string): string {
   return `/api/v1/broker/accounts/${id(accountId)}/login`;
+}
+
+/** The account's own Kite app (D55): key last 4, whether a secret is saved, app details. */
+export function getKiteApp(accountId: string, init?: RequestOptions): Promise<KiteApp> {
+  return apiGet(`/broker/accounts/${id(accountId)}/kite-app`, KiteAppSchema, init);
+}
+
+/** Saves the API key and secret; the server seals the secret with the passphrase and forgets both. */
+export function saveKiteKeys(
+  accountId: string,
+  body: KiteKeysUpdate,
+  init?: RequestOptions,
+): Promise<KiteApp> {
+  return apiRequest(
+    "PUT",
+    `/broker/accounts/${id(accountId)}/kite-app/keys`,
+    body,
+    KiteAppSchema,
+    init,
+  );
+}
+
+export function updateKiteApp(
+  accountId: string,
+  body: KiteAppUpdate,
+  init?: RequestOptions,
+): Promise<KiteApp> {
+  return apiRequest(
+    "PATCH",
+    `/broker/accounts/${id(accountId)}/kite-app`,
+    body,
+    KiteAppSchema,
+    init,
+  );
+}
+
+/** 204 when the passphrase opens the saved secret; 400 "Wrong passphrase" otherwise. */
+export function checkKitePassphrase(
+  accountId: string,
+  body: KitePassphrase,
+  init?: RequestOptions,
+): Promise<void> {
+  return apiSend("POST", `/broker/accounts/${id(accountId)}/kite-app/check`, body, init);
+}
+
+/** Finishes a Kite login that came back with `?kite=finish` (D55). */
+export function finishKiteLogin(
+  accountId: string,
+  body: KitePassphrase,
+  init?: RequestOptions,
+): Promise<BrokerAccount> {
+  return apiPost(`/broker/accounts/${id(accountId)}/login/finish`, body, BrokerAccountSchema, init);
 }
 
 export function listBrokerProfiles(init?: RequestOptions): Promise<BrokerProfile[]> {

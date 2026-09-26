@@ -3,13 +3,21 @@ import type {
   ArchiveJobCreate,
   BrokerAccountCreate,
   DataJobCreate,
+  KiteAppUpdate,
+  KiteKeysUpdate,
+  KitePassphrase,
   RateLimitEndpoint,
   RateLimitUpdate,
   RecorderSettingsUpdate,
 } from "@nova/contracts";
 import {
   cancelDataJob,
+  checkKitePassphrase,
   createBrokerAccount,
+  finishKiteLogin,
+  getKiteApp,
+  saveKiteKeys,
+  updateKiteApp,
   createArchiveJob,
   createDataJob,
   getBrokerAccount,
@@ -73,6 +81,62 @@ export function useUpdateRateLimit() {
     mutationFn: ({ accountId, endpoint, ...body }: RateLimitEdit) =>
       updateRateLimit(accountId, endpoint, body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.rateLimits.all }),
+  });
+}
+
+export function useKiteApp(accountId: string) {
+  return useQuery({
+    queryKey: queryKeys.kiteApp(accountId),
+    queryFn: ({ signal }) => getKiteApp(accountId, { signal }),
+    enabled: Boolean(accountId),
+  });
+}
+
+/**
+ * Mutations whose body holds a secret or passphrase (D55): no cache entry outlives the call.
+ * Callers also `reset()` after each attempt so the observer drops the variables.
+ */
+const SECRET_BODY = { gcTime: 0 } as const;
+
+/** Saving keys may end the account's session (new key): refresh the app and the accounts. */
+export function useSaveKiteKeys(accountId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    ...SECRET_BODY,
+    mutationFn: (body: KiteKeysUpdate) => saveKiteKeys(accountId, body),
+    onSuccess: (app) => {
+      queryClient.setQueryData(queryKeys.kiteApp(accountId), app);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.brokerAccounts.all });
+    },
+  });
+}
+
+export function useUpdateKiteApp(accountId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: KiteAppUpdate) => updateKiteApp(accountId, body),
+    onSuccess: (app) => queryClient.setQueryData(queryKeys.kiteApp(accountId), app),
+  });
+}
+
+export function useCheckKitePassphrase(accountId: string) {
+  return useMutation({
+    ...SECRET_BODY,
+    mutationFn: (body: KitePassphrase) => checkKitePassphrase(accountId, body),
+  });
+}
+
+/** Finishes the daily login with the passphrase; refreshes the accounts and the recorder state. */
+export function useFinishKiteLogin(accountId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    ...SECRET_BODY,
+    mutationFn: (body: KitePassphrase) => finishKiteLogin(accountId, body),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.brokerAccounts.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.recorder }),
+      ]),
   });
 }
 

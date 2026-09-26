@@ -6,6 +6,7 @@ import {
   BrokerAccountSchema,
   BrokerProfileSchema,
   DataJobSchema,
+  KiteAppSchema,
   RateLimitSchema,
   RecorderSettingsSchema,
   pageSchema,
@@ -138,6 +139,74 @@ describe("Relay MSW handlers", () => {
         "Account AB1234 already exists",
       );
       expect((await post({ label: "Main", clientId: "AB-1" })).status).toBe(400);
+    });
+  });
+
+  describe("Kite app and login finish (D55)", () => {
+    const base = "http://localhost/api/v1/broker/accounts";
+    const send = (method: string, path: string, body: unknown) =>
+      fetch(`${base}${path}`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    const message = async (res: Response) => ApiErrorSchema.parse(await res.json()).error.message;
+    const keys = {
+      apiKey: "newkeyZX90",
+      apiSecret: "s3cret",
+      passphrase: "long enough passphrase",
+    };
+
+    it("GET returns the account's app and 404 for an unknown account", async () => {
+      const app = KiteAppSchema.parse(await (await fetch(`${base}/brk_001/kite-app`)).json());
+      expect(app).toMatchObject({ accountId: "brk_001", apiKeyLast4: "k7Q2", secretSaved: true });
+      expect((await fetch(`${base}/nope/kite-app`)).status).toBe(404);
+    });
+
+    it("PUT keys answers the app with the new last 4 and never the secret", async () => {
+      const res = await send("PUT", "/brk_003/kite-app/keys", keys);
+      const text = await res.text();
+      expect(KiteAppSchema.parse(JSON.parse(text))).toMatchObject({
+        apiKeyLast4: "ZX90",
+        secretSaved: true,
+      });
+      expect(text).not.toContain("s3cret");
+      const short = await send("PUT", "/brk_003/kite-app/keys", { ...keys, passphrase: "short" });
+      expect(short.status).toBe(400);
+    });
+
+    it("PATCH saves the details and rejects a bad IP", async () => {
+      const details = {
+        plan: " Paid ",
+        subscriptionRenewsOn: null,
+        postbackUrl: null,
+        staticIp: null,
+      };
+      const app = KiteAppSchema.parse(
+        await (await send("PATCH", "/brk_001/kite-app", details)).json(),
+      );
+      expect(app.plan).toBe("Paid");
+      const bad = await send("PATCH", "/brk_001/kite-app", { ...details, staticIp: "1.2.3" });
+      expect(bad.status).toBe(400);
+    });
+
+    it("checks the passphrase, and needs saved keys", async () => {
+      expect((await send("POST", "/brk_001/kite-app/check", { passphrase: "any" })).status).toBe(
+        204,
+      );
+      const wrong = await send("POST", "/brk_001/kite-app/check", { passphrase: "wrong" });
+      expect(await message(wrong)).toBe("Wrong passphrase");
+      const noKeys = await send("POST", "/brk_003/kite-app/check", { passphrase: "any" });
+      expect(await message(noKeys)).toBe("Save the Kite API key and secret first");
+    });
+
+    it("finishes a login, or says wrong / expired", async () => {
+      const ok = await send("POST", "/brk_002/login/finish", { passphrase: "any" });
+      expect(BrokerAccountSchema.parse(await ok.json()).session.status).toBe("active");
+      const wrong = await send("POST", "/brk_002/login/finish", { passphrase: "wrong" });
+      expect(await message(wrong)).toBe("Wrong passphrase");
+      const expired = await send("POST", "/brk_002/login/finish", { passphrase: "expired" });
+      expect(await message(expired)).toBe("Login expired: log in to Kite again");
     });
   });
 

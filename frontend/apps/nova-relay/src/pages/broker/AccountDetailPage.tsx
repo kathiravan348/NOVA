@@ -9,6 +9,8 @@ import { brokerLabel, needsLogin } from "../../lib/session";
 import { LoginPrompt } from "../overview/LoginPrompt";
 import { AccountLimitsCard } from "./AccountLimitsCard";
 import { EditLimitsModal } from "./EditLimitsModal";
+import { FinishLoginModal } from "./FinishLoginModal";
+import { KiteAppCard } from "./KiteAppCard";
 import { SessionCard } from "./SessionCard";
 
 function AccountLimits({ accountId, label }: { accountId: string; label: string }) {
@@ -24,7 +26,10 @@ function AccountLimits({ accountId, label }: { accountId: string; label: string 
   );
 }
 
-/** Shows the outcome of a Kite login once (`?kite=connected|failed`, D39) and removes it from the URL. */
+/**
+ * Shows the outcome of a Kite login once (`?kite=connected|failed`, D39) and removes it from the URL.
+ * `?kite=finish` (D55) opens the passphrase prompt instead.
+ */
 function useKiteResult(): void {
   const [params, setParams] = useSearchParams();
   const toast = useToast();
@@ -50,6 +55,7 @@ function useKiteResult(): void {
 export function AccountDetailPage() {
   const { id = "" } = useParams();
   const query = useBrokerAccount(id);
+  const [params, setParams] = useSearchParams();
   useKiteResult();
   return (
     <QueryState query={query} back={{ to: "/broker", label: "Back to broker" }}>
@@ -76,7 +82,14 @@ export function AccountDetailPage() {
             </div>
           </Card>
           <SessionCard session={account.session} />
+          <KiteAppCard accountId={account.id} />
           <AccountLimits accountId={account.id} label={account.label} />
+          <FinishLoginModal
+            accountId={account.id}
+            accountLabel={account.label}
+            open={params.get("kite") === "finish"}
+            onClose={() => setParams({}, { replace: true })}
+          />
         </div>
       )}
     </QueryState>

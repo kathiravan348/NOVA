@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
   emptyHandlers,
@@ -210,5 +211,132 @@ describe("Account page", () => {
 
     expect(await screen.findByText("Kite connected")).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.pathname).toBe("/broker/brk_001"));
+  });
+});
+
+describe("Kite app (D55)", () => {
+  const PASSPHRASE = "a long enough passphrase";
+  const kiteCard = async () => {
+    await screen.findByRole("heading", { name: "Kite app" });
+    return card("Kite app");
+  };
+  const type = (label: string | RegExp, value: string) =>
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+
+  it("shows the key's last 4, a locked secret and the redirect URL, never the secret", async () => {
+    renderApp("/broker/brk_001");
+    const app = await kiteCard();
+    expect(within(app).getByText("•••• k7Q2")).toBeInTheDocument();
+    expect(within(app).getByText("Saved, locked by your passphrase")).toBeInTheDocument();
+    expect(
+      within(app).getByText("http://localhost:3001/api/v1/broker/kite/callback"),
+    ).toBeInTheDocument();
+    expect(within(app).getByRole("button", { name: "Test passphrase" })).toBeInTheDocument();
+  });
+
+  it("offers setup on an account without keys", async () => {
+    renderApp("/broker/brk_003");
+    const app = await kiteCard();
+    expect(within(app).getByText("Not set")).toBeInTheDocument();
+    expect(within(app).getByText("Not saved")).toBeInTheDocument();
+    expect(within(app).queryByRole("button", { name: "Test passphrase" })).not.toBeInTheDocument();
+  });
+
+  it("sets the keys: blocks a short or mismatched passphrase, then saves (demo)", async () => {
+    renderApp("/broker/brk_003");
+    fireEvent.click(within(await kiteCard()).getByRole("button", { name: "Set key and secret" }));
+    const dialog = await screen.findByRole("dialog", { name: "Set Kite API key and secret" });
+    type("API key", "newkeyZX90");
+    type("API secret", "s3cret");
+    type(/^Passphrase/, "short");
+    type("Confirm passphrase", "other");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save keys" }));
+    expect(await within(dialog).findByText("At least 12 characters")).toBeInTheDocument();
+    expect(within(dialog).getByText("The passphrases do not match")).toBeInTheDocument();
+
+    type(/^Passphrase/, PASSPHRASE);
+    type("Confirm passphrase", PASSPHRASE);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save keys" }));
+    expect(await screen.findByText("Kite keys saved (demo)")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(JSON.stringify({ ...sessionStorage, ...localStorage })).not.toContain(PASSPHRASE);
+  });
+
+  it("warns that a new key logs the account out", async () => {
+    renderApp("/broker/brk_001");
+    fireEvent.click(within(await kiteCard()).getByRole("button", { name: "Set key and secret" }));
+    expect(
+      await screen.findByText("Saving a new key logs this account out of Kite."),
+    ).toBeInTheDocument();
+  });
+
+  it("edits the details and checks the static IP", async () => {
+    renderApp("/broker/brk_001");
+    fireEvent.click(within(await kiteCard()).getByRole("button", { name: "Edit details" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit Kite app details" });
+    type("Static IP", "1.2.3");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save details" }));
+    expect(await within(dialog).findByText(/An IPv4 address/)).toBeInTheDocument();
+    type("Static IP", "203.0.113.9");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save details" }));
+    expect(await screen.findByText("Details saved (demo)")).toBeInTheDocument();
+  });
+
+  it("tests the passphrase: wrong stays open, right closes", async () => {
+    renderApp("/broker/brk_001");
+    fireEvent.click(within(await kiteCard()).getByRole("button", { name: "Test passphrase" }));
+    const dialog = await screen.findByRole("dialog", { name: "Test passphrase" });
+    type("Passphrase", "wrong");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Test passphrase" }));
+    expect(await within(dialog).findByText("Wrong passphrase")).toBeInTheDocument();
+    expect(screen.getByLabelText("Passphrase")).toHaveValue("");
+    type("Passphrase", PASSPHRASE);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Test passphrase" }));
+    expect(await screen.findByText("Passphrase is correct")).toBeInTheDocument();
+  });
+
+  it("finishes the login from ?kite=finish: wrong, then right passphrase", async () => {
+    const { router } = renderApp("/broker/brk_002?kite=finish");
+    const dialog = await screen.findByRole("dialog", { name: "Finish Kite login" });
+    type("Passphrase", "wrong");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Finish login" }));
+    expect(await within(dialog).findByText("Wrong passphrase")).toBeInTheDocument();
+    type("Passphrase", PASSPHRASE);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Finish login" }));
+    expect(await screen.findByText("Kite connected")).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.search).toBe(""));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("closes with a message when the pending login expired", async () => {
+    const { router } = renderApp("/broker/brk_002?kite=finish");
+    const dialog = await screen.findByRole("dialog", { name: "Finish Kite login" });
+    type("Passphrase", "expired");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Finish login" }));
+    expect(await screen.findByText("Kite login failed")).toBeInTheDocument();
+    expect(screen.getByText("Login expired: log in to Kite again")).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.search).toBe(""));
+  });
+
+  it("the login prompt points to setup when the account has no keys", async () => {
+    server.use(
+      http.get("*/api/v1/broker/accounts/brk_002/kite-app", () =>
+        HttpResponse.json({
+          accountId: "brk_002",
+          apiKeyLast4: null,
+          secretSaved: false,
+          plan: null,
+          subscriptionRenewsOn: null,
+          redirectUrl: "http://localhost:3001/api/v1/broker/kite/callback",
+          postbackUrl: null,
+          staticIp: null,
+          updatedAt: null,
+        }),
+      ),
+    );
+    renderApp("/broker/brk_002");
+    const setup = await screen.findByRole("link", { name: "Set up the Kite app" });
+    expect(setup).toHaveAttribute("href", "/broker/brk_002");
+    expect(screen.queryByRole("button", { name: "Log in to Kite" })).not.toBeInTheDocument();
   });
 });

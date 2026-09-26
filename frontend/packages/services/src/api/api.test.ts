@@ -12,6 +12,7 @@ import {
   mockCandles,
   mockDataJobs,
   mockInstruments,
+  mockKiteApps,
   mockRateLimits,
   mockStrategies,
   mockStrategyStats,
@@ -29,8 +30,13 @@ import {
   listStrategyStats,
 } from "./orbit";
 import {
+  checkKitePassphrase,
+  finishKiteLogin,
   getBrokerAccount,
   getBrokerProfile,
+  getKiteApp,
+  saveKiteKeys,
+  updateKiteApp,
   listBrokerProfiles,
   updateRateLimit,
   getDataJob,
@@ -133,6 +139,31 @@ describe("Relay api", () => {
     await expect(listBrokerProfiles()).resolves.toEqual(mockBrokerProfiles);
     await expect(getBrokerProfile("zerodha")).resolves.toEqual(mockBrokerProfiles[0]);
     await expect(getBrokerProfile("nope")).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("reads and writes an account's Kite app (D55)", async () => {
+    await expect(getKiteApp("brk_001")).resolves.toEqual(mockKiteApps[0]);
+    const keys = {
+      apiKey: "newkeyZX90",
+      apiSecret: "s3cret",
+      passphrase: "long enough passphrase",
+    };
+    await expect(saveKiteKeys("brk_003", keys)).resolves.toMatchObject({ apiKeyLast4: "ZX90" });
+    const details = { plan: "Paid", subscriptionRenewsOn: null, postbackUrl: null, staticIp: null };
+    await expect(updateKiteApp("brk_001", details)).resolves.toMatchObject({ plan: "Paid" });
+    await expect(checkKitePassphrase("brk_001", { passphrase: "any" })).resolves.toBeUndefined();
+    await expect(checkKitePassphrase("brk_001", { passphrase: "wrong" })).rejects.toMatchObject({
+      status: 400,
+      message: "Wrong passphrase",
+    });
+  });
+
+  it("finishKiteLogin answers the account with an active session", async () => {
+    const account = await finishKiteLogin("brk_002", { passphrase: "any" });
+    expect(account.session.status).toBe("active");
+    await expect(finishKiteLogin("brk_002", { passphrase: "expired" })).rejects.toMatchObject({
+      code: "invalid_request",
+    });
   });
 
   it("updateRateLimit resolves on 204 and maps 400 to invalid_request", async () => {
