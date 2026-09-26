@@ -1,6 +1,6 @@
 # NOVA-083 — Atlas: remove the CLI commands Relay already covers
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-083 · **Depends on:** NOVA-078
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-083 · **Depends on:** NOVA-078
 
 ## Goal
 `python -m nova_atlas` keeps only `worker` (a process, started by Compose). Syncing instruments, queueing
@@ -37,5 +37,12 @@ Create:
 ## Questions
 
 ## Handoff
+Built by Claude at the Owner's request. All acceptance checks pass.
+- `cli.py` keeps only `worker`; `test_cli.py` checks `--help` and that old commands exit 2.
+- backend README: the three Atlas rows replaced by one row pointing to Relay. Root README had no Atlas commands.
+- API guide: CLI table lists `nova_atlas worker`; endpoint rows no longer mention the removed commands.
+- Compose `atlas-worker` already runs `nova_atlas worker` (unchanged).
+- Checks: `backend-check` green (515 passed).
 
 ## Review
+Self-reviewed. No issues found.

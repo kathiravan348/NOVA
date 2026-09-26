@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 25 Sep 2026 (NOVA-077). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-083). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -62,7 +62,7 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 
 | Method & path | What it does |
 |---|---|
-| `GET /internal/kite/instruments/{exchange}` | Kite's instrument list (CSV) for `NSE` or `NFO`. Used by Atlas `sync-instruments`. |
+| `GET /internal/kite/instruments/{exchange}` | Kite's instrument list (CSV) for `NSE` or `NFO`. Used by the instrument sync (`POST /market-data/instruments/sync`). |
 | `GET /internal/kite/historical?instrument_token=&interval=&start=&end=` | Historical candles from Kite. Used by Atlas download jobs. |
 
 Both use the first enabled account with a live session (else 400 "Log in to Kite in Relay first") and wait for a
@@ -114,12 +114,12 @@ No delete in Phase 1 (runs refer to versions).
 | `POST /market-data/universe` | Adds a stock. Name and sector are stored trimmed. Audit: `instrument.add` ("Added M&M (Mahindra & Mahindra)"). | `UniverseEntryWrite {symbol (NSE style: A–Z, 0–9, &, -), name, sector (≤ 80), indices}` | 201 `UniverseEntry`; 400 bad body or already listed |
 | `PUT /market-data/universe/{symbol}` | Changes name, sector and indices. The symbol itself cannot change. Audit: `instrument.update`. | path + `UniverseEntryWrite` (same symbol) | `UniverseEntry`; 400; 404 |
 | `DELETE /market-data/universe/{symbol}` | Removes a stock from the list. Its downloaded candles and its `instruments` row stay. Audit: `instrument.remove`. | path | 204; 400 while a queued or running job uses it; 404 |
-| `POST /market-data/instruments/sync` | Asks Kite (through the broker) for instrument tokens and F&O lot sizes of every listed stock, like `sync-instruments`. Needs a Kite login. Audit: `instrument.sync` ("Synced 23; not on Kite NSE: XYZ"). | — | `InstrumentSyncResult {synced, missing}`; 400 broker error (e.g. not logged in) |
+| `POST /market-data/instruments/sync` | Asks Kite (through the broker) for instrument tokens and F&O lot sizes of every listed stock. Needs a Kite login. Audit: `instrument.sync` ("Synced 23; not on Kite NSE: XYZ"). | — | `InstrumentSyncResult {synced, missing}`; 400 broker error (e.g. not logged in) |
 | `GET /data-jobs` | Background jobs, newest first, paged: type (`historical_download`, `tick_record`, `archive`), status, symbols, timeframe, period, progress %, rows written, error. | `limit`, `cursor` | `Page<DataJob>` |
 | `GET /data-jobs/{id}` | One job. | path | `DataJob`; 404 |
 | `POST /data-jobs` | Queues a historical candle download for the Atlas worker, like the `download` command. Symbols are upper-cased and must be in the stock list. Audit: `data_job.create` ("Queued 1d download of 2 symbol(s), 2025-01-01 to 2025-12-31"). | `DataJobCreate {symbols (1–200), timeframe, from, to, segment? (default `equity_delivery`)}` | 201 `DataJob` (`queued`); 400 bad body or unknown symbol |
 | `POST /data-jobs/{id}/cancel` | Cancels a `queued` job at once, or a `running` one: the worker stops before its next chunk (rows already saved stay). Cancelling a running `tick_record` job stops the recording and turns the recorder switch off. Audit: `data_job.cancel` ("Cancelled 1d download of 2 symbol(s)"). | path | `DataJob` (`cancelled`); 400 "Job is already …" (completed, failed or cancelled); 404 |
-| `POST /data-jobs/archive` | Queues an `archive` job for the Atlas worker, like `archive-ticks`: every tick received before `before` (IST) moves to Parquet files, a day at a time (files first, then the rows are deleted; an existing file is never overwritten, the job fails instead). The job lists the symbols and the IST dates (`from` = first day, `to` = `before` − 1); progress moves per day, `rowsWritten` = ticks moved; a cancel stops between days. Audit: `data_job.create` ("Queued archive of ticks before 2026-09-01"). | `ArchiveJobCreate {before}` | 201 `DataJob` (`archive`, `queued`); 400 future date or no ticks before it |
+| `POST /data-jobs/archive` | Queues an `archive` job for the Atlas worker: every tick received before `before` (IST) moves to Parquet files, a day at a time (files first, then the rows are deleted; an existing file is never overwritten, the job fails instead). The job lists the symbols and the IST dates (`from` = first day, `to` = `before` − 1); progress moves per day, `rowsWritten` = ticks moved; a cancel stops between days. Audit: `data_job.create` ("Queued archive of ticks before 2026-09-01"). | `ArchiveJobCreate {before}` | 201 `DataJob` (`archive`, `queued`); 400 future date or no ticks before it |
 
 ---
 
@@ -132,7 +132,5 @@ No delete in Phase 1 (runs refer to versions).
 | `python -m nova_broker new-token-key` | Makes the key used to encrypt Kite tokens. |
 | `python -m nova_broker record-ticks` | Records live ticks now, by hand, until 15:30 IST (no data job). |
 | `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session. |
-| `python -m nova_atlas sync-instruments` | Loads instruments from the stock list (`universe` table) + Kite, like `POST /market-data/instruments/sync`. |
-| `python -m nova_atlas download` | Queues a historical candle download job. |
-| `python -m nova_atlas archive-ticks` | Moves old ticks to Parquet files and deletes them from the database, right away (no data job; `POST /data-jobs/archive` is the queued version). |
+| `python -m nova_atlas worker` | The data-job worker (Compose service `atlas-worker`): downloads, archives. Syncing, downloads and archives are started from Relay (D55). |
 | `python -m nova_db upgrade \| check` | Runs migrations / checks models match the database. |

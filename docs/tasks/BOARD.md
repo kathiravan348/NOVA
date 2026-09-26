@@ -88,7 +88,7 @@
 | NOVA-080 | Broker: Kite app per account, API secret sealed with a passphrase (D55, migration 0008) | planned | — | 079 |
 | NOVA-081 | Broker: login finished with the passphrase; Kite keys leave `.env`; broker CLI trimmed (D55) | planned | — | 080, 083 |
 | NOVA-082 | Relay: Kite app card + passphrase to finish the login (D55) | planned | — | 081 (merge with 081) |
-| NOVA-083 | Atlas: remove CLI commands Relay covers (D55) | planned | — | 078 |
+| NOVA-083 | Atlas: remove CLI commands Relay covers (D55) | done | Claude | 078 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
