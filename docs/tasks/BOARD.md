@@ -104,6 +104,10 @@
 | NOVA-096 | Relay: Delete job (+ candles) and clear the 26 Sep test downloads | done | Claude | 094, 095 |
 | NOVA-097 | Instruments from any timeframe; backtest coverage by the strategy's timeframe | done | Claude | 098 |
 | NOVA-098 | Postgres connections: limit 100, small pools per service | done | Claude | — |
+| NOVA-099 | Compress old candles (TimescaleDB compression, D58, migration 0013) | planned | — | 098 |
+| NOVA-100 | Download 1m and 1d only; build 3m–1h candles from 1m (D58) | planned | — | 099 |
+| NOVA-101 | Backtest progress: stage, counts and percent on each run (D58, migration 0014) | planned | — | 100 |
+| NOVA-102 | Orbit: live backtest progress on the run page and in the list (D58) | planned | — | 101 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -117,3 +121,4 @@
 - Stock list (D56): 084 (live bug), 085 and 086 touch different files and can run in parallel → 087 (after 084 too: both edit `worker.py`) → 088; 089 after 085, alongside 087/088.
 - Realtime + planned downloads (D57): 090 after 085 (both migrate `data_jobs`) → 091 (frontend) and 092 (backend) in parallel → 093 (after 087) → 094 (after 088).
 - Delete jobs (Owner request 26 Sep): 095 before 094 (the plan review discards drafts with it) → 096 after 094.
+- Scale + progress (D58): 099 → 100 → 101 (migrations in order; 100 and 101 both edit `strategy_engine.py`) → 102.
