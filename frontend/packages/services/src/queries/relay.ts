@@ -33,6 +33,7 @@ import {
   listDataJobs,
   listRateLimits,
 } from "../api/relay";
+import { isPollingNeeded } from "../realtime";
 import { queryKeys } from "./keys";
 import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
 
@@ -156,7 +157,7 @@ export function useBrokerProfile(broker: string) {
   });
 }
 
-/** How often job screens refresh while a job is queued or running (D56 (5)). */
+/** How often job screens refresh while a job is queued or running and the live socket is not open (D56 (5), D57). */
 export const JOB_POLL_MS = { detail: 3_000, list: 5_000 };
 
 function isActive(job: Pick<DataJob, "status">): boolean {
@@ -171,7 +172,9 @@ export function useDataJobs() {
     ...pagedListOptions,
     select: flattenPages,
     refetchInterval: (query) =>
-      query.state.data?.pages.some((page) => page.items.some(isActive)) ? JOB_POLL_MS.list : false,
+      isPollingNeeded() && query.state.data?.pages.some((page) => page.items.some(isActive))
+        ? JOB_POLL_MS.list
+        : false,
   });
 }
 
@@ -190,7 +193,9 @@ export function useDataJob(id: string) {
     },
     enabled: Boolean(id),
     refetchInterval: (query) =>
-      query.state.data && isActive(query.state.data) ? JOB_POLL_MS.detail : false,
+      isPollingNeeded() && query.state.data && isActive(query.state.data)
+        ? JOB_POLL_MS.detail
+        : false,
   });
 }
 
@@ -263,6 +268,8 @@ export function useLatestSync() {
       return page.items[0] ?? null;
     },
     refetchInterval: (query) =>
-      query.state.data && isActive(query.state.data) ? JOB_POLL_MS.detail : false,
+      isPollingNeeded() && query.state.data && isActive(query.state.data)
+        ? JOB_POLL_MS.detail
+        : false,
   });
 }

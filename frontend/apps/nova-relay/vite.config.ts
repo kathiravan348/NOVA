@@ -17,7 +17,10 @@ export default defineConfig(({ mode }) => ({
     port: 3001,
     proxy:
       mode === "real"
-        ? { "/api": { target: process.env["NOVA_API_URL"] ?? "http://127.0.0.1:8000" } }
+        ? {
+            // `ws: true` also forwards the live-updates WebSocket (`/api/v1/ws`, D57).
+            "/api": { target: process.env["NOVA_API_URL"] ?? "http://127.0.0.1:8000", ws: true },
+          }
         : undefined,
   },
   test: {

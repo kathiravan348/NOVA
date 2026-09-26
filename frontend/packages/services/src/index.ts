@@ -10,6 +10,7 @@ export * from "./queries/relay";
 export * from "./queries/paging";
 export * from "./queries/queryClient";
 export * from "./session";
+export * from "./realtime";
 export * from "./api/marketData";
 export * from "./queries/marketData";
 export * from "./clock";

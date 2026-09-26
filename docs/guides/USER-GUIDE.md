@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-089). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-091). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -268,6 +268,10 @@ Background work that fills our price database: **historical downloads** (past ca
 Each job shows status, symbols, period, progress % and rows written. Open one for details or the error if it
 failed.
 
+**Updates appear by themselves.** In Real mode a small **Live** badge sits at the top right: job lists and job
+pages change the moment the work moves on, with no reload. If it shows **Reconnecting…**, the connection
+dropped for a moment; the pages then refresh every few seconds until **Live** is back.
+
 **To download past prices:** press **New download**, choose the **Timeframe** (the size of each price bar,
 from **1 minute** to **1 day**), the **From** and **To** dates and the stocks (tick the boxes; use the search
 box to find one), then **Queue download**. The job starts within seconds and shows its progress. Only stocks
@@ -315,7 +319,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | A download *Failed* with *The broker service did not answer* | NOVA's broker part is not running. Start the whole NOVA stack again, then queue the download again. |
 | A download *Failed* with *Kite refused the request* | Zerodha said no (the reason follows). Often it is busy: wait a minute and queue it again. |
 | A download *Failed* with *Unexpected error* | Something broke inside NOVA. Queue it again once; if it fails the same way, send the message to the Owner. |
-| A job page shows an old status | It refreshes by itself every few seconds while a job is **Queued** or **Running**. |
+| A job page shows an old status | With **Live** at the top right it updates at once. With **Reconnecting…** (or in Demo) it refreshes every few seconds while a job is **Queued** or **Running**. If **Reconnecting…** stays for minutes, check that NOVA is running, then reload the page. |
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |

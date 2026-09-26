@@ -96,7 +96,7 @@
 | NOVA-088 | Relay: Instruments for ~2,500 stocks (search, index filter, New listings, sync job) (D56) | done | Claude | 087 |
 | NOVA-089 | Orbit: index choices from the indices list (D56) | done | Claude | 085 |
 | NOVA-090 | Core: WebSocket `/api/v1/ws` with data-job events from Postgres NOTIFY (D57, migration 0010) | done | Claude | 085 |
-| NOVA-091 | Frontend: realtime client; data-job screens update live, polling as fallback (D57) | planned | — | 084, 090 |
+| NOVA-091 | Frontend: realtime client; data-job screens update live, polling as fallback (D57) | done | Claude | 084, 090 |
 | NOVA-092 | Download plans: draft/paused statuses, job steps, market-hours setting (D57, migration 0011) | planned | — | 090 |
 | NOVA-093 | Atlas: plan, coverage check, Start/Pause/Resume, step-by-step worker, market-hours pace (D57) | planned | — | 087, 092 |
 | NOVA-094 | Relay: plan review before Start, Pause/Resume, bulk pick by index/sector, pace setting (D57) | planned | — | 088, 091, 093 |
