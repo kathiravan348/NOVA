@@ -58,3 +58,17 @@ def requeue_running(
     ).all()
     db.commit()
     return len(requeued)
+
+
+def fail_running(
+    db: Session, table: QueueTable, message: str, condition: ColumnElement[bool] | None = None
+) -> int:
+    """Fails rows a stopped worker left `running`, when re-running them could stop it again."""
+    failed = db.scalars(
+        update(table)
+        .where(table.status == "running", condition if condition is not None else true())
+        .values(status="failed", error=message, finished_at=datetime.now(UTC))
+        .returning(table.id)
+    ).all()
+    db.commit()
+    return len(failed)

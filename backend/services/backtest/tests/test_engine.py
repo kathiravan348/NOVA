@@ -94,9 +94,12 @@ def _queue(engine: Engine, version: int = 2, symbols: tuple[str, ...] = ("INFY",
     return "run_e2e"
 
 
-def _drain(factory: sessionmaker[Session]) -> BacktestRun:
+def _drain(
+    factory: sessionmaker[Session], max_bars: int = 1_500_000, max_bars_python: int = 750_000
+) -> BacktestRun:
     stop = threading.Event()
-    run_worker(factory, StrategyEngine(), stop, poll_seconds=0, on_idle=stop.set)
+    engine = StrategyEngine(max_bars, max_bars_python)
+    run_worker(factory, engine, stop, poll_seconds=0, on_idle=stop.set)
     with factory() as db:
         run = db.get(BacktestRun, "run_e2e")
         assert run is not None
@@ -132,6 +135,44 @@ def test_a_delivery_run_completes_with_charges(
     assert metrics["netPnlPaise"] == trade["netPnlPaise"]
     assert result["equityCurve"][-1]["equityPaise"] == 10_000_000 + trade["netPnlPaise"]
     assert [row["symbol"] for row in result["bySymbol"]] == ["INFY", "TCS"]
+
+
+def test_a_run_over_the_bar_limit_fails_early(
+    seeded: Engine, factory: sessionmaker[Session], client: TestClient
+) -> None:
+    _queue(seeded)
+
+    run = _drain(factory, max_bars=9)  # INFY 5 + TCS 5 bars
+
+    assert run.status == "failed"
+    assert run.error == (
+        "This run needs more than 9 price bars (stopped at TCS). "
+        "Pick fewer stocks or a shorter period."
+    )
+    assert client.get("/api/v1/backtests/run_e2e/trades").json()["items"] == []
+    assert client.get("/api/v1/backtests/run_e2e/result").status_code == 404
+
+
+def test_a_run_at_the_bar_limit_completes(seeded: Engine, factory: sessionmaker[Session]) -> None:
+    _queue(seeded)
+    assert _drain(factory, max_bars=10, max_bars_python=1).status == "completed"
+
+
+def test_python_runs_have_their_own_bar_limit(
+    seeded: Engine, factory: sessionmaker[Session]
+) -> None:
+    code = "class Strategy:\n    def on_bar(self, ctx):\n        return None\n"
+    spec = _spec(mode="python", code=code)
+    spec.pop("entry")
+    spec.pop("exit")
+    with Session(seeded) as db:
+        db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
+        db.commit()
+    _queue(seeded)
+
+    run = _drain(factory, max_bars=10, max_bars_python=4)
+
+    assert run.error is not None and run.error.startswith("This run needs more than 4 price bars")
 
 
 def test_rerun_replaces_the_old_result(seeded: Engine, factory: sessionmaker[Session]) -> None:

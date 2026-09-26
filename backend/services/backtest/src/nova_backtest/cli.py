@@ -14,7 +14,8 @@ from nova_backtest.worker import run_worker
 
 
 def default_engine() -> BacktestEngine:
-    return StrategyEngine()
+    settings = get_backtest_settings()
+    return StrategyEngine(settings.backtest_max_bars, settings.backtest_max_bars_python)
 
 
 def main(argv: list[str] | None = None) -> int:

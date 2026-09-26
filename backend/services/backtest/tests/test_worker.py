@@ -2,9 +2,9 @@ import threading
 from datetime import date
 
 from nova_backtest.engine import BacktestEngine, EngineError, PendingEngine
-from nova_backtest.worker import run_worker
+from nova_backtest.worker import STOPPED_MESSAGE, run_worker
 from nova_db.models import BacktestRun
-from sqlalchemy import Engine, select
+from sqlalchemy import Engine, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -90,3 +90,19 @@ def test_crashes_hide_details(clean: Engine, factory: sessionmaker[Session]) -> 
     _drain(factory, CrashingEngine())
     run = _runs(clean)[0]
     assert run.status == "failed" and run.error == "Unexpected error; see the worker log"
+
+
+def test_runs_left_running_fail_on_start_and_queued_runs_still_run(
+    clean: Engine, factory: sessionmaker[Session]
+) -> None:
+    stuck, waiting = _queue(clean, 2)
+    with Session(clean) as db:
+        db.execute(update(BacktestRun).where(BacktestRun.id == stuck).values(status="running"))
+        db.commit()
+
+    _drain(factory, CompletingEngine())
+
+    runs = {r.id: r for r in _runs(clean)}
+    assert runs[stuck].status == "failed" and runs[stuck].error == STOPPED_MESSAGE
+    assert runs[stuck].finished_at is not None
+    assert runs[waiting].status == "completed"

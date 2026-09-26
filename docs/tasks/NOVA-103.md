@@ -1,6 +1,6 @@
 # NOVA-103 — Backtest worker: no stuck runs, restart after a crash, bar limit (D59)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-103 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-103 · **Depends on:** —
 
 ## Goal
 A worker crash (e.g. out of memory) can no longer leave a run stuck in `running`, the worker comes back by
@@ -55,7 +55,17 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. Changed: `queue.py` (`fail_running`), backtest `worker/strategy_engine/settings/cli`, tests, `compose.yaml`, USER-GUIDE §7.
+- Measured on the Owner stack (1m, 20 NIFTY stocks, warm-up included), peak `docker stats`:
+  visual SMA 1.4 M bars → **779 MiB**; Python RSI 525 k → 828 MiB, 735 k → **1,104 MiB**, 1.05 M → 1,536 MiB (at the cap).
+- So Python runs get their own limit: `backtest_max_bars_python` = 750,000 (visual stays 1,500,000). The sandbox
+  copies every bar into a subprocess (~3× memory); D59 updated. At 1.4 M a Python run also hit the sandbox's own
+  512 MB `RLIMIT_AS` (`MemoryError`), which the 750 k limit avoids.
+- Crash check: `docker kill` counts as a manual stop (Docker ignores the restart policy), so a real OOM was forced
+  with `docker update --memory 400m`: the container restarted by itself and the run showed the "worker stopped" message.
+  The run stuck since 13:52 was failed with that message on first start.
+- `test_internal.py::test_calls_wait_for_a_limiter_slot` (broker) failed once under load and passed on rerun: timing flake.
+Guides: USER-GUIDE.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. All acceptance checks pass (`backend-check` 670 passed). Merged.

@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime, timedelta
 
 from nova_db.models import DataJob
-from nova_db.queue import claim_next, requeue_running
+from nova_db.queue import claim_next, fail_running, requeue_running
 from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
@@ -61,3 +61,27 @@ def test_requeue_leaves_paused_jobs_and_steps_alone(engine: Engine) -> None:
 
     assert statuses == {"job_p": "paused", "job_r": "queued"}
     assert steps == ["done"]
+
+
+def test_fail_running_honours_the_condition(engine: Engine) -> None:
+    with Session(engine) as db:
+        db.execute(text("TRUNCATE data_jobs CASCADE"))
+        db.add(_download("job_1d", "running", started_at=NOW))
+        db.add(_download("job_1m", "running", started_at=NOW, timeframe="1m"))
+        db.add(_download("job_q", "queued"))
+        db.commit()
+
+        assert fail_running(db, DataJob, "stopped", DataJob.timeframe == "1m") == 1
+        rows = db.execute(text("SELECT id, status, error FROM data_jobs ORDER BY id")).all()
+        finished = db.execute(
+            text("SELECT finished_at IS NOT NULL FROM data_jobs WHERE id = 'job_1m'")
+        ).scalar_one()
+        db.execute(text("TRUNCATE data_jobs CASCADE"))
+        db.commit()
+
+    assert [tuple(r) for r in rows] == [
+        ("job_1d", "running", None),
+        ("job_1m", "failed", "stopped"),
+        ("job_q", "queued", None),
+    ]
+    assert finished

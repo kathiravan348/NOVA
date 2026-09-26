@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-097). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-103). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -347,6 +347,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | A download is **Planned** but never ran | A plan waits for **Start**. Open it and press **Start** (plans older than 24 hours are cancelled; check the plan again). |
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
+| Backtest *Failed* with *needs more than … price bars* | The test is too big for NOVA in one go. Pick fewer stocks or a shorter period: 1-minute prices add up fast (one stock has about 375 bars a day). |
+| Backtest *Failed* with *The backtest worker stopped during this run* | NOVA's backtest part stopped in the middle (often it ran out of memory) and has restarted. Run it again; if it stops again, pick fewer stocks or a shorter period. |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |
 | Rate-limit warning above 80% | Press the account's name in the warning to see which limit. Wait for the reset time shown, or lower how much you download at once. |
