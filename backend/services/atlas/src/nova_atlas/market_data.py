@@ -1,4 +1,4 @@
-"""`GET /market-data/instruments` and `GET /market-data/candles` (D11, D17, D32)."""
+"""`GET /market-data/instruments` and `GET /market-data/candles` (D11, D17, D32, D58)."""
 
 import time as time_module
 from dataclasses import dataclass
@@ -14,6 +14,7 @@ from nova_common.internal import CallerDep
 from nova_contracts import Candle as CandleContract
 from nova_contracts import Instrument as InstrumentContract
 from nova_contracts import InstrumentCoverage
+from nova_db.candles import ROLLED_UP, read_bars, source_timeframe
 from nova_db.enums import TIMEFRAMES
 from nova_db.models import Candle, Instrument
 from nova_db.web import Db
@@ -49,11 +50,12 @@ _DAILY_STATS = text(
     GROUP BY symbol
     """
 )
+# Stored 3m–1h rows from older downloads are ignored: those timeframes come from 1m (D58).
 _COVERAGE = text(
     "SELECT symbol, timeframe, min(ts) AS first_ts, max(ts) AS last_ts FROM candles"
-    " WHERE exchange = :exchange GROUP BY symbol, timeframe"
+    " WHERE exchange = :exchange AND timeframe IN ('1m', '1d') GROUP BY symbol, timeframe"
 )
-# The same statistics from intraday bars rolled up per IST day, for stocks without daily bars.
+# The same statistics from 1m bars rolled up per IST day, for stocks without daily bars.
 _INTRADAY_STATS = text(
     """
     WITH days AS (
@@ -61,7 +63,7 @@ _INTRADAY_STATS = text(
                max(high_paise) AS high_paise, min(low_paise) AS low_paise, sum(volume) AS volume,
                last(close_paise, ts) AS close_paise
         FROM candles
-        WHERE exchange = :exchange AND timeframe = :timeframe AND symbol = ANY(:symbols)
+        WHERE exchange = :exchange AND timeframe = '1m' AND symbol = ANY(:symbols)
           AND ts >= :since
         GROUP BY symbol, day
     ), ranked AS (
@@ -79,8 +81,6 @@ _INTRADAY_STATS = text(
     GROUP BY symbol
     """
 )
-# Finest first: the roll-up reads one intraday timeframe per stock.
-INTRADAY = ("1m", "3m", "5m", "15m", "30m", "1h")
 # A roll-up covers the last year and 20 trading days, with room for holidays.
 ROLL_UP_DAYS = 400
 # Download jobs finishing or being deleted change this; the list is rebuilt only then.
@@ -104,25 +104,17 @@ def _change_percent(last: int, previous: int | None) -> float:
 def _intraday_stats(
     db: Db, exchange: str, coverage: dict[str, dict[str, tuple[datetime, datetime]]], skip: set[str]
 ) -> dict[str, Any]:
-    """Statistics for stocks without daily bars, from their finest intraday timeframe."""
-    by_timeframe: dict[str, list[str]] = {}
-    for symbol, ranges in coverage.items():
-        if symbol in skip:
-            continue
-        finest = next((t for t in INTRADAY if t in ranges), None)
-        if finest is not None:
-            by_timeframe.setdefault(finest, []).append(symbol)
-    stats: dict[str, Any] = {}
-    for timeframe, symbols in by_timeframe.items():
-        newest = max(coverage[s][timeframe][1] for s in symbols)
-        params = {
-            "exchange": exchange,
-            "timeframe": timeframe,
-            "symbols": symbols,
-            "since": newest - timedelta(days=ROLL_UP_DAYS),
-        }
-        stats.update((row.symbol, row) for row in db.execute(_INTRADAY_STATS, params))
-    return stats
+    """Statistics for stocks without daily bars, from their 1m bars."""
+    symbols = [s for s, ranges in coverage.items() if s not in skip and "1m" in ranges]
+    if not symbols:
+        return {}
+    newest = max(coverage[s]["1m"][1] for s in symbols)
+    params = {
+        "exchange": exchange,
+        "symbols": symbols,
+        "since": newest - timedelta(days=ROLL_UP_DAYS),
+    }
+    return {row.symbol: row for row in db.execute(_INTRADAY_STATS, params)}
 
 
 def build_instruments(db: Db, exchange: str) -> list[dict[str, Any]]:
@@ -130,6 +122,9 @@ def build_instruments(db: Db, exchange: str) -> list[dict[str, Any]]:
     coverage: dict[str, dict[str, tuple[datetime, datetime]]] = {}
     for row in db.execute(_COVERAGE, {"exchange": exchange}):
         coverage.setdefault(row.symbol, {})[row.timeframe] = (row.first_ts, row.last_ts)
+    for ranges in coverage.values():
+        if "1m" in ranges:
+            ranges.update(dict.fromkeys(ROLLED_UP, ranges["1m"]))
     stats: dict[str, Any] = {
         row.symbol: row for row in db.execute(_DAILY_STATS, {"exchange": exchange})
     }
@@ -198,11 +193,10 @@ def _window(
     """The UTC range to read, or None when the symbol has no bars in this timeframe."""
     daily = timeframe == "1d"
     if last is None:
+        stored = source_timeframe(timeframe)
         newest = db.scalar(
             select(Candle.ts)
-            .where(
-                Candle.exchange == exchange, Candle.symbol == symbol, Candle.timeframe == timeframe
-            )
+            .where(Candle.exchange == exchange, Candle.symbol == symbol, Candle.timeframe == stored)
             .order_by(Candle.ts.desc())
             .limit(1)
         )
@@ -242,17 +236,7 @@ def list_candles(
     window = _window(db, exchange, symbol, timeframe, first, last)
     if window is None:
         return JSONResponse([])
-    bars = db.scalars(
-        select(Candle)
-        .where(
-            Candle.exchange == exchange,
-            Candle.symbol == symbol,
-            Candle.timeframe == timeframe,
-            Candle.ts >= window[0],
-            Candle.ts < window[1],
-        )
-        .order_by(Candle.ts)
-    )
+    bars = read_bars(db, exchange, symbol, timeframe, *window)
     body = [
         CandleContract.model_validate(
             {

@@ -220,21 +220,22 @@ def test_an_intraday_run_squares_off_and_pays_intraday_charges(
         (103, 104, 102, 103),
     ]
     prices.append((104, 104, 104, 104))
-    with Session(seeded) as db:
+    with Session(seeded) as db:  # only 1m bars: the 5m strategy reads them rolled up (D58)
         for (hour, minute), (o, h, low, c) in zip(clocks, prices, strict=True):
-            db.add(
-                Candle(
-                    exchange="NSE",
-                    symbol="INFY",
-                    timeframe="5m",
-                    ts=datetime(2025, 1, 2, hour, minute, tzinfo=IST),
-                    open_paise=o * 100,
-                    high_paise=h * 100,
-                    low_paise=low * 100,
-                    close_paise=c * 100,
-                    volume=1_000,
+            for step in range(5):
+                db.add(
+                    Candle(
+                        exchange="NSE",
+                        symbol="INFY",
+                        timeframe="1m",
+                        ts=datetime(2025, 1, 2, hour, minute + step, tzinfo=IST),
+                        open_paise=o * 100,
+                        high_paise=h * 100,
+                        low_paise=low * 100,
+                        close_paise=c * 100,
+                        volume=200,
+                    )
                 )
-            )
         spec = _spec(segment="equity_intraday", timeframe="5m")
         db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
         db.commit()

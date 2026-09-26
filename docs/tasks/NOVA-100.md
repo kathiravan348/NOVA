@@ -1,6 +1,6 @@
 # NOVA-100 — Download 1m and 1d only; build 3m–1h candles from 1m
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-100 · **Depends on:** NOVA-099, NOVA-103
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-100 · **Depends on:** NOVA-099, NOVA-103
 
 ## Goal
 New downloads accept only `1m` and `1d` (D58). Charts, instrument coverage and backtests get `3m 5m 15m 30m 1h`
@@ -56,5 +56,14 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. `nova_db/candles.py` (`read_bars`, `source_timeframe`, `ROLLED_UP`), `DOWNLOAD_TIMEFRAMES`; Atlas
+`market_data` (coverage copies 1m to 3m–1h, stats from 1m only, candles via `read_bars`), `plan.check_request`;
+engine `_bars`; Relay New download select; tests; API + USER-GUIDE.
+- Extra file: `atlas/tests/test_download.py` expected the old timeframe message (one parameter changed).
+- The Vitest case went into `downloads.test.tsx` (where the New download tests live), not `dataJobs.test.tsx`.
+- Owner stack: INFY 25 Sep 2026 → 1m 360, 5m 72, 1h 6 bars starting 09:15 IST; the 09:15 1h bar equals the
+  first 60 one-minute bars (O/H/L/C/V). **Owner:** compare one day's 5m/1h chart with Kite's to close the last check.
+Guides: API, USER-GUIDE.
 
 ## Review
+Built and reviewed by Claude. `backend-check` 683 passed; `pnpm review:check` passed. Merged.

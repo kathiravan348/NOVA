@@ -8,14 +8,13 @@ from decimal import Decimal
 from nova_contracts import MAX_DOWNLOAD_SYMBOLS, DataJobPlan, DataJobPlanSymbol
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.enums import DOWNLOAD_MODES, SEGMENTS
+from nova_db.enums import DOWNLOAD_MODES, DOWNLOAD_TIMEFRAMES, SEGMENTS
 from nova_db.models import DataJob, DataJobStep, Instrument
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from nova_atlas.download import (
     IST,
-    KITE_INTERVAL,
     Chunk,
     market_hours_mode,
     plan_chunks,
@@ -107,8 +106,8 @@ def check_request(
     unknown = [s for s in symbols if s not in known]
     if unknown:
         raise ValueError(f"Not in the stock list: {', '.join(unknown)}")
-    if timeframe not in KITE_INTERVAL:
-        raise ValueError(f"Timeframe must be one of {', '.join(KITE_INTERVAL)}")
+    if timeframe not in DOWNLOAD_TIMEFRAMES:
+        raise ValueError("Download 1m or 1d; 3m to 1h are built from 1m")
     if first > last:
         raise ValueError("From must be on or before To")
     if segment not in SEGMENTS:

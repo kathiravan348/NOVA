@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-103). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-100). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -153,8 +153,9 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
      index needs prices downloaded for all its shares first.
 5. Press **Queue backtest**. If some shares have no price data for your dates, NOVA marks them
    *Partial data* and asks whether to **Drop and queue** without them.
-   Only prices in the strategy's own candle size count: a 1-minute strategy needs 1-minute prices, so a
-   share with daily prices only shows **No 1m data** and is dropped the same way.
+   A daily strategy needs daily prices. Every other candle size (3, 5, 15, 30 minutes, 1 hour) is built
+   from 1-minute prices, so a 5-minute strategy needs 1-minute prices; a share with daily prices only
+   shows **No 5m data** and is dropped the same way.
 6. The run goes into a waiting line: status *Queued* → *Running* → *Completed* (or *Failed* with the reason).
 
 ### Step 6 — Read the results
@@ -275,8 +276,9 @@ failed.
 pages change the moment the work moves on, with no reload. If it shows **Reconnecting…**, the connection
 dropped for a moment; the pages then refresh every few seconds until **Live** is back.
 
-**To download past prices:** press **New download**, choose the **Timeframe** (the size of each price bar,
-from **1 minute** to **1 day**), the **From** and **To** dates and the stocks. Tick stocks one by one (use the
+**To download past prices:** press **New download**, choose the **Timeframe** (the size of each price bar:
+**1 minute** or **1 day**; 3-minute to 1-hour candles are built from 1-minute prices, so download
+**1 minute** to test a 5-minute strategy), the **From** and **To** dates and the stocks. Tick stocks one by one (use the
 search box), or add a whole group with **Add index…** (for example all of NIFTY BANK) or **Add sector…**;
 **Clear** empties the list. Only stocks *synced* with Kite can be picked. Then press **Check plan**.
 

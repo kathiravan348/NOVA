@@ -32,7 +32,7 @@ def _bar(symbol: str, timeframe: str, at: datetime, close: int, volume: int = 10
 
 @pytest.fixture
 def seeded(clean: Engine) -> Engine:
-    """INFY: 30 daily bars (2026-08-01 … 08-30) + 2 five-minute bars; TCS: no candles."""
+    """INFY: 30 daily bars (2026-08-01 … 08-30) + ten 1m bars (two 5m bars); TCS: no candles."""
     with Session(clean) as db:
         db.add_all(
             [
@@ -61,11 +61,10 @@ def seeded(clean: Engine) -> Engine:
             day = datetime.combine(date(2026, 8, 1) + timedelta(days=i), time(0, 0), tzinfo=IST)
             db.add(_bar("INFY", "1d", day, close=150_000 + i * 100, volume=1_000 + i))
         morning = datetime(2026, 8, 30, 9, 15, tzinfo=IST)
+        closes = [152_500 + 100 * (m % 5) for m in range(5)] + [153_000] * 5
         db.add_all(
-            [
-                _bar("INFY", "5m", morning, 152_900),
-                _bar("INFY", "5m", morning + timedelta(minutes=5), 153_000),
-            ]
+            _bar("INFY", "1m", morning + timedelta(minutes=m), close)
+            for m, close in enumerate(closes)
         )
         db.commit()
     return clean
@@ -83,7 +82,7 @@ def test_instruments_with_daily_data_get_computed_stats(
     assert infy["changePercent"] == round(100 * 100 / 152_800, 2)
     assert infy["high52wPaise"] == 153_000 and infy["low52wPaise"] == 149_900
     assert infy["avgDailyVolume"] == sum(1_010 + i for i in range(20)) // 20
-    assert infy["timeframes"] == ["5m", "1d"]
+    assert infy["timeframes"] == ["1m", "3m", "5m", "15m", "30m", "1h", "1d"]
     assert (infy["dataFrom"], infy["dataTo"]) == ("2026-08-01", "2026-08-30")
     assert infy["lotSize"] == 300 and infy["indices"] == ["NIFTY 50"]
 
@@ -108,9 +107,30 @@ def test_a_range_limits_the_bars(client: TestClient, seeded: Engine) -> None:
 
 
 def test_intraday_times_are_utc(client: TestClient, seeded: Engine) -> None:
+    body = client.get(CANDLES, params={"symbol": "INFY", "timeframe": "1m"}).json()
+
+    assert (body[0]["time"], len(body)) == ("2026-08-30T03:45:00Z", 10)
+
+
+def test_5m_candles_are_rolled_up_from_1m(
+    client: TestClient, seeded: Engine, parity: Parity
+) -> None:
+    with Session(seeded) as db:  # an old stored 5m row is never read (D58)
+        db.add(_bar("INFY", "5m", datetime(2026, 8, 30, 9, 15, tzinfo=IST), 999_000))
+        db.commit()
+
     body = client.get(CANDLES, params={"symbol": "INFY", "timeframe": "5m"}).json()
 
+    for bar in body:
+        parity.assert_valid(bar, "Candle")
     assert [bar["time"] for bar in body] == ["2026-08-30T03:45:00Z", "2026-08-30T03:50:00Z"]
+    first = body[0]
+    assert (first["openPaise"], first["highPaise"], first["lowPaise"]) == (
+        152_450,
+        153_000,
+        152_400,
+    )
+    assert (first["closePaise"], first["volume"]) == (152_900, 500)
 
 
 def test_known_symbol_without_data_is_empty_and_unknown_is_404(
@@ -140,10 +160,10 @@ def test_bad_candle_requests_are_invalid(
 def test_coverage_is_listed_per_timeframe(client: TestClient, seeded: Engine) -> None:
     infy = client.get(INSTRUMENTS).json()[0]
 
+    intraday = ["1m", "3m", "5m", "15m", "30m", "1h"]
     assert infy["coverage"] == [
-        {"timeframe": "5m", "from": "2026-08-30", "to": "2026-08-30"},
-        {"timeframe": "1d", "from": "2026-08-01", "to": "2026-08-30"},
-    ]
+        {"timeframe": t, "from": "2026-08-30", "to": "2026-08-30"} for t in intraday
+    ] + [{"timeframe": "1d", "from": "2026-08-01", "to": "2026-08-30"}]
 
 
 def test_a_stock_with_only_intraday_bars_gets_prices_from_them(
@@ -156,7 +176,7 @@ def test_a_stock_with_only_intraday_bars_gets_prices_from_them(
                 db.add(_bar("TCS", "1m", open_ + timedelta(minutes=minute), close, volume=10))
         db.add(
             _bar("TCS", "5m", datetime(2026, 9, 1, 9, 15, tzinfo=IST), 299_000)
-        )  # coarser: unused
+        )  # stored 5m rows are ignored (D58)
         db.commit()
 
     tcs = next(i for i in client.get(INSTRUMENTS).json() if i["symbol"] == "TCS")
@@ -166,8 +186,8 @@ def test_a_stock_with_only_intraday_bars_gets_prices_from_them(
     assert tcs["changePercent"] == round(5_000 * 100 / 301_000, 2)  # vs the day before's close
     assert (tcs["low52wPaise"], tcs["high52wPaise"]) == (299_900, 306_100)
     assert tcs["avgDailyVolume"] == 20
-    assert tcs["timeframes"] == ["1m", "5m"]
-    assert (tcs["dataFrom"], tcs["dataTo"]) == ("2026-09-01", "2026-09-03")
+    assert tcs["timeframes"] == ["1m", "3m", "5m", "15m", "30m", "1h"]
+    assert (tcs["dataFrom"], tcs["dataTo"]) == ("2026-09-02", "2026-09-03")
 
 
 def test_the_list_is_cached_until_a_download_finishes(database_url: str, seeded: Engine) -> None:

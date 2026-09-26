@@ -7,7 +7,8 @@ from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import Charges, StrategySpec
 from nova_contracts.strategy import StrategySpecPython, StrategySpecVisual
 from nova_db import new_id
-from nova_db.models import BacktestResult, BacktestRun, Candle, Instrument, StrategyVersion, Trade
+from nova_db.candles import read_bars
+from nova_db.models import BacktestResult, BacktestRun, Instrument, StrategyVersion, Trade
 from nova_ledger import ChargeRates, rates_for, trade_charges
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import delete, select
@@ -59,17 +60,8 @@ def _symbols(db: Session, run: BacktestRun) -> list[str]:
 
 
 def _bars(db: Session, symbol: str, timeframe: str, start: datetime, end: datetime) -> list[Bar]:
-    rows = db.scalars(
-        select(Candle)
-        .where(
-            Candle.exchange == "NSE",
-            Candle.symbol == symbol,
-            Candle.timeframe == timeframe,
-            Candle.ts >= start,
-            Candle.ts < end,
-        )
-        .order_by(Candle.ts)
-    )
+    """3m–1h are rolled up from 1m (D58)."""
+    rows = read_bars(db, "NSE", symbol, timeframe, start, end)
     return [
         Bar(r.ts, r.open_paise, r.high_paise, r.low_paise, r.close_paise, r.volume) for r in rows
     ]

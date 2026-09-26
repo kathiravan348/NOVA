@@ -3,6 +3,8 @@
 SEGMENTS = ("equity_delivery", "equity_intraday", "futures", "options")
 EXCHANGES = ("NSE", "NFO")
 TIMEFRAMES = ("1m", "3m", "5m", "15m", "30m", "1h", "1d")
+# D58: only these are downloaded; 3m–1h are rolled up from 1m when read (`nova_db.candles`).
+DOWNLOAD_TIMEFRAMES = ("1m", "1d")
 SIDES = ("buy", "sell")
 
 STRATEGY_STATUSES = ("draft", "active", "archived")
