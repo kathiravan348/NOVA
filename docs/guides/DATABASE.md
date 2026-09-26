@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 26 Sep 2026 (migrations `0001`–`0012`, NOVA-095). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 26 Sep 2026 (migrations `0001`–`0012`, NOVA-098). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -91,3 +91,4 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`); there is no 
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
 | **alembic_version** (table) | The migration the database is on (currently `0012`). Managed by Alembic only. |
+| **Connections** | Postgres allows 100 connections (`compose.yaml` starts it with `max_connections=100`; the image's own tuning would give 25). Each service process keeps at most 2 idle connections and opens at most 8 (`create_db_engine`). |
