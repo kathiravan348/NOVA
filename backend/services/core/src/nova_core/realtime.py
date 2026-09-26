@@ -15,7 +15,8 @@ from dataclasses import dataclass, field
 import psycopg
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from nova_contracts import DataJob as DataJobContract
-from nova_contracts import DataJobPlan, DataJobUpdated
+from nova_contracts import DataJobDeleted, DataJobPlan, DataJobUpdated
+from nova_contracts.realtime import DeletedJobRef
 from nova_db.models import DataJob
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
@@ -111,10 +112,14 @@ class Hub:
             event = json.loads(payload)
         except ValueError:
             return
-        if not isinstance(event, dict) or event.get("type") != "data_job.updated":
+        if not isinstance(event, dict) or not isinstance(job_id := event.get("id"), str):
             return
-        job_id = event.get("id")
-        if not isinstance(job_id, str) or job_id in self._pending:
+        if event.get("type") == "data_job.deleted":
+            # No row to load; a pending update of this job finds none and sends nothing.
+            gone = DataJobDeleted(type="data_job.deleted", data=DeletedJobRef(id=job_id))
+            self.broadcast(gone.model_dump_json())
+            return
+        if event.get("type") != "data_job.updated" or job_id in self._pending:
             return  # a send for this job is already scheduled and will load the latest row
         self._pending.add(job_id)
         task = asyncio.create_task(self._send_job(job_id))

@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from nova_contracts.common import Contract
+from nova_contracts.common import Contract, Id
 from nova_contracts.data_job import DataJob
 
 
@@ -27,6 +27,17 @@ class DataJobUpdated(Contract):
     data: DataJob
 
 
+class DeletedJobRef(Contract):
+    id: Id
+
+
+class DataJobDeleted(Contract):
+    """A data job was deleted (NOVA-095)."""
+
+    type: Literal["data_job.deleted"]
+    data: DeletedJobRef
+
+
 RealtimeMessage = Annotated[
-    RealtimeHello | RealtimePing | DataJobUpdated, Field(discriminator="type")
+    RealtimeHello | RealtimePing | DataJobUpdated | DataJobDeleted, Field(discriminator="type")
 ]

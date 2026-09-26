@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 26 Sep 2026 (NOVA-093). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 26 Sep 2026 (NOVA-095). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -41,7 +41,7 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | `GET /me` | Who is signed in (the apps call it on start-up). | cookie | `User {id, name, email, role, createdAt, lastLoginAt}` |
 | `GET /audit` | The audit log, newest first, paged. | `limit`, `cursor` | `Page<AuditEntry>` |
 | `GET /openapi.json`, `GET /docs` | Merged OpenAPI schema + Swagger UI of all services. Only when `NOVA_API_DOCS=true`. | — | JSON / HTML |
-| `GET /ws` (WebSocket) | Live updates for signed-in screens (D57). Signed in with the `nova_session` cookie; without a valid one the socket is accepted and closed with code **4401**. Server sends `{type:"hello"}` first, `{type:"ping"}` every 25 s (`NOVA_WS_PING_SECONDS`), and `{type:"data_job.updated", data: DataJob}` whenever any data job is created or changed (at most one per job per 250 ms; always the latest state). The session is re-checked every 60 s (`NOVA_WS_SESSION_CHECK_SECONDS`); a signed-out or expired session is closed with 4401. Client messages are ignored (`{type:"pong"}` expected). | cookie | `RealtimeMessage` stream |
+| `GET /ws` (WebSocket) | Live updates for signed-in screens (D57). Signed in with the `nova_session` cookie; without a valid one the socket is accepted and closed with code **4401**. Server sends `{type:"hello"}` first, `{type:"ping"}` every 25 s (`NOVA_WS_PING_SECONDS`), `{type:"data_job.updated", data: DataJob}` whenever any data job is created or changed (at most one per job per 250 ms; always the latest state), and `{type:"data_job.deleted", data:{id}}` when one is deleted. The session is re-checked every 60 s (`NOVA_WS_SESSION_CHECK_SECONDS`); a signed-out or expired session is closed with 4401. Client messages are ignored (`{type:"pong"}` expected). | cookie | `RealtimeMessage` stream |
 
 ## 2. Broker service — Zerodha accounts, Kite login, rate limits (`/broker`)
 
@@ -135,6 +135,7 @@ No delete in Phase 1 (runs refer to versions).
 | `GET /data-jobs/settings`, `PATCH /data-jobs/settings` | Download pace on weekdays 09:15–15:30 IST: `slow` (default, at most 1 historical request a second) or `full` (2/s, the account limit). Audit on change: `download_settings.update` ("Full pace in market hours"). | `DownloadSettingsUpdate {marketHoursMode}` | `DownloadSettings`; 400 bad value |
 | `POST /data-jobs` | Queues a historical download at once (the pre-plan flow, still used by **New download**): it is planned with `skip_existing` and starts straight away. Audit: `data_job.create` ("Queued 1d download of 2 symbol(s), 2025-01-01 to 2025-12-31 (2 request(s), 0 step(s) already stored)"). | `DataJobCreate {symbols (1–200), timeframe, from, to, segment? (default `equity_delivery`)}` | 201 `DataJob` (`queued`); 400 bad body or unknown symbol |
 | `POST /data-jobs/{id}/cancel` | Cancels a `draft`, `queued` or `paused` job at once, or a `running` one: the worker stops before its next step (rows already saved stay). Cancelling a running `tick_record` job stops the recording and turns the recorder switch off. Audit: `data_job.cancel` ("Cancelled 1d download of 2 symbol(s)"). | path | `DataJob` (`cancelled`); 400 "Job is already …" (completed, failed or cancelled); 404 |
+| `DELETE /data-jobs/{id}` | Deletes a `draft`, `completed`, `failed` or `cancelled` job and its steps. With `candles=true` (downloads only) it also deletes the `candles` of the job's stocks and timeframe from `from` to `to` (IST days) — including rows other jobs stored there. Open screens get `data_job.deleted`. Audit: `data_job.delete` ("Deleted 1m download of 1 symbol(s) and 91,723 candles"). | path, `candles` (default false) | `DataJobDeleteResult {id, candlesDeleted}`; 400 "Cancel or finish the job first" (queued, running, paused), 400 candles on a non-download; 404 |
 | `POST /data-jobs/archive` | Queues an `archive` job for the Atlas worker: every tick received before `before` (IST) moves to Parquet files, a day at a time (files first, then the rows are deleted; an existing file is never overwritten, the job fails instead). The job lists the symbols and the IST dates (`from` = first day, `to` = `before` − 1); progress moves per day, `rowsWritten` = ticks moved; a cancel stops between days. Audit: `data_job.create` ("Queued archive of ticks before 2026-09-01"). | `ArchiveJobCreate {before}` | 201 `DataJob` (`archive`, `queued`); 400 future date or no ticks before it |
 
 ---

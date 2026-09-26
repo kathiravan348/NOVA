@@ -45,6 +45,7 @@ from nova_contracts.data_job import (
     ArchiveJobCreate,
     DataJob,
     DataJobCreate,
+    DataJobDeleteResult,
     DataJobPlan,
     DataJobPlanRequest,
     DataJobPlanSymbol,
@@ -66,7 +67,13 @@ from nova_contracts.rate_limit import (
     RateLimitUpdate,
     RateLimitWindow,
 )
-from nova_contracts.realtime import DataJobUpdated, RealtimeHello, RealtimeMessage, RealtimePing
+from nova_contracts.realtime import (
+    DataJobDeleted,
+    DataJobUpdated,
+    RealtimeHello,
+    RealtimeMessage,
+    RealtimePing,
+)
 from nova_contracts.recorder import (
     MAX_RECORDER_SYMBOLS,
     RecorderSettings,
@@ -122,6 +129,8 @@ __all__ = [
     "KitePassphrase",
     "DataJob",
     "DataJobCreate",
+    "DataJobDeleteResult",
+    "DataJobDeleted",
     "DataJobPlan",
     "DataJobPlanRequest",
     "DataJobPlanSymbol",

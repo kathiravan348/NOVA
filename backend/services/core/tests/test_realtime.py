@@ -9,7 +9,7 @@ from nova_core.settings import CoreSettings
 from nova_db import new_id
 from nova_db.models import DataJob
 from nova_testing.parity import Parity
-from sqlalchemy import Engine, update
+from sqlalchemy import Engine, delete, update
 from sqlalchemy.orm import Session
 from starlette.testclient import WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
@@ -116,3 +116,19 @@ def test_ping_and_close_when_the_session_is_revoked(
 
     assert cookie
     assert closed.value.code == 4401
+
+
+def test_deleting_a_job_is_announced(signed_in: TestClient, engine: Engine, parity: Parity) -> None:
+    with signed_in.websocket_connect(WS) as ws:
+        ws.receive_json()
+        job_id = _add_job(engine)
+        _next_job_message(ws)
+        with Session(engine) as db:
+            db.execute(delete(DataJob).where(DataJob.id == job_id))
+            db.commit()
+        message: dict[str, Any] = ws.receive_json()
+        while message["type"] == "ping":
+            message = ws.receive_json()
+
+    assert message == {"type": "data_job.deleted", "data": {"id": job_id}}
+    parity.assert_valid(message, "RealtimeMessage")

@@ -3,21 +3,26 @@
 Included before `jobs.router`, so `/data-jobs/settings` is not read as a job id.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time, timedelta
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import Caller, CallerDep
-from nova_contracts import DataJobPlanRequest, DownloadSettings, DownloadSettingsUpdate
+from nova_contracts import (
+    DataJobDeleteResult,
+    DataJobPlanRequest,
+    DownloadSettings,
+    DownloadSettingsUpdate,
+)
 from nova_db.audit import record_audit
-from nova_db.models import DataJob, DownloadSetting
+from nova_db.models import Candle, DataJob, DownloadSetting
 from nova_db.web import Db
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from nova_atlas.download import market_hours_mode
+from nova_atlas.download import IST, market_hours_mode
 from nova_atlas.jobs import to_contract
 from nova_atlas.plan import create_download
 
@@ -183,3 +188,49 @@ def expire_drafts(db: Session, now: datetime | None = None) -> int:
     ).all()
     db.commit()
     return len(expired)
+
+
+DELETABLE = ("draft", "completed", "failed", "cancelled")
+KIND = {
+    "historical_download": "download",
+    "tick_record": "tick recording",
+    "archive": "archive",
+    "instrument_sync": "stock-list sync",
+}
+
+
+def _delete_candles(db: Session, job: DataJob) -> int:
+    """Candles of the job's stocks, timeframe and IST dates (other jobs' rows there go too)."""
+    assert job.timeframe is not None and job.date_from is not None and job.date_to is not None
+    start = datetime.combine(job.date_from, time(0, 0), tzinfo=IST)
+    end = datetime.combine(job.date_to + timedelta(days=1), time(0, 0), tzinfo=IST)
+    result = db.execute(
+        delete(Candle).where(
+            Candle.exchange == job.exchange,
+            Candle.symbol.in_(job.symbols),
+            Candle.timeframe == job.timeframe,
+            Candle.ts >= start,
+            Candle.ts < end,
+        )
+    )
+    return int(result.rowcount or 0)  # type: ignore[attr-defined]
+
+
+@router.delete("/{job_id}")
+def delete_job(job_id: str, caller: CallerDep, db: Db, candles: bool = False) -> JSONResponse:
+    """Removes a finished job (and its steps); `candles=true` also removes a download's candles."""
+    job = _job(db, job_id)
+    if job.status not in DELETABLE:
+        raise ApiException(400, "invalid_request", "Cancel or finish the job first")
+    if candles and job.type != "historical_download":
+        raise ApiException(400, "invalid_request", "Only downloads have candles to delete")
+    removed = _delete_candles(db, job) if candles else 0
+    what = f"{job.timeframe} " if job.timeframe else ""
+    summary = f"Deleted {what}{KIND[job.type]} of {len(job.symbols)} symbol(s)"
+    if candles:
+        summary += f" and {removed:,} candles"
+    _audit(db, caller, "data_job.delete", job, summary)
+    db.delete(job)
+    db.commit()
+    result = DataJobDeleteResult(id=job_id, candles_deleted=removed)
+    return JSONResponse(result.model_dump(mode="json"))

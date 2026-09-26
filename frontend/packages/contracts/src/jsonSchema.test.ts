@@ -16,6 +16,7 @@ import {
 import {
   ArchiveJobCreateSchema,
   DataJobCreateSchema,
+  DataJobDeleteResultSchema,
   DataJobPlanRequestSchema,
   DataJobPlanSchema,
   DataJobSchema,
@@ -52,6 +53,7 @@ const contracts: Record<string, z.ZodType> = {
   Candle: CandleSchema,
   DataJob: DataJobSchema,
   DataJobCreate: DataJobCreateSchema,
+  DataJobDeleteResult: DataJobDeleteResultSchema,
   DataJobPlan: DataJobPlanSchema,
   DataJobPlanRequest: DataJobPlanRequestSchema,
   DownloadSettings: DownloadSettingsSchema,
