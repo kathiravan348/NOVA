@@ -11,6 +11,8 @@ import { MarketDataPage } from "./pages/market-data/MarketDataPage";
 import { EditStrategyPage, NewStrategyPage } from "./pages/editor/StrategyEditorPage";
 import { StrategiesPage } from "./pages/strategies/StrategiesPage";
 import { StrategyDetailPage } from "./pages/strategies/StrategyDetailPage";
+import { StrategyVersionPage } from "./pages/strategies/StrategyVersionPage";
+import { CompareVersionsPage } from "./pages/strategies/CompareVersionsPage";
 
 export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage /> },
@@ -35,6 +37,16 @@ export const routes: RouteObject[] = [
             path: "/strategies/:id",
             handle: { title: "Strategy" } satisfies RouteHandle,
             element: <StrategyDetailPage />,
+          },
+          {
+            path: "/strategies/:id/versions/:version",
+            handle: { title: "Strategy version" } satisfies RouteHandle,
+            element: <StrategyVersionPage />,
+          },
+          {
+            path: "/strategies/:id/compare",
+            handle: { title: "Compare versions" } satisfies RouteHandle,
+            element: <CompareVersionsPage />,
           },
           {
             path: "/strategies/:id/edit",

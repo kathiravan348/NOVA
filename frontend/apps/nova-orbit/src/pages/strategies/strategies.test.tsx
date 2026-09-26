@@ -128,3 +128,38 @@ describe("Strategy detail", () => {
     expect(screen.getByRole("link", { name: "Back to strategies" })).toBeInTheDocument();
   });
 });
+
+describe("Strategy versions (D60)", () => {
+  it("opens one version's rules and its backtest record", async () => {
+    renderApp("/strategies/stg_001");
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: "Versions (2)" }));
+    fireEvent.click((await screen.findAllByRole("link", { name: "v1" }))[0]!);
+    expect(await screen.findByText("Specification · v1")).toBeInTheDocument();
+    expect(screen.getByText("Initial VWAP crossover spec")).toBeInTheDocument();
+    expect(await screen.findByText(/2 completed backtests · best return/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Run backtest" })).toHaveAttribute(
+      "href",
+      "/backtests/new?strategy=stg_001&version=1",
+    );
+  });
+
+  it("needs two ticks to compare, then shows the changed lines", async () => {
+    renderApp("/strategies/stg_001");
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: "Versions (2)" }));
+    const table = await screen.findByRole("table", { name: "Versions" });
+    const compare = screen.getByRole("button", { name: "Compare versions" });
+    expect(compare).toBeDisabled();
+    const boxes = within(table).getAllByRole("checkbox").slice(-2);
+    for (const box of boxes) fireEvent.click(box);
+    expect(compare).toBeEnabled();
+    fireEvent.click(compare);
+    const list = await screen.findByRole("list", { name: "Differences between v1 and v2" });
+    const stop = within(list).getByText("Stop-loss").closest("li")!;
+    expect(stop).toHaveTextContent("Changed");
+    expect(stop).toHaveTextContent("1.5%");
+    const same = within(list).getByText("Mode").closest("li")!;
+    fireEvent.click(screen.getByRole("switch", { name: "Show changes only" }));
+    expect(same).not.toBeInTheDocument();
+    expect(within(list).getByText("Entry 2")).toBeInTheDocument();
+  });
+});
