@@ -1,6 +1,6 @@
 # NOVA-102 — Orbit: live backtest progress on the run page and in the list
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-102 · **Depends on:** NOVA-101
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-102 · **Depends on:** NOVA-101
 
 ## Goal
 A queued or running backtest shows live progress (D58): a progress bar, what it is doing in plain words,
@@ -46,5 +46,15 @@ Modify:
 ## Questions
 
 ## Handoff
+Done. `RUN_POLL_MS` + polling in `useBacktest`/`useBacktests` (a run leaving queued/running invalidates
+`backtests.lists` and `strategies.stats`; new key `queryKeys.backtests.lists`), `RunProgress.tsx`,
+`progressText.ts` (+ test), failed-run "Stopped while", list "Running · 42%", USER-GUIDE Step 5 + §7.
+- Renamed `runProgress.ts` → `progressText.ts`: next to `RunProgress.tsx` the two names differ only in case,
+  which TypeScript refuses on Windows' case-insensitive disk.
+- Checked in a demo Orbit at 360px (card stacks, no side scroll) and desktop, dark and light.
+- Owner stack check (NIFTY 50 5m run moving through stages) is left to the Owner; the backend side was
+  verified live in NOVA-101.
+Guides: USER-GUIDE.
 
 ## Review
+Built and reviewed by Claude. `pnpm review:check` passed. Merged.

@@ -1,7 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { handlers, mockBacktestRuns } from "@nova/mocks";
+import { RUN_POLL_MS } from "@nova/services";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -30,9 +32,10 @@ describe("Backtests list", () => {
     for (const run of mockBacktestRuns) {
       expect((await screen.findAllByRole("link", { name: run.name })).length).toBeGreaterThan(0);
     }
-    for (const label of ["Completed", "Running", "Queued", "Failed"]) {
+    for (const label of ["Completed", "Queued", "Failed"]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
+    expect(screen.getAllByText("Running · 56%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("12 symbols").length).toBeGreaterThan(0);
     expect(screen.getAllByText("NIFTY 50").length).toBeGreaterThan(0);
   });
@@ -74,14 +77,52 @@ describe("Backtest result", () => {
     expect(dialog).toHaveTextContent("Total");
   });
 
-  it("explains unfinished and failed runs", async () => {
+  it("shows live progress, a waiting run and where a failed run stopped", async () => {
     renderApp("/backtests/run_003");
-    expect(await screen.findByText("This run hasn't finished")).toBeInTheDocument();
+    const meter = await screen.findByRole("meter", { name: "Progress" });
+    expect(meter).toHaveAttribute("aria-valuenow", "56");
+    expect(
+      screen.getByText("Simulating — reached 12 Mar 2026 · 14 trades so far"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/^Running for /)).toBeInTheDocument();
+    cleanup();
+    renderApp("/backtests/run_004");
+    expect(await screen.findByText("Waiting to start")).toBeInTheDocument();
     cleanup();
     renderApp("/backtests/run_005");
     expect(
-      await screen.findByText("Data missing for symbol SBIN on 2026-04-14"),
+      await screen.findByText(/Data missing for symbol SBIN on 2026-04-14/),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("Stopped while: Loading prices — 1 of 1 stock (20%)"),
+    ).toBeInTheDocument();
+  });
+
+  it("switches to the results when a running run completes", async () => {
+    const completed = mockBacktestRuns.find((r) => r.id === "run_001")!;
+    const running = {
+      ...completed,
+      status: "running",
+      finishedAt: null,
+      progress: { ...completed.progress!, stage: "simulating", percent: 42 },
+    };
+    let calls = 0;
+    server.use(
+      http.get("*/api/v1/backtests/run_001", () => {
+        calls += 1;
+        return HttpResponse.json(calls === 1 ? running : completed);
+      }),
+    );
+    const original = RUN_POLL_MS.detail;
+    RUN_POLL_MS.detail = 50;
+    try {
+      renderApp("/backtests/run_001");
+      expect(await screen.findByRole("meter", { name: "Progress" })).toBeInTheDocument();
+      expect((await screen.findAllByText("Net P&L")).length).toBeGreaterThan(0);
+      expect(screen.queryByRole("meter", { name: "Progress" })).not.toBeInTheDocument();
+    } finally {
+      RUN_POLL_MS.detail = original;
+    }
   });
 
   it("shows Not found for an unknown run", async () => {

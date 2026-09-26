@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-100). NOVA **never places real orders**: it only
+> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-102). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -157,6 +157,11 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
    from 1-minute prices, so a 5-minute strategy needs 1-minute prices; a share with daily prices only
    shows **No 5m data** and is dropped the same way.
 6. The run goes into a waiting line: status *Queued* → *Running* → *Completed* (or *Failed* with the reason).
+   Open it to watch it: a waiting run says **Waiting to start**; a running one shows a **Progress** bar and
+   what it is doing in plain words (*Loading prices — 12 of 50 stocks*, *Running your Python code*,
+   *Simulating — reached 14 Mar 2025 · 37 trades so far*, *Saving 412 trades*), how long it has been
+   running and, after a little while, about how long is left. The page updates by itself and shows the
+   results as soon as the run completes. In the **Backtests** list a running run reads **Running · 42%**.
 
 ### Step 6 — Read the results
 Open a run from **Backtests**. You see:
@@ -348,7 +353,8 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | A download shows **Paused** | It was paused and keeps its finished steps. Open it and press **Resume**. |
 | A download is **Planned** but never ran | A plan waits for **Start**. Open it and press **Start** (plans older than 24 hours are cancelled; check the plan again). |
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
-| Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). |
+| Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). Under it, **Stopped while** says what the run was doing and how far it got. |
+| A backtest stays **Waiting to start** | Another run is still going; runs go one at a time. If nothing is **Running** for minutes, NOVA's backtest part is not running: start the NOVA stack again. |
 | Backtest *Failed* with *needs more than … price bars* | The test is too big for NOVA in one go. Pick fewer stocks or a shorter period: 1-minute prices add up fast (one stock has about 375 bars a day). |
 | Backtest *Failed* with *The backtest worker stopped during this run* | NOVA's backtest part stopped in the middle (often it ran out of memory) and has restarted. Run it again; if it stops again, pick fewer stocks or a shorter period. |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
