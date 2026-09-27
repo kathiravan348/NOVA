@@ -95,6 +95,16 @@ function columns(currentId: string, newestId: string): ColumnDef<BacktestVersion
         row.original.metrics ? signed(row.original.metrics.maxDrawdownPercent) : "—",
     },
     {
+      id: "afterTaxCagr",
+      header: "After-tax CAGR",
+      accessorFn: (v) => v.metrics?.afterTaxCagrPercent ?? null,
+      meta: { numeric: true, hideOnMobile: true },
+      cell: ({ row }) => {
+        const value = row.original.metrics?.afterTaxCagrPercent;
+        return value === null || value === undefined ? "—" : signed(value);
+      },
+    },
+    {
       id: "trades",
       header: "Trades",
       accessorFn: (v) => v.metrics?.tradeCount ?? null,

@@ -3,10 +3,14 @@ import { formatInr, formatPercent } from "@nova/ui-trading";
 
 export const MAX_RUNS = 3;
 
+const orDash = (value: number | null | undefined, show: (v: number) => string) =>
+  value === null || value === undefined ? "—" : show(value);
+
 export interface MetricRow {
   key: string;
   label: string;
-  value: (m: BacktestMetrics) => number;
+  /** null: the run has no such number (older runs, D62); never ranked. */
+  value: (m: BacktestMetrics) => number | null;
   format: (m: BacktestMetrics) => string;
   /** Which direction is better; null = not ranked. */
   better: "higher" | "lower" | null;
@@ -35,6 +39,20 @@ export const METRIC_ROWS: MetricRow[] = [
     better: "higher",
   },
   {
+    key: "afterTaxCagr",
+    label: "After-tax CAGR",
+    value: (m) => m.afterTaxCagrPercent ?? null,
+    format: (m) => orDash(m.afterTaxCagrPercent, (v) => formatPercent(v, { signed: true })),
+    better: "higher",
+  },
+  {
+    key: "benchmark",
+    label: "Benchmark return",
+    value: (m) => m.benchmarkReturnPercent ?? null,
+    format: (m) => orDash(m.benchmarkReturnPercent, (v) => formatPercent(v, { signed: true })),
+    better: null,
+  },
+  {
     key: "drawdown",
     label: "Max drawdown",
     value: (m) => m.maxDrawdownPercent,
@@ -47,6 +65,20 @@ export const METRIC_ROWS: MetricRow[] = [
     label: "Sharpe",
     value: (m) => m.sharpe,
     format: (m) => m.sharpe.toFixed(2),
+    better: "higher",
+  },
+  {
+    key: "profitFactor",
+    label: "Profit factor",
+    value: (m) => m.profitFactor ?? null,
+    format: (m) => orDash(m.profitFactor, (v) => v.toFixed(2)),
+    better: "higher",
+  },
+  {
+    key: "calmar",
+    label: "Calmar",
+    value: (m) => m.calmar ?? null,
+    format: (m) => orDash(m.calmar, (v) => v.toFixed(2)),
     better: "higher",
   },
   {
@@ -87,15 +119,18 @@ export function parseRunIds(search: string | null): string[] {
 
 export const toSearch = (ids: string[]) => ids.join(",");
 
-/** Id of the single best run for a row, or null when unranked or tied. */
+/** Id of the single best run for a row, or null when unranked, tied or a value is missing. */
 export function bestRunId(
   row: MetricRow,
   runs: { id: string; metrics: BacktestMetrics }[],
 ): string | null {
   if (!row.better || runs.length < 2) return null;
+  const values = runs.map((run) => ({ id: run.id, value: row.value(run.metrics) }));
+  const known = values.filter((v): v is { id: string; value: number } => v.value !== null);
+  if (known.length < values.length) return null;
   const sign = row.better === "higher" ? 1 : -1;
-  const sorted = [...runs].sort((a, b) => sign * (row.value(b.metrics) - row.value(a.metrics)));
+  const sorted = [...known].sort((a, b) => sign * (b.value - a.value));
   const [first, second] = sorted;
-  if (!first || !second || row.value(first.metrics) === row.value(second.metrics)) return null;
+  if (!first || !second || first.value === second.value) return null;
   return first.id;
 }
