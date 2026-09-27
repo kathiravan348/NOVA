@@ -133,6 +133,9 @@ def test_result_and_trades(
     result = client.get(f"{BACKTESTS}/{run_id}/result").json()
     parity.assert_valid(result, "BacktestResult")
     assert result["metrics"]["netPnlPaise"] == 700
+    # A result saved before NOVA-116 (D62 (6)): the new numbers read back as null, years as [].
+    assert result["metrics"]["estimatedTaxPaise"] is None
+    assert result["metrics"]["benchmarkReturnPercent"] is None and result["years"] == []
 
     first = client.get(f"{BACKTESTS}/{run_id}/trades", params={"limit": 2}).json()
     rest = client.get(

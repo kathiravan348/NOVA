@@ -21,6 +21,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
+from nova_backtest.benchmark import benchmark_curve, index_closes
 from nova_backtest.columns import Columns
 from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
@@ -32,7 +33,9 @@ from nova_backtest.rules import signals as rule_signals
 from nova_backtest.sandbox import ENTER, EXIT, Calls, check_code, run_python_one
 from nova_backtest.scratch import Floats, RunScratch
 from nova_backtest.simulate import simulate
+from nova_backtest.tax import estimate_tax
 from nova_backtest.versions import trim_older_versions
+from nova_backtest.years import year_rows
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 WARM_UP_DAYS = {"1d": 400}
@@ -101,6 +104,10 @@ def _extras(
     if atr_stop is not None:
         atr = indicator_array("atr", {"period": float(atr_stop.period)}, columns)
     return rank, atr
+
+
+def _decimal(value: float | None) -> Decimal | None:
+    return None if value is None else Decimal(str(value))
 
 
 def _ist_midnight(day: date) -> datetime:
@@ -228,23 +235,35 @@ class StrategyEngine:
             on_bar=on_bar,
             portfolio=spec.portfolio,
         )
+        initial = run.initial_capital_paise
+        dates = [day for day, _ in result.equity]
+        closes = (
+            index_closes(db, run.benchmark, start, _ist_midnight(run.date_to + timedelta(days=1)))
+            if run.benchmark
+            else []
+        )
+        bench = benchmark_curve(closes, dates, initial)
+        tax = estimate_tax(result.trades, spec.segment)
         summary = summarize(
             result.trades,
             result.equity,
-            run.initial_capital_paise,
+            initial,
             run.date_from,
             run.date_to,
             symbols,
+            bench,
+            None if tax is None else tax.tax_paise,
         )
         contract = ResultContract.model_validate(
             {
                 "run_id": run.id,
                 "metrics": summary.metrics,
                 "equity_curve": [
-                    {"date": day, "equity_paise": value, "benchmark_paise": None}
-                    for day, value in result.equity
+                    {"date": day, "equity_paise": value, "benchmark_paise": b}
+                    for (day, value), b in zip(result.equity, bench, strict=True)
                 ],
                 "by_symbol": summary.by_symbol,
+                "years": year_rows(result.equity, bench, initial, run.date_from, run.date_to),
             }
         )
         wire = contract.model_dump(mode="json")
@@ -296,6 +315,16 @@ class StrategyEngine:
                 loss_count=m["loss_count"],
                 equity_curve=wire["equityCurve"],
                 by_symbol=wire["bySymbol"],
+                benchmark_return_percent=_decimal(m["benchmark_return_percent"]),
+                benchmark_cagr_percent=_decimal(m["benchmark_cagr_percent"]),
+                exposure_percent=_decimal(m["exposure_percent"]),
+                avg_hold_days=_decimal(m["avg_hold_days"]),
+                profit_factor=_decimal(m["profit_factor"]),
+                calmar=_decimal(m["calmar"]),
+                after_tax_cagr_percent=_decimal(m["after_tax_cagr_percent"]),
+                estimated_tax_paise=m["estimated_tax_paise"],
+                after_tax_net_pnl_paise=m["after_tax_net_pnl_paise"],
+                years=wire["years"],
             )
         )
         run.status = "completed"

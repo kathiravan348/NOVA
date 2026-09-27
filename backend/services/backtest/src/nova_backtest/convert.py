@@ -1,5 +1,7 @@
 """Database rows → wire contracts for runs, results and trades."""
 
+from decimal import Decimal
+
 from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import BacktestRun as RunContract
 from nova_contracts import BacktestVersion as VersionContract
@@ -43,6 +45,10 @@ def run_contract(row: BacktestRun) -> RunContract:
     )
 
 
+def _float(value: Decimal | None) -> float | None:
+    return None if value is None else float(value)
+
+
 def metrics_of(row: BacktestResult) -> dict[str, object]:
     return {
         "gross_pnl_paise": row.gross_pnl_paise,
@@ -56,6 +62,15 @@ def metrics_of(row: BacktestResult) -> dict[str, object]:
         "trade_count": row.trade_count,
         "win_count": row.win_count,
         "loss_count": row.loss_count,
+        "benchmark_return_percent": _float(row.benchmark_return_percent),
+        "benchmark_cagr_percent": _float(row.benchmark_cagr_percent),
+        "exposure_percent": _float(row.exposure_percent),
+        "avg_hold_days": _float(row.avg_hold_days),
+        "profit_factor": _float(row.profit_factor),
+        "calmar": _float(row.calmar),
+        "estimated_tax_paise": row.estimated_tax_paise,
+        "after_tax_net_pnl_paise": row.after_tax_net_pnl_paise,
+        "after_tax_cagr_percent": _float(row.after_tax_cagr_percent),
     }
 
 
@@ -89,6 +104,7 @@ def result_contract(row: BacktestResult) -> ResultContract:
             "metrics": metrics_of(row),
             "equity_curve": row.equity_curve,
             "by_symbol": row.by_symbol,
+            "years": row.years,
         }
     )
 

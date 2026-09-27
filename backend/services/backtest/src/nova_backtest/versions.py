@@ -145,7 +145,8 @@ def delete_version(db: Session, run_id: str, caller: Caller) -> BacktestDeleteRe
 
 
 def trim_older_versions(db: Session, run: BacktestRun) -> None:
-    """Older completed versions keep only their metrics (no commit: the caller's transaction)."""
+    """Older completed versions keep only their metrics and year table (no commit: the caller's
+    transaction); their trades, equity curve and per-stock rows go."""
     older = [
         r.id
         for r in chain(db, run.root_id)

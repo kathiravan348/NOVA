@@ -1,6 +1,6 @@
 # NOVA-116 — Engine: benchmark, new metrics, year table, tax estimate (D62, migration 0018)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-116 · **Depends on:** NOVA-112, NOVA-113, NOVA-114, NOVA-115 · **Merge after:** NOVA-124 (migration order)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-116 · **Depends on:** NOVA-112, NOVA-113, NOVA-114, NOVA-115 · **Merge after:** NOVA-124 (migration order)
 
 ## Goal
 Every new run fills the D62 (6) numbers that NOVA-114 added to the contracts: the benchmark curve and return, time invested,
@@ -72,7 +72,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. Migration 0018: nullable numeric `benchmark_return_percent`, `benchmark_cagr_percent`, `exposure_percent`,
+`avg_hold_days`, `profit_factor`, `calmar`, `after_tax_cagr_percent`; bigint `estimated_tax_paise`,
+`after_tax_net_pnl_paise`; `years` JSONB not null default `[]`; checks exposure 0–100 and tax ≥ 0 (plain `Numeric`, so
+a large Calmar or profit factor never overflows). `benchmark.py`: index 1d closes (`NSE`, symbol = index name) → one
+value per equity date, `initial × close on/before ÷ first close`, half-up; none stored → all null, run completes.
+`metrics.py`: exposure, average days held (2 dp), profit factor, Calmar, benchmark return/CAGR, tax and after-tax
+net/CAGR (tax taken at the end). `tax.py`: FY of the exit, gain = gross − (charges − STT), long-term > 365 days from the
+first buy, short-term losses offset long-term gains, no carry-forward, per-year half-up, delivery only. `years.py`:
+12-month blocks from `date_from` clipped to `date_to`, chained start equity, per-block drawdown and benchmark %.
+Engine saves them all; `convert` sends them; trimming older versions keeps `years`.
+- Tests: `test_tax.py` (intraday null, 400-day long-term, ₹1 L LTCG → 0, ST loss offsets LT gain, years separate,
+  STT kept), `test_years.py` (5 years → 5 rows, 26 months → 3, profits add up, per-block drawdown, benchmark starts at
+  the initial capital), `test_metrics.py`, engine run with and without NIFTY 50 candles, old API result → nulls and
+  `[]`, trimmed version keeps `years`. `nova_db/tests/test_migrations.py` head → 0018 (not in Files; needed).
+Commands: backend-check 1001 passed. Guides: DATABASE (backtest_results, header 0018), API (result fields).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

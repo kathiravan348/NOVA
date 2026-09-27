@@ -10,8 +10,10 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Integer,
+    Numeric,
     SmallInteger,
     UniqueConstraint,
+    text,
     true,
 )
 from sqlalchemy.engine.default import DefaultExecutionContext
@@ -102,6 +104,8 @@ class BacktestResult(Base):
             "win_count >= 0 AND loss_count >= 0 AND win_count + loss_count <= trade_count",
             name="counts",
         ),
+        CheckConstraint("exposure_percent BETWEEN 0 AND 100", name="exposure"),
+        CheckConstraint("estimated_tax_paise >= 0", name="tax"),
     )
 
     run_id: Mapped[str] = mapped_column(
@@ -120,6 +124,17 @@ class BacktestResult(Base):
     loss_count: Mapped[int] = mapped_column(Integer)
     equity_curve: Mapped[JsonList]
     by_symbol: Mapped[JsonList]
+    # D62 (6), migration 0018: null on older results and where they do not apply (tax: delivery).
+    benchmark_return_percent: Mapped[Decimal | None] = mapped_column(Numeric())
+    benchmark_cagr_percent: Mapped[Decimal | None] = mapped_column(Numeric())
+    exposure_percent: Mapped[Decimal | None] = mapped_column(Numeric())
+    avg_hold_days: Mapped[Decimal | None] = mapped_column(Numeric())
+    profit_factor: Mapped[Decimal | None] = mapped_column(Numeric())
+    calmar: Mapped[Decimal | None] = mapped_column(Numeric())
+    after_tax_cagr_percent: Mapped[Decimal | None] = mapped_column(Numeric())
+    estimated_tax_paise: Mapped[int | None] = mapped_column(BigInteger)
+    after_tax_net_pnl_paise: Mapped[int | None] = mapped_column(BigInteger)
+    years: Mapped[JsonList] = mapped_column(server_default=text("'[]'::jsonb"))
 
 
 CHARGE_COLUMNS = (
