@@ -13,16 +13,19 @@ const validForm = (): EditorForm => ({
   qty: "10",
 });
 
+/** The spec of a visual or Python form (rotation specs have no sizing or portfolio). */
+const ruleSpec = (form: EditorForm) => {
+  const spec = toSpec(form);
+  if (spec.mode === "rotation") throw new Error("expected a visual or Python spec");
+  return spec;
+};
+
 describe("editorForm", () => {
-  it("round-trips every mock spec, visual and python", () => {
-    // Rotation (stg_005) gets its editor in NOVA-119; stg_004 has every D62 visual setting.
-    const all = mockStrategies
-      .flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })))
-      .filter(
-        (x): x is typeof x & { spec: Exclude<typeof x.spec, { mode: "rotation" }> } =>
-          x.spec.mode !== "rotation",
-      );
-    expect(all.some(({ spec }) => spec.mode === "python")).toBe(true);
+  it("round-trips every mock spec: visual, python and rotation", () => {
+    const all = mockStrategies.flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })));
+    expect(new Set(all.map(({ spec }) => spec.mode))).toEqual(
+      new Set(["visual", "python", "rotation"]),
+    );
     for (const { s, spec } of all) {
       const form = fromSpec(s.name, s.description, spec);
       expect(issuesOf(form)).toEqual([]);
@@ -32,11 +35,11 @@ describe("editorForm", () => {
 
   it("builds each sizing type", () => {
     const base = validForm();
-    expect(toSpec(base).sizing).toEqual({ type: "fixed_qty", qty: 10 });
-    expect(toSpec({ ...base, sizingType: "fixed_amount", amountRupees: "25000.5" }).sizing).toEqual(
-      { type: "fixed_amount", amountPaise: 25_000_50 },
-    );
-    expect(toSpec({ ...base, sizingType: "percent_equity", percent: "12.5" }).sizing).toEqual({
+    expect(ruleSpec(base).sizing).toEqual({ type: "fixed_qty", qty: 10 });
+    expect(
+      ruleSpec({ ...base, sizingType: "fixed_amount", amountRupees: "25000.5" }).sizing,
+    ).toEqual({ type: "fixed_amount", amountPaise: 25_000_50 });
+    expect(ruleSpec({ ...base, sizingType: "percent_equity", percent: "12.5" }).sizing).toEqual({
       type: "percent_equity",
       percent: 12.5,
     });
@@ -166,7 +169,7 @@ describe("editorForm", () => {
     expect(toSpec(form)).not.toHaveProperty("averaging");
 
     const on = { ...form, averagingOn: true, averagingDrop: "5", averagingMaxAdds: "3" };
-    const spec = toSpec(on);
+    const spec = ruleSpec(on);
     expect(spec.averaging).toEqual({ dropPercent: 5, maxAdds: 3 });
     expect(fromSpec("T", "", spec)).toMatchObject({
       averagingOn: true,

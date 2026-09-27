@@ -11,6 +11,9 @@ export function BasicsFields() {
   const { errors } = formState;
   const sizingType = watch("sizingType");
   const averagingOn = watch("averagingOn");
+  // Rotation runs on daily prices, delivery only (D62 (4)): shown, not editable; no sizing.
+  const rotation = watch("mode") === "rotation";
+  const locked = "Rotation runs on daily prices, delivery only";
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -19,12 +22,23 @@ export function BasicsFields() {
           <Input label="Name" required error={errors.name?.message} {...register("name")} />
           <Input label="Description" {...register("description")} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Segment"
-              options={toOptions(segmentLabel)}
-              containerClassName="sm:col-span-2"
-              {...register("segment")}
-            />
+            {rotation ? (
+              <Input
+                label="Segment"
+                description={locked}
+                value={segmentLabel.equity_delivery}
+                disabled
+                readOnly
+                containerClassName="sm:col-span-2"
+              />
+            ) : (
+              <Select
+                label="Segment"
+                options={toOptions(segmentLabel)}
+                containerClassName="sm:col-span-2"
+                {...register("segment")}
+              />
+            )}
             <Select
               label="Exchange"
               options={[
@@ -33,28 +47,45 @@ export function BasicsFields() {
               ]}
               {...register("exchange")}
             />
-            <Select
-              label="Timeframe"
-              options={toOptions(timeframeLabel)}
-              {...register("timeframe")}
-            />
+            {rotation ? (
+              <Input
+                label="Timeframe"
+                description={locked}
+                value={timeframeLabel["1d"]}
+                disabled
+                readOnly
+              />
+            ) : (
+              <Select
+                label="Timeframe"
+                options={toOptions(timeframeLabel)}
+                {...register("timeframe")}
+              />
+            )}
           </div>
         </div>
       </Card>
 
       <div className="flex flex-col gap-6">
-        <Card title="Sizing and risk">
+        <Card title={rotation ? "Risk" : "Sizing and risk"}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Sizing"
-              options={[
-                { value: "fixed_qty", label: "Fixed quantity" },
-                { value: "fixed_amount", label: "Fixed amount" },
-                { value: "percent_equity", label: "% of equity" },
-              ]}
-              {...register("sizingType")}
-            />
-            {sizingType === "fixed_qty" && (
+            {rotation && (
+              <p className="text-body-sm text-text-muted sm:col-span-2">
+                Each stock bought gets an equal share: your money ÷ Hold.
+              </p>
+            )}
+            {!rotation && (
+              <Select
+                label="Sizing"
+                options={[
+                  { value: "fixed_qty", label: "Fixed quantity" },
+                  { value: "fixed_amount", label: "Fixed amount" },
+                  { value: "percent_equity", label: "% of equity" },
+                ]}
+                {...register("sizingType")}
+              />
+            )}
+            {!rotation && sizingType === "fixed_qty" && (
               <Input
                 label="Quantity"
                 inputMode="numeric"
@@ -62,7 +93,7 @@ export function BasicsFields() {
                 {...register("qty")}
               />
             )}
-            {sizingType === "fixed_amount" && (
+            {!rotation && sizingType === "fixed_amount" && (
               <Input
                 label="Amount"
                 inputMode="decimal"
@@ -71,7 +102,7 @@ export function BasicsFields() {
                 {...register("amountRupees")}
               />
             )}
-            {sizingType === "percent_equity" && (
+            {!rotation && sizingType === "percent_equity" && (
               <Input
                 label="Percent"
                 inputMode="decimal"
@@ -94,16 +125,18 @@ export function BasicsFields() {
               error={errors.targetPercent?.message}
               {...register("targetPercent")}
             />
-            <Switch
-              label="Cost averaging"
-              description="Buy more each time the price falls by a set % below your last buy. Stop-loss and target then use the average buy price."
-              containerClassName="sm:col-span-2"
-              checked={averagingOn}
-              onCheckedChange={(on) =>
-                setValue("averagingOn", on, { shouldValidate: formState.isSubmitted })
-              }
-            />
-            {averagingOn && (
+            {!rotation && (
+              <Switch
+                label="Cost averaging"
+                description="Buy more each time the price falls by a set % below your last buy. Stop-loss and target then use the average buy price."
+                containerClassName="sm:col-span-2"
+                checked={averagingOn}
+                onCheckedChange={(on) =>
+                  setValue("averagingOn", on, { shouldValidate: formState.isSubmitted })
+                }
+              />
+            )}
+            {!rotation && averagingOn && (
               <Input
                 label="Add every (% fall)"
                 inputMode="decimal"
@@ -112,7 +145,7 @@ export function BasicsFields() {
                 {...register("averagingDrop")}
               />
             )}
-            {averagingOn && (
+            {!rotation && averagingOn && (
               <Input
                 label="Max extra buys"
                 inputMode="numeric"

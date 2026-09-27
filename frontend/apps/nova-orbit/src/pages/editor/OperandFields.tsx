@@ -3,11 +3,12 @@ import { INDICATORS, indicatorDef, type IndicatorGroup, type IndicatorName } fro
 import { Input, Select, type SelectOption } from "@nova/ui-core";
 import { defaultParams, type EditorForm, type OperandForm } from "./editorForm";
 
-/** A rule side, the portfolio rank or a side of the market filter's condition (D62). */
+/** A rule side, the portfolio rank, a score term or a side of the market filter (D62). */
 export type OperandPath =
-  | `${"entry" | "exit"}.conditions.${number}.${"left" | "right"}`
+  | `${"entry" | "exit" | "filter"}.conditions.${number}.${"left" | "right"}`
   | "rank"
-  | `regime.${"left" | "right"}`;
+  | `regime.${"left" | "right"}`
+  | `scoreTerms.${number}.operand`;
 
 const kindOptions: SelectOption[] = [
   { value: "price", label: "Price" },

@@ -3,14 +3,17 @@ import {
   ConditionOpSchema,
   IndicatorNameSchema,
   PriceFieldSchema,
+  RuleGroupCombinatorSchema,
   indicatorDef,
   type IndicatorName,
   type Operand,
+  type RuleGroup,
 } from "@nova/contracts";
 
 /**
- * One operand of a rule, a rank or the market filter as form strings (what `<input>` gives),
- * with its checks and its conversion to and from the contract (D51, D62).
+ * One operand of a rule, a rank, a score or the market filter as form strings (what `<input>`
+ * gives), rule groups made of them, their checks and their conversion to and from the contract
+ * (D51, D62).
  */
 
 export const isNumber = (v: string) => v.trim() !== "" && Number.isFinite(Number(v));
@@ -113,3 +116,49 @@ export function operandToSpec(o: OperandForm): Operand {
   );
   return { kind: "indicator", name: o.name, params, ...extra };
 }
+
+export const RuleGroupFormSchema = z.object({
+  combinator: RuleGroupCombinatorSchema,
+  conditions: z.array(ConditionFormSchema),
+});
+export type RuleGroupForm = z.infer<typeof RuleGroupFormSchema>;
+
+export const emptyCondition = (): ConditionForm => ({
+  left: emptyOperand("price"),
+  op: "crosses_above",
+  right: emptyOperand("indicator"),
+});
+
+/** Adds an issue for an empty group and for every incomplete operand of its conditions. */
+export function groupIssues(
+  group: RuleGroupForm,
+  at: string,
+  issue: (path: (string | number)[], message: string) => void,
+): void {
+  if (group.conditions.length === 0) issue([at, "conditions"], "Add at least one condition");
+  group.conditions.forEach((c, i) => {
+    for (const side of ["left", "right"] as const) {
+      for (const [path, message] of operandIssues(c[side])) {
+        issue([at, "conditions", i, side, ...path], message);
+      }
+    }
+  });
+}
+
+export const groupFromSpec = (g: RuleGroup): RuleGroupForm => ({
+  combinator: g.combinator,
+  conditions: g.conditions.map((c) => ({
+    left: operandFromSpec(c.left),
+    op: c.op,
+    right: operandFromSpec(c.right),
+  })),
+});
+
+export const groupToSpec = (g: RuleGroupForm): RuleGroup => ({
+  combinator: g.combinator,
+  conditions: g.conditions.map((c) => ({
+    left: operandToSpec(c.left),
+    op: c.op,
+    right: operandToSpec(c.right),
+  })),
+});

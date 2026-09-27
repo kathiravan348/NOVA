@@ -1,8 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useParams } from "react-router";
-import { Button, EmptyState, useToast } from "@nova/ui-core";
-import { RefreshCw } from "lucide-react";
+import { Button, useToast } from "@nova/ui-core";
 import type { Strategy } from "@nova/contracts";
 import {
   getDataMode,
@@ -19,6 +18,7 @@ import { ModeSwitch } from "./ModeSwitch";
 import { PortfolioFields } from "./PortfolioFields";
 import { PythonFields } from "./PythonFields";
 import { RegimeFields } from "./RegimeFields";
+import { RotationFields } from "./RotationFields";
 import { RuleGroupEditor } from "./RuleGroupEditor";
 import { SpecPreview } from "./SpecPreview";
 
@@ -91,19 +91,23 @@ function StrategyEditor({
       <form onSubmit={form.handleSubmit(onValid)} noValidate className="flex flex-col gap-6">
         <ModeSwitch />
         <BasicsFields />
-        <div className="grid gap-6 lg:grid-cols-2">
+        {mode === "rotation" ? (
           <ExitsFields />
-          <PortfolioFields />
-        </div>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ExitsFields />
+            <PortfolioFields />
+          </div>
+        )}
         <RegimeFields />
-        {mode === "visual" ? (
+        {mode === "visual" && (
           <div className="flex flex-col gap-6">
             <RuleGroupEditor group="entry" title="Entry rules" />
             <RuleGroupEditor group="exit" title="Exit rules" />
           </div>
-        ) : (
-          <PythonFields />
         )}
+        {mode === "python" && <PythonFields />}
+        {mode === "rotation" && <RotationFields />}
         <SpecPreview />
         <div className="flex flex-wrap gap-3">
           <Button type="submit" disabled={form.formState.isSubmitted && !form.formState.isValid}>
@@ -129,20 +133,6 @@ export function EditStrategyPage() {
     <QueryState query={query} back={{ to: "/strategies", label: "Back to strategies" }}>
       {(strategy) => {
         const latest = strategy.versions.find((v) => v.version === strategy.latestVersion)!;
-        if (latest.spec.mode === "rotation") {
-          return (
-            <EmptyState
-              icon={<RefreshCw className="h-6 w-6" />}
-              title="Rotation strategies cannot be edited here yet."
-              description="Open the strategy to see its settings."
-              action={
-                <Button asChild variant="secondary">
-                  <Link to={`/strategies/${strategy.id}`}>Back to the strategy</Link>
-                </Button>
-              }
-            />
-          );
-        }
         return (
           <StrategyEditor
             defaults={fromSpec(strategy.name, strategy.description, latest.spec)}

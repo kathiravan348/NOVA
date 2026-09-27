@@ -20,7 +20,8 @@ const opOptions: SelectOption[] = [
 ];
 
 export interface RuleGroupEditorProps {
-  group: "entry" | "exit";
+  /** Entry or exit rules, or a rotation's filter (D62). */
+  group: "entry" | "exit" | "filter";
   title: string;
 }
 

@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-libra
 import { EditorView } from "@codemirror/view";
 import { setupServer } from "msw/node";
 import { handlers, mockStrategies } from "@nova/mocks";
+import { StrategyCreateSchema } from "@nova/contracts";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -104,15 +105,52 @@ describe("Strategy editor", () => {
     expect(screen.getByLabelText("Strategy spec JSON").textContent).toContain('"vwap"');
   });
 
-  it("refuses a rotation strategy for now (D62)", async () => {
+  it("opens the 12-1 momentum rotation mock and saves it unchanged (NOVA-119)", async () => {
     renderApp("/strategies/stg_005/edit");
-    expect(
-      await screen.findByText("Rotation strategies cannot be edited here yet."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to the strategy" })).toHaveAttribute(
-      "href",
-      "/strategies/stg_005",
-    );
+    expect(await screen.findByDisplayValue("12-1 momentum rotation")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Rotation" })).toBeChecked();
+    expect(screen.getByLabelText(/^Rebalance/)).toHaveValue("monthly");
+    expect(screen.getByLabelText(/^Hold/)).toHaveValue("10");
+    expect(screen.getByLabelText(/^Keep while in top/)).toHaveValue("20");
+    expect(screen.getByLabelText(/^Timeframe/)).toBeDisabled();
+    expect(screen.queryByText("Portfolio")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Sizing/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+
+    await waitFor(() => expect(posted).toHaveLength(1));
+    const mock = mockStrategies.find((s) => s.id === "stg_005")!;
+    const spec = mock.versions.find((v) => v.version === mock.latestVersion)!.spec;
+    expect((posted[0]!.body as { spec: unknown }).spec).toEqual(spec);
+  });
+
+  it("creates a new rotation strategy with a valid body", async () => {
+    renderApp("/strategies/new");
+    fireEvent.click(await screen.findByRole("radio", { name: "Rotation" }));
+    expect(await screen.findByText("Stocks with the highest score are held.")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: "Momentum" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+
+    await waitFor(() => expect(posted).toHaveLength(1));
+    expect(StrategyCreateSchema.safeParse(posted[0]!.body).success).toBe(true);
+    expect(posted[0]!.body).toMatchObject({
+      spec: { mode: "rotation", timeframe: "1d", rotation: { hold: 10, keepWithin: 20 } },
+    });
+  });
+
+  it("asks before a mode switch that would lose settings, and keeps the name", async () => {
+    renderApp("/strategies/stg_004/edit");
+    await screen.findByDisplayValue("Turtle 55/20 (ranked)");
+    fireEvent.click(screen.getByRole("radio", { name: "Rotation" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Switch to Rotation?" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Keep editing" }));
+    await waitFor(() => expect(screen.getByRole("radio", { name: "Visual rules" })).toBeChecked());
+
+    fireEvent.click(screen.getByRole("radio", { name: "Rotation" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Switch" }));
+    expect(await screen.findByLabelText(/^Keep while in top/)).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Turtle 55/20 (ranked)")).toBeInTheDocument();
   });
 
   it("opens a python strategy in python mode with its code", async () => {

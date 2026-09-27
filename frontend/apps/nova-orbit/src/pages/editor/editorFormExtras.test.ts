@@ -17,6 +17,13 @@ const issuesOf = (form: EditorForm) => {
   return result.success ? [] : result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
 };
 
+/** The spec of a visual or Python form (rotation specs have no sizing or portfolio). */
+const ruleSpec = (form: EditorForm) => {
+  const spec = toSpec(form);
+  if (spec.mode === "rotation") throw new Error("expected a visual or Python spec");
+  return spec;
+};
+
 describe("D62 editor fields (NOVA-118)", () => {
   it("round-trips the ranked Turtle mock and its multiplier", () => {
     const form = fromSpec("Turtle", "", turtle());
@@ -34,11 +41,11 @@ describe("D62 editor fields (NOVA-118)", () => {
       regimeOn: false,
       rankOn: false,
     };
-    const spec = toSpec(form);
+    const spec = ruleSpec(form);
     expect(spec.risk).toEqual({ stopLossPercent: 10, targetPercent: null });
     expect(spec.portfolio).toEqual({ maxPositions: 10 });
     expect("regime" in spec).toBe(false);
-    expect(toSpec({ ...form, maxPositions: "" }).portfolio).toBeUndefined();
+    expect(ruleSpec({ ...form, maxPositions: "" }).portfolio).toBeUndefined();
   });
 
   it("writes × only when it is neither empty nor 1", () => {
