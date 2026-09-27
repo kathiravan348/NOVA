@@ -8,6 +8,7 @@ import threading
 from nova_db import create_db_engine, create_session_factory
 
 from nova_backtest.engine import BacktestEngine
+from nova_backtest.scratch import clear_all
 from nova_backtest.settings import get_backtest_settings
 from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_worker
@@ -15,7 +16,11 @@ from nova_backtest.worker import run_worker
 
 def default_engine() -> BacktestEngine:
     settings = get_backtest_settings()
-    return StrategyEngine(settings.backtest_max_bars, settings.backtest_max_bars_python)
+    return StrategyEngine(
+        settings.backtest_max_bars,
+        settings.backtest_max_bars_python,
+        settings.backtest_scratch_dir,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -27,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
 
     settings = get_backtest_settings()
     engine = create_db_engine(settings.database_url.get_secret_value())
+    clear_all(settings.backtest_scratch_dir)  # folders a stopped worker left behind (D61)
     stop = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     signal.signal(signal.SIGINT, lambda *_: stop.set())

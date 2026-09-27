@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta
 import pytest
 from nova_backtest.bars import IST, Bar
 from nova_backtest.rules import RuleSignals
-from nova_backtest.simulate import Simulation, simulate
+from nova_backtest.simulate import Simulation, simulate_bars
 from nova_contracts import Charges, RuleGroup, Sizing
 from nova_contracts.strategy import Averaging, Risk
 from pydantic import TypeAdapter
@@ -75,7 +75,7 @@ def _run(
     start: datetime = DAY0,
     fee: int = 0,
 ) -> Simulation:
-    return simulate(
+    return simulate_bars(
         {"INFY": bars},
         RuleSignals({"INFY": bars}, ENTRY, EXIT),
         sizing,
@@ -188,7 +188,7 @@ def _intraday(day: int, *bars: tuple[str, tuple[float, float, float, float]]) ->
 
 def _intraday_run(bars: list[Bar]) -> Simulation:
     start = datetime(2026, 9, 1, tzinfo=IST)
-    return simulate(
+    return simulate_bars(
         {"INFY": bars},
         RuleSignals({"INFY": bars}, ENTRY, EXIT),
         TEN,
@@ -248,7 +248,7 @@ class _EnterOnce:
 def _average(
     bars: list[Bar], averaging: Averaging, risk: Risk = NO_RISK, cash: int = 10_000_000
 ) -> Simulation:
-    return simulate(
+    return simulate_bars(
         {"INFY": bars}, _EnterOnce(), TEN, risk, cash, DAY0, lambda *_: _charges(0), None, averaging
     )
 
@@ -278,7 +278,7 @@ def test_stop_follows_the_average_price() -> None:
     bars = _bars(*FALLING[:3], (85, 86, 83, 84))
 
     (with_adds,) = _average(bars, Averaging(drop_percent=10, max_adds=3), risk).trades
-    (without,) = simulate(
+    (without,) = simulate_bars(
         {"INFY": bars}, _EnterOnce(), TEN, risk, 10_000_000, DAY0, lambda *_: _charges(0)
     ).trades
 

@@ -2,7 +2,9 @@
 
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
+from pathlib import Path
 
+import numpy as np
 from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import Charges, StrategySpec
 from nova_contracts.strategy import (
@@ -20,15 +22,17 @@ from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from nova_backtest.bars import IST, Bar
+from nova_backtest.bars import IST
+from nova_backtest.columns import Columns
 from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
 from nova_backtest.metrics import summarize
 from nova_backtest.progress import ProgressSink
-from nova_backtest.rules import Bools, RuleSignals, check_group
+from nova_backtest.rules import check_group
 from nova_backtest.rules import signals as rule_signals
-from nova_backtest.sandbox import PythonSignals, run_python
-from nova_backtest.simulate import Signals, simulate
+from nova_backtest.sandbox import run_python
+from nova_backtest.scratch import RunScratch
+from nova_backtest.simulate import simulate
 from nova_backtest.versions import trim_older_versions
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
@@ -36,6 +40,7 @@ WARM_UP_DAYS = {"1d": 400}
 # Zerodha squares off MIS equity positions from 15:20 IST (D46).
 SQUARE_OFF = time(15, 20)
 INTRADAY_WARM_UP_DAYS = 30
+DEFAULT_SCRATCH = Path("/tmp/nova-backtest")  # noqa: S108 - the worker container's own disk (D61)
 
 
 def unsupported(spec: StrategySpec) -> str | None:
@@ -103,7 +108,13 @@ def _ist_midnight(day: date) -> datetime:
 
 
 class StrategyEngine:
-    def __init__(self, max_bars: int = 1_500_000, max_bars_python: int = 750_000) -> None:
+    def __init__(
+        self,
+        max_bars: int = 1_500_000,
+        max_bars_python: int = 750_000,
+        scratch_root: Path = DEFAULT_SCRATCH,
+    ) -> None:
+        self.scratch_root = scratch_root
         self.max_bars = max_bars
         self.max_bars_python = max_bars_python
 
@@ -115,18 +126,22 @@ class StrategyEngine:
         span: tuple[datetime, datetime],
         limit: int,
         progress: ProgressSink,
-    ) -> tuple[dict[str, list[Bar]], dict[str, tuple[Bools, Bools]]]:
-        """One stock at a time (D59, D61): its columns, then (visual) its signal arrays at once.
+        scratch: RunScratch,
+        start: datetime,
+    ) -> int:
+        """Pass 1 (D61): one stock at a time, its columns and signals go to `scratch`.
 
-        Stops as soon as the run passes the bar limit. 3m–1h are rolled up from 1m (D58).
+        Visual signals are computed right after each stock loads, so only one stock's indicator
+        arrays exist at a time. Stops as soon as the run passes the bar limit (D59); 3m–1h are
+        rolled up from 1m (D58). Answers the number of bars stored.
         """
         progress.stage("loading", len(symbols))
         if isinstance(spec, StrategySpecVisual):
             check_group(spec.entry)
             check_group(spec.exit)
-        bars: dict[str, list[Bar]] = {}
-        arrays: dict[str, tuple[Bools, Bools]] = {}
-        total = 0
+        waiting: dict[str, Columns] = {}  # Python mode: every stock, for one sandbox run
+        missing: list[str] = []
+        first, total = int(start.timestamp()), 0
         for done, symbol in enumerate(symbols, start=1):
             columns = load_columns(db, "NSE", symbol, spec.timeframe, *span)
             total += len(columns)
@@ -135,11 +150,29 @@ class StrategyEngine:
                     f"This run needs more than {limit:,} price bars (stopped at {symbol}). "
                     "Pick fewer stocks or a shorter period."
                 )
-            if isinstance(spec, StrategySpecVisual):
-                arrays[symbol] = rule_signals(columns, spec.entry, spec.exit)
-            bars[symbol] = columns.to_bars()  # the simulator still takes Bar lists (NOVA-110)
+            if len(columns) == 0 or int(columns.ts[-1]) < first:
+                missing.append(symbol)
+            elif isinstance(spec, StrategySpecVisual):
+                scratch.add(symbol, columns, *rule_signals(columns, spec.entry, spec.exit))
+            else:
+                waiting[symbol] = columns
             progress.advance(done)
-        return bars, arrays
+        if missing:
+            raise EngineError(
+                f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
+                "(download them first)"
+            )
+        if isinstance(spec, StrategySpecPython):
+            progress.stage("signals", 1)
+            bars = {symbol: columns.to_bars() for symbol, columns in waiting.items()}
+            coded = run_python(spec.code, bars)
+            for symbol, columns in waiting.items():
+                codes = coded[symbol]
+                enter = np.array([c == "enter" for c in codes], dtype=np.bool_)
+                exit_ = np.array([c == "exit" for c in codes], dtype=np.bool_)
+                scratch.add(symbol, columns, enter, exit_)
+            progress.advance(1)
+        return total
 
     def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         run = db.get(BacktestRun, run_id)
@@ -151,14 +184,26 @@ class StrategyEngine:
         end = _ist_midnight(run.date_to + timedelta(days=1))
         warm_up = timedelta(days=WARM_UP_DAYS.get(spec.timeframe, INTRADAY_WARM_UP_DAYS))
         limit = self.max_bars if isinstance(spec, StrategySpecVisual) else self.max_bars_python
-        bars, arrays = self._load(db, symbols, spec, (start - warm_up, end), limit, progress)
-        missing = [s for s, series in bars.items() if not any(b.ts >= start for b in series)]
-        if missing:
-            raise EngineError(
-                f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
-                "(download them first)"
-            )
+        scratch = RunScratch(self.scratch_root, run.id)
+        try:
+            span = (start - warm_up, end)
+            total = self._load(db, symbols, spec, span, limit, progress, scratch, start)
+            self._simulate(db, run, spec, symbols, scratch, start, total, progress)
+        finally:
+            scratch.close()
 
+    def _simulate(
+        self,
+        db: Session,
+        run: BacktestRun,
+        spec: StrategySpecVisual | StrategySpecPython,
+        symbols: list[str],
+        scratch: RunScratch,
+        start: datetime,
+        total: int,
+        progress: ProgressSink,
+    ) -> None:
+        """Pass 2 (D61): all stocks in time order from the scratch folder; then the results."""
         rates: dict[date, ChargeRates] = {}
 
         def charges(qty: int, entry: int, exit_: int, entry_at: datetime) -> Charges:
@@ -170,21 +215,12 @@ class StrategyEngine:
                     raise EngineError(str(exc)) from exc
             return trade_charges(rates[day], "buy", qty, entry, exit_)
 
-        signals: Signals
-        if isinstance(spec, StrategySpecVisual):
-            signals = RuleSignals.from_arrays(arrays)
-        else:
-            progress.stage("signals", 1)
-            signals = PythonSignals(run_python(spec.code, bars))
-            progress.advance(1)
-
         def on_bar(done: int, ts: datetime, trades: int) -> None:
             progress.advance(done, max(ts, start).astimezone(IST).date(), trades)
 
-        progress.stage("simulating", sum(len(series) for series in bars.values()))
+        progress.stage("simulating", total)
         result = simulate(
-            bars,
-            signals,
+            scratch,
             spec.sizing,
             spec.risk,
             run.initial_capital_paise,
