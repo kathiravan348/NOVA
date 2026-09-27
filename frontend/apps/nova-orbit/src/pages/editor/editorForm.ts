@@ -1,12 +1,11 @@
 import { z } from "zod";
 import {
   ExchangeSchema,
-  RuleGroupCombinatorSchema,
   SegmentSchema,
   StrategySpecPythonSchema,
+  StrategySpecRotationSchema,
   StrategySpecVisualSchema,
   TimeframeSchema,
-  type RuleGroup,
   type StrategySpec,
 } from "@nova/contracts";
 import {
@@ -17,29 +16,41 @@ import {
   extrasToSpec,
 } from "./editorFormExtras";
 import {
-  ConditionFormSchema,
-  emptyOperand,
+  RotationFormShape,
+  emptyRotation,
+  rotationFromSpec,
+  rotationIssues,
+  rotationToSpec,
+} from "./editorFormRotation";
+import {
+  RuleGroupFormSchema,
+  emptyCondition,
+  groupFromSpec,
+  groupIssues,
+  groupToSpec,
   isPositive,
   isPositiveInt,
-  operandFromSpec,
-  operandIssues,
-  operandToSpec,
 } from "./operandForm";
 
-export { defaultParams, emptyOperand, OperandFormSchema, type OperandForm } from "./operandForm";
+export {
+  defaultParams,
+  emptyCondition,
+  emptyOperand,
+  OperandFormSchema,
+  RuleGroupFormSchema,
+  type OperandForm,
+  type RuleGroupForm,
+} from "./operandForm";
 
 /**
- * Form shape for the strategy editor (visual rules or Python). Numeric inputs stay strings
- * (what `<input>` gives) and are checked here; `toSpec` turns a valid form into a contract spec.
- * Rule groups are only validated in visual mode, so hidden rows never block a Python save.
- * The D62 exits, portfolio and market filter live in `editorFormExtras.ts`.
+ * Form shape for the strategy editor (visual rules, Python or rotation). Numeric inputs stay
+ * strings (what `<input>` gives) and are checked here; `toSpec` turns a valid form into a contract
+ * spec. Only the chosen mode's fields are checked, so hidden fields never block a save. The D62
+ * exits, portfolio and market filter live in `editorFormExtras.ts`, rotation in
+ * `editorFormRotation.ts`.
  */
 
-export const RuleGroupFormSchema = z.object({
-  combinator: RuleGroupCombinatorSchema,
-  conditions: z.array(ConditionFormSchema),
-});
-export type RuleGroupForm = z.infer<typeof RuleGroupFormSchema>;
+export type EditorMode = "visual" | "python" | "rotation";
 
 /** Python mode API (D47): no imports (math is available); names must not start with "_". */
 export const PYTHON_TEMPLATE = `# on_bar runs once per closed bar of each symbol.
@@ -60,7 +71,7 @@ class Strategy:
 
 export const EditorFormSchema = z
   .object({
-    mode: z.enum(["visual", "python"]),
+    mode: z.enum(["visual", "python", "rotation"]),
     name: z.string().trim().min(1, "Name is required"),
     description: z.string(),
     segment: SegmentSchema,
@@ -80,10 +91,19 @@ export const EditorFormSchema = z
     exit: RuleGroupFormSchema,
     code: z.string(),
     ...ExtrasFormShape,
+    ...RotationFormShape,
   })
   .superRefine((f, ctx) => {
     const issue = (path: (string | number)[], message: string) =>
       ctx.addIssue({ code: "custom", path, message });
+    for (const key of ["stopLossPercent", "targetPercent"] as const) {
+      if (f[key].trim() !== "" && !isPositive(f[key])) issue([key], "Leave empty or above 0");
+    }
+    extrasIssues(f, issue, f.mode !== "rotation");
+    if (f.mode === "rotation") {
+      rotationIssues(f, issue);
+      return;
+    }
     if (f.sizingType === "fixed_qty" && !isPositiveInt(f.qty)) {
       issue(["qty"], "Whole number above 0");
     }
@@ -92,9 +112,6 @@ export const EditorFormSchema = z
     }
     if (f.sizingType === "percent_equity" && !(isPositive(f.percent) && Number(f.percent) <= 100)) {
       issue(["percent"], "Between 0 and 100");
-    }
-    for (const key of ["stopLossPercent", "targetPercent"] as const) {
-      if (f[key].trim() !== "" && !isPositive(f[key])) issue([key], "Leave empty or above 0");
     }
     if (f.averagingOn) {
       if (!(isPositive(f.averagingDrop) && Number(f.averagingDrop) <= 50)) {
@@ -105,31 +122,14 @@ export const EditorFormSchema = z
         issue(["averagingMaxAdds"], "Whole number from 1 to 10");
       }
     }
-    extrasIssues(f, issue);
     if (f.mode === "python") {
       if (f.code.trim() === "") issue(["code"], "Code is required");
       return;
     }
-    for (const group of ["entry", "exit"] as const) {
-      if (f[group].conditions.length === 0) {
-        issue([group, "conditions"], "Add at least one condition");
-      }
-      f[group].conditions.forEach((c, i) => {
-        for (const side of ["left", "right"] as const) {
-          for (const [path, message] of operandIssues(c[side])) {
-            issue([group, "conditions", i, side, ...path], message);
-          }
-        }
-      });
-    }
+    groupIssues(f.entry, "entry", issue);
+    groupIssues(f.exit, "exit", issue);
   });
 export type EditorForm = z.infer<typeof EditorFormSchema>;
-
-export const emptyCondition = (): RuleGroupForm["conditions"][number] => ({
-  left: emptyOperand("price"),
-  op: "crosses_above",
-  right: emptyOperand("indicator"),
-});
 
 export const emptyForm = (): EditorForm => ({
   mode: "visual",
@@ -151,47 +151,57 @@ export const emptyForm = (): EditorForm => ({
   exit: { combinator: "any", conditions: [emptyCondition()] },
   code: "",
   ...emptyExtras(),
+  ...emptyRotation(),
 });
 
-const groupFromSpec = (g: RuleGroup): RuleGroupForm => ({
-  combinator: g.combinator,
-  conditions: g.conditions.map((c) => ({
-    left: operandFromSpec(c.left),
-    op: c.op,
-    right: operandFromSpec(c.right),
-  })),
-});
-
-const groupToSpec = (g: RuleGroupForm): RuleGroup => ({
-  combinator: g.combinator,
-  conditions: g.conditions.map((c) => ({
-    left: operandToSpec(c.left),
-    op: c.op,
-    right: operandToSpec(c.right),
-  })),
-});
-
-/** Rotation specs are not editable here yet (D62): the editor page refuses them before this. */
-export function fromSpec(
-  name: string,
-  description: string,
-  spec: Exclude<StrategySpec, { mode: "rotation" }>,
-): EditorForm {
+/** A fresh form for a mode: Python starts from a template; rotation is daily delivery (D62). */
+export function modeDefaults(mode: EditorMode): EditorForm {
   const form = emptyForm();
-  return {
-    ...form,
-    mode: spec.mode,
+  if (mode === "python") return { ...form, mode, code: PYTHON_TEMPLATE };
+  if (mode === "rotation") {
+    return {
+      ...form,
+      mode,
+      segment: "equity_delivery",
+      timeframe: "1d",
+      regimeWhenOff: "exit_all",
+    };
+  }
+  return form;
+}
+
+/** Whether switching away from this form's mode would lose settings (name and description stay). */
+export function hasModeWork(form: EditorForm): boolean {
+  const strip = (f: EditorForm) => ({ ...f, name: "", description: "" });
+  return JSON.stringify(strip(form)) !== JSON.stringify(strip(modeDefaults(form.mode)));
+}
+
+export function fromSpec(name: string, description: string, spec: StrategySpec): EditorForm {
+  const shared = {
     name,
     description,
-    segment: spec.segment,
     exchange: spec.exchange,
+    stopLossPercent: spec.risk.stopLossPercent === null ? "" : String(spec.risk.stopLossPercent),
+    targetPercent: spec.risk.targetPercent === null ? "" : String(spec.risk.targetPercent),
+  };
+  if (spec.mode === "rotation") {
+    return {
+      ...modeDefaults("rotation"),
+      ...shared,
+      ...extrasFromSpec(spec, "exit_all"),
+      ...rotationFromSpec(spec),
+    };
+  }
+  return {
+    ...emptyForm(),
+    ...shared,
+    mode: spec.mode,
+    segment: spec.segment,
     timeframe: spec.timeframe,
     sizingType: spec.sizing.type,
     qty: spec.sizing.type === "fixed_qty" ? String(spec.sizing.qty) : "",
     amountRupees: spec.sizing.type === "fixed_amount" ? String(spec.sizing.amountPaise / 100) : "",
     percent: spec.sizing.type === "percent_equity" ? String(spec.sizing.percent) : "",
-    stopLossPercent: spec.risk.stopLossPercent === null ? "" : String(spec.risk.stopLossPercent),
-    targetPercent: spec.risk.targetPercent === null ? "" : String(spec.risk.targetPercent),
     ...(spec.averaging
       ? {
           averagingOn: true,
@@ -202,15 +212,32 @@ export function fromSpec(
     ...(spec.mode === "visual"
       ? { entry: groupFromSpec(spec.entry), exit: groupFromSpec(spec.exit) }
       : { code: spec.code }),
-    ...extrasFromSpec(spec),
+    ...extrasFromSpec(spec, "no_new_entries"),
   };
 }
 
 const optionalPercent = (v: string) => (v.trim() === "" ? null : Number(v));
 
 /** Valid form → contract spec, checked with the contract schema for its mode. */
-export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotation" }> {
+export function toSpec(form: EditorForm): StrategySpec {
   const extras = extrasToSpec(form);
+  const risk = {
+    stopLossPercent: optionalPercent(form.stopLossPercent),
+    targetPercent: optionalPercent(form.targetPercent),
+    ...extras.risk,
+  };
+  const regime = extras.regime ? { regime: extras.regime } : {};
+  if (form.mode === "rotation") {
+    return StrategySpecRotationSchema.parse({
+      mode: "rotation",
+      segment: "equity_delivery",
+      exchange: form.exchange,
+      timeframe: "1d",
+      risk,
+      ...regime,
+      rotation: rotationToSpec(form),
+    });
+  }
   const base = {
     segment: form.segment,
     exchange: form.exchange,
@@ -221,11 +248,7 @@ export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotatio
         : form.sizingType === "fixed_amount"
           ? { type: "fixed_amount", amountPaise: Math.round(Number(form.amountRupees) * 100) }
           : { type: "percent_equity", percent: Number(form.percent) },
-    risk: {
-      stopLossPercent: optionalPercent(form.stopLossPercent),
-      targetPercent: optionalPercent(form.targetPercent),
-      ...extras.risk,
-    },
+    risk,
     // Written only when on, so specs without it round-trip unchanged (D53, D62).
     ...(form.averagingOn
       ? {
@@ -236,7 +259,7 @@ export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotatio
         }
       : {}),
     ...(extras.portfolio ? { portfolio: extras.portfolio } : {}),
-    ...(extras.regime ? { regime: extras.regime } : {}),
+    ...regime,
   };
   if (form.mode === "python") {
     return StrategySpecPythonSchema.parse({ mode: "python", ...base, code: form.code });

@@ -37,7 +37,6 @@ export const ExtrasFormShape = {
 };
 export type ExtrasForm = z.infer<z.ZodObject<typeof ExtrasFormShape>>;
 
-type SpecWithExtras = Exclude<StrategySpec, { mode: "rotation" }>;
 type Issue = (path: (string | number)[], message: string) => void;
 
 const inRange = (v: string, low: number, high: number, whole: boolean) =>
@@ -72,8 +71,8 @@ export const emptyExtras = (): ExtrasForm => ({
   regimeWhenOff: "no_new_entries",
 });
 
-/** Adds a form issue for every out-of-range D62 field. */
-export function extrasIssues(f: ExtrasForm, issue: Issue): void {
+/** Adds a form issue for every out-of-range D62 field; rotation has no portfolio card. */
+export function extrasIssues(f: ExtrasForm, issue: Issue, portfolio = true): void {
   if (
     f.trailingStopPercent.trim() !== "" &&
     !(isPositive(f.trailingStopPercent) && Number(f.trailingStopPercent) <= 50)
@@ -87,10 +86,10 @@ export function extrasIssues(f: ExtrasForm, issue: Issue): void {
   if (f.maxHoldBars.trim() !== "" && !inRange(f.maxHoldBars, 1, 5000, true)) {
     issue(["maxHoldBars"], "Leave empty or a whole number from 1 to 5000");
   }
-  if (f.maxPositions.trim() !== "" && !inRange(f.maxPositions, 1, 100, true)) {
+  if (portfolio && f.maxPositions.trim() !== "" && !inRange(f.maxPositions, 1, 100, true)) {
     issue(["maxPositions"], "Leave empty or a whole number from 1 to 100");
   }
-  if (f.maxPositions.trim() !== "" && f.rankOn) {
+  if (portfolio && f.maxPositions.trim() !== "" && f.rankOn) {
     for (const [path, message] of operandIssues(f.rank)) issue(["rank", ...path], message);
   }
   if (f.regimeOn) {
@@ -103,11 +102,17 @@ export function extrasIssues(f: ExtrasForm, issue: Issue): void {
   }
 }
 
-export function extrasFromSpec(spec: SpecWithExtras): ExtrasForm {
+/** `whenOff`: the market filter's choice when the spec has none (rotation defaults to selling). */
+export function extrasFromSpec(
+  spec: StrategySpec,
+  whenOff: ExtrasForm["regimeWhenOff"],
+): ExtrasForm {
   const form = emptyExtras();
-  const { risk, portfolio, regime } = spec;
+  const { risk, regime } = spec;
+  const portfolio = spec.mode === "rotation" ? undefined : spec.portfolio;
   return {
     ...form,
+    regimeWhenOff: whenOff,
     trailingStopPercent:
       risk.trailingStopPercent === undefined ? "" : String(risk.trailingStopPercent),
     ...(risk.atrStop

@@ -1,6 +1,6 @@
 # NOVA-119 — Orbit editor: rotation mode (D62 (4))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-119 · **Depends on:** NOVA-118 · **Merge after:** NOVA-117
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-119 · **Depends on:** NOVA-118 · **Merge after:** NOVA-117
 
 ## Goal
 The editor gets a third mode, **Rotation**, so momentum-rotation strategies can be created, edited and versioned like the
@@ -48,7 +48,22 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `editorFormRotation.ts`: rebalance, hold, keep while in top, 1–3 score terms (price/indicator + non-zero
+weight), optional filter group; checks, `rotationFromSpec` / `rotationToSpec`. `editorForm.ts`: mode `rotation`,
+`modeDefaults(mode)` (rotation = delivery, 1 day, market filter default **Sell everything**), `hasModeWork`, `fromSpec`
+takes any spec and `toSpec` builds `StrategySpecRotation`; only the chosen mode's fields are checked (hidden sizing and
+portfolio never block). Rule-group form helpers moved to `operandForm.ts` (shared with the filter).
+`ModeSwitch`: three modes; a switch keeps name and description and resets the rest to that mode's defaults, asking
+first in a Modal (**Keep editing** / **Switch**) when settings would be lost. `RotationFields` + `ScoreTermsEditor`
+(Add term up to 3, remove down to 1); the filter reuses `RuleGroupEditor` (`group="filter"`). `BasicsFields` in
+rotation: Segment/Timeframe shown disabled with the hint, card **Risk** keeps stop-loss and target, no sizing or
+averaging; `Portfolio` is hidden. The "cannot be edited here yet" screen is gone.
+- Tests: `editorFormRotation.test.ts` (valid defaults, keep < hold, 0 and 4 terms, weight 0, unfinished filter row,
+  filter only when on); `editor.test.tsx` (stg_005 saves the identical spec, new rotation posts a body that passes
+  `StrategyCreateSchema`, mode-switch confirm); every mock (visual, python, rotation) round-trips in `editorForm.test.ts`.
+- Preview (mock): stg_005 edit shows Basics, Risk, Exits, Market filter, Rotation, Score, filter; no overflow at 360 px.
+- Deviation: visual ↔ Python switches now also reset to that mode's defaults (the task's rule for all switches).
+Commands: `pnpm review:check` passed. Guides: USER-GUIDE (Step 4c).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

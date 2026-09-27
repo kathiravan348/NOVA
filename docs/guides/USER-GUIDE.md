@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-118). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-119). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -173,6 +173,31 @@ settings in the same order as the editor shows them: `ctx.rsi(14)`, `ctx.supertr
 `ctx.macd_signal(12, 26, 9)` (or by name: `ctx.macd_signal(fast=12, slow=26, signal=9)`). Add `ago=1` for
 the value one candle earlier. The settings must be plain numbers typed in the code, not names you
 calculate. The answer is empty (`None`) until there are enough candles.
+
+### Step 4c — Or a rotation strategy (hold the strongest stocks)
+Switch **Authoring mode** to **Rotation**. Instead of buy and sell rules, you give every stock a
+**score**, and NOVA keeps the stocks with the highest scores. It always uses daily prices and delivery
+(the **Segment** and **Timeframe** boxes are greyed out), and each stock bought gets an equal share of
+your money.
+
+- **Rebalance**: how often the list is checked and changed: **Every week**, **Every month** or **Every
+  quarter**. Buying and selling happens only then (and after a stop).
+- **Hold**: how many stocks to own, e.g. 10.
+- **Keep while in top**: a stock you own is sold only when it drops below this place in the ranking, e.g.
+  20. This stops NOVA from selling a stock that slips from 9th to 11th place.
+- **Score**: one to three terms added together, each a price or indicator times a **Weight** (**Add term**
+  adds one). Stocks with the highest score are held.
+- **Only stocks where…** (optional): rules a stock must pass to be ranked at all. A stock you hold that
+  fails them is sold at the next rebalance.
+- **Risk**, **Exits** and **Market filter** work as in Step 4; here the market filter starts as **Sell
+  everything**.
+
+Example — *12-1 momentum*: score = **Rate of change %(231)**, **Bars ago** 21, weight 1 (the rise over the last
+year, leaving out the last month); **Every month**, **Hold** 10, **Keep while in top** 20; market filter NIFTY 50
+close above SMA(200), **Sell everything**.
+
+Changing the mode starts the settings of the new mode from scratch (name and description stay). If that
+would throw away settings you entered, NOVA asks first: **Switch** or **Keep editing**.
 
 ### Step 5 — Run a backtest
 Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
