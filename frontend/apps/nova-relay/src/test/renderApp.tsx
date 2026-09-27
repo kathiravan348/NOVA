@@ -6,8 +6,11 @@ import { createQueryClient } from "@nova/services";
 import { ToastProvider } from "@nova/ui-core";
 import { routes } from "../routes";
 
-/** Renders the real app routes at `path`, signed in unless told otherwise. Start MSW yourself. */
-export function renderApp(path: string, { signedIn = true }: { signedIn?: boolean } = {}) {
+/** Renders the real app routes at `path` (or a location with router state), signed in unless told otherwise. */
+export function renderApp(
+  path: string | { pathname: string; state: unknown },
+  { signedIn = true }: { signedIn?: boolean } = {},
+) {
   if (signedIn) {
     sessionStorage.setItem(
       "nova-session",

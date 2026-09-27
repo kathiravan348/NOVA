@@ -11,6 +11,7 @@ import { DataJobsPage } from "./pages/data-jobs/DataJobsPage";
 import { NewDownloadPage } from "./pages/data-jobs/NewDownloadPage";
 import { InstrumentsPage } from "./pages/instruments/InstrumentsPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
+import { StoredDataPage } from "./pages/stored-data/StoredDataPage";
 
 const page = (path: string, title: string, element: ReactNode): RouteObject => ({
   path,
@@ -44,6 +45,7 @@ export const routes: RouteObject[] = [
           { path: "/accounts/:id", element: <OldAccountRedirect /> },
           { path: "/rate-limits", element: <Navigate to="/broker" replace /> },
           page("/instruments", "Instruments", <InstrumentsPage />),
+          page("/stored-data", "Stored data", <StoredDataPage />),
           page("/data-jobs", "Data jobs", <DataJobsPage />),
           page("/data-jobs/new", "New download", <NewDownloadPage />),
           page("/data-jobs/:id", "Data job", <DataJobDetailPage />),
