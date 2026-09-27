@@ -298,6 +298,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -306,6 +308,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -317,7 +320,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -443,6 +448,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -451,6 +458,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -462,7 +470,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -585,6 +595,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -593,6 +605,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -604,7 +617,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -754,6 +769,8 @@
                                         "cci",
                                         "williams_r",
                                         "roc",
+                                        "risk_adj_return",
+                                        "pct_of_high",
                                         "atr",
                                         "bb_upper",
                                         "bb_middle",
@@ -762,6 +779,7 @@
                                         "keltner_lower",
                                         "donchian_upper",
                                         "donchian_lower",
+                                        "volatility",
                                         "vwap",
                                         "obv",
                                         "mfi",
@@ -773,7 +791,9 @@
                                         "pivot_r1",
                                         "pivot_s1",
                                         "pivot_r2",
-                                        "pivot_s2"
+                                        "pivot_s2",
+                                        "or_high",
+                                        "or_low"
                                       ]
                                     },
                                     "params": {
@@ -896,6 +916,8 @@
                                         "cci",
                                         "williams_r",
                                         "roc",
+                                        "risk_adj_return",
+                                        "pct_of_high",
                                         "atr",
                                         "bb_upper",
                                         "bb_middle",
@@ -904,6 +926,7 @@
                                         "keltner_lower",
                                         "donchian_upper",
                                         "donchian_lower",
+                                        "volatility",
                                         "vwap",
                                         "obv",
                                         "mfi",
@@ -915,7 +938,9 @@
                                         "pivot_r1",
                                         "pivot_s1",
                                         "pivot_r2",
-                                        "pivot_s2"
+                                        "pivot_s2",
+                                        "or_high",
+                                        "or_low"
                                       ]
                                     },
                                     "params": {
@@ -1058,6 +1083,8 @@
                                         "cci",
                                         "williams_r",
                                         "roc",
+                                        "risk_adj_return",
+                                        "pct_of_high",
                                         "atr",
                                         "bb_upper",
                                         "bb_middle",
@@ -1066,6 +1093,7 @@
                                         "keltner_lower",
                                         "donchian_upper",
                                         "donchian_lower",
+                                        "volatility",
                                         "vwap",
                                         "obv",
                                         "mfi",
@@ -1077,7 +1105,9 @@
                                         "pivot_r1",
                                         "pivot_s1",
                                         "pivot_r2",
-                                        "pivot_s2"
+                                        "pivot_s2",
+                                        "or_high",
+                                        "or_low"
                                       ]
                                     },
                                     "params": {
@@ -1200,6 +1230,8 @@
                                         "cci",
                                         "williams_r",
                                         "roc",
+                                        "risk_adj_return",
+                                        "pct_of_high",
                                         "atr",
                                         "bb_upper",
                                         "bb_middle",
@@ -1208,6 +1240,7 @@
                                         "keltner_lower",
                                         "donchian_upper",
                                         "donchian_lower",
+                                        "volatility",
                                         "vwap",
                                         "obv",
                                         "mfi",
@@ -1219,7 +1252,9 @@
                                         "pivot_r1",
                                         "pivot_s1",
                                         "pivot_r2",
-                                        "pivot_s2"
+                                        "pivot_s2",
+                                        "or_high",
+                                        "or_low"
                                       ]
                                     },
                                     "params": {
@@ -1547,6 +1582,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -1555,6 +1592,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -1566,7 +1604,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -1692,6 +1732,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -1700,6 +1742,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -1711,7 +1754,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -1834,6 +1879,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -1842,6 +1889,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -1853,7 +1901,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -2098,6 +2148,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -2106,6 +2158,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -2117,7 +2170,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -2240,6 +2295,8 @@
                                       "cci",
                                       "williams_r",
                                       "roc",
+                                      "risk_adj_return",
+                                      "pct_of_high",
                                       "atr",
                                       "bb_upper",
                                       "bb_middle",
@@ -2248,6 +2305,7 @@
                                       "keltner_lower",
                                       "donchian_upper",
                                       "donchian_lower",
+                                      "volatility",
                                       "vwap",
                                       "obv",
                                       "mfi",
@@ -2259,7 +2317,9 @@
                                       "pivot_r1",
                                       "pivot_s1",
                                       "pivot_r2",
-                                      "pivot_s2"
+                                      "pivot_s2",
+                                      "or_high",
+                                      "or_low"
                                     ]
                                   },
                                   "params": {
@@ -2421,6 +2481,8 @@
                                         "cci",
                                         "williams_r",
                                         "roc",
+                                        "risk_adj_return",
+                                        "pct_of_high",
                                         "atr",
                                         "bb_upper",
                                         "bb_middle",
@@ -2429,6 +2491,7 @@
                                         "keltner_lower",
                                         "donchian_upper",
                                         "donchian_lower",
+                                        "volatility",
                                         "vwap",
                                         "obv",
                                         "mfi",
@@ -2440,7 +2503,9 @@
                                         "pivot_r1",
                                         "pivot_s1",
                                         "pivot_r2",
-                                        "pivot_s2"
+                                        "pivot_s2",
+                                        "or_high",
+                                        "or_low"
                                       ]
                                     },
                                     "params": {
@@ -2561,6 +2626,8 @@
                                             "cci",
                                             "williams_r",
                                             "roc",
+                                            "risk_adj_return",
+                                            "pct_of_high",
                                             "atr",
                                             "bb_upper",
                                             "bb_middle",
@@ -2569,6 +2636,7 @@
                                             "keltner_lower",
                                             "donchian_upper",
                                             "donchian_lower",
+                                            "volatility",
                                             "vwap",
                                             "obv",
                                             "mfi",
@@ -2580,7 +2648,9 @@
                                             "pivot_r1",
                                             "pivot_s1",
                                             "pivot_r2",
-                                            "pivot_s2"
+                                            "pivot_s2",
+                                            "or_high",
+                                            "or_low"
                                           ]
                                         },
                                         "params": {
@@ -2703,6 +2773,8 @@
                                             "cci",
                                             "williams_r",
                                             "roc",
+                                            "risk_adj_return",
+                                            "pct_of_high",
                                             "atr",
                                             "bb_upper",
                                             "bb_middle",
@@ -2711,6 +2783,7 @@
                                             "keltner_lower",
                                             "donchian_upper",
                                             "donchian_lower",
+                                            "volatility",
                                             "vwap",
                                             "obv",
                                             "mfi",
@@ -2722,7 +2795,9 @@
                                             "pivot_r1",
                                             "pivot_s1",
                                             "pivot_r2",
-                                            "pivot_s2"
+                                            "pivot_s2",
+                                            "or_high",
+                                            "or_low"
                                           ]
                                         },
                                         "params": {

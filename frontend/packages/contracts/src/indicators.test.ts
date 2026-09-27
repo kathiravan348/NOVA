@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { INDICATORS, IndicatorNameSchema, checkIndicatorParams, indicatorDef } from "./indicators";
 
 describe("indicator catalog (D51)", () => {
-  it("has 38 unique indicators in five groups", () => {
-    expect(INDICATORS).toHaveLength(38);
-    expect(new Set(INDICATORS.map((i) => i.name)).size).toBe(38);
+  it("has 43 unique indicators in five groups", () => {
+    expect(INDICATORS).toHaveLength(43);
+    expect(new Set(INDICATORS.map((i) => i.name)).size).toBe(43);
     expect(new Set(INDICATORS.map((i) => i.group))).toEqual(
       new Set(["trend", "momentum", "volatility", "volume", "levels"]),
     );
@@ -32,5 +32,7 @@ describe("indicator catalog (D51)", () => {
     ]);
     expect(checkIndicatorParams("nope", {})).toEqual(["Unknown indicator 'nope'"]);
     expect(indicatorDef("pivot_r1")?.label).toBe("Pivot R1");
+    expect(checkIndicatorParams("or_high", { minutes: 7.5 })).toHaveLength(1);
+    expect(indicatorDef("volatility")?.group).toBe("volatility");
   });
 });

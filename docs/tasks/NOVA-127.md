@@ -1,6 +1,6 @@
 # NOVA-127 — Five new indicators: catalog, engine and Python ctx (D62 (5))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-127 · **Depends on:** NOVA-111, NOVA-114
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-127 · **Depends on:** NOVA-111, NOVA-114
 
 ## Goal
 The catalog grows from 38 to 43 indicators: `volatility`, `risk_adj_return`, `pct_of_high`, `or_high` and `or_low`. Each one
@@ -61,7 +61,18 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. Catalog 38 → 43 on both sides (`volatility` in Volatility; `risk_adj_return`, `pct_of_high` in Momentum;
+`or_high`, `or_low` with `minutes` in Levels) plus `INTRADAY_ONLY`; `specParamProblems` / `spec_param_problems` add
+"Opening range needs an intraday timeframe" for those on `1d`. `Columns.timeframe` (default `"1d"`; `load`,
+`from_arrays`, `from_bars` take it). `indicators_stats.py`: volatility = sample std dev of the last N returns ×
+√(252 × bars a day) × 100, first value at index N, computed on numpy windows in 20 k-row blocks;
+`risk_adj_return` = ROC ÷ volatility (none at 0); `pct_of_high` = close ÷ N-bar highest high × 100.
+`indicators_levels.opening_range`: high/low of the day's bars that start before 09:15 + minutes, shown from the first
+bar at or after that time, none on `1d`. Python mode needed nothing (the sandbox reads the catalog).
+- Deviations: the write check lives in `strategyWrite.ts` (where `specParamProblems` is), not `strategy.ts`; the new
+  hand-checked tests are all in `test_indicators_stats.py` (including the sandbox case) instead of spread over
+  `test_indicators*.py` / `test_sandbox.py`.
+Commands: backend-check 987 passed; `pnpm review:check` passed. Guides: USER-GUIDE (Step 4 list, count 43).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

@@ -5,7 +5,7 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Exchange, Id, Segment, Timeframe, UtcDateTime
-from nova_contracts.indicators import IndicatorName, param_problems
+from nova_contracts.indicators import INTRADAY_ONLY, IndicatorName, param_problems
 from nova_contracts.market_data import IndexName
 
 PriceField = Literal["open", "high", "low", "close", "volume"]
@@ -241,12 +241,18 @@ def spec_operands(spec: AnySpec) -> list[Operand]:
 def spec_param_problems(spec: AnySpec) -> list[str]:
     """Indicator setting problems anywhere in a spec (D51, D62): writes refuse, reads do not."""
     operands = spec_operands(spec)
-    return [
+    problems = [
         problem
         for o in operands
         if isinstance(o, OperandIndicator)
         for problem in param_problems(o.name, o.params)
     ]
+    opening_range = any(
+        isinstance(o, OperandIndicator) and o.name in INTRADAY_ONLY for o in operands
+    )
+    if opening_range and spec.timeframe == "1d":
+        problems.append("Opening range needs an intraday timeframe")
+    return problems
 
 
 class _CheckedSpec(Contract):

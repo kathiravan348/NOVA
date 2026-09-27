@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { checkIndicatorParams } from "./indicators";
+import { checkIndicatorParams, INTRADAY_ONLY } from "./indicators";
 import {
   StrategySpecSchema,
   StrategyStatusSchema,
@@ -30,9 +30,15 @@ export function specOperands(spec: StrategySpec): Operand[] {
 
 /** Indicator settings problems anywhere in a spec (D51, D62); write bodies refuse them, reads stay tolerant. */
 export function specParamProblems(spec: StrategySpec): string[] {
-  return specOperands(spec).flatMap((o) =>
+  const operands = specOperands(spec);
+  const problems = operands.flatMap((o) =>
     o.kind === "indicator" ? checkIndicatorParams(o.name, o.params) : [],
   );
+  const openingRange = operands.some((o) => o.kind === "indicator" && INTRADAY_ONLY.has(o.name));
+  if (openingRange && spec.timeframe === "1d") {
+    problems.push("Opening range needs an intraday timeframe");
+  }
+  return problems;
 }
 
 const checkedSpec = (body: { spec: StrategySpec }, ctx: z.RefinementCtx) => {

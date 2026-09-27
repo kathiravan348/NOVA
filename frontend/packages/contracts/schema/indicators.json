@@ -300,6 +300,32 @@
     ]
   },
   {
+    "name": "risk_adj_return",
+    "label": "Risk-adjusted return",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 126,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "pct_of_high",
+    "label": "% of N-bar high",
+    "group": "momentum",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 252,
+        "integer": true
+      }
+    ]
+  },
+  {
     "name": "atr",
     "label": "ATR",
     "group": "volatility",
@@ -446,6 +472,19 @@
     ]
   },
   {
+    "name": "volatility",
+    "label": "Volatility % (yearly)",
+    "group": "volatility",
+    "params": [
+      {
+        "key": "period",
+        "label": "Period",
+        "default": 20,
+        "integer": true
+      }
+    ]
+  },
+  {
     "name": "vwap",
     "label": "VWAP",
     "group": "volume",
@@ -530,5 +569,31 @@
     "label": "Pivot S2",
     "group": "levels",
     "params": []
+  },
+  {
+    "name": "or_high",
+    "label": "Opening range high",
+    "group": "levels",
+    "params": [
+      {
+        "key": "minutes",
+        "label": "Minutes",
+        "default": 15,
+        "integer": true
+      }
+    ]
+  },
+  {
+    "name": "or_low",
+    "label": "Opening range low",
+    "group": "levels",
+    "params": [
+      {
+        "key": "minutes",
+        "label": "Minutes",
+        "default": 15,
+        "integer": true
+      }
+    ]
   }
 ]

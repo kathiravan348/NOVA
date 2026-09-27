@@ -137,4 +137,16 @@ describe("spec v2 (D62)", () => {
       "SMA period must be a whole number of at least 1",
     ]);
   });
+
+  it("refuses an opening range on daily bars (D62 (5))", () => {
+    const orHigh = { kind: "indicator", name: "or_high", params: { minutes: 15 } } as const;
+    const entry = { combinator: "all", conditions: [{ left: close, op: "gt", right: orHigh }] };
+    const daily = { ...visual, entry } as const;
+    expect(specParamProblems(StrategySpecSchema.parse(daily))).toEqual([
+      "Opening range needs an intraday timeframe",
+    ]);
+    expect(create(daily).success).toBe(false);
+    const intraday = { ...daily, segment: "equity_intraday", timeframe: "15m" } as const;
+    expect(create(intraday).success).toBe(true);
+  });
 });

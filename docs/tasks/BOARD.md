@@ -132,7 +132,7 @@
 | NOVA-124 | Atlas: `candle_days` summary, trading calendar, coverage endpoints (D63, migration 0017) | done | Claude | 112, 113, 123 |
 | NOVA-125 | ui-core DataTable: group rows (D63) | done | Claude | — |
 | NOVA-126 | Relay: Stored data page, group by index/sector, Download missing (D63) | done | Claude | 113, 123, 125 (merge after 124) |
-| NOVA-127 | Five new indicators: catalog, engine, Python ctx (D62) | planned | — | 111, 114 |
+| NOVA-127 | Five new indicators: catalog, engine, Python ctx (D62) | done | Claude | 111, 114 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

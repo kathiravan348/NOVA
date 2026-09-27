@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-111). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-127). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -106,7 +106,7 @@ Go to **Strategies → New strategy** (or **Edit** on an existing one).
    **Exchange** (NSE) and **Timeframe** (candle size, e.g. 1 day or 5 minutes).
 2. **Entry rules** — *when to buy*. Each rule is: **Left** thing · comparison · **Right** thing.
    - A "thing" can be a **Price** (Open, High, Low, Close, Volume), an **Indicator**, or a plain **Number**.
-   - An *indicator* is a number calculated from past prices. The **Indicator** list has 38, in groups.
+   - An *indicator* is a number calculated from past prices. The **Indicator** list has 43, in groups.
      Choosing one shows its own settings (for example MACD: **Fast**, **Slow**, **Signal**), already filled
      with the usual values. You can change them.
      - **Trend**: moving averages (SMA, EMA, WMA), MACD; **SuperTrend** (a line under the price in an
@@ -114,12 +114,18 @@ Go to **Strategies → New strategy** (or **Edit** on an existing one).
        **+DI / −DI** (buying vs selling pressure); **Parabolic SAR** (a trailing stop that follows the trend).
      - **Momentum**: RSI; **Stochastic** (where the close sits in the recent high–low range); **CCI** (how far
        the price is from its average); **Williams %R** (like Stochastic, from 0 down to −100); rate of change %.
+       - **Risk-adjusted return**: the rise over a period divided by how bumpy it was (higher = a steadier rise).
+       - **% of N-bar high**: today's close as a percentage of the highest price in that period (100 = a new high).
      - **Volatility**: ATR (the average daily range), Bollinger bands; **Keltner** bands (average ± ATR);
        **Highest high / Lowest low** of the last few candles (Donchian).
+       - **Volatility % (yearly)**: how much the price jumps around, as a yearly percentage.
      - **Volume**: VWAP; **OBV** (volume added on up days, taken away on down days); **MFI** (like RSI but
        weighted by volume); Volume SMA.
      - **Levels (previous day)**: yesterday's high, low and close, and the **pivot** levels traders compute
        from them (Pivot, R1/R2 above it, S1/S2 below it).
+       - **Opening range high / low**: the highest and lowest price of today's first minutes after 09:15
+         (15 by default). It appears once those minutes are over, and only on intraday timeframes: a
+         strategy on 1-day candles cannot use it.
    - **Bars ago** looks back in time: 0 is the current candle, 1 the one before. Example: *Close greater
      than High, 1 bar ago* means "today's close beats yesterday's high".
    - Comparisons: *crosses above*, *crosses below*, *greater than*, *less than*, *equal*, etc.

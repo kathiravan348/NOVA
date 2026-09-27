@@ -11,6 +11,7 @@ from nova_contracts import (
     StrategyUpdate,
     StrategyVersionCreate,
 )
+from nova_contracts.strategy import spec_param_problems
 from nova_testing.parity import Parity
 from pydantic import ValidationError
 
@@ -115,6 +116,20 @@ def test_write_bodies_refuse_bad_params_but_reads_accept_them(left: dict[str, ob
     with pytest.raises(ValidationError):
         StrategyVersionCreate.model_validate_json(json.dumps({"note": "", "spec": spec}))
     StrategySpecVisual.model_validate_json(json.dumps(spec))
+
+
+def test_an_opening_range_needs_an_intraday_timeframe() -> None:
+    """D62 (5): `or_high` / `or_low` have no value on daily bars, so writes refuse them."""
+    or_low: dict[str, object] = {"kind": "indicator", "name": "or_low", "params": {"minutes": 30}}
+    daily = _visual(or_low)
+
+    assert spec_param_problems(StrategySpecVisual.model_validate(daily)) == [
+        "Opening range needs an intraday timeframe"
+    ]
+    with pytest.raises(ValidationError, match="Opening range needs an intraday timeframe"):
+        StrategyVersionCreate.model_validate_json(json.dumps({"note": "", "spec": daily}))
+    intraday = daily | {"segment": "equity_intraday", "timeframe": "15m"}
+    StrategyVersionCreate.model_validate_json(json.dumps({"note": "", "spec": intraday}))
 
 
 @pytest.mark.parametrize("offset", [0, 1, 500, None])

@@ -33,18 +33,26 @@ class Columns:
     close: Ints
     volume: Ints
     day: npt.NDArray[np.int32]
+    timeframe: str = "1d"  # bar size: the opening range and volatility need it (D62)
 
     def __len__(self) -> int:
         return len(self.ts)
 
     @classmethod
     def from_arrays(
-        cls, ts: Ints, open_: Ints, high: Ints, low: Ints, close: Ints, volume: Ints
+        cls,
+        ts: Ints,
+        open_: Ints,
+        high: Ints,
+        low: Ints,
+        close: Ints,
+        volume: Ints,
+        timeframe: str = "1d",
     ) -> Self:
-        return cls(ts, open_, high, low, close, volume, ist_days(ts))
+        return cls(ts, open_, high, low, close, volume, ist_days(ts), timeframe)
 
     @classmethod
-    def from_bars(cls, bars: Sequence[Bar]) -> Self:
+    def from_bars(cls, bars: Sequence[Bar], timeframe: str = "1d") -> Self:
         def column(values: list[int]) -> Ints:
             return np.array(values, dtype=np.int64)
 
@@ -55,6 +63,7 @@ class Columns:
             column([b.low for b in bars]),
             column([b.close for b in bars]),
             column([b.volume for b in bars]),
+            timeframe,
         )
 
     def time(self, i: int) -> datetime:
@@ -113,4 +122,5 @@ def load(
     def joined(k: int) -> Ints:
         return np.concatenate(parts[k]) if parts[k] else np.zeros(0, dtype=np.int64)
 
-    return Columns.from_arrays(*(joined(k) for k in range(6)))
+    ts, open_, high, low, close, volume = (joined(k) for k in range(6))
+    return Columns.from_arrays(ts, open_, high, low, close, volume, timeframe)
