@@ -5,9 +5,10 @@ from datetime import UTC, datetime
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
-from nova_common.internal import CallerDep
+from nova_common.internal import Caller, CallerDep
 from nova_contracts import (
     BacktestDeleteResult,
+    LibraryInstall,
     StrategyCreate,
     StrategyUpdate,
     StrategyVersionCreate,
@@ -20,6 +21,7 @@ from nova_db.web import Db
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from nova_strategy.library import load_library
 from nova_strategy.stats import strategy_stats
 
 router = APIRouter(prefix="/strategies")
@@ -83,40 +85,80 @@ def list_stats(_: CallerDep, db: Db) -> JSONResponse:
     return JSONResponse([stats.model_dump(mode="json") for stats in strategy_stats(db)])
 
 
+@router.get("/library")
+def get_library(_: CallerDep) -> JSONResponse:
+    """The 60 library strategies in their families (D62 (7))."""
+    return JSONResponse(load_library().model_dump(mode="json"))
+
+
+@router.post("/library/install")
+def install_library(body: LibraryInstall, caller: CallerDep, db: Db) -> JSONResponse:
+    """Adds the chosen entries as draft strategies, in order, in one transaction."""
+    by_id = {entry.id: entry for entry in load_library().entries}
+    unknown = [entry_id for entry_id in body.ids if entry_id not in by_id]
+    if unknown:
+        raise ApiException(
+            400, "invalid_request", f"Unknown library strategies: {', '.join(unknown)}"
+        )
+    created = [
+        _create(
+            db,
+            caller,
+            by_id[entry_id].name,
+            by_id[entry_id].summary,
+            by_id[entry_id].spec.model_dump(mode="json"),
+            note=f"From the library ({entry_id})",
+        )
+        for entry_id in body.ids
+    ]
+    db.commit()
+    return JSONResponse(
+        [to_contract(s, _versions(db, s.id)).model_dump(mode="json") for s in created],
+        status_code=201,
+    )
+
+
 @router.get("/{strategy_id}")
 def get_strategy(strategy_id: str, _: CallerDep, db: Db) -> JSONResponse:
     return _body(db, strategy_id)
 
 
-@router.post("")
-def create_strategy(body: StrategyCreate, caller: CallerDep, db: Db) -> JSONResponse:
+def _create(
+    db: Session,
+    caller: Caller,
+    name: str,
+    description: str,
+    spec: dict[str, object],
+    note: str = "First version",
+) -> Strategy:
+    """A new draft strategy with version 1 and its audit row (no commit)."""
     strategy = Strategy(
         id=new_id("stg"),
-        name=body.name,
-        description=body.description,
+        name=name,
+        description=description,
         status="draft",
         latest_version=1,
     )
     db.add(strategy)
     db.flush()
-    db.add(
-        StrategyVersion(
-            strategy_id=strategy.id,
-            version=1,
-            note="First version",
-            spec=body.spec.model_dump(mode="json"),
-        )
-    )
+    db.add(StrategyVersion(strategy_id=strategy.id, version=1, note=note, spec=spec))
     record_audit(
         db,
         action="strategy.create",
         actor_id=caller.id,
         actor_name=caller.name,
-        summary=f"Created strategy {body.name}",
+        summary=f"Created strategy {name}",
         target_type="strategy",
         target_id=strategy.id,
         ip=caller.ip,
     )
+    return strategy
+
+
+@router.post("")
+def create_strategy(body: StrategyCreate, caller: CallerDep, db: Db) -> JSONResponse:
+    spec = body.spec.model_dump(mode="json")
+    strategy = _create(db, caller, body.name, body.description, spec)
     db.commit()
     return _body(db, strategy.id, status=201)
 

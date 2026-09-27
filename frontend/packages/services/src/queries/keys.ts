@@ -5,6 +5,8 @@ export const queryKeys = {
     stats: ["strategies", "stats"] as const,
     detail: (id: string) => ["strategies", id] as const,
   },
+  /** Fixed data (D62 (7)); not under "strategies", so saving a strategy does not refetch it. */
+  strategyLibrary: ["strategy-library"] as const,
   backtests: {
     all: ["backtests"] as const,
     lists: ["backtests", "list"] as const,

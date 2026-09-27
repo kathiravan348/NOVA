@@ -1,0 +1,1072 @@
+[
+  {
+    "id": "G01",
+    "family": "intraday",
+    "name": "Opening range breakout 15",
+    "summary": "15m: buy a break above the first 15 minutes' high over VWAP on high volume; sell below VWAP.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 15
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G02",
+    "family": "intraday",
+    "name": "Opening range breakout 30",
+    "summary": "15m: buy a break above the first 30 minutes' high over VWAP; sell below VWAP.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1.2,
+        "targetPercent": 2.5
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 30
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G03",
+    "family": "intraday",
+    "name": "VWAP pullback in trend",
+    "summary": "15m: in an uptrend over yesterday's close, buy a dip through VWAP that closes above it.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 0.8,
+        "targetPercent": 1.6
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_close",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G04",
+    "family": "intraday",
+    "name": "VWAP reclaim",
+    "summary": "15m: buy a cross back above VWAP with RSI over 50 and ADX over 20; sell on a cross below.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 50
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_below",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G05",
+    "family": "intraday",
+    "name": "Previous-day high break",
+    "summary": "15m: buy a break above yesterday's high on high volume; sell below VWAP.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_high",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G06",
+    "family": "intraday",
+    "name": "Pivot S1 bounce",
+    "summary": "15m: buy a bounce off pivot S1 over the 200 EMA; sell at the pivot.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 0.8,
+        "targetPercent": 1.5
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_s1",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_s1",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G07",
+    "family": "intraday",
+    "name": "Pivot R1 breakout",
+    "summary": "15m: buy a break above pivot R1 over VWAP on high volume; sell below the pivot or above R2.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_r1",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_r2",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G08",
+    "family": "intraday",
+    "name": "SuperTrend 15m",
+    "summary": "15m: buy a cross above SuperTrend over the 200 EMA with ADX over 20; sell below SuperTrend.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1.5,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "supertrend",
+              "params": {
+                "period": 10,
+                "multiplier": 3.0
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "supertrend",
+              "params": {
+                "period": 10,
+                "multiplier": 3.0
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G09",
+    "family": "intraday",
+    "name": "RSI dip in trend",
+    "summary": "15m: buy RSI under 35 in an uptrend above yesterday's low; sell when RSI tops 60.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 1.5
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 35
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 60
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G10",
+    "family": "intraday",
+    "name": "Squeeze breakout 15m",
+    "summary": "15m: buy the breakout after a Bollinger-in-Keltner squeeze over VWAP; sell below EMA 20.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 20
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 4
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "bb_upper",
+              "params": {
+                "period": 20,
+                "stddev": 2.0
+              },
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "keltner_upper",
+              "params": {
+                "period": 20,
+                "multiplier": 1.5,
+                "atr_period": 10
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_upper",
+              "params": {
+                "period": 20,
+                "stddev": 2.0
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  }
+]

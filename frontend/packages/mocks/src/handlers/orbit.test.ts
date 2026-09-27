@@ -6,6 +6,7 @@ import {
   BacktestDeleteResultSchema,
   BacktestRunSchema,
   BacktestVersionSchema,
+  StrategyLibrarySchema,
   StrategySchema,
   StrategyStatsSchema,
   TradeSchema,
@@ -16,6 +17,7 @@ import {
   mockBacktestResults,
   mockBacktestRuns,
   mockStrategies,
+  mockStrategyLibrary,
   mockStrategyStats,
   mockTrades,
   mockUser,
@@ -187,6 +189,30 @@ describe("Orbit MSW handlers", () => {
     const data = await res.json();
     const parsed = ApiErrorSchema.parse(data);
     expect(parsed.error.code).toBe("not_found");
+  });
+
+  it("GET /api/v1/strategies/library returns the library sample (D62)", async () => {
+    const res = await fetch("http://localhost/api/v1/strategies/library");
+    expect(StrategyLibrarySchema.parse(await res.json())).toEqual(mockStrategyLibrary);
+  });
+
+  it("POST /api/v1/strategies/library/install answers one draft per id; unknown ids are 400", async () => {
+    const install = (ids: string[]) =>
+      fetch("http://localhost/api/v1/strategies/library/install", {
+        method: "POST",
+        body: JSON.stringify({ ids }),
+      });
+    const res = await install(["B01", "A01"]);
+    expect(res.status).toBe(201);
+    const created = StrategySchema.array().parse(await res.json());
+    expect(created.map((s) => [s.name, s.status])).toEqual([
+      ["Turtle 55/20", "draft"],
+      ["12-1 momentum", "draft"],
+    ]);
+    expect(created[1]!.versions[0]!.note).toBe("From the library (A01)");
+    const bad = await install(["A01", "B99"]);
+    expect(bad.status).toBe(400);
+    expect(ApiErrorSchema.parse(await bad.json()).error.message).toContain("B99");
   });
 
   it("POST /api/v1/strategies answers with a draft version 1 (D43)", async () => {

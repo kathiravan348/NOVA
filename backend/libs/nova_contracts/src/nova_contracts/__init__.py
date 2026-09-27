@@ -73,6 +73,13 @@ from nova_contracts.data_job import (
 )
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.indicators import INDICATORS, Indicator, IndicatorName, check_params
+from nova_contracts.library import (
+    LibraryBacktest,
+    LibraryEntry,
+    LibraryFamily,
+    LibraryInstall,
+    StrategyLibrary,
+)
 from nova_contracts.market_data import (
     Candle,
     IndexName,
@@ -128,6 +135,11 @@ from nova_contracts.universe import UniverseEntry, UniverseEntryWrite, UniverseS
 from nova_contracts.user import User, UserRole
 
 __all__ = [
+    "LibraryBacktest",
+    "LibraryEntry",
+    "LibraryFamily",
+    "LibraryInstall",
+    "StrategyLibrary",
     "INDICATORS",
     "MAX_DOWNLOAD_SYMBOLS",
     "MAX_RECORDER_SYMBOLS",

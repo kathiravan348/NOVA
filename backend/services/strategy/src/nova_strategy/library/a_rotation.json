@@ -1,0 +1,880 @@
+[
+  {
+    "id": "A01",
+    "family": "momentum_rotation",
+    "name": "12-1 momentum",
+    "summary": "Each month, hold the 10 stocks that rose most over the past year, leaving out the latest month.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 231
+              },
+              "offset": 21
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A02",
+    "family": "momentum_rotation",
+    "name": "6-month momentum",
+    "summary": "Each month, hold the 10 stocks with the biggest 6-month rise.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A03",
+    "family": "momentum_rotation",
+    "name": "Blended momentum",
+    "summary": "Each month, hold the 10 stocks with the best mix of 3-, 6- and 12-month rises.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 63
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A04",
+    "family": "momentum_rotation",
+    "name": "Risk-adjusted momentum",
+    "summary": "Each month, hold the 10 stocks whose 6- and 12-month rises were steadiest for the risk taken.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A05",
+    "family": "momentum_rotation",
+    "name": "Concentrated risk-adjusted",
+    "summary": "Like risk-adjusted momentum, but only 5 stocks, each with a 20% stop-loss.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": 20,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 5,
+        "keepWithin": 10,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A06",
+    "family": "momentum_rotation",
+    "name": "Diversified blend",
+    "summary": "The blended 3-, 6- and 12-month score, spread over 20 stocks.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 20,
+        "keepWithin": 30,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 63
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A07",
+    "family": "momentum_rotation",
+    "name": "Trend-qualified momentum",
+    "summary": "Each month, hold the 10 biggest 6-month risers that sit above a rising 50-day average.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 50
+                }
+              }
+            },
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 50
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A08",
+    "family": "momentum_rotation",
+    "name": "52-week-high leaders",
+    "summary": "Each month, hold the 10 stocks closest to their 52-week high, ties broken by the 6-month rise.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "pct_of_high",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 0.1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A09",
+    "family": "momentum_rotation",
+    "name": "Fast weekly momentum",
+    "summary": "Each week, hold the 10 biggest 3-month risers, with a 10% stop-loss.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": 10,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "weekly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 63
+              }
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A10",
+    "family": "momentum_rotation",
+    "name": "Low-volatility momentum",
+    "summary": "Each month, hold the 10 biggest 6-month risers among stocks with yearly volatility under 30%.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "volatility",
+                "params": {
+                  "period": 252
+                }
+              },
+              "op": "lt",
+              "right": {
+                "kind": "number",
+                "value": 30
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A11",
+    "family": "momentum_rotation",
+    "name": "Momentum, not overheated",
+    "summary": "Each month, hold the 10 biggest 6-month risers whose RSI is under 75 (not overheated).",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "rsi",
+                "params": {
+                  "period": 14
+                }
+              },
+              "op": "lt",
+              "right": {
+                "kind": "number",
+                "value": 75
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A12",
+    "family": "momentum_rotation",
+    "name": "Quarterly momentum",
+    "summary": "Each quarter, hold the 15 stocks that rose most over the past year, leaving out the latest month.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "quarterly",
+        "hold": 15,
+        "keepWithin": 25,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 231
+              },
+              "offset": 21
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  }
+]
