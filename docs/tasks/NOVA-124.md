@@ -1,6 +1,6 @@
 # NOVA-124 — Atlas: `candle_days` summary, trading calendar, coverage endpoints (D63, migration 0017)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-124 · **Depends on:** NOVA-112, NOVA-113, NOVA-123
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-124 · **Depends on:** NOVA-112, NOVA-113, NOVA-123
 
 ## Goal
 A per-day candle summary is always current: filled once by the migration, then updated by every download step and job delete.
@@ -64,7 +64,18 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. Migration 0017 + model `CandleDay` (`candle_days`: bars per IST day of each `1m`/`1d` series; filled once from
+`candles`). `nova_atlas/candle_days.py`: `recount_days` (recounts whole IST days a range touches), called after every
+download step and, per symbol, after deleting a job's candles. `nova_atlas/coverage.py`: `calendar` (NIFTY 50 daily days,
+else days with ≥ 10 stocks), `GET /market-data/coverage` (stock list + indices with rows; one SQL pass over
+`candle_days` joined to the calendar; missing days counted in [max(first, from), min(last, to)]; status gaps > partial >
+complete; none when no day in the period) and `GET /market-data/coverage/{symbol}` (missing ranges merged by calendar
+order; 404 unknown). Router registered in `main.py`.
+- Extra file: `candle_days.py` (split from `coverage.py` so `download.py` does not import the router module).
+- Measured on the Owner DB (temporary copy in a rolled-back transaction): the one-time fill 23 s (318 k day rows); calendar
+  24 ms; the list query for 1m 33 ms.
+- Real mode: migration 0017 runs with the deploy after this batch.
+Commands: backend-check 732 passed. Guides: API, DATABASE.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass (timing measured on real data). Merged.

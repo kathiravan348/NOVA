@@ -15,6 +15,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from nova_atlas.broker_client import BrokerData, BrokerDataError
+from nova_atlas.candle_days import recount_days
 from nova_atlas.tokens import kite_tokens
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -231,6 +232,7 @@ def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | No
                 r for bar in bars if (r := to_row(job.exchange, step.symbol, job.timeframe, bar))
             ]
             written = upsert_candles(db, rows)
+            recount_days(db, job.exchange, step.symbol, job.timeframe, step.start_at, step.end_at)
             step.status, step.rows_written = "done", written
             step.finished_at = datetime.now(UTC)
             job.rows_written += written
