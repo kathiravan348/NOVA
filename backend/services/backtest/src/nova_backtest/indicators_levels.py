@@ -1,9 +1,10 @@
-"""Channels and levels (D51): Donchian, Keltner, previous IST day high/low/close, pivots."""
+"""Channels and levels (D51, D62): Donchian, Keltner, previous IST day high/low/close,
+pivots, and the opening range of the day."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from nova_backtest.columns import Columns
+from nova_backtest.columns import DAY_SECONDS, IST_OFFSET_SECONDS, Columns
 from nova_backtest.indicators_core import Series, atr, ema, highest, lowest, rupees
 
 
@@ -67,3 +68,32 @@ LEVELS: dict[str, Callable[[Day], float]] = {
 def level(bars: Columns, name: str) -> Series:
     value = LEVELS[name]
     return [value(day) if day else None for day in _previous_days(bars)]
+
+
+MARKET_OPEN_SECONDS = 9 * 3600 + 15 * 60  # 09:15 IST
+
+
+def opening_range(bars: Columns, minutes: int, upper: bool) -> Series:
+    """High (low) of the day's bars that start before 09:15 + `minutes` IST (D62 (5)).
+
+    The value appears from the first bar at or after that time and lasts to the end of the day;
+    there is none before it, nor on daily bars.
+    """
+    out: Series = [None] * len(bars)
+    if bars.timeframe == "1d":
+        return out
+    highs, lows, _ = rupees(bars)
+    cut = MARKET_OPEN_SECONDS + minutes * 60
+    seconds: list[int] = ((bars.ts + IST_OFFSET_SECONDS) % DAY_SECONDS).tolist()
+    day: int | None = None
+    best: float | None = None
+    for i, (bar_day, second) in enumerate(zip(bars.day.tolist(), seconds, strict=True)):
+        if bar_day != day:
+            day, best = bar_day, None
+        if second < cut:
+            value = highs[i] if upper else lows[i]
+            pick = max if upper else min
+            best = value if best is None else pick(best, value)
+        else:
+            out[i] = best
+    return out

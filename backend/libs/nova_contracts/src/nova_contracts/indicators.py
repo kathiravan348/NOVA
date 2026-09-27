@@ -23,6 +23,8 @@ IndicatorName = Literal[
     "cci",
     "williams_r",
     "roc",
+    "risk_adj_return",
+    "pct_of_high",
     "atr",
     "bb_upper",
     "bb_middle",
@@ -31,6 +33,7 @@ IndicatorName = Literal[
     "keltner_lower",
     "donchian_upper",
     "donchian_lower",
+    "volatility",
     "vwap",
     "obv",
     "mfi",
@@ -43,6 +46,8 @@ IndicatorName = Literal[
     "pivot_s1",
     "pivot_r2",
     "pivot_s2",
+    "or_high",
+    "or_low",
 ]
 
 
@@ -129,6 +134,10 @@ INDICATORS: tuple[Indicator, ...] = (
     Indicator("cci", "CCI", "momentum", (_int("period", "Period", 20),)),
     Indicator("williams_r", "Williams %R", "momentum", (_int("period", "Period", 14),)),
     Indicator("roc", "Rate of change %", "momentum", (_int("period", "Period", 12),)),
+    Indicator(
+        "risk_adj_return", "Risk-adjusted return", "momentum", (_int("period", "Period", 126),)
+    ),
+    Indicator("pct_of_high", "% of N-bar high", "momentum", (_int("period", "Period", 252),)),
     # Volatility
     Indicator("atr", "ATR", "volatility", (_int("period", "Period", 14),)),
     Indicator(
@@ -171,6 +180,7 @@ INDICATORS: tuple[Indicator, ...] = (
     ),
     Indicator("donchian_upper", "Highest high", "volatility", (_int("period", "Period", 20),)),
     Indicator("donchian_lower", "Lowest low", "volatility", (_int("period", "Period", 20),)),
+    Indicator("volatility", "Volatility % (yearly)", "volatility", (_int("period", "Period", 20),)),
     # Volume
     Indicator("vwap", "VWAP", "volume", ()),
     Indicator("obv", "OBV", "volume", ()),
@@ -185,7 +195,12 @@ INDICATORS: tuple[Indicator, ...] = (
     Indicator("pivot_s1", "Pivot S1", "levels", ()),
     Indicator("pivot_r2", "Pivot R2", "levels", ()),
     Indicator("pivot_s2", "Pivot S2", "levels", ()),
+    # Opening range (D62 (5)): today's first N minutes from 09:15 IST, intraday only.
+    Indicator("or_high", "Opening range high", "levels", (_int("minutes", "Minutes", 15),)),
+    Indicator("or_low", "Opening range low", "levels", (_int("minutes", "Minutes", 15),)),
 )
+# Indicators that only exist on intraday bars (D62 (5)).
+INTRADAY_ONLY = frozenset({"or_high", "or_low"})
 BY_NAME: dict[str, Indicator] = {i.name: i for i in INDICATORS}
 
 

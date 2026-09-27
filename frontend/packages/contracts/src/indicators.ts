@@ -36,6 +36,7 @@ const fast = int("fast", "Fast", 12);
 const slow = int("slow", "Slow", 26);
 const signal = (value: number) => int("signal", "Signal", value);
 const bollinger = [period(20), dec("stddev", "Std dev", 2)];
+const minutes = int("minutes", "Minutes", 15);
 const keltner = [
   period(20),
   dec("multiplier", "Multiplier", 2),
@@ -88,6 +89,13 @@ export const INDICATORS = [
   { name: "cci", label: "CCI", group: "momentum", params: [period(20)] },
   { name: "williams_r", label: "Williams %R", group: "momentum", params: [period(14)] },
   { name: "roc", label: "Rate of change %", group: "momentum", params: [period(12)] },
+  {
+    name: "risk_adj_return",
+    label: "Risk-adjusted return",
+    group: "momentum",
+    params: [period(126)],
+  },
+  { name: "pct_of_high", label: "% of N-bar high", group: "momentum", params: [period(252)] },
   // Volatility
   { name: "atr", label: "ATR", group: "volatility", params: [period(14)] },
   { name: "bb_upper", label: "Bollinger upper", group: "volatility", params: bollinger },
@@ -97,6 +105,7 @@ export const INDICATORS = [
   { name: "keltner_lower", label: "Keltner lower", group: "volatility", params: keltner },
   { name: "donchian_upper", label: "Highest high", group: "volatility", params: [period(20)] },
   { name: "donchian_lower", label: "Lowest low", group: "volatility", params: [period(20)] },
+  { name: "volatility", label: "Volatility % (yearly)", group: "volatility", params: [period(20)] },
   // Volume
   { name: "vwap", label: "VWAP", group: "volume", params: [] },
   { name: "obv", label: "OBV", group: "volume", params: [] },
@@ -111,7 +120,13 @@ export const INDICATORS = [
   { name: "pivot_s1", label: "Pivot S1", group: "levels", params: [] },
   { name: "pivot_r2", label: "Pivot R2", group: "levels", params: [] },
   { name: "pivot_s2", label: "Pivot S2", group: "levels", params: [] },
+  // Opening range (D62 (5)): today's first N minutes from 09:15 IST, intraday only.
+  { name: "or_high", label: "Opening range high", group: "levels", params: [minutes] },
+  { name: "or_low", label: "Opening range low", group: "levels", params: [minutes] },
 ] as const satisfies readonly IndicatorDef[];
+
+/** Indicators that only exist on intraday bars (D62 (5)). */
+export const INTRADAY_ONLY: ReadonlySet<string> = new Set(["or_high", "or_low"]);
 
 export type IndicatorName = (typeof INDICATORS)[number]["name"];
 export const IndicatorNameSchema = z.enum(

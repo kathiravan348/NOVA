@@ -21,8 +21,9 @@ from nova_backtest.indicators_core import (
     sma,
     vwap,
 )
-from nova_backtest.indicators_levels import LEVELS, donchian, keltner, level
+from nova_backtest.indicators_levels import LEVELS, donchian, keltner, level, opening_range
 from nova_backtest.indicators_momentum import cci, roc, stoch_d, stoch_k, stoch_rsi, williams_r
+from nova_backtest.indicators_stats import pct_of_high, risk_adj_return, volatility
 from nova_backtest.indicators_trend import (
     adx,
     macd_hist,
@@ -103,6 +104,11 @@ _DISPATCH: dict[str, Compute] = {
     "keltner_lower": lambda b, _, s: keltner(
         b, s.whole("period"), s.number("multiplier"), s.whole("atr_period"), upper=False
     ),
+    "volatility": lambda b, _, s: volatility(b, s.whole("period")),
+    "risk_adj_return": lambda b, _, s: risk_adj_return(b, s.whole("period")),
+    "pct_of_high": lambda b, _, s: pct_of_high(b, s.whole("period")),
+    "or_high": lambda b, _, s: opening_range(b, s.whole("minutes"), upper=True),
+    "or_low": lambda b, _, s: opening_range(b, s.whole("minutes"), upper=False),
 }
 
 
