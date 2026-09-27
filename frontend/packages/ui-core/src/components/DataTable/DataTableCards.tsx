@@ -1,5 +1,5 @@
 import * as React from "react";
-import { flexRender, type Table } from "@tanstack/react-table";
+import { flexRender, type Row, type Table } from "@tanstack/react-table";
 import { cn } from "../../lib/cn";
 import { Skeleton } from "../Skeleton/Skeleton";
 import "./columnMeta";
@@ -10,6 +10,8 @@ export interface DataTableCardsProps<TData> {
   loading?: boolean;
   error?: React.ReactNode;
   emptyState?: React.ReactNode;
+  /** Rows to show instead of the table's current page (a group, D63). */
+  rows?: Row<TData>[];
 }
 
 export function DataTableCards<TData>({
@@ -18,6 +20,7 @@ export function DataTableCards<TData>({
   loading = false,
   error,
   emptyState,
+  rows: onlyRows,
 }: DataTableCardsProps<TData>): React.ReactElement {
   if (loading) {
     return (
@@ -46,7 +49,7 @@ export function DataTableCards<TData>({
     );
   }
 
-  const rows = table.getRowModel().rows;
+  const rows = onlyRows ?? table.getRowModel().rows;
 
   if (rows.length === 0) {
     return (

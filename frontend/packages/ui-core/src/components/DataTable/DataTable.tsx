@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -9,16 +8,24 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { Skeleton } from "../Skeleton/Skeleton";
 import { DataTableCards } from "./DataTableCards";
+import { DataTableHead } from "./DataTableHead";
+import {
+  DataRow,
+  DataTableGroupBodies,
+  DataTableGroupCards,
+  groupRows,
+  useOpenGroups,
+  type DataTableGroups,
+} from "./DataTableGroups";
 import { DataTablePagination } from "./DataTablePagination";
 import { DataTableToolbar, type DataTableSearch } from "./DataTableToolbar";
 import { SelectionContext, selectionColumn } from "./selectionColumn";
 import "./columnMeta";
 
-export interface DataTableProps<TData, TValue> {
+interface DataTableBaseProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   caption: string;
@@ -29,14 +36,32 @@ export interface DataTableProps<TData, TValue> {
   error?: React.ReactNode;
   emptyState?: React.ReactNode;
   className?: string;
-  /** Selection is on when both are set; needs `getRowId`. */
-  selectedIds?: string[];
-  onSelectedIdsChange?: (ids: string[]) => void;
-  isRowSelectable?: (row: TData) => boolean;
   search?: DataTableSearch<TData>;
   /** Extra controls (e.g. filter selects) shown next to the search box. */
   toolbar?: React.ReactNode;
 }
+
+interface DataTableSelectionProps<TData> {
+  /** Selection is on when both are set; needs `getRowId`. */
+  selectedIds?: string[];
+  onSelectedIdsChange?: (ids: string[]) => void;
+  isRowSelectable?: (row: TData) => boolean;
+  groups?: never;
+}
+
+interface DataTableGroupedProps<TData> {
+  /**
+   * Rows in collapsible groups, not paginated. Not combined with selection: a row in two groups
+   * would show two checkboxes for one choice.
+   */
+  groups: DataTableGroups<TData>;
+  selectedIds?: never;
+  onSelectedIdsChange?: never;
+  isRowSelectable?: never;
+}
+
+export type DataTableProps<TData, TValue> = DataTableBaseProps<TData, TValue> &
+  (DataTableSelectionProps<TData> | DataTableGroupedProps<TData>);
 
 export function DataTable<TData, TValue = unknown>({
   columns,
@@ -54,7 +79,9 @@ export function DataTable<TData, TValue = unknown>({
   isRowSelectable,
   search,
   toolbar,
+  groups,
 }: DataTableProps<TData, TValue>): React.ReactElement {
+  const open = useOpenGroups(groups?.defaultOpen);
   const [sorting, setSorting] = React.useState<SortingState>(initialSort ?? []);
   const [pageIndex, setPageIndex] = React.useState(0);
   const [query, setQuery] = React.useState("");
@@ -119,6 +146,11 @@ export function DataTable<TData, TValue = unknown>({
   const noMatch =
     query.trim() !== "" && data.length > 0 ? `No rows match "${query.trim()}"` : undefined;
   const emptyContent = noMatch ?? emptyState;
+  // Groups see every filtered, sorted row: no pagination while grouped.
+  const grouped = groups ? groupRows(table.getPrePaginationRowModel().rows, groups) : null;
+  const view =
+    groups && grouped && grouped.length > 0 && !loading && !error ? { groups, grouped } : null;
+  const noRows = grouped ? grouped.length === 0 : table.getRowModel().rows.length === 0;
 
   return (
     <SelectionContext.Provider value={selection}>
@@ -138,135 +170,77 @@ export function DataTable<TData, TValue = unknown>({
         <div className="hidden md:block overflow-x-auto rounded-lg border border-border-default bg-bg-surface">
           <table className="w-full text-left border-collapse">
             <caption className="sr-only">{caption}</caption>
-            <thead className="bg-bg-raised text-label uppercase text-text-muted border-b border-border-default">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    const meta = header.column.columnDef.meta;
-                    const isNumeric = meta?.numeric ?? false;
-                    const canSort = header.column.getCanSort();
-                    const isSorted = header.column.getIsSorted();
-
-                    const ariaSort =
-                      isSorted === "asc"
-                        ? "ascending"
-                        : isSorted === "desc"
-                          ? "descending"
-                          : canSort
-                            ? "none"
-                            : undefined;
-
-                    return (
-                      <th
-                        key={header.id}
-                        scope="col"
-                        aria-sort={ariaSort}
-                        className={cn(
-                          "px-5 py-3 font-semibold",
-                          isNumeric ? "text-right" : "text-left",
-                        )}
-                      >
-                        {header.isPlaceholder ? null : canSort ? (
-                          <button
-                            type="button"
-                            onClick={header.column.getToggleSortingHandler()}
-                            className={cn(
-                              "inline-flex items-center gap-1.5 rounded-xs transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action",
-                              isNumeric && "flex-row-reverse",
-                            )}
-                          >
-                            <span>
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                            </span>
-                            {isSorted === "asc" ? (
-                              <ArrowUp className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            ) : isSorted === "desc" ? (
-                              <ArrowDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            ) : (
-                              <ArrowUpDown
-                                className="h-3.5 w-3.5 shrink-0 opacity-50"
-                                aria-hidden="true"
-                              />
-                            )}
-                          </button>
-                        ) : (
-                          <span>
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </span>
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-border-default">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {allColumns.map((_, colIndex) => (
-                      <td key={colIndex} className="px-5 py-3">
-                        <Skeleton className="h-4 w-full" />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : error ? (
-                <tr>
-                  <td colSpan={allColumns.length} className="px-5 py-8 text-center">
-                    <div role="alert" className="text-body text-loss">
-                      {error}
-                    </div>
-                  </td>
-                </tr>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={allColumns.length}
-                    className="px-5 py-8 text-center text-body text-text-muted"
-                  >
-                    {emptyContent ?? "No rows to show"}
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="transition-colors hover:bg-bg-raised/50">
-                    {row.getVisibleCells().map((cell) => {
-                      const isNumeric = cell.column.columnDef.meta?.numeric ?? false;
-
-                      return (
-                        <td
-                          key={cell.id}
-                          className={cn(
-                            "px-5 py-3 text-body text-text-primary",
-                            isNumeric &&
-                              "whitespace-nowrap text-right font-mono text-number tabular-nums",
-                          )}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            <DataTableHead table={table} />
+            {view ? (
+              <DataTableGroupBodies
+                grouped={view.grouped}
+                groups={view.groups}
+                isOpen={open.isOpen}
+                onToggle={open.toggle}
+                columnCount={allColumns.length}
+              />
+            ) : (
+              <tbody className="divide-y divide-border-default">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {allColumns.map((_, colIndex) => (
+                        <td key={colIndex} className="px-5 py-3">
+                          <Skeleton className="h-4 w-full" />
                         </td>
-                      );
-                    })}
+                      ))}
+                    </tr>
+                  ))
+                ) : error ? (
+                  <tr>
+                    <td colSpan={allColumns.length} className="px-5 py-8 text-center">
+                      <div role="alert" className="text-body text-loss">
+                        {error}
+                      </div>
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
+                ) : noRows ? (
+                  <tr>
+                    <td
+                      colSpan={allColumns.length}
+                      className="px-5 py-8 text-center text-body text-text-muted"
+                    >
+                      {emptyContent ?? "No rows to show"}
+                    </td>
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map((row) => <DataRow key={row.id} row={row} />)
+                )}
+              </tbody>
+            )}
           </table>
         </div>
 
         {/* Mobile view */}
         <div className="md:hidden">
-          <DataTableCards
-            table={table}
-            caption={caption}
-            loading={loading}
-            error={error}
-            emptyState={emptyContent}
-          />
+          {view ? (
+            <DataTableGroupCards
+              table={table}
+              caption={caption}
+              grouped={view.grouped}
+              groups={view.groups}
+              isOpen={open.isOpen}
+              onToggle={open.toggle}
+            />
+          ) : (
+            <DataTableCards
+              table={table}
+              caption={caption}
+              loading={loading}
+              error={error}
+              emptyState={emptyContent}
+              rows={grouped ? [] : undefined}
+            />
+          )}
         </div>
 
-        {/* Pagination */}
-        {!loading && !error && <DataTablePagination table={table} />}
+        {/* Pagination: not while grouped (every group shows all its rows) */}
+        {!loading && !error && !groups && <DataTablePagination table={table} />}
       </div>
     </SelectionContext.Provider>
   );

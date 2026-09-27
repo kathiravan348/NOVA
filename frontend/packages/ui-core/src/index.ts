@@ -35,6 +35,7 @@ export {
 } from "./components/Toast/toastContext";
 export { useToast } from "./components/Toast/useToast";
 export { DataTable, type DataTableProps } from "./components/DataTable/DataTable";
+export { type DataTableGroups } from "./components/DataTable/DataTableGroups";
 export { DataTableCards, type DataTableCardsProps } from "./components/DataTable/DataTableCards";
 export {
   DataTablePagination,
