@@ -6,7 +6,7 @@ from nova_atlas.broker_client import BrokerData
 from nova_atlas.download import Pacer, run_download
 from nova_atlas.job_control import expire_drafts
 from nova_atlas.jobs import queue_download
-from nova_atlas.plan import build_plan, is_covered
+from nova_atlas.plan import build_plan, check_request, is_covered
 from nova_atlas.universe import sync_instruments
 from nova_db.models import AuditEntry, DataJob, DataJobStep
 from nova_testing.parity import Parity
@@ -217,3 +217,25 @@ def test_old_create_endpoint_plans_and_queues_at_once(synced: Engine, client: Te
 
     assert job["status"] == "queued" and job["mode"] == "skip_existing" and job["stepsTotal"] == 2
     assert [s.status for s in steps] == ["pending", "pending"]
+
+
+def test_indices_are_planned_like_stocks(synced: Engine) -> None:
+    """D62 (2): NIFTY 50 has a Kite token after the sync; NIFTY BANK does not."""
+    with Session(synced) as db:
+        plan, steps = build_plan(
+            db,
+            symbols=["INFY", "NIFTY 50", "NIFTY BANK"],
+            timeframe="1d",
+            first=date(2026, 9, 1),
+            last=date(2026, 9, 25),
+            mode="skip_existing",
+            now=SATURDAY,
+        )
+
+    assert [s.symbol for s in steps] == ["INFY", "NIFTY 50", "NIFTY BANK"]
+    assert plan.warnings == ["Not synced with Kite: NIFTY BANK. Run Sync with Kite first."]
+
+
+def test_unknown_names_are_refused(synced: Engine) -> None:
+    with Session(synced) as db, pytest.raises(ValueError, match="or the indices: NIFTY 51"):
+        check_request(db, ["NIFTY 50", "NIFTY 51"], "1d", FIRST, LAST, "equity_delivery")

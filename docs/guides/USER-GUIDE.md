@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-112). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-113). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -310,7 +310,9 @@ dropped for a moment; the pages then refresh every few seconds until **Live** is
 **1 minute** or **1 day**; 3-minute to 1-hour candles are built from 1-minute prices, so download
 **1 minute** to test a 5-minute strategy), the **From** and **To** dates and the stocks. Tick stocks one by one (use the
 search box), or add a whole group with **Add index…** (for example all of NIFTY BANK) or **Add sector…**;
-**Clear** empties the list. Only stocks *synced* with Kite can be picked. Then press **Check plan**.
+**Clear** empties the list. Only stocks *synced* with Kite can be picked. Under **Indices** you can tick index
+prices too (for example **NIFTY 50**): backtests use them for the benchmark line and the market filter. Before a
+5-year test, download NIFTY 50 and NIFTY 100 with **1 day** from 1 Jan 2020. Then press **Check plan**.
 
 **Check the plan before it runs.** Nothing is downloaded yet. The plan shows, for each stock, the prices
 already stored and how many *steps* (one request to Zerodha each) are still needed, plus the total rows, the

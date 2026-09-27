@@ -9,6 +9,7 @@ import {
 } from "@nova/contracts";
 import { mockDataJobs, mockInstruments } from "../data";
 import { apiPath, badRequest, notFound } from "./api";
+import { mockMarketIndices } from "./marketData";
 
 /** Demo time for everything these handlers answer. */
 export const DEMO_NOW = "2026-09-22T04:30:00Z";
@@ -62,8 +63,12 @@ export const downloadHandlers = [
     const parsed = DataJobPlanRequestSchema.safeParse(await request.json().catch(() => undefined));
     if (!parsed.success) return badRequest(parsed.error.issues[0]?.message ?? "Invalid download");
     const body = parsed.data;
-    const unknown = body.symbols.filter((s) => !mockInstruments.some((i) => i.symbol === s));
-    if (unknown.length > 0) return badRequest(`Not in the stock list: ${unknown.join(", ")}`);
+    const known = (s: string) =>
+      mockInstruments.some((i) => i.symbol === s) || mockMarketIndices.some((i) => i.name === s);
+    const unknown = body.symbols.filter((s) => !known(s));
+    if (unknown.length > 0) {
+      return badRequest(`Not in the stock list or the indices: ${unknown.join(", ")}`);
+    }
     const perSymbol = body.symbols.map((symbol) => {
       const stored = storedRange(symbol, body.timeframe);
       const covered =

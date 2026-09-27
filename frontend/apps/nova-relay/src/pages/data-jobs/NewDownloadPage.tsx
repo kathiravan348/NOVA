@@ -23,6 +23,7 @@ import { QueryError } from "../../components/QueryState";
 import { istDaysAgo, todayIst } from "../../lib/format";
 import { segmentLabel, timeframeLabel } from "../../lib/labels";
 import { BulkStockPicker } from "./BulkStockPicker";
+import { IndexPicker } from "./IndexPicker";
 import { PlanReview } from "./PlanReview";
 
 const columns: ColumnDef<UniverseEntry, unknown>[] = [
@@ -51,6 +52,7 @@ export function NewDownloadPage() {
   const change = useChangeDataJob();
   const discard = useDeleteDataJob();
   const [symbols, setSymbols] = useState<string[]>([]);
+  const [indices, setIndices] = useState<string[]>([]);
   const [timeframe, setTimeframe] = useState<Timeframe>("1d");
   const [from, setFrom] = useState(istDaysAgo(365));
   const [to, setTo] = useState(todayIst());
@@ -59,7 +61,7 @@ export function NewDownloadPage() {
   const [failed, setFailed] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
 
-  const request = { symbols, timeframe, from, to, segment };
+  const request = { symbols: [...symbols, ...indices], timeframe, from, to, segment };
   const parsed = DataJobPlanRequestSchema.safeParse(request);
   const issue = (field: string) =>
     parsed.success ? undefined : parsed.error.issues.find((i) => i.path[0] === field)?.message;
@@ -101,7 +103,7 @@ export function NewDownloadPage() {
         title: demo ? "Download started (demo)" : "Download started",
         description: demo
           ? "Mock mode downloads nothing."
-          : `${timeframeLabel[timeframe]} candles for ${draft.symbols.length} stock(s).`,
+          : `${timeframeLabel[timeframe]} candles for ${draft.symbols.length} stock(s) or index(es).`,
         tone: "success",
       });
       void navigate(demo ? "/data-jobs" : `/data-jobs/${draft.id}`);
@@ -197,6 +199,7 @@ export function NewDownloadPage() {
           />
         </div>
       </Card>
+      <IndexPicker selected={indices} onChange={setIndices} />
       {failed && (
         <p role="alert" className="text-body-sm text-loss">
           {failed}

@@ -9,12 +9,13 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from nova_contracts import MarketHoursMode
-from nova_db.models import Candle, DataJob, DataJobStep, DownloadSetting, Instrument
+from nova_db.models import Candle, DataJob, DataJobStep, DownloadSetting
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from nova_atlas.broker_client import BrokerData, BrokerDataError
+from nova_atlas.tokens import kite_tokens
 
 IST = ZoneInfo("Asia/Kolkata")
 KITE_INTERVAL = {
@@ -193,12 +194,7 @@ def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | No
     job = db.get(DataJob, job_id)
     if job is None or job.timeframe is None or job.date_from is None or job.date_to is None:
         raise ValueError(f"Job {job_id} is not a runnable historical download")
-    found = db.execute(
-        select(Instrument.symbol, Instrument.instrument_token).where(
-            Instrument.exchange == job.exchange, Instrument.symbol.in_(job.symbols)
-        )
-    )
-    tokens = {symbol: token for symbol, token in found}
+    tokens = kite_tokens(db, job.exchange, list(job.symbols))  # stocks and indices (D62)
     missing = [s for s in job.symbols if tokens.get(s) is None]
     if missing:
         finish_job(
