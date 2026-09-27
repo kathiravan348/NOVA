@@ -7,6 +7,7 @@ import { BacktestsPage } from "./pages/backtests/BacktestsPage";
 import { EditBacktestPage } from "./pages/backtests/EditBacktestPage";
 import { NewBacktestPage } from "./pages/backtests/NewBacktestPage";
 import { ComparePage } from "./pages/compare/ComparePage";
+import { LibraryPage } from "./pages/library/LibraryPage";
 import { MarketDataPage } from "./pages/market-data/MarketDataPage";
 import { EditStrategyPage, NewStrategyPage } from "./pages/editor/StrategyEditorPage";
 import { StrategiesPage } from "./pages/strategies/StrategiesPage";
@@ -52,6 +53,11 @@ export const routes: RouteObject[] = [
             path: "/strategies/:id/edit",
             handle: { title: "Edit strategy" } satisfies RouteHandle,
             element: <EditStrategyPage />,
+          },
+          {
+            path: "/library",
+            handle: { title: "Library" } satisfies RouteHandle,
+            element: <LibraryPage />,
           },
           {
             path: "/backtests",

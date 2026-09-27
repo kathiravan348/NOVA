@@ -3,6 +3,7 @@ import { mockStrategies } from "@nova/mocks";
 import {
   BacktestFormSchema,
   defaultsFor,
+  defaultsFromParams,
   todayIst,
   toRunCreate,
   toUniverse,
@@ -92,5 +93,28 @@ describe("backtestForm", () => {
       benchmark: null,
       universe: { type: "symbols", symbols: ["TCS"] },
     });
+  });
+
+  it("takes checked defaults from a Library link and ignores bad ones (D62)", () => {
+    const link = new URLSearchParams(
+      "strategy=stg_005&index=NIFTY%20100&from=2021-10-01&to=2024-09-30&capital=1000000" +
+        "&benchmark=NIFTY%2050&name=12-1%20momentum%20%E2%80%94%20v1%20in-sample",
+    );
+    expect(defaultsFromParams(link, "2026-09-27")).toEqual({
+      universeType: "index",
+      index: "NIFTY 100",
+      from: "2021-10-01",
+      to: "2024-09-30",
+      capitalRupees: "1000000",
+      benchmark: true,
+      name: "12-1 momentum — v1 in-sample",
+    });
+    const bad = new URLSearchParams(
+      "index=&from=2024-13-01&to=2024-09-30&capital=500&benchmark=SENSEX&name=%20",
+    );
+    expect(defaultsFromParams(bad, "2026-09-27")).toEqual({});
+    const future = new URLSearchParams("from=2026-09-01&to=2027-01-01&benchmark=none");
+    expect(defaultsFromParams(future, "2026-09-27")).toEqual({ benchmark: false });
+    expect(defaultsFromParams(new URLSearchParams("strategy=stg_001"), "2026-09-27")).toEqual({});
   });
 });
