@@ -3,6 +3,8 @@ import { setupServer } from "msw/node";
 import {
   ApiErrorSchema,
   CandleSchema,
+  CoverageDetailSchema,
+  CoverageListSchema,
   InstrumentSchema,
   MarketIndexSchema,
   DataJobSchema,
@@ -48,6 +50,24 @@ describe("Market data MSW handlers", () => {
       expect(res.status).toBe(404);
       expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("not_found");
     }
+  });
+
+  it("GET /market-data/coverage answers the list for a timeframe and echoes the period (D63)", async () => {
+    const res = await fetch(
+      "http://localhost/api/v1/market-data/coverage?timeframe=1m&from=2021-09-18&to=2026-09-18",
+    );
+    const list = CoverageListSchema.parse(await res.json());
+    expect([list.timeframe, list.from, list.to]).toEqual(["1m", "2021-09-18", "2026-09-18"]);
+    expect(list.rows.find((r) => r.symbol === "INFY")?.status).toBe("gaps");
+  });
+
+  it("GET /market-data/coverage/:symbol gives missing ranges, or 404 (D63)", async () => {
+    const get = (path: string) => fetch(`http://localhost/api/v1/market-data/coverage/${path}`);
+    const detail = CoverageDetailSchema.parse(await (await get("RELIANCE?timeframe=1d")).json());
+    expect(detail.missing).toEqual([{ from: "2026-08-12", to: "2026-08-14", days: 3 }]);
+    const plain = CoverageDetailSchema.parse(await (await get("TCS?timeframe=1d")).json());
+    expect(plain.missing).toEqual([]);
+    expect((await get("NOPE?timeframe=1d")).status).toBe(404);
   });
 
   it("has empty and error scenarios", async () => {

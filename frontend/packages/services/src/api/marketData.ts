@@ -1,10 +1,15 @@
 import {
   CandleSchema,
+  CoverageDetailSchema,
+  CoverageListSchema,
   InstrumentSchema,
   MarketIndexSchema,
   DataJobSchema,
   UniverseEntrySchema,
   type Candle,
+  type CoverageDetail,
+  type CoverageList,
+  type CoverageQuery,
   type Instrument,
   type MarketIndex,
   type DataJob,
@@ -68,4 +73,22 @@ export function listMarketIndices(init?: RequestOptions): Promise<MarketIndex[]>
 export function clearNewListing(symbol: string, init?: RequestOptions): Promise<UniverseEntry> {
   const path = `/market-data/universe/${encodeURIComponent(symbol)}/clear-new`;
   return apiPost(path, undefined, UniverseEntrySchema, init);
+}
+
+const coverageQuery = ({ timeframe, from, to }: CoverageQuery) =>
+  new URLSearchParams({ timeframe, ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString();
+
+/** Stored days per stock and index for one timeframe in a period (D63). */
+export function getCoverage(query: CoverageQuery, init?: RequestOptions): Promise<CoverageList> {
+  return apiGet(`/market-data/coverage?${coverageQuery(query)}`, CoverageListSchema, init);
+}
+
+/** One stock's stored range and its missing date ranges (D63). */
+export function getCoverageDetail(
+  symbol: string,
+  query: CoverageQuery,
+  init?: RequestOptions,
+): Promise<CoverageDetail> {
+  const path = `/market-data/coverage/${encodeURIComponent(symbol)}?${coverageQuery(query)}`;
+  return apiGet(path, CoverageDetailSchema, init);
 }

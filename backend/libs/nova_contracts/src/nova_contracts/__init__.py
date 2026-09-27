@@ -47,6 +47,14 @@ from nova_contracts.common import (
     Timeframe,
     UtcDateTime,
 )
+from nova_contracts.coverage import (
+    CoverageDetail,
+    CoverageList,
+    CoverageRow,
+    CoverageStatus,
+    CoverageTimeframe,
+    MissingRange,
+)
 from nova_contracts.data_job import (
     MAX_DOWNLOAD_SYMBOLS,
     ArchiveJobCreate,
@@ -177,6 +185,7 @@ __all__ = [
     "Instrument",
     "InstrumentCoverage",
     "MarketIndex",
+    "MissingRange",
     "LoginRequest",
     "Operand",
     "Page",
@@ -197,6 +206,11 @@ __all__ = [
     "ApiErrorBody",
     "ApiErrorCode",
     "Contract",
+    "CoverageDetail",
+    "CoverageList",
+    "CoverageRow",
+    "CoverageStatus",
+    "CoverageTimeframe",
     "Exchange",
     "Id",
     "IsoDate",

@@ -5,7 +5,7 @@ import {
   type MarketIndex,
   type UniverseEntry,
 } from "@nova/contracts";
-import { mockCandles, mockInstruments } from "../data";
+import { mockCandles, mockCoverageDetails, mockCoverageLists, mockInstruments } from "../data";
 import { apiPath, badRequest, notFound } from "./api";
 
 /** Two demo IPOs: new listings a sync found (D56). They have no candles yet. */
@@ -100,6 +100,41 @@ export const marketDataHandlers = [
 
   http.get(apiPath("/market-data/indices"), () => {
     return HttpResponse.json(mockMarketIndices);
+  }),
+
+  // Demo: the stored lists ignore the asked period but echo it (D63).
+  http.get(apiPath("/market-data/coverage"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const list = mockCoverageLists.find((l) => l.timeframe === (params.get("timeframe") ?? "1d"));
+    if (!list) return badRequest("Timeframe must be 1m or 1d");
+    return HttpResponse.json({
+      ...list,
+      from: params.get("from") ?? list.from,
+      to: params.get("to") ?? list.to,
+    });
+  }),
+
+  http.get(apiPath("/market-data/coverage/:symbol"), ({ params, request }) => {
+    const symbol = decodeURIComponent(params["symbol"] as string);
+    const timeframe = new URL(request.url).searchParams.get("timeframe") ?? "1d";
+    const found = mockCoverageDetails.find((d) => d.symbol === symbol && d.timeframe === timeframe);
+    if (found) return HttpResponse.json(found);
+    const row = mockCoverageLists
+      .find((l) => l.timeframe === timeframe)
+      ?.rows.find((r) => r.symbol === symbol);
+    if (!row) return notFound(`${symbol} is not in the stock list`);
+    const list = mockCoverageLists.find((l) => l.timeframe === timeframe)!;
+    return HttpResponse.json({
+      symbol,
+      timeframe,
+      from: list.from,
+      to: list.to,
+      firstDay: row.firstDay,
+      lastDay: row.lastDay,
+      days: row.days,
+      missingDays: 0,
+      missing: [],
+    });
   }),
 
   // Demo: answers as seen without storing it.

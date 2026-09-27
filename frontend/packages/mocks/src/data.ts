@@ -4,6 +4,8 @@ import {
   BacktestRunSchema,
   BrokerAccountSchema,
   CandleSchema,
+  CoverageDetailSchema,
+  CoverageListSchema,
   DataJobSchema,
   InstrumentSchema,
   RateLimitSchema,
@@ -17,6 +19,7 @@ import {
 } from "@nova/contracts";
 import auditEntriesJson from "../data/auditEntries.json";
 import candlesJson from "../data/candles.json";
+import coverageJson from "../data/coverage.json";
 import instrumentsJson from "../data/instruments.json";
 import backtestResultsJson from "../data/backtestResults.json";
 import backtestRunsJson from "../data/backtestRuns.json";
@@ -49,3 +52,6 @@ export const mockInstruments = InstrumentSchema.array().parse(instrumentsJson);
 export const mockCandles: Record<string, Candle[]> = Object.fromEntries(
   Object.entries(candlesJson).map(([key, bars]) => [key, CandleSchema.array().parse(bars)]),
 );
+/** Stored-data lists for `1d` and `1m`, and missing ranges of a few stocks (D63). */
+export const mockCoverageLists = CoverageListSchema.array().parse(coverageJson.lists);
+export const mockCoverageDetails = CoverageDetailSchema.array().parse(coverageJson.details);
