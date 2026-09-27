@@ -1,6 +1,6 @@
 # NOVA-115 — Engine: ranked buys, max positions, trailing/ATR/time exits, multiplier (D62)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-115 · **Depends on:** NOVA-111, NOVA-114
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-115 · **Depends on:** NOVA-111, NOVA-114
 
 ## Goal
 The engine runs the D62 (3) spec fields that NOVA-114 added, except `regime` (NOVA-117): operand `multiplier`,
@@ -55,7 +55,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `rules.py`: an operand = cached plain series → `offset` shift → × `multiplier`. `exits.py`: `at_close` (bars held,
+highest close, trailing and ATR levels that only move up), `stop_level` (highest of fixed, trailing, ATR),
+`held_long_enough`. `book.Position` gains `highest_close`, `bars_held`, `trail`. `scratch.py`/`timeline.py`: optional
+`rank` and `atr` arrays per stock (NaN when absent). `simulate.py` step b takes the whole bar-time group: waiting buys
+sorted by rank at their signal close (desc/asc, NaN last, ties by symbol), filled while `len(positions) < maxPositions`;
+the rest are dropped. Averaging's "stop at or above the trigger" test now uses the combined stop level.
+`strategy_engine.py`: pass 1 saves `rank` (`SeriesCache.values(portfolio.rank.by)`) and `atr(period)` when used, for
+visual and Python specs; every operand's settings are checked up front; only `regime`/rotation still fail
+("This strategy uses a market filter or rotation, which backtests do not support yet").
+- Tests: `test_exits.py` (ranked desc/asc/NaN, symbol order without rank, trailing rise + gap fill + next-bar check, ATR
+  never falls, higher fixed stop wins, `maxHoldBars` 3 → open of bar 4); `test_rules.py` (`volume > 1.5 × volume_sma(3)`,
+  offset then multiplier); engine end-to-end run with every new setting. Differential test: 200 cases now add
+  portfolios (none/plain/desc/asc, 20 % NaN ranks, 1–3 slots), trailing, ATR, max-hold; 104 cases trade differently
+  from the same case without D62 settings. No old expected value changed.
+Commands: backend-check 980 passed. Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

@@ -8,7 +8,6 @@ from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import Charges, StrategySpec
 from nova_contracts.strategy import (
     OperandIndicator,
-    OperandPrice,
     StrategySpecPython,
     StrategySpecRotation,
     StrategySpecVisual,
@@ -22,14 +21,16 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
+from nova_backtest.columns import Columns
 from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
+from nova_backtest.indicators import indicator_array, settings_for
 from nova_backtest.metrics import summarize
 from nova_backtest.progress import ProgressSink
-from nova_backtest.rules import check_group
+from nova_backtest.rules import SeriesCache, check_group
 from nova_backtest.rules import signals as rule_signals
 from nova_backtest.sandbox import ENTER, EXIT, Calls, check_code, run_python_one
-from nova_backtest.scratch import RunScratch
+from nova_backtest.scratch import Floats, RunScratch
 from nova_backtest.simulate import simulate
 from nova_backtest.versions import trim_older_versions
 
@@ -42,29 +43,10 @@ DEFAULT_SCRATCH = Path("/tmp/nova-backtest")  # noqa: S108 - the worker containe
 
 
 def unsupported(spec: StrategySpec) -> str | None:
-    """D62 settings the engine cannot run yet; a run must fail rather than ignore one."""
-    if isinstance(spec, StrategySpecRotation):
-        return "rotation"
-    risk = spec.risk
-    found = [
-        name
-        for name, used in (
-            ("a market filter", spec.regime is not None),
-            ("a portfolio limit", spec.portfolio is not None),
-            ("a trailing stop", risk.trailing_stop_percent is not None),
-            ("an ATR stop", risk.atr_stop is not None),
-            ("an exit after N bars", risk.max_hold_bars is not None),
-            (
-                "a multiplier",
-                any(
-                    isinstance(o, OperandPrice | OperandIndicator) and o.multiplier is not None
-                    for o in spec_operands(spec)
-                ),
-            ),
-        )
-        if used
-    ]
-    return ", ".join(found) or None
+    """D62 settings the engine cannot run yet (NOVA-117); a run fails rather than ignore one."""
+    if isinstance(spec, StrategySpecRotation) or spec.regime is not None:
+        return "a market filter or rotation"
+    return None
 
 
 def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPython:
@@ -78,6 +60,12 @@ def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPyt
     features = unsupported(spec)
     if features is not None or isinstance(spec, StrategySpecRotation):
         raise EngineError(f"This strategy uses {features}, which backtests do not support yet")
+    for operand in spec_operands(spec):
+        if isinstance(operand, OperandIndicator):
+            try:
+                settings_for(operand.name, operand.params)
+            except ValueError as exc:
+                raise EngineError(f"{exc}: open the strategy and save it again") from exc
     if spec.segment not in ("equity_delivery", "equity_intraday"):
         raise EngineError(f"{spec.segment} backtests are not supported yet")
     if spec.segment == "equity_intraday" and spec.timeframe == "1d":
@@ -99,6 +87,20 @@ def _symbols(db: Session, run: BacktestRun) -> list[str]:
             f"No instruments are in {universe['index']}: sync with Kite on Relay's Instruments page"
         )
     return list(rows)
+
+
+def _extras(
+    spec: StrategySpecVisual | StrategySpecPython, columns: Columns
+) -> tuple[Floats | None, Floats | None]:
+    """The stock's rank values and ATR for the simulator, when the spec uses them (D62)."""
+    portfolio, atr_stop = spec.portfolio, spec.risk.atr_stop
+    rank = None
+    if portfolio is not None and portfolio.rank is not None:
+        rank = SeriesCache(columns).values(portfolio.rank.by)
+    atr = None
+    if atr_stop is not None:
+        atr = indicator_array("atr", {"period": float(atr_stop.period)}, columns)
+    return rank, atr
 
 
 def _ist_midnight(day: date) -> datetime:
@@ -155,10 +157,11 @@ class StrategyEngine:
             if len(columns) == 0 or int(columns.ts[-1]) < first:
                 missing.append(symbol)
             elif isinstance(spec, StrategySpecVisual):
-                scratch.add(symbol, columns, *rule_signals(columns, spec.entry, spec.exit))
+                enter, exit_ = rule_signals(columns, spec.entry, spec.exit)
+                scratch.add(symbol, columns, enter, exit_, *_extras(spec, columns))
             else:
                 codes = run_python_one(spec.code, symbol, columns, calls)
-                scratch.add(symbol, columns, codes == ENTER, codes == EXIT)
+                scratch.add(symbol, columns, codes == ENTER, codes == EXIT, *_extras(spec, columns))
             del columns
             progress.advance(done)
         if missing:
@@ -223,6 +226,7 @@ class StrategyEngine:
             square_off=SQUARE_OFF if spec.segment == "equity_intraday" else None,
             averaging=spec.averaging,
             on_bar=on_bar,
+            portfolio=spec.portfolio,
         )
         summary = summarize(
             result.trades,

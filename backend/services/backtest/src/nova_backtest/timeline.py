@@ -5,6 +5,7 @@ bars; its OHLC values become plain Python numbers, which the simulator reads far
 """
 
 import itertools
+import math
 from collections.abc import Iterator
 from typing import NamedTuple
 
@@ -27,6 +28,8 @@ class BarAt(NamedTuple):
     day: int  # IST day number
     enter: bool
     exit: bool
+    rank: float  # NaN when the run ranks nothing (D62)
+    atr: float  # NaN when the run has no ATR stop (D62)
 
 
 def walk(store: Store, window_bars: int = 500_000) -> Iterator[tuple[int, list[BarAt]]]:
@@ -55,6 +58,7 @@ def walk(store: Store, window_bars: int = 500_000) -> Iterator[tuple[int, list[B
                 continue
             part = slice(position[k], stop)
             c = s.columns
+            blank = [math.nan] * (stop - position[k])
             rows = zip(
                 c.ts[part].tolist(),
                 c.open[part].tolist(),
@@ -65,13 +69,13 @@ def walk(store: Store, window_bars: int = 500_000) -> Iterator[tuple[int, list[B
                 c.day[part].tolist(),
                 s.enter[part].tolist(),
                 s.exit[part].tolist(),
+                blank if s.rank is None else s.rank[part].tolist(),
+                blank if s.atr is None else s.atr[part].tolist(),
                 strict=True,
             )
-            for j, (ts, o, h, low, close, volume, day, enter, exit_) in enumerate(rows):
-                bar = BarAt(
-                    symbols[k], position[k] + j, ts, o, h, low, close, volume, day, enter, exit_
-                )
-                window.append((ts, k, bar))
+            for j, row in enumerate(rows):
+                bar = BarAt(symbols[k], position[k] + j, *row)
+                window.append((bar.ts, k, bar))
             position[k] = stop
         window.sort(key=lambda row: (row[0], row[1]))
         group: list[BarAt] = []

@@ -35,14 +35,23 @@ class SeriesCache:
         self._cache: dict[str, Floats] = {}
 
     def values(self, operand: Operand) -> Floats:
-        """The operand's series; `offset` (bars ago, D51) shifts the cached series without it."""
-        offset = operand.offset if isinstance(operand, OperandPrice | OperandIndicator) else 0
-        base = operand.model_copy(update={"offset": 0}) if offset else operand
-        key = base.model_dump_json()
+        """The operand's series: the cached plain series, shifted by `offset` (bars ago, D51),
+        then times `multiplier` (D62)."""
+        if not isinstance(operand, OperandPrice | OperandIndicator):
+            return self._cached(operand)
+        base = operand.model_copy(update={"offset": 0, "multiplier": None})
+        series = self._cached(base)
+        if operand.offset:
+            series = shift(series, operand.offset)
+        if operand.multiplier is not None:  # D62: after the offset
+            series = series * operand.multiplier
+        return series
+
+    def _cached(self, operand: Operand) -> Floats:
+        key = operand.model_dump_json()
         if key not in self._cache:
-            self._cache[key] = self._compute(base)
-        series = self._cache[key]
-        return shift(series, offset) if offset else series
+            self._cache[key] = self._compute(operand)
+        return self._cache[key]
 
     def _compute(self, operand: Operand) -> Floats:
         bars = self._bars

@@ -1,5 +1,6 @@
 """NOVA-110 (D61): timeline windows, D61 fill order, and the streaming simulator vs the oracle."""
 
+import math
 import random
 import sys
 from datetime import date, datetime, time, timedelta
@@ -13,7 +14,7 @@ from nova_backtest.scratch import MemoryStore, RunScratch
 from nova_backtest.simulate import simulate
 from nova_backtest.timeline import walk
 from nova_contracts import Charges, Sizing
-from nova_contracts.strategy import Averaging, Risk
+from nova_contracts.strategy import AtrStop, Averaging, Portfolio, Risk
 from pydantic import TypeAdapter
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -128,6 +129,35 @@ def _sizing(rng: random.Random) -> Sizing:
     return SIZING.validate_python({"type": kind, "percent": rng.choice([10, 25, 50, 100])})
 
 
+def _floats(rng: random.Random, count: int, blank: float) -> list[float]:
+    """Random values with some NaN (no value yet), e.g. ranks or ATRs in rupees."""
+    return [math.nan if rng.random() < blank else rng.uniform(1, 60) for _ in range(count)]
+
+
+def _risk(rng: random.Random) -> Risk:
+    return Risk(
+        stop_loss_percent=rng.choice([None, 2.0, 5.0]),
+        target_percent=rng.choice([None, 3.0, 8.0]),
+        trailing_stop_percent=rng.choice([None, None, 3.0, 8.0]),
+        atr_stop=rng.choice([None, None, AtrStop(period=5, multiplier=rng.choice([1.0, 2.5]))]),
+        max_hold_bars=rng.choice([None, None, 1, 3, 7]),
+    )
+
+
+def _portfolio(rng: random.Random) -> Portfolio | None:
+    if rng.random() < 0.4:
+        return None
+    rank = rng.choice([None, "desc", "asc"])
+    return Portfolio.model_validate(
+        {
+            "maxPositions": rng.randint(1, 3),
+            "rank": None
+            if rank is None
+            else {"by": {"kind": "price", "field": "close", "multiplier": 1.5}, "order": rank},
+        }
+    )
+
+
 @pytest.mark.parametrize("seed", range(200))
 def test_streaming_simulate_matches_the_reference(seed: int, tmp_path: Path) -> None:
     rng = random.Random(seed)
@@ -140,16 +170,17 @@ def test_streaming_simulate_matches_the_reference(seed: int, tmp_path: Path) -> 
         {s: [(rng.random() < chance, rng.random() < chance) for _ in b] for s, b in bars.items()}
     )
     sizing = _sizing(rng)
-    risk = Risk(
-        stop_loss_percent=rng.choice([None, 2.0, 5.0]),
-        target_percent=rng.choice([None, 3.0, 8.0]),
-    )
+    risk = _risk(rng)
     averaging = rng.choice([None, Averaging(drop_percent=rng.choice([1.0, 3.0]), max_adds=3)])
     cash = rng.choice([300_000, 2_000_000, 10_000_000])  # small cash drops buys
     square_off = time(15, 20) if intraday else None
+    portfolio = _portfolio(rng)
+    ranks = {s: _floats(rng, len(b), 0.2) for s, b in bars.items()}
+    ranks = ranks if portfolio is not None and portfolio.rank is not None else {}
+    atrs = {s: _floats(rng, len(b), 0.1) for s, b in bars.items()} if risk.atr_stop else {}
     args = (sizing, risk, cash, DAY0, _charges, square_off, averaging)
 
-    expected = reference_simulate(bars, flags, *args)
+    expected = reference_simulate(bars, flags, *args, portfolio, ranks or None, atrs or None)
     scratch = RunScratch(tmp_path, "run")
     try:
         for s, series in bars.items():
@@ -159,8 +190,11 @@ def test_streaming_simulate_matches_the_reference(seed: int, tmp_path: Path) -> 
                 Columns.from_bars(series),
                 np.array([flags.enter(s, i) for i in count], dtype=np.bool_),
                 np.array([flags.exit(s, i) for i in count], dtype=np.bool_),
+                np.array(ranks[s]) if ranks else None,
+                np.array(atrs[s]) if atrs else None,
             )
-        actual = simulate(scratch, *args, window_bars=7)  # tiny windows cross chunk edges
+        # Tiny windows cross chunk edges.
+        actual = simulate(scratch, *args, window_bars=7, portfolio=portfolio)
     finally:
         scratch.close()
 

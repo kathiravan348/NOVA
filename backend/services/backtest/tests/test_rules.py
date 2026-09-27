@@ -112,3 +112,49 @@ def test_bad_settings_fail_the_run_with_a_message() -> None:
 
     with pytest.raises(EngineError, match="Unknown setting 'period' for MACD line: open the"):
         RuleSignals({}, group, group)
+
+
+def _volumes(volumes: list[int]) -> SeriesCache:
+    t0 = datetime(2026, 9, 1, tzinfo=UTC)
+    return SeriesCache(
+        [Bar(t0 + timedelta(days=i), 100, 100, 100, 100, v) for i, v in enumerate(volumes)]
+    )
+
+
+def test_volume_beats_one_and_a_half_times_its_average_d62() -> None:
+    """`volume > 1.5 × volume_sma(3)`: the average includes the bar itself."""
+    cache = _volumes([100, 100, 100, 250, 100, 400, 100])
+    group = RuleGroup.model_validate(
+        {
+            "combinator": "all",
+            "conditions": [
+                {
+                    "left": {"kind": "price", "field": "volume"},
+                    "op": "gt",
+                    "right": {
+                        "kind": "indicator",
+                        "name": "volume_sma",
+                        "params": {"period": 3},
+                        "multiplier": 1.5,
+                    },
+                }
+            ],
+        }
+    )
+    # Averages from bar 2: 100, 150, 150, 250, 200 → × 1.5 = 150, 225, 225, 375, 300.
+    assert [holds(group, cache, i) for i in range(7)] == [
+        False, False, False, True, False, True, False,
+    ]  # fmt: skip
+
+
+def test_offset_comes_before_the_multiplier_d62() -> None:
+    cache = _cache([100, 110, 120, 130])
+    operand = OperandPrice.model_validate(
+        {"kind": "price", "field": "close", "offset": 1, "multiplier": 0.5}
+    )
+
+    values = cache.values(operand)
+
+    assert np.isnan(values[0]) and values[1:].tolist() == [50.0, 55.0, 60.0]
+    plain = cache.values(OperandPrice(kind="price", field="close"))
+    assert plain.tolist() == [100.0, 110.0, 120.0, 130.0]  # the cached series is untouched
