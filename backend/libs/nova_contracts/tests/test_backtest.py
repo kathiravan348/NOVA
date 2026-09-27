@@ -10,6 +10,7 @@ from nova_contracts import (
     BacktestVersion,
     BacktestVersionCreate,
     Trade,
+    YearRow,
 )
 from nova_testing.parity import Parity
 from pydantic import ValidationError
@@ -140,3 +141,21 @@ def test_version_bodies_match_their_schemas(parity: Parity) -> None:
         BacktestVersion.model_validate_json(json.dumps(version | {"metrics": None}))
     with pytest.raises(ValidationError):
         BacktestDeleteRequest.model_validate_json(json.dumps({"ids": []}))
+
+
+def test_year_rows_check_their_period_and_drawdown() -> None:
+    row = {
+        "year": 1,
+        "from": "2024-07-01",
+        "to": "2025-06-30",
+        "returnPercent": 3.0,
+        "profitPaise": 300000,
+        "maxDrawdownPercent": -2.0,
+        "benchmarkPercent": None,
+    }
+    assert (
+        YearRow.model_validate_json(json.dumps(row)).model_dump(mode="json", by_alias=True) == row
+    )
+    for change in ({"year": 0}, {"maxDrawdownPercent": 1.0}, {"from": "2025-07-01"}):
+        with pytest.raises(ValidationError):
+            YearRow.model_validate_json(json.dumps(row | change))

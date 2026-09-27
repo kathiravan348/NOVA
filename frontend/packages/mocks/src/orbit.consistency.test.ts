@@ -381,3 +381,17 @@ describe("Orbit consistency rules", () => {
     }
   });
 });
+
+describe("Year-by-year results (D62)", () => {
+  it("year profits add up to the net P&L and the rows cover the run's period in order", () => {
+    for (const result of mockBacktestResults) {
+      if (result.years.length === 0) continue;
+      const run = mockBacktestRuns.find((r) => r.id === result.runId)!;
+      const total = result.years.reduce((sum, y) => sum + y.profitPaise, 0);
+      expect(total).toBe(result.metrics.netPnlPaise);
+      expect(result.years[0]!.from).toBe(run.from);
+      expect(result.years.at(-1)!.to).toBe(run.to);
+      result.years.forEach((y, i) => expect(y.year).toBe(i + 1));
+    }
+  });
+});

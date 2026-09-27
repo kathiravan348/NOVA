@@ -137,6 +137,16 @@ class BacktestMetrics(Contract):
     trade_count: Count
     win_count: Count
     loss_count: Count
+    # D62 (6): always sent, null for older runs or when they do not apply (tax: delivery only).
+    benchmark_return_percent: float | None = None
+    benchmark_cagr_percent: float | None = None
+    exposure_percent: Annotated[float, Field(ge=0, le=100)] | None = None
+    avg_hold_days: Annotated[float, Field(ge=0)] | None = None
+    profit_factor: Annotated[float, Field(ge=0)] | None = None
+    calmar: float | None = None
+    estimated_tax_paise: NonNegPaise | None = None
+    after_tax_net_pnl_paise: Paise | None = None
+    after_tax_cagr_percent: float | None = None
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -168,11 +178,23 @@ class SymbolBreakdown(Contract):
         return self
 
 
+class YearRow(_Period):
+    """One 12-month block from the run's start date (the last may be short), D62 (6)."""
+
+    year: Annotated[int, Field(ge=1)]
+    return_percent: float
+    profit_paise: Paise
+    max_drawdown_percent: Annotated[float, Field(le=0)]
+    benchmark_percent: float | None
+
+
 class BacktestResult(Contract):
     run_id: Id
     metrics: BacktestMetrics
     equity_curve: list[EquityPoint]
     by_symbol: list[SymbolBreakdown]
+    # Year-by-year results (D62); empty for older runs.
+    years: list[YearRow] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _unique_symbols(self) -> Self:

@@ -3,10 +3,14 @@ import type {
   Condition,
   ConditionOp,
   Operand,
+  Portfolio,
   PriceField,
+  Regime,
   Risk,
+  Rotation,
   RuleGroup,
   Sizing,
+  StrategySpec,
   Universe,
 } from "@nova/contracts";
 import { indicatorDef } from "@nova/contracts";
@@ -38,6 +42,14 @@ const barsAgo = (offset: number | undefined) =>
  * (D51), settings in catalog order (unknown old keys after them), numbers as written.
  */
 export function describeOperand(operand: Operand): string {
+  const times =
+    operand.kind !== "number" && operand.multiplier !== undefined && operand.multiplier !== 1
+      ? `${operand.multiplier} × `
+      : "";
+  return times + describeBare(operand);
+}
+
+function describeBare(operand: Operand): string {
   switch (operand.kind) {
     case "price":
       return priceLabel[operand.field] + barsAgo(operand.offset);
@@ -100,4 +112,63 @@ export function describeRisk(risk: Risk): string {
   if (risk.stopLossPercent !== null) parts.push(`Stop-loss ${risk.stopLossPercent}%`);
   if (risk.targetPercent !== null) parts.push(`Target ${risk.targetPercent}%`);
   return parts.length > 0 ? parts.join(" · ") : "None";
+}
+
+const modeNames: Record<StrategySpec["mode"], string> = {
+  visual: "Visual",
+  python: "Python",
+  rotation: "Rotation",
+};
+
+/** "Visual", "Python" or "Rotation" (D62). */
+export function modeLabel(mode: StrategySpec["mode"]): string {
+  return modeNames[mode];
+}
+
+/** Trailing, ATR and time exits (D62): "Trailing 15% · 3 × ATR(20) · After 60 bars" or "None". */
+export function describeExits(risk: Risk): string {
+  const parts: string[] = [];
+  if (risk.trailingStopPercent !== undefined) parts.push(`Trailing ${risk.trailingStopPercent}%`);
+  if (risk.atrStop) parts.push(`${risk.atrStop.multiplier} × ATR(${risk.atrStop.period}) trailing`);
+  if (risk.maxHoldBars !== undefined) {
+    parts.push(`After ${risk.maxHoldBars} ${risk.maxHoldBars === 1 ? "bar" : "bars"}`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : "None";
+}
+
+/** "Up to 10 · ranked by ROC(126), highest first" or "No limit" (D62). */
+export function describePortfolio(portfolio: Portfolio | undefined): string {
+  if (!portfolio) return "No limit";
+  const rank = portfolio.rank
+    ? ` · ranked by ${describeOperand(portfolio.rank.by)}, ${portfolio.rank.order === "desc" ? "highest" : "lowest"} first`
+    : "";
+  return `Up to ${portfolio.maxPositions}${rank}`;
+}
+
+/** "NIFTY 50: Close > SMA(200); otherwise no new buys" or "Off" (D62). */
+export function describeRegime(regime: Regime | undefined): string {
+  if (!regime) return "Off";
+  const off = regime.whenOff === "exit_all" ? "sell everything" : "no new buys";
+  return `${regime.index}: ${describeCondition(regime.condition)}; otherwise ${off}`;
+}
+
+const rebalanceLabel: Record<Rotation["rebalance"], string> = {
+  weekly: "Every week",
+  monthly: "Every month",
+  quarterly: "Every quarter",
+};
+
+/** Rotation settings in words (D62 (4)). */
+export function describeRotation(rotation: Rotation): {
+  rebalance: string;
+  hold: string;
+  score: string[];
+  filter: ReturnType<typeof describeRuleGroup> | null;
+} {
+  return {
+    rebalance: rebalanceLabel[rotation.rebalance],
+    hold: `Top ${rotation.hold}, kept while in the top ${rotation.keepWithin}`,
+    score: rotation.score.map((t) => `${describeOperand(t.operand)} × weight ${t.weight}`),
+    filter: rotation.filter ? describeRuleGroup(rotation.filter) : null,
+  };
 }

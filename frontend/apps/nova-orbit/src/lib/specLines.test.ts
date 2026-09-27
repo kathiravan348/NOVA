@@ -12,7 +12,7 @@ const python = mockStrategies.find((s) => s.id === "stg_002")!.versions[0]!
 describe("specLines", () => {
   it("lists settings, then each entry and exit rule of a visual spec", () => {
     const lines = specLines(v2);
-    expect(lines.slice(0, 8).map((l) => l.label)).toEqual([
+    expect(lines.slice(0, 11).map((l) => l.label)).toEqual([
       "Mode",
       "Segment",
       "Exchange",
@@ -20,7 +20,10 @@ describe("specLines", () => {
       "Sizing",
       "Stop-loss",
       "Target",
+      "Other exits",
+      "Market filter",
       "Cost averaging",
+      "Positions",
     ]);
     expect(lines.find((l) => l.key === "stop")?.value).toBe("1%");
     expect(lines.filter((l) => l.key.startsWith("entry.")).map((l) => l.label)).toEqual([

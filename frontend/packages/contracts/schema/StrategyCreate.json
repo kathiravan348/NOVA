@@ -131,6 +131,35 @@
                       "type": "null"
                     }
                   ]
+                },
+                "trailingStopPercent": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 50
+                },
+                "atrStop": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "multiplier": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "period",
+                    "multiplier"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxHoldBars": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5000
                 }
               },
               "required": [
@@ -156,6 +185,457 @@
               "required": [
                 "dropPercent",
                 "maxAdds"
+              ],
+              "additionalProperties": false
+            },
+            "portfolio": {
+              "type": "object",
+              "properties": {
+                "maxPositions": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "rank": {
+                  "type": "object",
+                  "properties": {
+                    "by": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "order": {
+                      "type": "string",
+                      "enum": [
+                        "desc",
+                        "asc"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "by",
+                    "order"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "maxPositions"
+              ],
+              "additionalProperties": false
+            },
+            "regime": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40,
+                  "pattern": "^[A-Z0-9 &-]+$"
+                },
+                "condition": {
+                  "type": "object",
+                  "properties": {
+                    "left": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "number"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "crosses_above",
+                        "crosses_below",
+                        "gt",
+                        "gte",
+                        "lt",
+                        "lte",
+                        "eq"
+                      ]
+                    },
+                    "right": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "number"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "left",
+                    "op",
+                    "right"
+                  ],
+                  "additionalProperties": false
+                },
+                "whenOff": {
+                  "type": "string",
+                  "enum": [
+                    "no_new_entries",
+                    "exit_all"
+                  ]
+                }
+              },
+              "required": [
+                "index",
+                "condition",
+                "whenOff"
               ],
               "additionalProperties": false
             },
@@ -198,6 +678,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -269,6 +753,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -332,6 +820,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -403,6 +895,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -486,6 +982,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -557,6 +1057,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -620,6 +1124,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -691,6 +1199,10 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
                               }
                             },
                             "required": [
@@ -868,6 +1380,35 @@
                       "type": "null"
                     }
                   ]
+                },
+                "trailingStopPercent": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 50
+                },
+                "atrStop": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "multiplier": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "period",
+                    "multiplier"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxHoldBars": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5000
                 }
               },
               "required": [
@@ -896,6 +1437,457 @@
               ],
               "additionalProperties": false
             },
+            "portfolio": {
+              "type": "object",
+              "properties": {
+                "maxPositions": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "rank": {
+                  "type": "object",
+                  "properties": {
+                    "by": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "order": {
+                      "type": "string",
+                      "enum": [
+                        "desc",
+                        "asc"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "by",
+                    "order"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "maxPositions"
+              ],
+              "additionalProperties": false
+            },
+            "regime": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40,
+                  "pattern": "^[A-Z0-9 &-]+$"
+                },
+                "condition": {
+                  "type": "object",
+                  "properties": {
+                    "left": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "number"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "crosses_above",
+                        "crosses_below",
+                        "gt",
+                        "gte",
+                        "lt",
+                        "lte",
+                        "eq"
+                      ]
+                    },
+                    "right": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "number"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "left",
+                    "op",
+                    "right"
+                  ],
+                  "additionalProperties": false
+                },
+                "whenOff": {
+                  "type": "string",
+                  "enum": [
+                    "no_new_entries",
+                    "exit_all"
+                  ]
+                }
+              },
+              "required": [
+                "index",
+                "condition",
+                "whenOff"
+              ],
+              "additionalProperties": false
+            },
             "code": {
               "type": "string",
               "minLength": 1
@@ -909,6 +1901,872 @@
             "sizing",
             "risk",
             "code"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "const": "rotation"
+            },
+            "segment": {
+              "type": "string",
+              "const": "equity_delivery"
+            },
+            "exchange": {
+              "type": "string",
+              "enum": [
+                "NSE",
+                "NFO"
+              ]
+            },
+            "timeframe": {
+              "type": "string",
+              "const": "1d"
+            },
+            "risk": {
+              "type": "object",
+              "properties": {
+                "stopLossPercent": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "targetPercent": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "trailingStopPercent": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 50
+                },
+                "atrStop": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "multiplier": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "period",
+                    "multiplier"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxHoldBars": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5000
+                }
+              },
+              "required": [
+                "stopLossPercent",
+                "targetPercent"
+              ],
+              "additionalProperties": false
+            },
+            "regime": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40,
+                  "pattern": "^[A-Z0-9 &-]+$"
+                },
+                "condition": {
+                  "type": "object",
+                  "properties": {
+                    "left": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "number"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "crosses_above",
+                        "crosses_below",
+                        "gt",
+                        "gte",
+                        "lt",
+                        "lte",
+                        "eq"
+                      ]
+                    },
+                    "right": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            "field": {
+                              "type": "string",
+                              "enum": [
+                                "open",
+                                "high",
+                                "low",
+                                "close",
+                                "volume"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "indicator"
+                            },
+                            "name": {
+                              "type": "string",
+                              "enum": [
+                                "sma",
+                                "ema",
+                                "wma",
+                                "macd",
+                                "macd_signal",
+                                "macd_hist",
+                                "supertrend",
+                                "adx",
+                                "plus_di",
+                                "minus_di",
+                                "psar",
+                                "rsi",
+                                "stoch_k",
+                                "stoch_d",
+                                "stoch_rsi",
+                                "cci",
+                                "williams_r",
+                                "roc",
+                                "atr",
+                                "bb_upper",
+                                "bb_middle",
+                                "bb_lower",
+                                "keltner_upper",
+                                "keltner_lower",
+                                "donchian_upper",
+                                "donchian_lower",
+                                "vwap",
+                                "obv",
+                                "mfi",
+                                "volume_sma",
+                                "prev_day_high",
+                                "prev_day_low",
+                                "prev_day_close",
+                                "pivot",
+                                "pivot_r1",
+                                "pivot_s1",
+                                "pivot_r2",
+                                "pivot_s2"
+                              ]
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              }
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 500
+                            },
+                            "multiplier": {
+                              "type": "number",
+                              "exclusiveMinimum": 0
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "name",
+                            "params"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "number"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "left",
+                    "op",
+                    "right"
+                  ],
+                  "additionalProperties": false
+                },
+                "whenOff": {
+                  "type": "string",
+                  "enum": [
+                    "no_new_entries",
+                    "exit_all"
+                  ]
+                }
+              },
+              "required": [
+                "index",
+                "condition",
+                "whenOff"
+              ],
+              "additionalProperties": false
+            },
+            "rotation": {
+              "type": "object",
+              "properties": {
+                "rebalance": {
+                  "type": "string",
+                  "enum": [
+                    "weekly",
+                    "monthly",
+                    "quarterly"
+                  ]
+                },
+                "hold": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 50
+                },
+                "keepWithin": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "score": {
+                  "minItems": 1,
+                  "maxItems": 3,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "operand": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "price"
+                              },
+                              "field": {
+                                "type": "string",
+                                "enum": [
+                                  "open",
+                                  "high",
+                                  "low",
+                                  "close",
+                                  "volume"
+                                ]
+                              },
+                              "offset": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "field"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "indicator"
+                              },
+                              "name": {
+                                "type": "string",
+                                "enum": [
+                                  "sma",
+                                  "ema",
+                                  "wma",
+                                  "macd",
+                                  "macd_signal",
+                                  "macd_hist",
+                                  "supertrend",
+                                  "adx",
+                                  "plus_di",
+                                  "minus_di",
+                                  "psar",
+                                  "rsi",
+                                  "stoch_k",
+                                  "stoch_d",
+                                  "stoch_rsi",
+                                  "cci",
+                                  "williams_r",
+                                  "roc",
+                                  "atr",
+                                  "bb_upper",
+                                  "bb_middle",
+                                  "bb_lower",
+                                  "keltner_upper",
+                                  "keltner_lower",
+                                  "donchian_upper",
+                                  "donchian_lower",
+                                  "vwap",
+                                  "obv",
+                                  "mfi",
+                                  "volume_sma",
+                                  "prev_day_high",
+                                  "prev_day_low",
+                                  "prev_day_close",
+                                  "pivot",
+                                  "pivot_r1",
+                                  "pivot_s1",
+                                  "pivot_r2",
+                                  "pivot_s2"
+                                ]
+                              },
+                              "params": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {
+                                  "type": "number"
+                                }
+                              },
+                              "offset": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 500
+                              },
+                              "multiplier": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "name",
+                              "params"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "weight": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "operand",
+                      "weight"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "filter": {
+                  "type": "object",
+                  "properties": {
+                    "combinator": {
+                      "type": "string",
+                      "enum": [
+                        "all",
+                        "any"
+                      ]
+                    },
+                    "conditions": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "left": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "price"
+                                  },
+                                  "field": {
+                                    "type": "string",
+                                    "enum": [
+                                      "open",
+                                      "high",
+                                      "low",
+                                      "close",
+                                      "volume"
+                                    ]
+                                  },
+                                  "offset": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "multiplier": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "field"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "indicator"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "enum": [
+                                      "sma",
+                                      "ema",
+                                      "wma",
+                                      "macd",
+                                      "macd_signal",
+                                      "macd_hist",
+                                      "supertrend",
+                                      "adx",
+                                      "plus_di",
+                                      "minus_di",
+                                      "psar",
+                                      "rsi",
+                                      "stoch_k",
+                                      "stoch_d",
+                                      "stoch_rsi",
+                                      "cci",
+                                      "williams_r",
+                                      "roc",
+                                      "atr",
+                                      "bb_upper",
+                                      "bb_middle",
+                                      "bb_lower",
+                                      "keltner_upper",
+                                      "keltner_lower",
+                                      "donchian_upper",
+                                      "donchian_lower",
+                                      "vwap",
+                                      "obv",
+                                      "mfi",
+                                      "volume_sma",
+                                      "prev_day_high",
+                                      "prev_day_low",
+                                      "prev_day_close",
+                                      "pivot",
+                                      "pivot_r1",
+                                      "pivot_s1",
+                                      "pivot_r2",
+                                      "pivot_s2"
+                                    ]
+                                  },
+                                  "params": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "offset": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "multiplier": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "name",
+                                  "params"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "number"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "value"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "op": {
+                            "type": "string",
+                            "enum": [
+                              "crosses_above",
+                              "crosses_below",
+                              "gt",
+                              "gte",
+                              "lt",
+                              "lte",
+                              "eq"
+                            ]
+                          },
+                          "right": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "price"
+                                  },
+                                  "field": {
+                                    "type": "string",
+                                    "enum": [
+                                      "open",
+                                      "high",
+                                      "low",
+                                      "close",
+                                      "volume"
+                                    ]
+                                  },
+                                  "offset": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "multiplier": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "field"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "indicator"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "enum": [
+                                      "sma",
+                                      "ema",
+                                      "wma",
+                                      "macd",
+                                      "macd_signal",
+                                      "macd_hist",
+                                      "supertrend",
+                                      "adx",
+                                      "plus_di",
+                                      "minus_di",
+                                      "psar",
+                                      "rsi",
+                                      "stoch_k",
+                                      "stoch_d",
+                                      "stoch_rsi",
+                                      "cci",
+                                      "williams_r",
+                                      "roc",
+                                      "atr",
+                                      "bb_upper",
+                                      "bb_middle",
+                                      "bb_lower",
+                                      "keltner_upper",
+                                      "keltner_lower",
+                                      "donchian_upper",
+                                      "donchian_lower",
+                                      "vwap",
+                                      "obv",
+                                      "mfi",
+                                      "volume_sma",
+                                      "prev_day_high",
+                                      "prev_day_low",
+                                      "prev_day_close",
+                                      "pivot",
+                                      "pivot_r1",
+                                      "pivot_s1",
+                                      "pivot_r2",
+                                      "pivot_s2"
+                                    ]
+                                  },
+                                  "params": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "offset": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 500
+                                  },
+                                  "multiplier": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "name",
+                                  "params"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "number"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "value"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "left",
+                          "op",
+                          "right"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "combinator",
+                    "conditions"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "rebalance",
+                "hold",
+                "keepWithin",
+                "score"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "mode",
+            "segment",
+            "exchange",
+            "timeframe",
+            "risk",
+            "rotation"
           ],
           "additionalProperties": false
         }

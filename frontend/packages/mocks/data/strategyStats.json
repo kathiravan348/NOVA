@@ -73,5 +73,49 @@
         "bestRunId": null
       }
     ]
+  },
+  {
+    "strategyId": "stg_004",
+    "runsTotal": 0,
+    "runsCompleted": 0,
+    "runsFailed": 0,
+    "runsInProgress": 0,
+    "lastRunAt": null,
+    "bestReturnPercent": null,
+    "worstReturnPercent": null,
+    "winRateMinPercent": null,
+    "winRateMaxPercent": null,
+    "worstDrawdownPercent": null,
+    "bestNetPnl": null,
+    "byVersion": [
+      {
+        "version": 1,
+        "runsCompleted": 0,
+        "bestReturnPercent": null,
+        "bestRunId": null
+      }
+    ]
+  },
+  {
+    "strategyId": "stg_005",
+    "runsTotal": 0,
+    "runsCompleted": 0,
+    "runsFailed": 0,
+    "runsInProgress": 0,
+    "lastRunAt": null,
+    "bestReturnPercent": null,
+    "worstReturnPercent": null,
+    "winRateMinPercent": null,
+    "winRateMaxPercent": null,
+    "worstDrawdownPercent": null,
+    "bestNetPnl": null,
+    "byVersion": [
+      {
+        "version": 1,
+        "runsCompleted": 0,
+        "bestReturnPercent": null,
+        "bestRunId": null
+      }
+    ]
   }
 ]

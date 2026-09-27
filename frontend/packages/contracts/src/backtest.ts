@@ -86,6 +86,17 @@ export const BacktestMetricsSchema = z
     tradeCount: z.number().int().min(0),
     winCount: z.number().int().min(0),
     lossCount: z.number().int().min(0),
+    /** D62 (6): null for runs made before these numbers existed, or when they do not apply. */
+    benchmarkReturnPercent: z.number().nullable(),
+    benchmarkCagrPercent: z.number().nullable(),
+    exposurePercent: z.number().min(0).max(100).nullable(),
+    avgHoldDays: z.number().min(0).nullable(),
+    profitFactor: z.number().min(0).nullable(),
+    calmar: z.number().nullable(),
+    /** Delivery runs only (intraday profit is business income): today's tax rates for every year. */
+    estimatedTaxPaise: NonNegPaiseSchema.nullable(),
+    afterTaxNetPnlPaise: PaiseSchema.nullable(),
+    afterTaxCagrPercent: z.number().nullable(),
   })
   .refine((data) => data.netPnlPaise === data.grossPnlPaise - data.chargesPaise, {
     message: "netPnlPaise must equal grossPnlPaise minus chargesPaise",
@@ -120,12 +131,28 @@ export const SymbolBreakdownSchema = z
   });
 export type SymbolBreakdown = z.infer<typeof SymbolBreakdownSchema>;
 
+/** One 12-month block from the run's start date (the last may be short), D62 (6). */
+export const YearRowSchema = z
+  .strictObject({
+    year: z.number().int().min(1),
+    from: IsoDateSchema,
+    to: IsoDateSchema,
+    returnPercent: z.number(),
+    profitPaise: PaiseSchema,
+    maxDrawdownPercent: z.number().lte(0),
+    benchmarkPercent: z.number().nullable(),
+  })
+  .refine((y) => y.from <= y.to, { message: "from must be on or before to", path: ["from"] });
+export type YearRow = z.infer<typeof YearRowSchema>;
+
 export const BacktestResultSchema = z
   .strictObject({
     runId: IdSchema,
     metrics: BacktestMetricsSchema,
     equityCurve: z.array(EquityPointSchema),
     bySymbol: z.array(SymbolBreakdownSchema),
+    /** Year-by-year results (D62); empty for older runs. */
+    years: z.array(YearRowSchema),
   })
   .refine((r) => new Set(r.bySymbol.map((b) => b.symbol)).size === r.bySymbol.length, {
     message: "bySymbol must list each symbol once",

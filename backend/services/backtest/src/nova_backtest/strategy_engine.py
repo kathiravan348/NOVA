@@ -5,7 +5,14 @@ from decimal import Decimal
 
 from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import Charges, StrategySpec
-from nova_contracts.strategy import StrategySpecPython, StrategySpecVisual
+from nova_contracts.strategy import (
+    OperandIndicator,
+    OperandPrice,
+    StrategySpecPython,
+    StrategySpecRotation,
+    StrategySpecVisual,
+    spec_operands,
+)
 from nova_db import new_id
 from nova_db.candles import read_bars
 from nova_db.models import BacktestResult, BacktestRun, Instrument, StrategyVersion, Trade
@@ -30,6 +37,32 @@ SQUARE_OFF = time(15, 20)
 INTRADAY_WARM_UP_DAYS = 30
 
 
+def unsupported(spec: StrategySpec) -> str | None:
+    """D62 settings the engine cannot run yet; a run must fail rather than ignore one."""
+    if isinstance(spec, StrategySpecRotation):
+        return "rotation"
+    risk = spec.risk
+    found = [
+        name
+        for name, used in (
+            ("a market filter", spec.regime is not None),
+            ("a portfolio limit", spec.portfolio is not None),
+            ("a trailing stop", risk.trailing_stop_percent is not None),
+            ("an ATR stop", risk.atr_stop is not None),
+            ("an exit after N bars", risk.max_hold_bars is not None),
+            (
+                "a multiplier",
+                any(
+                    isinstance(o, OperandPrice | OperandIndicator) and o.multiplier is not None
+                    for o in spec_operands(spec)
+                ),
+            ),
+        )
+        if used
+    ]
+    return ", ".join(found) or None
+
+
 def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPython:
     version = db.get(StrategyVersion, (run.strategy_id, run.strategy_version))
     if version is None:
@@ -38,6 +71,9 @@ def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPyt
         spec = SPEC.validate_python(version.spec)
     except ValidationError as exc:
         raise EngineError("The stored strategy spec is not valid") from exc
+    features = unsupported(spec)
+    if features is not None or isinstance(spec, StrategySpecRotation):
+        raise EngineError(f"This strategy uses {features}, which backtests do not support yet")
     if spec.segment not in ("equity_delivery", "equity_intraday"):
         raise EngineError(f"{spec.segment} backtests are not supported yet")
     if spec.segment == "equity_intraday" and spec.timeframe == "1d":

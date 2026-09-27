@@ -246,7 +246,12 @@ const groupToSpec = (g: RuleGroupForm): RuleGroup => ({
   })),
 });
 
-export function fromSpec(name: string, description: string, spec: StrategySpec): EditorForm {
+/** Rotation specs are not editable here yet (D62): the editor page refuses them before this. */
+export function fromSpec(
+  name: string,
+  description: string,
+  spec: Exclude<StrategySpec, { mode: "rotation" }>,
+): EditorForm {
   const form = emptyForm();
   return {
     ...form,
@@ -278,7 +283,7 @@ export function fromSpec(name: string, description: string, spec: StrategySpec):
 const optionalPercent = (v: string) => (v.trim() === "" ? null : Number(v));
 
 /** Valid form → contract spec, checked with the contract schema for its mode. */
-export function toSpec(form: EditorForm): StrategySpec {
+export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotation" }> {
   const base = {
     segment: form.segment,
     exchange: form.exchange,
