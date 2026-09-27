@@ -10,10 +10,11 @@ from pydantic import Field, SecretStr
 class BacktestSettings(Settings):
     internal_token: SecretStr
     worker_poll_seconds: float = 2.0
-    # D59: price bars one run may load (warm-up included); keeps the worker inside its memory limit.
-    # Measured peaks: visual 1.4 M bars ≈ 0.8 GB; Python 735 k ≈ 1.1 GB (the sandbox copies bars).
-    backtest_max_bars: int = Field(1_500_000, gt=0)
-    backtest_max_bars_python: int = Field(750_000, gt=0)
+    # D61 (6): price bars one run may load (warm-up included); a run-time guard, since memory stays
+    # flat. Measured 27 Sep (NOVA-111): visual 47 M 1m bars ≈ 6.6 min, 0.83 GB peak;
+    # Python 5 M 15m bars ≈ 2.7 min, 0.61 GB peak (each stock's sandbox ≈ 0.1 GB).
+    backtest_max_bars: int = Field(50_000_000, gt=0)
+    backtest_max_bars_python: int = Field(5_000_000, gt=0)
     # D61: pass 1 writes each run's columns and signals here; removed after the run and on start.
     backtest_scratch_dir: Path = Path("/tmp/nova-backtest")  # noqa: S108 - the container's disk
 

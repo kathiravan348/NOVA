@@ -4,12 +4,15 @@ Bars with the same time arrive together, stocks in name order. A window holds ab
 bars; its OHLC values become plain Python numbers, which the simulator reads far faster than numpy.
 """
 
+import itertools
 from collections.abc import Iterator
 from typing import NamedTuple
 
 import numpy as np
 
-from nova_backtest.scratch import Store
+from nova_backtest.scratch import Store, StoredSeries
+
+REMAP_WINDOWS = 16
 
 
 class BarAt(NamedTuple):
@@ -29,14 +32,17 @@ class BarAt(NamedTuple):
 def walk(store: Store, window_bars: int = 500_000) -> Iterator[tuple[int, list[BarAt]]]:
     """Yields `(time, bars at that time)` for every bar time of every stock, oldest first."""
     symbols = sorted(store.symbols())
-    series = [store.series(s) for s in symbols]
-    sizes = [len(s.columns) for s in series]
+    sizes = [len(store.series(s).columns) for s in symbols]
     position = [0] * len(symbols)
     per_stock = max(1, window_bars // max(1, len(symbols)))
-    while True:
+    series: dict[int, StoredSeries] = {}
+    for number in itertools.count():
         active = [k for k in range(len(symbols)) if position[k] < sizes[k]]
         if not active:
             return
+        if number % REMAP_WINDOWS == 0:
+            # Fresh memory maps now and then: pages already read are let go with the old ones.
+            series = {k: store.series(symbols[k]) for k in active}
         # The earliest time at which some stock would pass its share of the window.
         end = min(
             int(series[k].columns.ts[min(position[k] + per_stock, sizes[k]) - 1]) for k in active

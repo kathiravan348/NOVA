@@ -88,9 +88,11 @@ def test_percent_follows_the_stage_bands(clean: Engine, factory: sessionmaker[Se
 
     progress.stage("loading", 4)
     progress.advance(2)
-    assert progress.percent == 10
-    progress.stage("signals", 1)
-    assert progress.percent == 20
+    assert progress.percent == 15
+    progress.stage("signals", 4)  # Python strategies count pass 1 here instead (D61 (5))
+    assert progress.percent == 0
+    progress.advance(2)
+    assert progress.percent == 15
     progress.stage("simulating", 1_000)
     clock.now += 5
     progress.advance(500, date(2025, 3, 14), 3)

@@ -1,6 +1,6 @@
 # NOVA-111 — Engine: Python strategies one stock at a time; limits re-measured (D61)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-111 · **Depends on:** NOVA-110
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-111 · **Depends on:** NOVA-110
 
 ## Goal
 Step 3 of the streaming engine (D61 (5), (6)). Python strategies run in one sandbox process per stock, so memory no longer
@@ -51,7 +51,21 @@ Delete:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `sandbox.py`: `run_python_one(code, symbol, columns, calls)` → int8 codes, one child per stock with the same
+limits; errors read "Python strategy error in INFY: …" (also timeouts and crashes). `run_python` stays as a thin loop for
+tests. `strategy_engine.py`: `check_code` once per run, then per stock load → rules or `run_python_one` → `scratch.add`.
+`progress.py`: pass 1 counts stocks in `loading` (visual) or `signals` (Python), both 0–30 %; simulating 30–95 %.
+`timeline.py`: memory maps are reopened every 16 windows so pages already read are let go; `RunScratch.series` returns
+fresh maps each call. New caps: `backtest_max_bars` 50 M, `backtest_max_bars_python` 5 M.
+Measured (backend image, 1.5 GB limit, synthetic stocks, EMA 20/50 cross, pass 1 + pass 2 without the DB read):
+| Run | Bars | Time | Peak RSS |
+|---|---|---|---|
+| Visual 100 × 5 y 1d / 15m / 1m | 0.125 M / 3.1 M / 46.9 M | 1 s / 16 s / 6.6 min | 153 / 508 / 825 MB |
+| Python 100 × 5 y 1d / 15m; 160 × 15m | 0.125 M / 3.1 M / 5 M | 28 s / 97 s / 2.7 min | 152 / 508 / 608 MB (child ≈ 0.1 GB) |
+Python and visual versions of the same strategy gave identical trades in every size.
+- Deviations: `reference_rules.py` never existed (NOVA-109 kept its reference inside `test_columns.py`); band tests
+  updated for the new 0–30 % pass-1 band. Measured numbers copied into D61 (6).
+Commands: backend-check 971 passed (+ the band fix; backtest 370 passed). Guides: USER-GUIDE (bar-limit row).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

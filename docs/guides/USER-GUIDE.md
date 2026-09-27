@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-126). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-111). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -406,7 +406,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | **Could not delete**: *A running backtest cannot be deleted* | Wait until it finishes (or fails), then delete it. |
 | **Could not delete**: *Wait for the running backtest to finish* (deleting a strategy) | One of its backtests is running. Wait until it finishes (or fails), then delete the strategy. |
 | A backtest stays **Waiting to start** | Another run is still going; runs go one at a time. If nothing is **Running** for minutes, NOVA's backtest part is not running: start the NOVA stack again. |
-| Backtest *Failed* with *needs more than … price bars* | The test is too big for NOVA in one go. Pick fewer stocks or a shorter period: 1-minute prices add up fast (one stock has about 375 bars a day). |
+| Backtest *Failed* with *needs more than … price bars* | The test is too big for NOVA in one go. Pick fewer stocks or a shorter period. The most a test can use: about 100 stocks × 5 years of 1-minute prices for a rule-based strategy (it takes about 7 minutes), or about 100 stocks × 5 years of 15-minute prices for a Python strategy. One stock has about 375 one-minute bars a day. |
 | Backtest *Failed* with *The backtest worker stopped during this run* | NOVA's backtest part stopped in the middle (often it ran out of memory) and has restarted. Run it again; if it stops again, pick fewer stocks or a shorter period. |
 | Backtest fails with *Unknown setting … save it again* | The strategy was saved before indicators got their own settings. Open it, press **Edit**, then **Save draft**. |
 | Signed out suddenly | Your session expired. Sign in again. |
