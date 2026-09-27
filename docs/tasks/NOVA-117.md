@@ -1,6 +1,6 @@
 # NOVA-117 — Engine: market filter (regime) + rotation mode (D62)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-117 · **Depends on:** NOVA-116, NOVA-127
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-117 · **Depends on:** NOVA-116, NOVA-127
 
 ## Goal
 Backtests honour `regime` on visual and Python specs and run `mode: "rotation"` specs (D62 (3), (4)). After this task every
@@ -66,7 +66,23 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `regime.py`: `load_regime` reads the index like a stock in the strategy's timeframe (warm-up included) and
+evaluates the condition with the array rule code; `RegimeSeries.at(ts)` = last index bar at or before (off before the
+first); no index bars in the period → "No NIFTY 50 1d prices for this period: download them in Relay (Stored data →
+Download missing)". Pass 1 stores each stock's filter per bar (`regime` array in scratch, `BarAt.regime`).
+`simulate.py`: no buy is queued at a close where the filter is off; `exit_all` also queues a sell of every holding
+there. The loop is now `run_loop(store, Run, …)` with `warm_up` and `begin` hooks. `rotation.py`: pass 1 saves the score
+(weighted sum, NaN if a term is NaN) and the filter; `RotationRun` rebalances on the first bar time on/after the start,
+each new ISO week/month/quarter, and the bar time after the market filter comes back on; ranks on each stock's
+previous close; sells rank > keepWithin or filtered out (a holding without a bar is kept); buys best not held up to
+`hold`, worth ÷ hold each at the open, capped by cash; no buys while off; stops, target and bars-held exits apply.
+`strategy_engine.py`: guard removed; rotation branch; results writing moved to `save.py` (keeps files ≤ 300 lines).
+- Tests: `test_rotation.py` (6 stocks monthly hold 2 keep 3: trades only on first bars of months, rank 3 kept, rank 4
+  sold, 50 shares each, filtered-out leader skipped; weekly on Mondays; quarterly on 1 Jan/1 Apr/1 Jul; `exit_all` sell
+  and next-bar rebalance; A01 on 30 synthetic stocks × 2 years with NIFTY 50 → completed, 2 year rows, tax, benchmark),
+  `test_regime.py` (filter lookup, visual `exit_all` and `no_new_entries`); the missing-index message in `test_engine`.
+- Deviations: new `save.py`; the A01 engine test lives in `test_rotation.py` (test_engine is already long).
+Commands: backend-check 1007 passed. Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

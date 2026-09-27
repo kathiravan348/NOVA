@@ -1,43 +1,45 @@
-"""Backtest engine (D45, D46, D47): visual and Python strategies, equity delivery and intraday."""
+"""Backtest engine (D45–D47, D61, D62): visual, Python and rotation strategies.
+
+Pass 1 goes stock by stock: bars → signals (or rotation scores) → the scratch folder. Pass 2
+simulates every stock in time order from there; `save.py` then writes the results.
+"""
 
 from datetime import UTC, date, datetime, time, timedelta
-from decimal import Decimal
 from pathlib import Path
 
-from nova_contracts import BacktestResult as ResultContract
+import numpy as np
 from nova_contracts import Charges, StrategySpec
 from nova_contracts.strategy import (
     OperandIndicator,
+    Risk,
     StrategySpecPython,
     StrategySpecRotation,
     StrategySpecVisual,
     spec_operands,
 )
-from nova_db import new_id
-from nova_db.models import BacktestResult, BacktestRun, Instrument, StrategyVersion, Trade
+from nova_db.models import BacktestRun, Instrument, StrategyVersion
 from nova_ledger import ChargeRates, rates_for, trade_charges
 from pydantic import TypeAdapter, ValidationError
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
-from nova_backtest.benchmark import benchmark_curve, index_closes
 from nova_backtest.columns import Columns
 from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
 from nova_backtest.indicators import indicator_array, settings_for
-from nova_backtest.metrics import summarize
 from nova_backtest.progress import ProgressSink
+from nova_backtest.regime import RegimeSeries, load_regime
+from nova_backtest.rotation import rotation_arrays, simulate_rotation
 from nova_backtest.rules import SeriesCache, check_group
 from nova_backtest.rules import signals as rule_signals
 from nova_backtest.sandbox import ENTER, EXIT, Calls, check_code, run_python_one
-from nova_backtest.scratch import Floats, RunScratch
-from nova_backtest.simulate import simulate
-from nova_backtest.tax import estimate_tax
-from nova_backtest.versions import trim_older_versions
-from nova_backtest.years import year_rows
+from nova_backtest.save import save_result
+from nova_backtest.scratch import Bools, Floats, RunScratch
+from nova_backtest.simulate import Simulation, simulate
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
+Spec = StrategySpecVisual | StrategySpecPython | StrategySpecRotation
 WARM_UP_DAYS = {"1d": 400}
 # Zerodha squares off MIS equity positions from 15:20 IST (D46).
 SQUARE_OFF = time(15, 20)
@@ -45,14 +47,7 @@ INTRADAY_WARM_UP_DAYS = 30
 DEFAULT_SCRATCH = Path("/tmp/nova-backtest")  # noqa: S108 - the worker container's own disk (D61)
 
 
-def unsupported(spec: StrategySpec) -> str | None:
-    """D62 settings the engine cannot run yet (NOVA-117); a run fails rather than ignore one."""
-    if isinstance(spec, StrategySpecRotation) or spec.regime is not None:
-        return "a market filter or rotation"
-    return None
-
-
-def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPython:
+def _spec(db: Session, run: BacktestRun) -> Spec:
     version = db.get(StrategyVersion, (run.strategy_id, run.strategy_version))
     if version is None:
         raise EngineError("The strategy version of this run no longer exists")
@@ -60,15 +55,14 @@ def _spec(db: Session, run: BacktestRun) -> StrategySpecVisual | StrategySpecPyt
         spec = SPEC.validate_python(version.spec)
     except ValidationError as exc:
         raise EngineError("The stored strategy spec is not valid") from exc
-    features = unsupported(spec)
-    if features is not None or isinstance(spec, StrategySpecRotation):
-        raise EngineError(f"This strategy uses {features}, which backtests do not support yet")
     for operand in spec_operands(spec):
         if isinstance(operand, OperandIndicator):
             try:
                 settings_for(operand.name, operand.params)
             except ValueError as exc:
                 raise EngineError(f"{exc}: open the strategy and save it again") from exc
+    if isinstance(spec, StrategySpecRotation):
+        return spec  # the contract allows only equity delivery on 1d (D62 (4))
     if spec.segment not in ("equity_delivery", "equity_intraday"):
         raise EngineError(f"{spec.segment} backtests are not supported yet")
     if spec.segment == "equity_intraday" and spec.timeframe == "1d":
@@ -92,22 +86,30 @@ def _symbols(db: Session, run: BacktestRun) -> list[str]:
     return list(rows)
 
 
-def _extras(
-    spec: StrategySpecVisual | StrategySpecPython, columns: Columns
-) -> tuple[Floats | None, Floats | None]:
-    """The stock's rank values and ATR for the simulator, when the spec uses them (D62)."""
-    portfolio, atr_stop = spec.portfolio, spec.risk.atr_stop
+def _atr(risk: Risk, columns: Columns) -> Floats | None:
+    """ATR for the ATR stop (D62), when the spec has one."""
+    if risk.atr_stop is None:
+        return None
+    return indicator_array("atr", {"period": float(risk.atr_stop.period)}, columns)
+
+
+def _signals(
+    spec: Spec, symbol: str, columns: Columns, calls: Calls
+) -> tuple[Bools, Bools, Floats | None]:
+    """One stock's `enter`, `exit` and rank arrays. Rotation: passes the filter, never, score."""
+    if isinstance(spec, StrategySpecRotation):
+        score, eligible = rotation_arrays(columns, spec.rotation)
+        return eligible, np.zeros(len(columns), dtype=np.bool_), score
+    if isinstance(spec, StrategySpecVisual):
+        enter, exit_ = rule_signals(columns, spec.entry, spec.exit)
+    else:
+        codes = run_python_one(spec.code, symbol, columns, calls)
+        enter, exit_ = codes == ENTER, codes == EXIT
+    portfolio = spec.portfolio
     rank = None
     if portfolio is not None and portfolio.rank is not None:
         rank = SeriesCache(columns).values(portfolio.rank.by)
-    atr = None
-    if atr_stop is not None:
-        atr = indicator_array("atr", {"period": float(atr_stop.period)}, columns)
-    return rank, atr
-
-
-def _decimal(value: float | None) -> Decimal | None:
-    return None if value is None else Decimal(str(value))
+    return enter, exit_, rank
 
 
 def _ist_midnight(day: date) -> datetime:
@@ -129,26 +131,27 @@ class StrategyEngine:
         self,
         db: Session,
         symbols: list[str],
-        spec: StrategySpecVisual | StrategySpecPython,
+        spec: Spec,
         span: tuple[datetime, datetime],
         limit: int,
         progress: ProgressSink,
         scratch: RunScratch,
         start: datetime,
+        regime: RegimeSeries | None,
     ) -> int:
         """Pass 1 (D61): one stock at a time, its columns and signals go to `scratch`.
 
         Signals are computed right after each stock loads (visual rules on arrays, Python code in
-        its own sandbox process), so only one stock's arrays exist at a time. Stops as soon as the
-        run passes the bar limit (D59, D61 (6)); 3m–1h are rolled up from 1m (D58). Answers the
-        number of bars stored.
+        its own sandbox process, rotation scores), so only one stock's arrays exist at a time.
+        Stops as soon as the run passes the bar limit (D59, D61 (6)); 3m–1h are rolled up from
+        1m (D58). Answers the number of bars stored.
         """
         progress.stage("loading", len(symbols))
         calls: Calls = {}
         if isinstance(spec, StrategySpecVisual):
             check_group(spec.entry)
             check_group(spec.exit)
-        else:
+        elif isinstance(spec, StrategySpecPython):
             calls = check_code(spec.code)  # once per run, not per stock
             progress.stage("signals", len(symbols))
         missing: list[str] = []
@@ -163,12 +166,10 @@ class StrategyEngine:
                 )
             if len(columns) == 0 or int(columns.ts[-1]) < first:
                 missing.append(symbol)
-            elif isinstance(spec, StrategySpecVisual):
-                enter, exit_ = rule_signals(columns, spec.entry, spec.exit)
-                scratch.add(symbol, columns, enter, exit_, *_extras(spec, columns))
             else:
-                codes = run_python_one(spec.code, symbol, columns, calls)
-                scratch.add(symbol, columns, codes == ENTER, codes == EXIT, *_extras(spec, columns))
+                enter, exit_, rank = _signals(spec, symbol, columns, calls)
+                market = None if regime is None else regime.at(columns.ts)
+                scratch.add(symbol, columns, enter, exit_, rank, _atr(spec.risk, columns), market)
             del columns
             progress.advance(done)
         if missing:
@@ -187,12 +188,17 @@ class StrategyEngine:
         start = _ist_midnight(run.date_from)
         end = _ist_midnight(run.date_to + timedelta(days=1))
         warm_up = timedelta(days=WARM_UP_DAYS.get(spec.timeframe, INTRADAY_WARM_UP_DAYS))
-        limit = self.max_bars if isinstance(spec, StrategySpecVisual) else self.max_bars_python
+        span = (start - warm_up, end)
+        python = isinstance(spec, StrategySpecPython)
+        limit = self.max_bars_python if python else self.max_bars
+        regime = None
+        if spec.regime is not None:
+            regime = load_regime(db, spec.regime, spec.timeframe, span, start)
         scratch = RunScratch(self.scratch_root, run.id)
         try:
-            span = (start - warm_up, end)
-            total = self._load(db, symbols, spec, span, limit, progress, scratch, start)
-            self._simulate(db, run, spec, symbols, scratch, start, total, progress)
+            total = self._load(db, symbols, spec, span, limit, progress, scratch, start, regime)
+            result = self._simulate(db, run, spec, scratch, start, total, progress)
+            save_result(db, run, spec.segment, symbols, result, (start, end), progress)
         finally:
             scratch.close()
 
@@ -200,14 +206,13 @@ class StrategyEngine:
         self,
         db: Session,
         run: BacktestRun,
-        spec: StrategySpecVisual | StrategySpecPython,
-        symbols: list[str],
+        spec: Spec,
         scratch: RunScratch,
         start: datetime,
         total: int,
         progress: ProgressSink,
-    ) -> None:
-        """Pass 2 (D61): all stocks in time order from the scratch folder; then the results."""
+    ) -> Simulation:
+        """Pass 2 (D61): all stocks in time order from the scratch folder."""
         rates: dict[date, ChargeRates] = {}
 
         def charges(qty: int, entry: int, exit_: int, entry_at: datetime) -> Charges:
@@ -223,114 +228,22 @@ class StrategyEngine:
             progress.advance(done, max(ts, start).astimezone(IST).date(), trades)
 
         progress.stage("simulating", total)
-        result = simulate(
+        cash = run.initial_capital_paise
+        when_off = None if spec.regime is None else spec.regime.when_off
+        if isinstance(spec, StrategySpecRotation):
+            return simulate_rotation(
+                scratch, spec.rotation, spec.risk, cash, start, charges, when_off, on_bar
+            )
+        return simulate(
             scratch,
             spec.sizing,
             spec.risk,
-            run.initial_capital_paise,
+            cash,
             start,
             charges,
             square_off=SQUARE_OFF if spec.segment == "equity_intraday" else None,
             averaging=spec.averaging,
             on_bar=on_bar,
             portfolio=spec.portfolio,
+            when_off=when_off,
         )
-        initial = run.initial_capital_paise
-        dates = [day for day, _ in result.equity]
-        closes = (
-            index_closes(db, run.benchmark, start, _ist_midnight(run.date_to + timedelta(days=1)))
-            if run.benchmark
-            else []
-        )
-        bench = benchmark_curve(closes, dates, initial)
-        tax = estimate_tax(result.trades, spec.segment)
-        summary = summarize(
-            result.trades,
-            result.equity,
-            initial,
-            run.date_from,
-            run.date_to,
-            symbols,
-            bench,
-            None if tax is None else tax.tax_paise,
-        )
-        contract = ResultContract.model_validate(
-            {
-                "run_id": run.id,
-                "metrics": summary.metrics,
-                "equity_curve": [
-                    {"date": day, "equity_paise": value, "benchmark_paise": b}
-                    for (day, value), b in zip(result.equity, bench, strict=True)
-                ],
-                "by_symbol": summary.by_symbol,
-                "years": year_rows(result.equity, bench, initial, run.date_from, run.date_to),
-            }
-        )
-        wire = contract.model_dump(mode="json")
-
-        progress.stage("saving", len(result.trades))
-        db.execute(delete(Trade).where(Trade.run_id == run.id))
-        db.execute(delete(BacktestResult).where(BacktestResult.run_id == run.id))
-        for trade in result.trades:
-            c = trade.charges
-            db.add(
-                Trade(
-                    id=new_id("trd"),
-                    run_id=run.id,
-                    symbol=trade.symbol,
-                    exchange="NSE",
-                    segment=spec.segment,
-                    side="buy",
-                    qty=trade.qty,
-                    entry_at=trade.entry_at,
-                    entry_price_paise=trade.entry_price,
-                    exit_at=trade.exit_at,
-                    exit_price_paise=trade.exit_price,
-                    gross_pnl_paise=trade.gross,
-                    brokerage_paise=c.brokerage_paise,
-                    stt_paise=c.stt_paise,
-                    exchange_txn_paise=c.exchange_txn_paise,
-                    sebi_fee_paise=c.sebi_fee_paise,
-                    stamp_duty_paise=c.stamp_duty_paise,
-                    gst_paise=c.gst_paise,
-                    dp_paise=c.dp_paise,
-                    charges_total_paise=c.total_paise,
-                    net_pnl_paise=trade.net,
-                )
-            )
-        m = summary.metrics
-        db.add(
-            BacktestResult(
-                run_id=run.id,
-                gross_pnl_paise=m["gross_pnl_paise"],
-                charges_paise=m["charges_paise"],
-                net_pnl_paise=m["net_pnl_paise"],
-                return_percent=Decimal(str(m["return_percent"])),
-                cagr_percent=Decimal(str(m["cagr_percent"])),
-                max_drawdown_percent=Decimal(str(m["max_drawdown_percent"])),
-                sharpe=Decimal(str(m["sharpe"])),
-                win_rate_percent=Decimal(str(m["win_rate_percent"])),
-                trade_count=m["trade_count"],
-                win_count=m["win_count"],
-                loss_count=m["loss_count"],
-                equity_curve=wire["equityCurve"],
-                by_symbol=wire["bySymbol"],
-                benchmark_return_percent=_decimal(m["benchmark_return_percent"]),
-                benchmark_cagr_percent=_decimal(m["benchmark_cagr_percent"]),
-                exposure_percent=_decimal(m["exposure_percent"]),
-                avg_hold_days=_decimal(m["avg_hold_days"]),
-                profit_factor=_decimal(m["profit_factor"]),
-                calmar=_decimal(m["calmar"]),
-                after_tax_cagr_percent=_decimal(m["after_tax_cagr_percent"]),
-                estimated_tax_paise=m["estimated_tax_paise"],
-                after_tax_net_pnl_paise=m["after_tax_net_pnl_paise"],
-                years=wire["years"],
-            )
-        )
-        run.status = "completed"
-        run.finished_at = datetime.now(UTC)
-        run.stage = "done"
-        run.progress_percent = 100
-        run.trades_so_far = len(result.trades)
-        trim_older_versions(db, run)  # D60: older versions keep only their metrics
-        db.commit()

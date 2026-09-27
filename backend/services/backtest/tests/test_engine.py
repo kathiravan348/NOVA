@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from nova_backtest.bars import IST
 from nova_backtest.progress import Progress
-from nova_backtest.strategy_engine import SPEC, StrategyEngine, unsupported
+from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_one, run_worker
 from nova_db.models import BacktestRun, Candle, StrategyVersion
 from nova_db.queue import claim_next
@@ -275,7 +275,7 @@ def test_rerun_replaces_the_old_result(seeded: Engine, factory: sessionmaker[Ses
         (_spec(timeframe="5m"), "No 5m candles in the period for INFY, TCS"),
         (
             _spec(portfolio={"maxPositions": 3}, regime=NIFTY_UP),
-            "This strategy uses a market filter or rotation, which backtests do not support yet",
+            "No NIFTY 50 1d prices for this period: download them in Relay",
         ),
     ],
 )
@@ -444,43 +444,3 @@ def test_a_failed_run_keeps_its_last_progress(
     assert run["status"] == "failed"
     progress = run["progress"]
     assert (progress["stage"], progress["percent"], progress["symbolsDone"]) == ("loading", 15, 1)
-
-
-def test_unsupported_names_only_the_market_filter_and_rotation() -> None:
-    """D62: until NOVA-117 runs them, a run fails instead of ignoring a setting."""
-    multiplier = RULE | {"op": "gt", "right": {"kind": "price", "field": "open", "multiplier": 2}}
-    visual = SPEC.validate_python(
-        _spec(
-            risk={
-                "stopLossPercent": None,
-                "targetPercent": None,
-                "trailingStopPercent": 10,
-                "atrStop": {"period": 14, "multiplier": 3},
-                "maxHoldBars": 5,
-            },
-            portfolio={"maxPositions": 3},
-            entry={"combinator": "all", "conditions": [multiplier]},
-        )
-    )
-    rotation = SPEC.validate_python(
-        {
-            "mode": "rotation",
-            "segment": "equity_delivery",
-            "exchange": "NSE",
-            "timeframe": "1d",
-            "risk": {"stopLossPercent": None, "targetPercent": None},
-            "rotation": {
-                "rebalance": "monthly",
-                "hold": 2,
-                "keepWithin": 3,
-                "score": [{"operand": {"kind": "price", "field": "close"}, "weight": 1}],
-            },
-        }
-    )
-
-    assert unsupported(visual) is None  # NOVA-115 runs these
-    assert unsupported(rotation) == "a market filter or rotation"
-    assert (
-        unsupported(SPEC.validate_python(_spec(regime=NIFTY_UP))) == "a market filter or rotation"
-    )
-    assert unsupported(SPEC.validate_python(_spec())) is None

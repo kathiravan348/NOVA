@@ -7,12 +7,15 @@ on each holding's previous close; (c) averaging adds (D53), then the stop (the h
 fixed, trailing and ATR levels), then the target; (d) the close is the last price, trailing
 levels and bars held follow it, and signals queue new orders.
 With `square_off` (intraday, D46) nothing is held past that IST time or overnight.
+With a market filter (`when_off`, D62) no buy is queued at a close where it is off, and
+`exit_all` also queues a sell of every holding there. Rotation (`rotation.py`) reuses this loop.
 """
 
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
+from typing import Literal
 
 from nova_contracts import Sizing
 from nova_contracts.strategy import Averaging, Portfolio, Risk
@@ -38,6 +41,7 @@ __all__ = [
 OnBar = Callable[[int, datetime, int], None]
 ON_BAR_EVERY = 1_000
 EPOCH = date(1970, 1, 1)
+WhenOff = Literal["no_new_entries", "exit_all"]
 
 
 @dataclass(frozen=True)
@@ -50,7 +54,7 @@ def _at(ts: int) -> datetime:
     return datetime.fromtimestamp(ts, UTC)
 
 
-class _Run:
+class Run:
     def __init__(
         self,
         book: Book,
@@ -59,14 +63,23 @@ class _Run:
         averaging: Averaging | None,
         square_off: time | None,
         portfolio: Portfolio | None,
+        when_off: WhenOff | None = None,
     ) -> None:
         self.book, self.sizing, self.risk, self.averaging = book, sizing, risk, averaging
-        self.portfolio = portfolio
+        self.portfolio, self.when_off = portfolio, when_off
         cut = square_off
         self.cut = None if cut is None else cut.hour * 3600 + cut.minute * 60 + cut.second
         self.pending: dict[str, str] = {}
         self.signal_rank: dict[str, float] = {}  # rank at the close that queued a buy (D62)
         self.previous: dict[str, tuple[int, int, int]] = {}  # symbol → (ts, day, close)
+
+    def warm_up(self, bar: BarAt) -> None:
+        """A bar before the start: only its close is remembered."""
+        self.book.last_close[bar.symbol] = bar.close
+        self.previous[bar.symbol] = (bar.ts, bar.day, bar.close)
+
+    def begin(self, group: list[BarAt]) -> None:
+        """Called once per bar time in the period, before step a (rotation decides here)."""
 
     def average_down(self, bar: BarAt) -> None:
         """Resting buys below the last buy (D53); a stop at or above the trigger fills first."""
@@ -156,11 +169,15 @@ class _Run:
         position = self.book.positions.get(symbol)
         if position is not None:
             exits.at_close(position, bar.close, self.risk, bar.atr)
-            if bar.exit or exits.held_long_enough(position, self.risk):
+            if bar.exit or exits.held_long_enough(position, self.risk) or self.all_out(bar):
                 self.pending[symbol] = "exit"
-        elif bar.enter:
+        elif bar.enter and bar.regime:
             self.pending[symbol] = "enter"
             self.signal_rank[symbol] = bar.rank
+
+    def all_out(self, bar: BarAt) -> bool:
+        """The market filter is off at this close and says to sell everything (D62)."""
+        return not bar.regime and self.when_off == "exit_all"
 
 
 def simulate(
@@ -175,9 +192,18 @@ def simulate(
     on_bar: OnBar | None = None,
     window_bars: int = 500_000,
     portfolio: Portfolio | None = None,
+    when_off: WhenOff | None = None,
 ) -> Simulation:
     book = Book(cash, charges)
-    run = _Run(book, sizing, risk, averaging, square_off, portfolio)
+    run = Run(book, sizing, risk, averaging, square_off, portfolio, when_off)
+    return run_loop(store, run, start, on_bar, window_bars)
+
+
+def run_loop(
+    store: Store, run: Run, start: datetime, on_bar: OnBar | None, window_bars: int
+) -> Simulation:
+    """Every bar time in order: warm-up bars, then steps a–d for each bar time in the period."""
+    book = run.book
     equity: list[tuple[date, int]] = []
     first = int(start.timestamp())
     day: int | None = None
@@ -193,13 +219,13 @@ def simulate(
         last_ts = ts
         if ts < first:
             for bar in group:
-                book.last_close[bar.symbol] = bar.close
-                run.previous[bar.symbol] = (bar.ts, bar.day, bar.close)
+                run.warm_up(bar)
             continue
         bar_day = group[0].day
         if day is not None and bar_day != day:
             equity.append((EPOCH + timedelta(days=day), book.worth()))
         day = bar_day
+        run.begin(group)
         active = {bar.symbol: run.sells(bar) for bar in group}
         run.buys(group, active)
         for bar in group:
@@ -232,9 +258,11 @@ def simulate_bars(
     portfolio: Portfolio | None = None,
     ranks: Mapping[str, Sequence[float]] | None = None,
     atrs: Mapping[str, Sequence[float]] | None = None,
+    regimes: Mapping[str, Sequence[bool]] | None = None,
+    when_off: WhenOff | None = None,
 ) -> Simulation:
     """The same simulation over in-memory `Bar` lists (tests, small runs)."""
-    store = MemoryStore.from_bars(bars, signals, ranks, atrs)
+    store = MemoryStore.from_bars(bars, signals, ranks, atrs, regimes)
     return simulate(
         store,
         sizing,
@@ -247,4 +275,5 @@ def simulate_bars(
         on_bar,
         window_bars,
         portfolio,
+        when_off,
     )

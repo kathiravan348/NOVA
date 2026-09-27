@@ -122,7 +122,7 @@
 | NOVA-114 | Contracts: spec v2, rotation mode, result metrics + year table (D62) | done | Claude | — |
 | NOVA-115 | Engine: ranked buys, max positions, trailing/ATR/time exits, multiplier (D62) | done | Claude | 111, 114 |
 | NOVA-116 | Engine: benchmark, new metrics, year table, tax estimate (D62, migration 0018) | done | Claude | 112, 113, 114, 115 (merge after 124) |
-| NOVA-117 | Engine: market filter + rotation mode (D62) | planned | — | 116, 127 |
+| NOVA-117 | Engine: market filter + rotation mode (D62) | done | Claude | 116, 127 |
 | NOVA-118 | Orbit editor: multiplier, exits, portfolio, market filter (D62) | planned | — | 112, 114 (merge after 115) |
 | NOVA-119 | Orbit editor: rotation mode (D62) | planned | — | 118 (merge after 117) |
 | NOVA-120 | Orbit results: year-by-year table, new metrics, tax, benchmark line (D62) | planned | — | 114 |
