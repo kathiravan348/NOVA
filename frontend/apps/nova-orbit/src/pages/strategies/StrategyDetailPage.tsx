@@ -22,6 +22,7 @@ import {
   strategyStatusLabel,
   strategyStatusTone,
 } from "../../lib/format";
+import { modeLabel } from "../../lib/strategyText";
 import { useRunColumns } from "../backtests/runColumns";
 import { DeleteStrategyButton } from "./DeleteStrategyButton";
 import { StrategySpecCard } from "./StrategySpecCard";
@@ -55,7 +56,7 @@ const versionColumns = (
   {
     id: "mode",
     header: "Mode",
-    accessorFn: (v) => (v.spec.mode === "visual" ? "Visual" : "Python"),
+    accessorFn: (v) => modeLabel(v.spec.mode),
   },
   { id: "note", header: "Note", accessorKey: "note" },
   {

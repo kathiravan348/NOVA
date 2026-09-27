@@ -1,6 +1,6 @@
 # NOVA-114 — Contracts: spec v2, rotation mode, result metrics + year table (D62)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-114 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-114 · **Depends on:** —
 
 ## Goal
 The wire contracts can describe D62 (3), (4) and (6) on both sides, with parity tests, and Orbit shows the new spec parts as
@@ -61,7 +61,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. TS: operand `multiplier`; `Risk` + `trailingStopPercent`, `atrStop`, `maxHoldBars`; `Portfolio {maxPositions, rank?}`,
+`Regime`, `ScoreTerm`, `Rotation`, `StrategySpecRotation` (third mode); write bodies and `specParamProblems` (now over every
+operand: rules, rank, regime, score, filter) moved to `strategyWrite.ts`. Backtest: nullable D62 metrics + `YearRow` /
+`years`. Python mirrors in `strategy.py` / `backtest.py` (optional fields `exclude_if` absent; metrics default None, years []).
+Mocks: "Turtle 55/20 (ranked)" (stg_004) and "12-1 momentum rotation" (stg_005) + stats rows; results get the new metrics
+(computed from the mock trades) and one year row each; consistency test "years add up to net P&L".
+Orbit read-only: `modeLabel`, multiplier text, `describeExits/Portfolio/Regime/Rotation`; spec card and `specLines` show
+them (new rows: Other exits, Market filter, Positions; rotation: Rebalance, Hold, Score n, Filter); editor shows an
+EmptyState for rotation specs.
+- Deviations: new schemas live in `strategy.ts` (no `strategyPortfolio.ts`, which would import `strategy.ts` and be imported
+  by it); write bodies moved to `strategyWrite.ts` to stay under 300 lines. `StrategyDetailPage` already uses `modeLabel`
+  (NOVA-112 is merged). Extra: `backtest/strategy_engine.py` fails runs that use any D62 setting it cannot run yet
+  ("This strategy uses a market filter, …, which backtests do not support yet"); NOVA-115/117 remove parts of it.
+- Checked in a mock Orbit (stg_004/stg_005 detail, desktop dark).
+Commands: backend-check 718 passed; `pnpm review:check` passed (829 tests). Maps: CONTRACTS. Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

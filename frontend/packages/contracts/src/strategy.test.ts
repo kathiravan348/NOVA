@@ -6,16 +6,18 @@ import {
   RuleGroupSchema,
   SizingSchema,
   Strategy,
-  StrategyCreateSchema,
   StrategySchema,
   StrategySpecPython,
   StrategySpecPythonSchema,
   StrategySpecVisual,
   StrategySpecVisualSchema,
-  StrategyUpdateSchema,
-  StrategyVersionCreateSchema,
   UniverseSchema,
 } from "./strategy";
+import {
+  StrategyCreateSchema,
+  StrategyUpdateSchema,
+  StrategyVersionCreateSchema,
+} from "./strategyWrite";
 
 describe("Strategy schemas", () => {
   const visualSpec: StrategySpecVisual = {

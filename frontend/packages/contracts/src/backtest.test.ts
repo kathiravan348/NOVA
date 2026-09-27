@@ -5,6 +5,7 @@ import {
   BacktestMetricsSchema,
   BacktestResult,
   BacktestResultSchema,
+  YearRowSchema,
   BacktestRun,
   BacktestRunSchema,
   EquityPoint,
@@ -54,6 +55,15 @@ describe("Backtest schemas", () => {
     tradeCount: 80,
     winCount: 50,
     lossCount: 30,
+    benchmarkReturnPercent: 9.8,
+    benchmarkCagrPercent: 9.8,
+    exposurePercent: 71.5,
+    avgHoldDays: 12.4,
+    profitFactor: 1.9,
+    calmar: 2.61,
+    estimatedTaxPaise: 2943200,
+    afterTaxNetPnlPaise: 11206800,
+    afterTaxCagrPercent: 11.21,
   };
 
   const validEquityPoint: EquityPoint = {
@@ -74,6 +84,17 @@ describe("Backtest schemas", () => {
         lossCount: 1,
         winRatePercent: 75,
         netPnlPaise: 120000,
+      },
+    ],
+    years: [
+      {
+        year: 1,
+        from: "2024-07-01",
+        to: "2025-06-30",
+        returnPercent: 14.15,
+        profitPaise: 14150000,
+        maxDrawdownPercent: -5.42,
+        benchmarkPercent: 9.8,
       },
     ],
   };
@@ -239,5 +260,24 @@ describe("BacktestRunCreateSchema (D44)", () => {
       false,
     );
     expect(BacktestRunCreateSchema.safeParse({ ...body, status: "queued" }).success).toBe(false);
+  });
+});
+
+describe("D62 (6) result fields", () => {
+  const row = {
+    year: 1,
+    from: "2024-07-01",
+    to: "2025-06-30",
+    returnPercent: 3,
+    profitPaise: 300000,
+    maxDrawdownPercent: -2,
+    benchmarkPercent: null,
+  };
+
+  it("checks year rows", () => {
+    expect(YearRowSchema.safeParse(row).success).toBe(true);
+    expect(YearRowSchema.safeParse({ ...row, year: 0 }).success).toBe(false);
+    expect(YearRowSchema.safeParse({ ...row, maxDrawdownPercent: 1 }).success).toBe(false);
+    expect(YearRowSchema.safeParse({ ...row, from: "2025-07-01" }).success).toBe(false);
   });
 });

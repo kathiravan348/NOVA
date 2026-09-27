@@ -5,6 +5,7 @@ export * from "./charges";
 export * from "./trade";
 export * from "./indicators";
 export * from "./strategy";
+export * from "./strategyWrite";
 export * from "./backtest";
 export * from "./broker";
 export * from "./rateLimit";

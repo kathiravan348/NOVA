@@ -2,13 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   describeAveraging,
   describeCondition,
+  describeExits,
   describeOperand,
+  describePortfolio,
+  describeRegime,
   describeRisk,
+  describeRotation,
   describeRuleGroup,
   describeSizing,
   describeUniverse,
+  modeLabel,
   summarizeUniverse,
 } from "./strategyText";
+import { mockStrategies } from "@nova/mocks";
 import { formatCalendarDate, formatIstDate, formatIstDateTime } from "./format";
 
 describe("strategyText", () => {
@@ -95,5 +101,38 @@ describe("strategyText", () => {
     expect(describeAveraging({ dropPercent: 2.5, maxAdds: 1 })).toBe(
       "Buy again every 2.5% fall, once",
     );
+  });
+});
+
+describe("D62 settings in words", () => {
+  const turtle = mockStrategies.find((s) => s.id === "stg_004")!.versions[0]!.spec;
+  const rotation = mockStrategies.find((s) => s.id === "stg_005")!.versions[0]!.spec;
+
+  it("describes multipliers, exits, positions and the market filter", () => {
+    if (turtle.mode !== "visual") throw new Error("visual spec expected");
+    expect(describeCondition(turtle.entry.conditions[1]!)).toBe("Volume > 1.5 × Volume SMA(50)");
+    expect(describeExits(turtle.risk)).toBe("Trailing 15% · 3 × ATR(20) trailing · After 60 bars");
+    expect(describePortfolio(turtle.portfolio)).toBe(
+      "Up to 10 · ranked by Rate of change %(126), highest first",
+    );
+    expect(describeRegime(turtle.regime)).toBe("NIFTY 50: Close > SMA(200); otherwise no new buys");
+    expect(describeExits({ stopLossPercent: null, targetPercent: null })).toBe("None");
+    expect(describePortfolio(undefined)).toBe("No limit");
+    expect(describeRegime(undefined)).toBe("Off");
+  });
+
+  it("describes a rotation and labels every mode", () => {
+    if (rotation.mode !== "rotation") throw new Error("rotation spec expected");
+    expect(describeRotation(rotation.rotation)).toEqual({
+      rebalance: "Every month",
+      hold: "Top 10, kept while in the top 20",
+      score: ["Rate of change %(231) 21 bars ago × weight 1"],
+      filter: { heading: "All of", lines: ["Close > SMA(200)"] },
+    });
+    expect(["visual", "python", "rotation"].map((m) => modeLabel(m as "visual"))).toEqual([
+      "Visual",
+      "Python",
+      "Rotation",
+    ]);
   });
 });

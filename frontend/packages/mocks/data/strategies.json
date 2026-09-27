@@ -230,5 +230,208 @@
     ],
     "createdAt": "2026-02-01T04:00:00Z",
     "updatedAt": "2026-05-01T08:00:00Z"
+  },
+  {
+    "id": "stg_004",
+    "name": "Turtle 55/20 (ranked)",
+    "description": "Buys 55-day breakouts on volume, best 6-month momentum first; trailing and time exits.",
+    "status": "draft",
+    "latestVersion": 1,
+    "versions": [
+      {
+        "version": 1,
+        "createdAt": "2026-09-20T05:00:00Z",
+        "note": "First version",
+        "spec": {
+          "mode": "visual",
+          "segment": "equity_delivery",
+          "exchange": "NSE",
+          "timeframe": "1d",
+          "sizing": {
+            "type": "percent_equity",
+            "percent": 10
+          },
+          "risk": {
+            "stopLossPercent": 10,
+            "targetPercent": null,
+            "trailingStopPercent": 15,
+            "atrStop": {
+              "period": 20,
+              "multiplier": 3
+            },
+            "maxHoldBars": 60
+          },
+          "portfolio": {
+            "maxPositions": 10,
+            "rank": {
+              "by": {
+                "kind": "indicator",
+                "name": "roc",
+                "params": {
+                  "period": 126
+                }
+              },
+              "order": "desc"
+            }
+          },
+          "regime": {
+            "index": "NIFTY 50",
+            "condition": {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            },
+            "whenOff": "no_new_entries"
+          },
+          "entry": {
+            "combinator": "all",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "gt",
+                "right": {
+                  "kind": "indicator",
+                  "name": "donchian_upper",
+                  "params": {
+                    "period": 55
+                  },
+                  "offset": 1
+                }
+              },
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "volume"
+                },
+                "op": "gt",
+                "right": {
+                  "kind": "indicator",
+                  "name": "volume_sma",
+                  "params": {
+                    "period": 50
+                  },
+                  "multiplier": 1.5
+                }
+              }
+            ]
+          },
+          "exit": {
+            "combinator": "any",
+            "conditions": [
+              {
+                "left": {
+                  "kind": "price",
+                  "field": "close"
+                },
+                "op": "lt",
+                "right": {
+                  "kind": "indicator",
+                  "name": "donchian_lower",
+                  "params": {
+                    "period": 20
+                  },
+                  "offset": 1
+                }
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "createdAt": "2026-09-20T05:00:00Z",
+    "updatedAt": "2026-09-20T05:00:00Z"
+  },
+  {
+    "id": "stg_005",
+    "name": "12-1 momentum rotation",
+    "description": "Each month holds the 10 NIFTY 100 stocks with the best 12-month return, skipping the last month.",
+    "status": "draft",
+    "latestVersion": 1,
+    "versions": [
+      {
+        "version": 1,
+        "createdAt": "2026-09-20T05:10:00Z",
+        "note": "First version",
+        "spec": {
+          "mode": "rotation",
+          "segment": "equity_delivery",
+          "exchange": "NSE",
+          "timeframe": "1d",
+          "risk": {
+            "stopLossPercent": null,
+            "targetPercent": null
+          },
+          "regime": {
+            "index": "NIFTY 50",
+            "condition": {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            },
+            "whenOff": "exit_all"
+          },
+          "rotation": {
+            "rebalance": "monthly",
+            "hold": 10,
+            "keepWithin": 20,
+            "score": [
+              {
+                "operand": {
+                  "kind": "indicator",
+                  "name": "roc",
+                  "params": {
+                    "period": 231
+                  },
+                  "offset": 21
+                },
+                "weight": 1
+              }
+            ],
+            "filter": {
+              "combinator": "all",
+              "conditions": [
+                {
+                  "left": {
+                    "kind": "price",
+                    "field": "close"
+                  },
+                  "op": "gt",
+                  "right": {
+                    "kind": "indicator",
+                    "name": "sma",
+                    "params": {
+                      "period": 200
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "createdAt": "2026-09-20T05:10:00Z",
+    "updatedAt": "2026-09-20T05:10:00Z"
   }
 ]

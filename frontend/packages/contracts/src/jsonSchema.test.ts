@@ -34,12 +34,12 @@ import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema, MarketIndexSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
 import { RecorderSettingsSchema, RecorderSettingsUpdateSchema } from "./recorder";
+import { StrategySchema } from "./strategy";
 import {
   StrategyCreateSchema,
-  StrategySchema,
   StrategyUpdateSchema,
   StrategyVersionCreateSchema,
-} from "./strategy";
+} from "./strategyWrite";
 import { StrategyStatsSchema } from "./strategyStats";
 import { TradeSchema } from "./trade";
 import { UniverseEntrySchema, UniverseEntryWriteSchema, UniverseSectorSchema } from "./universe";

@@ -1,7 +1,8 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useParams } from "react-router";
-import { Button, useToast } from "@nova/ui-core";
+import { Button, EmptyState, useToast } from "@nova/ui-core";
+import { RefreshCw } from "lucide-react";
 import type { Strategy } from "@nova/contracts";
 import {
   getDataMode,
@@ -118,6 +119,20 @@ export function EditStrategyPage() {
     <QueryState query={query} back={{ to: "/strategies", label: "Back to strategies" }}>
       {(strategy) => {
         const latest = strategy.versions.find((v) => v.version === strategy.latestVersion)!;
+        if (latest.spec.mode === "rotation") {
+          return (
+            <EmptyState
+              icon={<RefreshCw className="h-6 w-6" />}
+              title="Rotation strategies cannot be edited here yet."
+              description="Open the strategy to see its settings."
+              action={
+                <Button asChild variant="secondary">
+                  <Link to={`/strategies/${strategy.id}`}>Back to the strategy</Link>
+                </Button>
+              }
+            />
+          );
+        }
         return (
           <StrategyEditor
             defaults={fromSpec(strategy.name, strategy.description, latest.spec)}

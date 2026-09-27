@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import pytest
 from nova_contracts import (
@@ -172,3 +173,66 @@ def test_absent_averaging_is_not_written() -> None:
     dumped = StrategySpecVisual.model_validate_json(json.dumps(spec)).model_dump(mode="json")
 
     assert "averaging" not in dumped
+
+
+def _mock_spec(parity: Parity, strategy_id: str) -> dict[str, Any]:
+    strategy = next(s for s in parity.mock("strategies") if s["id"] == strategy_id)
+    spec: dict[str, Any] = strategy["versions"][0]["spec"]
+    return spec
+
+
+def _create(spec: dict[str, Any]) -> StrategyCreate:
+    body = {"name": "S", "description": "", "spec": spec}
+    return StrategyCreate.model_validate_json(json.dumps(body))
+
+
+def test_v2_mocks_round_trip_without_adding_fields(parity: Parity) -> None:
+    """D62: new optional fields are never written when absent, and present ones survive."""
+    for strategy_id in ("stg_004", "stg_005"):
+        spec = _mock_spec(parity, strategy_id)
+        dumped = _create(spec).model_dump(mode="json", exclude_unset=True)["spec"]
+        assert dumped == spec
+    old = parity.mock("strategies")[0]["versions"][0]["spec"]
+    assert _create(old).model_dump(mode="json")["spec"] == old
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"keepWithin": 5},
+        {"score": []},
+        {"score": [{"operand": {"kind": "price", "field": "close"}, "weight": 1}] * 4},
+        {"score": [{"operand": {"kind": "price", "field": "close"}, "weight": 0}]},
+        {"score": [{"operand": {"kind": "number", "value": 3}, "weight": 1}]},
+        {
+            "score": [
+                {
+                    "operand": {"kind": "indicator", "name": "sma", "params": {"period": 0}},
+                    "weight": 1,
+                }
+            ]
+        },
+    ],
+)
+def test_bad_rotations_are_refused(parity: Parity, change: dict[str, Any]) -> None:
+    spec = _mock_spec(parity, "stg_005")
+    spec["rotation"] = spec["rotation"] | change
+
+    with pytest.raises(ValidationError):
+        _create(spec)
+
+
+def test_bad_settings_in_rank_regime_and_multiplier_are_refused(parity: Parity) -> None:
+    bad_sma = {"kind": "indicator", "name": "sma", "params": {"period": 0}}
+    rank = _mock_spec(parity, "stg_004")
+    rank["portfolio"]["rank"]["by"] = bad_sma
+    regime = _mock_spec(parity, "stg_004")
+    regime["regime"]["condition"]["right"] = bad_sma
+    number_rank = _mock_spec(parity, "stg_004")
+    number_rank["portfolio"]["rank"]["by"] = {"kind": "number", "value": 1}
+    zero = _mock_spec(parity, "stg_004")
+    zero["entry"]["conditions"][1]["right"]["multiplier"] = 0
+
+    for spec in (rank, regime, number_rank, zero):
+        with pytest.raises(ValidationError):
+            _create(spec)

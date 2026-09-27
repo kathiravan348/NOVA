@@ -1,6 +1,14 @@
 import type { RuleGroup, StrategySpec } from "@nova/contracts";
 import { segmentLabel, timeframeLabel } from "./format";
-import { describeAveraging, describeRuleGroup, describeSizing } from "./strategyText";
+import {
+  describeAveraging,
+  describeExits,
+  describePortfolio,
+  describeRegime,
+  describeRotation,
+  describeRuleGroup,
+  describeSizing,
+} from "./strategyText";
 
 /** One row of a strategy's rules in plain words; `key` pairs rows across versions (D60). */
 export interface SpecLine {
@@ -21,7 +29,7 @@ export interface DiffLine {
 
 const percentOrNone = (value: number | null) => (value === null ? "None" : `${value}%`);
 
-function ruleLines(name: "Entry" | "Exit", group: RuleGroup): SpecLine[] {
+function ruleLines(name: "Entry" | "Exit" | "Filter", group: RuleGroup): SpecLine[] {
   const text = describeRuleGroup(group);
   const prefix = name.toLowerCase();
   return [
@@ -34,17 +42,40 @@ function ruleLines(name: "Entry" | "Exit", group: RuleGroup): SpecLine[] {
   ];
 }
 
-/** A strategy spec as ordered rows: settings, then rules (visual) or code lines (Python). */
+const modeText = { visual: "Visual rules", python: "Python", rotation: "Rotation" } as const;
+
+/** Rotation settings, score terms and the optional filter (D62 (4)). */
+function rotationLines(spec: Extract<StrategySpec, { mode: "rotation" }>): SpecLine[] {
+  const text = describeRotation(spec.rotation);
+  return [
+    { key: "rebalance", label: "Rebalance", value: text.rebalance },
+    { key: "hold", label: "Hold", value: text.hold },
+    ...text.score.map((value, i) => ({ key: `score.${i}`, label: `Score ${i + 1}`, value })),
+    ...(spec.rotation.filter ? ruleLines("Filter", spec.rotation.filter) : []),
+  ];
+}
+
+/** A strategy spec as ordered rows: settings, then rules (visual), code lines (Python) or rotation. */
 export function specLines(spec: StrategySpec): SpecLine[] {
-  const settings: SpecLine[] = [
-    { key: "mode", label: "Mode", value: spec.mode === "visual" ? "Visual rules" : "Python" },
+  const common: SpecLine[] = [
+    { key: "mode", label: "Mode", value: modeText[spec.mode] },
     { key: "segment", label: "Segment", value: segmentLabel[spec.segment] },
     { key: "exchange", label: "Exchange", value: spec.exchange },
     { key: "timeframe", label: "Timeframe", value: timeframeLabel[spec.timeframe] },
-    { key: "sizing", label: "Sizing", value: describeSizing(spec.sizing) },
+  ];
+  const risk: SpecLine[] = [
     { key: "stop", label: "Stop-loss", value: percentOrNone(spec.risk.stopLossPercent) },
     { key: "target", label: "Target", value: percentOrNone(spec.risk.targetPercent) },
+    { key: "exits", label: "Other exits", value: describeExits(spec.risk) },
+    { key: "regime", label: "Market filter", value: describeRegime(spec.regime) },
+  ];
+  if (spec.mode === "rotation") return [...common, ...risk, ...rotationLines(spec)];
+  const settings: SpecLine[] = [
+    ...common,
+    { key: "sizing", label: "Sizing", value: describeSizing(spec.sizing) },
+    ...risk,
     { key: "averaging", label: "Cost averaging", value: describeAveraging(spec.averaging) },
+    { key: "portfolio", label: "Positions", value: describePortfolio(spec.portfolio) },
   ];
   if (spec.mode === "visual") {
     return [...settings, ...ruleLines("Entry", spec.entry), ...ruleLines("Exit", spec.exit)];

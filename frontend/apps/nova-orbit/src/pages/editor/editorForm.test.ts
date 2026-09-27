@@ -15,7 +15,15 @@ const validForm = (): EditorForm => ({
 
 describe("editorForm", () => {
   it("round-trips every mock spec, visual and python", () => {
-    const all = mockStrategies.flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })));
+    // The D62 mocks (portfolio, exits, market filter, rotation) get editor fields in NOVA-118/119.
+    const v2 = new Set(["stg_004", "stg_005"]);
+    const all = mockStrategies
+      .filter((s) => !v2.has(s.id))
+      .flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })))
+      .filter(
+        (x): x is typeof x & { spec: Exclude<typeof x.spec, { mode: "rotation" }> } =>
+          x.spec.mode !== "rotation",
+      );
     expect(all.some(({ spec }) => spec.mode === "python")).toBe(true);
     for (const { s, spec } of all) {
       const form = fromSpec(s.name, s.description, spec);

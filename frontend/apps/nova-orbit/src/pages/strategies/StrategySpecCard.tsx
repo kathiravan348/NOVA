@@ -3,7 +3,11 @@ import { Card, CodeEditor, DescriptionList } from "@nova/ui-core";
 import { segmentLabel, timeframeLabel } from "../../lib/format";
 import {
   describeAveraging,
+  describeExits,
+  describePortfolio,
+  describeRegime,
   describeRisk,
+  describeRotation,
   describeRuleGroup,
   describeSizing,
 } from "../../lib/strategyText";
@@ -28,41 +32,72 @@ function RuleBlock({
   );
 }
 
+function Body({ spec }: { spec: StrategySpec }) {
+  if (spec.mode === "visual") {
+    return (
+      <div className="grid gap-6 md:grid-cols-2">
+        <RuleBlock title="Entry" group={describeRuleGroup(spec.entry)} />
+        <RuleBlock title="Exit" group={describeRuleGroup(spec.exit)} />
+      </div>
+    );
+  }
+  if (spec.mode === "python") {
+    return (
+      <section className="flex flex-col gap-2">
+        <h3 className="text-card-title text-text-primary">Code</h3>
+        <p className="text-body-sm text-text-muted">
+          Python strategy: entry and exit rules live in its code.
+        </p>
+        <CodeEditor value={spec.code} readOnly minHeight={80} ariaLabel="Strategy code" />
+      </section>
+    );
+  }
+  const rotation = describeRotation(spec.rotation);
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <RuleBlock
+        title="Score"
+        group={{ heading: "Stocks with the highest total are held", lines: rotation.score }}
+      />
+      {rotation.filter && <RuleBlock title="Only stocks where" group={rotation.filter} />}
+    </div>
+  );
+}
+
 export interface StrategySpecCardProps {
   spec: StrategySpec;
   version: number;
 }
 
 export function StrategySpecCard({ spec, version }: StrategySpecCardProps) {
+  const common = [
+    { label: "Segment", value: segmentLabel[spec.segment] },
+    { label: "Exchange", value: spec.exchange },
+    { label: "Timeframe", value: timeframeLabel[spec.timeframe] },
+    { label: "Risk", value: describeRisk(spec.risk) },
+    { label: "Other exits", value: describeExits(spec.risk) },
+    { label: "Market filter", value: describeRegime(spec.regime) },
+  ];
+  const items =
+    spec.mode === "rotation"
+      ? [
+          { label: "Mode", value: "Rotation" },
+          ...common,
+          { label: "Rebalance", value: describeRotation(spec.rotation).rebalance },
+          { label: "Hold", value: describeRotation(spec.rotation).hold },
+        ]
+      : [
+          { label: "Mode", value: spec.mode === "visual" ? "Visual rules" : "Python" },
+          ...common,
+          { label: "Sizing", value: describeSizing(spec.sizing) },
+          { label: "Cost averaging", value: describeAveraging(spec.averaging) },
+          { label: "Positions", value: describePortfolio(spec.portfolio) },
+        ];
   return (
     <Card title={`Specification · v${version}`}>
       <div className="flex flex-col gap-6">
-        <DescriptionList
-          columns={2}
-          items={[
-            { label: "Mode", value: spec.mode === "visual" ? "Visual rules" : "Python" },
-            { label: "Segment", value: segmentLabel[spec.segment] },
-            { label: "Exchange", value: spec.exchange },
-            { label: "Timeframe", value: timeframeLabel[spec.timeframe] },
-            { label: "Sizing", value: describeSizing(spec.sizing) },
-            { label: "Risk", value: describeRisk(spec.risk) },
-            { label: "Cost averaging", value: describeAveraging(spec.averaging) },
-          ]}
-        />
-        {spec.mode === "visual" ? (
-          <div className="grid gap-6 md:grid-cols-2">
-            <RuleBlock title="Entry" group={describeRuleGroup(spec.entry)} />
-            <RuleBlock title="Exit" group={describeRuleGroup(spec.exit)} />
-          </div>
-        ) : (
-          <section className="flex flex-col gap-2">
-            <h3 className="text-card-title text-text-primary">Code</h3>
-            <p className="text-body-sm text-text-muted">
-              Python strategy: entry and exit rules live in its code.
-            </p>
-            <CodeEditor value={spec.code} readOnly minHeight={80} ariaLabel="Strategy code" />
-          </section>
-        )}
+        <DescriptionList columns={2} items={items} />
+        <Body spec={spec} />
       </div>
     </Card>
   );

@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from nova_backtest.bars import IST
 from nova_backtest.progress import Progress
-from nova_backtest.strategy_engine import StrategyEngine
+from nova_backtest.strategy_engine import SPEC, StrategyEngine, unsupported
 from nova_backtest.worker import run_one, run_worker
 from nova_db.models import BacktestRun, Candle, StrategyVersion
 from nova_db.queue import claim_next
@@ -17,6 +17,11 @@ from sqlalchemy import Engine, update
 from sqlalchemy.orm import Session, sessionmaker
 
 RULE = {"left": {"kind": "price", "field": "close"}, "right": {"kind": "number", "value": 0}}
+NIFTY_UP = {
+    "index": "NIFTY 50",
+    "condition": RULE | {"op": "gt"},
+    "whenOff": "no_new_entries",
+}
 
 
 def _spec(**change: object) -> dict[str, object]:
@@ -194,6 +199,14 @@ def test_rerun_replaces_the_old_result(seeded: Engine, factory: sessionmaker[Ses
         (_spec(mode="python", code="import os"), "Python strategy not allowed: imports"),
         (_spec(segment="equity_intraday"), "Intraday strategies need an intraday timeframe"),
         (_spec(timeframe="5m"), "No 5m candles in the period for INFY, TCS"),
+        (
+            _spec(risk={"stopLossPercent": None, "targetPercent": None, "maxHoldBars": 5}),
+            "This strategy uses an exit after N bars, which backtests do not support yet",
+        ),
+        (
+            _spec(portfolio={"maxPositions": 3}, regime=NIFTY_UP),
+            "This strategy uses a market filter, a portfolio limit, which backtests do not",
+        ),
     ],
 )
 def test_runs_the_engine_cannot_do_fail_plainly(
@@ -361,3 +374,38 @@ def test_a_failed_run_keeps_its_last_progress(
     assert run["status"] == "failed"
     progress = run["progress"]
     assert (progress["stage"], progress["percent"], progress["symbolsDone"]) == ("loading", 10, 1)
+
+
+def test_unsupported_names_every_new_setting_and_rotation() -> None:
+    """D62: until the engine runs them, a run fails instead of ignoring a setting."""
+    multiplier = RULE | {"op": "gt", "right": {"kind": "price", "field": "open", "multiplier": 2}}
+    visual = SPEC.validate_python(
+        _spec(
+            risk={
+                "stopLossPercent": None,
+                "targetPercent": None,
+                "trailingStopPercent": 10,
+                "atrStop": {"period": 14, "multiplier": 3},
+            },
+            entry={"combinator": "all", "conditions": [multiplier]},
+        )
+    )
+    rotation = SPEC.validate_python(
+        {
+            "mode": "rotation",
+            "segment": "equity_delivery",
+            "exchange": "NSE",
+            "timeframe": "1d",
+            "risk": {"stopLossPercent": None, "targetPercent": None},
+            "rotation": {
+                "rebalance": "monthly",
+                "hold": 2,
+                "keepWithin": 3,
+                "score": [{"operand": {"kind": "price", "field": "close"}, "weight": 1}],
+            },
+        }
+    )
+
+    assert unsupported(visual) == "a trailing stop, an ATR stop, a multiplier"
+    assert unsupported(rotation) == "rotation"
+    assert unsupported(SPEC.validate_python(_spec())) is None

@@ -12,7 +12,16 @@
       "winRatePercent": 75,
       "tradeCount": 4,
       "winCount": 3,
-      "lossCount": 1
+      "lossCount": 1,
+      "benchmarkReturnPercent": 0.6,
+      "benchmarkCagrPercent": 15.68,
+      "exposurePercent": 36.36,
+      "avgHoldDays": 0.13,
+      "profitFactor": 5.69,
+      "calmar": 126.09,
+      "estimatedTaxPaise": null,
+      "afterTaxNetPnlPaise": null,
+      "afterTaxCagrPercent": null
     },
     "equityCurve": [
       {
@@ -96,6 +105,17 @@
         "winRatePercent": 0,
         "netPnlPaise": -106522
       }
+    ],
+    "years": [
+      {
+        "year": 1,
+        "from": "2026-06-01",
+        "to": "2026-06-15",
+        "returnPercent": 0.5,
+        "profitPaise": 499474,
+        "maxDrawdownPercent": -0.11,
+        "benchmarkPercent": 0.6
+      }
     ]
   },
   {
@@ -111,7 +131,16 @@
       "winRatePercent": 75,
       "tradeCount": 4,
       "winCount": 3,
-      "lossCount": 1
+      "lossCount": 1,
+      "benchmarkReturnPercent": null,
+      "benchmarkCagrPercent": null,
+      "exposurePercent": 33.33,
+      "avgHoldDays": 0.13,
+      "profitFactor": 5.33,
+      "calmar": 94.45,
+      "estimatedTaxPaise": null,
+      "afterTaxNetPnlPaise": null,
+      "afterTaxCagrPercent": null
     },
     "equityCurve": [
       {
@@ -208,6 +237,17 @@
         "winRatePercent": 0,
         "netPnlPaise": -106482
       }
+    ],
+    "years": [
+      {
+        "year": 1,
+        "from": "2026-08-14",
+        "to": "2026-08-31",
+        "returnPercent": 0.46,
+        "profitPaise": 461522,
+        "maxDrawdownPercent": -0.11,
+        "benchmarkPercent": null
+      }
     ]
   },
   {
@@ -223,9 +263,29 @@
       "winRatePercent": 50,
       "tradeCount": 4,
       "winCount": 2,
-      "lossCount": 2
+      "lossCount": 2,
+      "benchmarkReturnPercent": null,
+      "benchmarkCagrPercent": null,
+      "exposurePercent": null,
+      "avgHoldDays": null,
+      "profitFactor": null,
+      "calmar": 25.56,
+      "estimatedTaxPaise": null,
+      "afterTaxNetPnlPaise": null,
+      "afterTaxCagrPercent": null
     },
     "equityCurve": [],
-    "bySymbol": []
+    "bySymbol": [],
+    "years": [
+      {
+        "year": 1,
+        "from": "2026-08-14",
+        "to": "2026-08-31",
+        "returnPercent": 0.21,
+        "profitPaise": 210500,
+        "maxDrawdownPercent": -0.18,
+        "benchmarkPercent": null
+      }
+    ]
   }
 ]

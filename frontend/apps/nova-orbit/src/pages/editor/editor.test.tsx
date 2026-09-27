@@ -104,6 +104,17 @@ describe("Strategy editor", () => {
     expect(screen.getByLabelText("Strategy spec JSON").textContent).toContain('"vwap"');
   });
 
+  it("refuses a rotation strategy for now (D62)", async () => {
+    renderApp("/strategies/stg_005/edit");
+    expect(
+      await screen.findByText("Rotation strategies cannot be edited here yet."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to the strategy" })).toHaveAttribute(
+      "href",
+      "/strategies/stg_005",
+    );
+  });
+
   it("opens a python strategy in python mode with its code", async () => {
     renderApp("/strategies/stg_002/edit");
     const code = await screen.findByLabelText("Strategy code");

@@ -167,6 +167,88 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
+            },
+            "benchmarkReturnPercent": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "benchmarkCagrPercent": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "exposurePercent": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "avgHoldDays": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "profitFactor": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "calmar": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "estimatedTaxPaise": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "afterTaxNetPnlPaise": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "afterTaxCagrPercent": {
+              "type": [
+                "number",
+                "null"
+              ]
             }
           },
           "required": [
@@ -180,7 +262,16 @@
             "winRatePercent",
             "tradeCount",
             "winCount",
-            "lossCount"
+            "lossCount",
+            "benchmarkReturnPercent",
+            "benchmarkCagrPercent",
+            "exposurePercent",
+            "avgHoldDays",
+            "profitFactor",
+            "calmar",
+            "estimatedTaxPaise",
+            "afterTaxNetPnlPaise",
+            "afterTaxCagrPercent"
           ],
           "additionalProperties": false
         },

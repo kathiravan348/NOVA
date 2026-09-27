@@ -13,6 +13,7 @@ import {
   strategyStatusTone,
   timeframeLabel,
 } from "../../lib/format";
+import { modeLabel } from "../../lib/strategyText";
 
 export type SortKey = "updated" | "best" | "runs";
 type StatusFilter = StrategyStatus | "all";
@@ -97,7 +98,7 @@ function StrategyGrid({ strategies }: { strategies: Strategy[] }) {
                     />
                   }
                   details={[
-                    spec.mode === "visual" ? "Visual" : "Python",
+                    modeLabel(spec.mode),
                     segmentLabel[spec.segment],
                     timeframeLabel[spec.timeframe],
                     `v${s.latestVersion}`,

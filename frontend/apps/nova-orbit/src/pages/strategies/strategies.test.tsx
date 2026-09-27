@@ -52,7 +52,14 @@ describe("Strategies list", () => {
         .map((h) => h.textContent);
     expect(names()[0]).toBe("VWAP Momentum Intraday");
     fireEvent.change(screen.getByLabelText("Status"), { target: { value: "draft" } });
-    expect(names()).toEqual(["Delivery Mean Reversion"]);
+    expect(names()).toHaveLength(3);
+    expect(names()).toEqual(
+      expect.arrayContaining([
+        "Delivery Mean Reversion",
+        "Turtle 55/20 (ranked)",
+        "12-1 momentum rotation",
+      ]),
+    );
   });
 
   it("opens the detail page from a name", async () => {
@@ -82,7 +89,7 @@ describe("Strategy detail", () => {
     renderApp("/strategies/stg_001");
     expect(await screen.findByText("Specification · v2")).toBeInTheDocument();
     expect(screen.getByText("Cost averaging")).toBeInTheDocument();
-    expect(screen.getByText("Off")).toBeInTheDocument();
+    expect(screen.getAllByText("Off").length).toBeGreaterThan(0);
     expect(screen.getByText("Entry")).toBeInTheDocument();
     expect(screen.getAllByText(/crosses above/).length).toBeGreaterThan(0);
     fireEvent.mouseDown(screen.getByRole("tab", { name: "Versions (2)" }));
@@ -115,6 +122,26 @@ describe("Strategy detail", () => {
     await screen.findAllByRole("link", { name: "VWAP Intraday v1 Backtest" });
     expect(searches).toContain("?strategyId=stg_001");
     server.events.removeAllListeners();
+  });
+
+  it("shows the D62 settings of a ranked strategy and of a rotation", async () => {
+    renderApp("/strategies/stg_004");
+    expect(
+      await screen.findByText("Trailing 15% · 3 × ATR(20) trailing · After 60 bars"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Up to 10 · ranked by Rate of change %(126), highest first"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Volume > 1.5 × Volume SMA(50)")).toBeInTheDocument();
+    cleanup();
+
+    renderApp("/strategies/stg_005");
+    expect(await screen.findByText("Every month")).toBeInTheDocument();
+    expect(screen.getByText("Top 10, kept while in the top 20")).toBeInTheDocument();
+    expect(screen.getByText("Rate of change %(231) 21 bars ago × weight 1")).toBeInTheDocument();
+    expect(
+      screen.getByText("NIFTY 50: Close > SMA(200); otherwise sell everything"),
+    ).toBeInTheDocument();
   });
 
   it("explains python strategies", async () => {

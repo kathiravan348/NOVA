@@ -6,18 +6,22 @@ import {
   TimeframeSchema,
   UtcDateTimeSchema,
 } from "./common";
-import { IndicatorNameSchema, checkIndicatorParams } from "./indicators";
+import { IndicatorNameSchema } from "./indicators";
 
 export const PriceFieldSchema = z.enum(["open", "high", "low", "close", "volume"]);
 export type PriceField = z.infer<typeof PriceFieldSchema>;
 
 export const OffsetSchema = z.number().int().min(0).max(500);
 
+/** Multiplies the operand's value (D62), e.g. 1.5 × Volume SMA; absent = 1. */
+export const MultiplierSchema = z.number().gt(0);
+
 export const OperandPriceSchema = z.strictObject({
   kind: z.literal("price"),
   field: PriceFieldSchema,
   /** Bars ago (D51); absent = 0. */
   offset: OffsetSchema.optional(),
+  multiplier: MultiplierSchema.optional(),
 });
 export type OperandPrice = z.infer<typeof OperandPriceSchema>;
 
@@ -27,6 +31,7 @@ export const OperandIndicatorSchema = z.strictObject({
   params: z.record(z.string(), z.number()),
   /** Bars ago (D51); absent = 0. */
   offset: OffsetSchema.optional(),
+  multiplier: MultiplierSchema.optional(),
 });
 export type OperandIndicator = z.infer<typeof OperandIndicatorSchema>;
 
@@ -121,9 +126,21 @@ export const SizingSchema = z.discriminatedUnion("type", [
 ]);
 export type Sizing = z.infer<typeof SizingSchema>;
 
+/** ATR stop (D62): trails `multiplier` × ATR(`period`) below the highest close since the first buy. */
+export const AtrStopSchema = z.strictObject({
+  period: z.number().int().min(1),
+  multiplier: z.number().gt(0),
+});
+export type AtrStop = z.infer<typeof AtrStopSchema>;
+
 export const RiskSchema = z.strictObject({
   stopLossPercent: z.number().positive().nullable(),
   targetPercent: z.number().positive().nullable(),
+  /** D62, absent = off: sell this % below the highest close since the first buy. */
+  trailingStopPercent: z.number().gt(0).lte(50).optional(),
+  atrStop: AtrStopSchema.optional(),
+  /** D62, absent = off: sell at the next open once held this many bars. */
+  maxHoldBars: z.number().int().min(1).max(5000).optional(),
 });
 export type Risk = z.infer<typeof RiskSchema>;
 
@@ -134,6 +151,49 @@ export const AveragingSchema = z.strictObject({
 });
 export type Averaging = z.infer<typeof AveragingSchema>;
 
+/** A price or indicator value: what ranks and scores are made of (never a plain number). */
+export const RankOperandSchema = z.discriminatedUnion("kind", [
+  OperandPriceSchema,
+  OperandIndicatorSchema,
+]);
+export type RankOperand = z.infer<typeof RankOperandSchema>;
+
+/** D62: at most `maxPositions` holdings; buys waiting at the same time are taken best-ranked first. */
+export const PortfolioSchema = z.strictObject({
+  maxPositions: z.number().int().min(1).max(100),
+  rank: z.strictObject({ by: RankOperandSchema, order: z.enum(["desc", "asc"]) }).optional(),
+});
+export type Portfolio = z.infer<typeof PortfolioSchema>;
+
+/** D62 market filter: one condition on an index's own prices; what happens while it fails. */
+export const RegimeSchema = z.strictObject({
+  index: IndexNameSchema,
+  condition: ConditionSchema,
+  whenOff: z.enum(["no_new_entries", "exit_all"]),
+});
+export type Regime = z.infer<typeof RegimeSchema>;
+
+export const ScoreTermSchema = z.strictObject({
+  operand: RankOperandSchema,
+  weight: z.number().refine((w) => w !== 0, { message: "Weight must not be 0" }),
+});
+export type ScoreTerm = z.infer<typeof ScoreTermSchema>;
+
+/** D62 rotation: each period hold the top `hold` stocks by score; keep one while ranked ≤ `keepWithin`. */
+export const RotationSchema = z
+  .strictObject({
+    rebalance: z.enum(["weekly", "monthly", "quarterly"]),
+    hold: z.number().int().min(1).max(50),
+    keepWithin: z.number().int().min(1).max(100),
+    score: z.array(ScoreTermSchema).min(1).max(3),
+    filter: RuleGroupSchema.optional(),
+  })
+  .refine((r) => r.keepWithin >= r.hold, {
+    message: "Keep while in top must be at least Hold",
+    path: ["keepWithin"],
+  });
+export type Rotation = z.infer<typeof RotationSchema>;
+
 /** A strategy is rules only (D25); symbols are chosen per backtest run (`BacktestRun.universe`). */
 const baseSpecFields = {
   segment: SegmentSchema,
@@ -143,6 +203,10 @@ const baseSpecFields = {
   risk: RiskSchema,
   /** Absent = off (D53). */
   averaging: AveragingSchema.optional(),
+  /** Absent = no limit, buys in symbol order (D62). */
+  portfolio: PortfolioSchema.optional(),
+  /** Absent = no market filter (D62). */
+  regime: RegimeSchema.optional(),
 };
 
 export const StrategySpecVisualSchema = z.strictObject({
@@ -160,9 +224,22 @@ export const StrategySpecPythonSchema = z.strictObject({
 });
 export type StrategySpecPython = z.infer<typeof StrategySpecPythonSchema>;
 
+/** D62 (4): rotation runs on daily prices, delivery only; equal weight, so no sizing. */
+export const StrategySpecRotationSchema = z.strictObject({
+  mode: z.literal("rotation"),
+  segment: z.literal("equity_delivery"),
+  exchange: ExchangeSchema,
+  timeframe: z.literal("1d"),
+  risk: RiskSchema,
+  regime: RegimeSchema.optional(),
+  rotation: RotationSchema,
+});
+export type StrategySpecRotation = z.infer<typeof StrategySpecRotationSchema>;
+
 export const StrategySpecSchema = z.discriminatedUnion("mode", [
   StrategySpecVisualSchema,
   StrategySpecPythonSchema,
+  StrategySpecRotationSchema,
 ]);
 export type StrategySpec = z.infer<typeof StrategySpecSchema>;
 
@@ -199,49 +276,3 @@ export const StrategySchema = z
     },
   );
 export type Strategy = z.infer<typeof StrategySchema>;
-
-/** Indicator settings problems in a visual spec (D51); write bodies refuse them, reads stay tolerant. */
-export function specParamProblems(spec: StrategySpec): string[] {
-  if (spec.mode !== "visual") return [];
-  const operands = [spec.entry, spec.exit].flatMap((g) =>
-    g.conditions.flatMap((c) => [c.left, c.right]),
-  );
-  return operands.flatMap((o) =>
-    o.kind === "indicator" ? checkIndicatorParams(o.name, o.params) : [],
-  );
-}
-
-const checkedSpec = (body: { spec: StrategySpec }, ctx: z.RefinementCtx) => {
-  for (const message of specParamProblems(body.spec)) {
-    ctx.addIssue({ code: "custom", message, path: ["spec"] });
-  }
-};
-
-/** Body of `POST /strategies` (D43): creates version 1 of a `draft` strategy. */
-export const StrategyCreateSchema = z
-  .strictObject({
-    name: z.string().min(1),
-    description: z.string(),
-    spec: StrategySpecSchema,
-  })
-  .superRefine(checkedSpec);
-export type StrategyCreate = z.infer<typeof StrategyCreateSchema>;
-
-/** Body of `POST /strategies/{id}/versions` (D43): versions are immutable; this adds latest + 1. */
-export const StrategyVersionCreateSchema = z
-  .strictObject({
-    note: z.string(),
-    spec: StrategySpecSchema,
-  })
-  .superRefine(checkedSpec);
-export type StrategyVersionCreate = z.infer<typeof StrategyVersionCreateSchema>;
-
-/** Body of `PATCH /strategies/{id}` (D43): at least one field. */
-export const StrategyUpdateSchema = z
-  .strictObject({
-    name: z.string().min(1).optional(),
-    description: z.string().optional(),
-    status: StrategyStatusSchema.optional(),
-  })
-  .refine((u) => Object.keys(u).length > 0, { message: "Change at least one field" });
-export type StrategyUpdate = z.infer<typeof StrategyUpdateSchema>;
