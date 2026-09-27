@@ -1,23 +1,40 @@
-"""Evaluating a visual rule group on one symbol's bars (D9, D45)."""
+"""Visual rules on whole arrays (D9, D45, D61): one stock's bars into `enter` and `exit` arrays."""
 
 from collections.abc import Mapping, Sequence
 
+import numpy as np
+import numpy.typing as npt
 from nova_contracts import Condition, Operand, RuleGroup
 from nova_contracts.strategy import OperandIndicator, OperandNumber, OperandPrice
 
 from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.engine import EngineError
-from nova_backtest.indicators import Series, indicator, settings_for
+from nova_backtest.indicators import Floats, indicator_array, settings_for
+
+Bools = npt.NDArray[np.bool_]
+
+
+def _columns(bars: Columns | Sequence[Bar]) -> Columns:
+    return bars if isinstance(bars, Columns) else Columns.from_bars(bars)
+
+
+def shift(values: Floats, bars_ago: int) -> Floats:
+    """The value `bars_ago` bars earlier at each index; NaN where there is none."""
+    out = np.full(len(values), np.nan)
+    if bars_ago < len(values):
+        out[bars_ago:] = values[: len(values) - bars_ago]
+    return out
 
 
 class SeriesCache:
-    """Operand values per bar for one symbol, computed once per operand."""
+    """Operand values of one stock as float arrays, computed once per operand."""
 
-    def __init__(self, bars: Sequence[Bar]) -> None:
-        self._bars = bars
-        self._cache: dict[str, Series] = {}
+    def __init__(self, bars: Columns | Sequence[Bar]) -> None:
+        self._bars = _columns(bars)
+        self._cache: dict[str, Floats] = {}
 
-    def values(self, operand: Operand) -> Series:
+    def values(self, operand: Operand) -> Floats:
         """The operand's series; `offset` (bars ago, D51) shifts the cached series without it."""
         offset = operand.offset if isinstance(operand, OperandPrice | OperandIndicator) else 0
         base = operand.model_copy(update={"offset": 0}) if offset else operand
@@ -25,76 +42,100 @@ class SeriesCache:
         if key not in self._cache:
             self._cache[key] = self._compute(base)
         series = self._cache[key]
-        if not offset:
-            return series
-        return [None] * min(offset, len(series)) + series[: max(len(series) - offset, 0)]
+        return shift(series, offset) if offset else series
 
-    def _compute(self, operand: Operand) -> Series:
+    def _compute(self, operand: Operand) -> Floats:
+        bars = self._bars
         if isinstance(operand, OperandNumber):
-            return [operand.value] * len(self._bars)
+            return np.full(len(bars), operand.value, dtype=np.float64)
         if isinstance(operand, OperandPrice):
             if operand.field == "volume":
-                return [float(bar.volume) for bar in self._bars]
-            return [getattr(bar, operand.field) / 100 for bar in self._bars]
+                return bars.volume.astype(np.float64)
+            column: npt.NDArray[np.int64] = getattr(bars, operand.field)
+            return column / 100
         assert isinstance(operand, OperandIndicator)
-        return indicator(operand.name, operand.params, self._bars)
+        return indicator_array(operand.name, operand.params, bars)
 
 
-def _holds(condition: Condition, cache: SeriesCache, i: int) -> bool:
-    left, right = cache.values(condition.left), cache.values(condition.right)
-    a, b = left[i], right[i]
-    if a is None or b is None:
-        return False
+def condition_holds(condition: Condition, cache: SeriesCache) -> Bools:
+    """At every bar: does the condition hold at that bar's close? A missing value never holds."""
+    a, b = cache.values(condition.left), cache.values(condition.right)
+    known = ~np.isnan(a) & ~np.isnan(b)
     op = condition.op
     if op in ("crosses_above", "crosses_below"):
-        if i == 0:
-            return False
-        before_a, before_b = left[i - 1], right[i - 1]
-        if before_a is None or before_b is None:
-            return False
-        if op == "crosses_above":
-            return before_a <= before_b and a > b
-        return before_a >= before_b and a < b
-    if op == "gt":
-        return a > b
-    if op == "gte":
-        return a >= b
-    if op == "lt":
-        return a < b
-    if op == "lte":
-        return a <= b
-    return abs(a - b) < 1e-9  # eq
+        before_a, before_b = shift(a, 1), shift(b, 1)
+        known &= ~np.isnan(before_a) & ~np.isnan(before_b)
+        with np.errstate(invalid="ignore"):
+            if op == "crosses_above":
+                return known & (before_a <= before_b) & (a > b)
+            return known & (before_a >= before_b) & (a < b)
+    with np.errstate(invalid="ignore"):
+        if op == "gt":
+            return known & (a > b)
+        if op == "gte":
+            return known & (a >= b)
+        if op == "lt":
+            return known & (a < b)
+        if op == "lte":
+            return known & (a <= b)
+        return known & (np.abs(a - b) < 1e-9)  # eq
+
+
+def group_holds(group: RuleGroup, cache: SeriesCache) -> Bools:
+    results = [condition_holds(condition, cache) for condition in group.conditions]
+    combined: Bools = (
+        np.logical_and.reduce(results)
+        if group.combinator == "all"
+        else np.logical_or.reduce(results)
+    )
+    return combined
 
 
 def holds(group: RuleGroup, cache: SeriesCache, i: int) -> bool:
-    results = (_holds(condition, cache, i) for condition in group.conditions)
-    return all(results) if group.combinator == "all" else any(results)
+    """One bar's answer (tests and callers that ask bar by bar)."""
+    return bool(group_holds(group, cache)[i])
 
 
-def _check(operand: OperandIndicator) -> None:
+def check_group(group: RuleGroup) -> None:
     """Fails the run up front when a stored spec has settings the catalog no longer accepts."""
-    try:
-        settings_for(operand.name, operand.params)
-    except ValueError as exc:
-        raise EngineError(f"{exc}: open the strategy and save it again") from exc
+    for condition in group.conditions:
+        for operand in (condition.left, condition.right):
+            if isinstance(operand, OperandIndicator):
+                try:
+                    settings_for(operand.name, operand.params)
+                except ValueError as exc:
+                    raise EngineError(f"{exc}: open the strategy and save it again") from exc
+
+
+def signals(bars: Columns, entry: RuleGroup, exit_: RuleGroup) -> tuple[Bools, Bools]:
+    """One stock's `enter` and `exit` arrays (D61 pass 1); its indicator arrays are freed after."""
+    cache = SeriesCache(bars)
+    return group_holds(entry, cache), group_holds(exit_, cache)
 
 
 class RuleSignals:
     """Entry/exit signals of a visual strategy, per symbol and bar index."""
 
     def __init__(
-        self, bars: Mapping[str, Sequence[Bar]], entry: RuleGroup, exit_: RuleGroup
+        self,
+        bars: Mapping[str, Columns | Sequence[Bar]],
+        entry: RuleGroup,
+        exit_: RuleGroup,
     ) -> None:
-        for group in (entry, exit_):
-            for condition in group.conditions:
-                for operand in (condition.left, condition.right):
-                    if isinstance(operand, OperandIndicator):
-                        _check(operand)
-        self._caches = {symbol: SeriesCache(series) for symbol, series in bars.items()}
-        self._entry, self._exit = entry, exit_
+        check_group(entry)
+        check_group(exit_)
+        self._arrays = {
+            symbol: signals(_columns(series), entry, exit_) for symbol, series in bars.items()
+        }
+
+    @classmethod
+    def from_arrays(cls, arrays: Mapping[str, tuple[Bools, Bools]]) -> "RuleSignals":
+        signals_ = cls.__new__(cls)
+        signals_._arrays = dict(arrays)
+        return signals_
 
     def enter(self, symbol: str, i: int) -> bool:
-        return holds(self._entry, self._caches[symbol], i)
+        return bool(self._arrays[symbol][0][i])
 
     def exit(self, symbol: str, i: int) -> bool:
-        return holds(self._exit, self._caches[symbol], i)
+        return bool(self._arrays[symbol][1][i])

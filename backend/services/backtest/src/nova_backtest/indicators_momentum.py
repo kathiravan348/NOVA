@@ -2,11 +2,11 @@
 
 from collections.abc import Sequence
 
-from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators_core import Series, highest, lowest, rsi, rupees, sma, sma_of
 
 
-def _raw_k(bars: Sequence[Bar], period: int) -> Series:
+def _raw_k(bars: Columns, period: int) -> Series:
     """100 × (close − lowest low) / (highest high − lowest low); a flat range gives 50."""
     highs, lows, closes = rupees(bars)
     out: Series = [None] * len(bars)
@@ -16,11 +16,11 @@ def _raw_k(bars: Sequence[Bar], period: int) -> Series:
     return out
 
 
-def stoch_k(bars: Sequence[Bar], period: int, smooth: int) -> Series:
+def stoch_k(bars: Columns, period: int, smooth: int) -> Series:
     return sma_of(_raw_k(bars, period), smooth)
 
 
-def stoch_d(bars: Sequence[Bar], period: int, smooth: int, signal: int) -> Series:
+def stoch_d(bars: Columns, period: int, smooth: int, signal: int) -> Series:
     return sma_of(stoch_k(bars, period, smooth), signal)
 
 
@@ -38,7 +38,7 @@ def stoch_rsi(closes: Sequence[float], rsi_period: int, period: int) -> Series:
     return out
 
 
-def cci(bars: Sequence[Bar], period: int) -> Series:
+def cci(bars: Columns, period: int) -> Series:
     """(TP − SMA(TP)) / (0.015 × mean deviation), TP = (H + L + C) / 3; zero deviation gives 0."""
     highs, lows, closes = rupees(bars)
     typical = [(h + low + c) / 3 for h, low, c in zip(highs, lows, closes, strict=True)]
@@ -52,7 +52,7 @@ def cci(bars: Sequence[Bar], period: int) -> Series:
     return out
 
 
-def williams_r(bars: Sequence[Bar], period: int) -> Series:
+def williams_r(bars: Columns, period: int) -> Series:
     """−100 × (highest high − close) / (highest high − lowest low); a flat range gives −50."""
     highs, lows, closes = rupees(bars)
     out: Series = [None] * len(bars)

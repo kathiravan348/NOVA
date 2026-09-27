@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators import indicator
 from nova_backtest.indicators_momentum import cci, roc, stoch_d, stoch_k, stoch_rsi, williams_r
 
@@ -12,18 +13,20 @@ def _p(rupees: float) -> int:
     return round(rupees * 100)
 
 
-def _bars(*hlc: tuple[float, float, float]) -> list[Bar]:
-    return [
-        Bar(
-            T0 + timedelta(days=i),
-            round(c * 100),
-            round(h * 100),
-            round(low * 100),
-            round(c * 100),
-            100,
-        )
-        for i, (h, low, c) in enumerate(hlc)
-    ]
+def _bars(*hlc: tuple[float, float, float]) -> Columns:
+    return Columns.from_bars(
+        [
+            Bar(
+                T0 + timedelta(days=i),
+                round(c * 100),
+                round(h * 100),
+                round(low * 100),
+                round(c * 100),
+                100,
+            )
+            for i, (h, low, c) in enumerate(hlc)
+        ]
+    )
 
 
 HLC = ((10, 8, 9), (11, 9, 10), (12, 10, 11), (12, 9, 9), (13, 11, 12))
