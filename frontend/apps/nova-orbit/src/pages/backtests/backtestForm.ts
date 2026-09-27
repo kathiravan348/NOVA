@@ -129,3 +129,37 @@ export function toVersionCreate(form: BacktestForm): BacktestVersionCreate {
     benchmark: run.benchmark,
   };
 }
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const isDate = (value: string) => {
+  const day = new Date(`${value}T00:00:00Z`);
+  return (
+    ISO_DATE.test(value) && !Number.isNaN(day.getTime()) && day.toISOString().startsWith(value)
+  );
+};
+
+/**
+ * Form defaults from the link a Library entry's **Backtest** button builds (D62 (7)): `index`,
+ * `from`, `to`, `capital` (rupees), `benchmark` and `name`. Each is checked like typed input and
+ * left out when it is not valid, so a bad link just falls back to the usual default.
+ */
+export function defaultsFromParams(
+  params: URLSearchParams,
+  today = todayIst(),
+): Partial<BacktestForm> {
+  const found: Partial<BacktestForm> = {};
+  const index = IndexNameSchema.safeParse(params.get("index") ?? undefined);
+  if (index.success) Object.assign(found, { universeType: "index", index: index.data });
+  const from = params.get("from") ?? "";
+  const to = params.get("to") ?? "";
+  if (isDate(from) && isDate(to) && from <= to && to <= today) Object.assign(found, { from, to });
+  const capital = Number(params.get("capital") ?? "");
+  if (Number.isFinite(capital) && capital >= MIN_CAPITAL_RUPEES) {
+    found.capitalRupees = String(capital);
+  }
+  const benchmark = params.get("benchmark");
+  if (benchmark === "NIFTY 50" || benchmark === "none") found.benchmark = benchmark === "NIFTY 50";
+  const name = params.get("name")?.trim() ?? "";
+  if (name.length > 0 && name.length <= 200) found.name = name;
+  return found;
+}

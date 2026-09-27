@@ -1,6 +1,6 @@
 # NOVA-122 — Orbit Library page: Add, Add all, Backtest pre-filled (D62 (7))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-122 · **Depends on:** NOVA-121 · **Merge after:** NOVA-117, NOVA-119
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-122 · **Depends on:** NOVA-121 · **Merge after:** NOVA-117, NOVA-119
 
 ## Goal
 Orbit gets a **Library** page. It lists the 60 strategies by family with plain explanations. The Owner can **Add** one or
@@ -52,7 +52,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `LibraryPage` (`/library`, menu **Library** with `BookOpen`): intro line, **Add all** with a confirm Modal
+("Add all N as draft strategies?", adds only the ones not there yet), family buttons (`aria-pressed`) and **Search**;
+an empty filter shows "No strategy matches". `LibraryFamilyCard`: name, **Idea**, **Watch out**, DataTable (ID,
+Strategy + **Added** badge, What it does, Mode · timeframe, **Add** / **Backtest**; stacked cards on phones).
+"Added" = a strategy with the entry's name exists, plus entries added during this visit (so the badge also shows
+in demo mode and before the list refetches). **Backtest** uses the existing strategy or installs it first, then
+opens `/backtests/new?strategy=…&index=NIFTY 100&from=…&to=…&capital=1000000&benchmark=NIFTY 50&name=… — v1
+in-sample`. Toasts "Added N strategies" / "Could not add". `backtestForm.defaultsFromParams` reads `index`, `from`,
+`to`, `capital` (rupees), `benchmark` (`NIFTY 50`/`none`), `name`, each checked like typed input (bad or future
+dates, capital under ₹10,000, blank names are ignored); `?strategy=`/`?version=` work as before.
+- Tests: `library.test.tsx` (7 family tables with ideas, Add → toast + Added + body `{ids:["A01"]}`, Add all skips a
+  name-matched strategy and posts 6, Backtest fills name/strategy/NIFTY 100/₹10,00,000/benchmark and the dates,
+  family filter and search); `backtestForm.test.ts` (good link, bad values, future dates, old links).
+- Preview (mock): 7 cards, no overflow at 360 px.
+Commands: `pnpm review:check` passed. Guides: USER-GUIDE (Step 4d Library and the 3-version test).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

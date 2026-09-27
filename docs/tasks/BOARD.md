@@ -127,7 +127,7 @@
 | NOVA-119 | Orbit editor: rotation mode (D62) | done | Claude | 118 (merge after 117) |
 | NOVA-120 | Orbit results: year-by-year table, new metrics, tax, benchmark line (D62) | done | Claude | 114 |
 | NOVA-121 | Strategy library: 60 strategies as data, list + install endpoints (D62) | done | Claude | 112, 114, 127 |
-| NOVA-122 | Orbit Library page: Add / Add all, Backtest pre-filled (D62) | planned | — | 121 (merge after 117, 119) |
+| NOVA-122 | Orbit Library page: Add / Add all, Backtest pre-filled (D62) | done | Claude | 121 (merge after 117, 119) |
 | NOVA-123 | Stored data: contracts, mocks, MSW, services (D63) | done | Claude | — |
 | NOVA-124 | Atlas: `candle_days` summary, trading calendar, coverage endpoints (D63, migration 0017) | done | Claude | 112, 113, 123 |
 | NOVA-125 | ui-core DataTable: group rows (D63) | done | Claude | — |

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useMatches, useNavigate } from "react-router";
-import { BarChart3, CandlestickChart, GitCompare, LogOut, Workflow } from "lucide-react";
+import { BarChart3, BookOpen, CandlestickChart, GitCompare, LogOut, Workflow } from "lucide-react";
 import { brand } from "@nova/brand";
 import { AppShell, DemoBanner, IconButton, NavItem, ThemeToggle } from "@nova/ui-core";
 import { getDataMode, signOut, useSession } from "@nova/services";
@@ -9,6 +9,7 @@ const product = brand.products.orbit;
 
 const navItems: { to: string; label: string; icon: ReactNode }[] = [
   { to: "/strategies", label: "Strategies", icon: <Workflow className="h-4 w-4" /> },
+  { to: "/library", label: "Library", icon: <BookOpen className="h-4 w-4" /> },
   { to: "/backtests", label: "Backtests", icon: <BarChart3 className="h-4 w-4" /> },
   { to: "/compare", label: "Compare", icon: <GitCompare className="h-4 w-4" /> },
   { to: "/market-data", label: "Market data", icon: <CandlestickChart className="h-4 w-4" /> },

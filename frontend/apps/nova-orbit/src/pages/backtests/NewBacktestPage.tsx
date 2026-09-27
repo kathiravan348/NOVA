@@ -26,6 +26,7 @@ import { QueryError } from "../../components/QueryState";
 import {
   BacktestFormSchema,
   defaultsFor,
+  defaultsFromParams,
   defaultsFromRun,
   todayIst,
   toRunCreate,
@@ -41,6 +42,7 @@ export function BacktestFormView({
   latestData,
   editing,
   preselectedVersion,
+  linked,
 }: {
   strategies: Strategy[];
   preselected?: Strategy;
@@ -48,6 +50,8 @@ export function BacktestFormView({
   editing?: BacktestRun;
   /** `?version=` from a strategy version page (D60). */
   preselectedVersion?: number;
+  /** Checked settings from the link (Library's Backtest button, D62). */
+  linked?: Partial<BacktestForm>;
 }) {
   const toast = useToast();
   const navigate = useNavigate();
@@ -62,6 +66,7 @@ export function BacktestFormView({
       : {
           ...defaultsFor(preselected, todayIst(), latestData),
           ...(preselectedVersion ? { version: String(preselectedVersion) } : {}),
+          ...linked,
         },
   });
   const { register, control, handleSubmit, watch, setValue, setError, formState } = form;
@@ -291,6 +296,7 @@ export function NewBacktestPage() {
       preselected={preselected}
       latestData={latestData}
       preselectedVersion={preselectedVersion}
+      linked={defaultsFromParams(params)}
     />
   );
 }
