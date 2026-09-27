@@ -4,7 +4,6 @@ from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from pathlib import Path
 
-import numpy as np
 from nova_contracts import BacktestResult as ResultContract
 from nova_contracts import Charges, StrategySpec
 from nova_contracts.strategy import (
@@ -23,14 +22,13 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
-from nova_backtest.columns import Columns
 from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
 from nova_backtest.metrics import summarize
 from nova_backtest.progress import ProgressSink
 from nova_backtest.rules import check_group
 from nova_backtest.rules import signals as rule_signals
-from nova_backtest.sandbox import run_python
+from nova_backtest.sandbox import ENTER, EXIT, Calls, check_code, run_python_one
 from nova_backtest.scratch import RunScratch
 from nova_backtest.simulate import simulate
 from nova_backtest.versions import trim_older_versions
@@ -110,8 +108,8 @@ def _ist_midnight(day: date) -> datetime:
 class StrategyEngine:
     def __init__(
         self,
-        max_bars: int = 1_500_000,
-        max_bars_python: int = 750_000,
+        max_bars: int = 50_000_000,
+        max_bars_python: int = 5_000_000,
         scratch_root: Path = DEFAULT_SCRATCH,
     ) -> None:
         self.scratch_root = scratch_root
@@ -131,15 +129,19 @@ class StrategyEngine:
     ) -> int:
         """Pass 1 (D61): one stock at a time, its columns and signals go to `scratch`.
 
-        Visual signals are computed right after each stock loads, so only one stock's indicator
-        arrays exist at a time. Stops as soon as the run passes the bar limit (D59); 3m–1h are
-        rolled up from 1m (D58). Answers the number of bars stored.
+        Signals are computed right after each stock loads (visual rules on arrays, Python code in
+        its own sandbox process), so only one stock's arrays exist at a time. Stops as soon as the
+        run passes the bar limit (D59, D61 (6)); 3m–1h are rolled up from 1m (D58). Answers the
+        number of bars stored.
         """
         progress.stage("loading", len(symbols))
+        calls: Calls = {}
         if isinstance(spec, StrategySpecVisual):
             check_group(spec.entry)
             check_group(spec.exit)
-        waiting: dict[str, Columns] = {}  # Python mode: every stock, for one sandbox run
+        else:
+            calls = check_code(spec.code)  # once per run, not per stock
+            progress.stage("signals", len(symbols))
         missing: list[str] = []
         first, total = int(start.timestamp()), 0
         for done, symbol in enumerate(symbols, start=1):
@@ -155,23 +157,15 @@ class StrategyEngine:
             elif isinstance(spec, StrategySpecVisual):
                 scratch.add(symbol, columns, *rule_signals(columns, spec.entry, spec.exit))
             else:
-                waiting[symbol] = columns
+                codes = run_python_one(spec.code, symbol, columns, calls)
+                scratch.add(symbol, columns, codes == ENTER, codes == EXIT)
+            del columns
             progress.advance(done)
         if missing:
             raise EngineError(
                 f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
                 "(download them first)"
             )
-        if isinstance(spec, StrategySpecPython):
-            progress.stage("signals", 1)
-            bars = {symbol: columns.to_bars() for symbol, columns in waiting.items()}
-            coded = run_python(spec.code, bars)
-            for symbol, columns in waiting.items():
-                codes = coded[symbol]
-                enter = np.array([c == "enter" for c in codes], dtype=np.bool_)
-                exit_ = np.array([c == "exit" for c in codes], dtype=np.bool_)
-                scratch.add(symbol, columns, enter, exit_)
-            progress.advance(1)
         return total
 
     def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:

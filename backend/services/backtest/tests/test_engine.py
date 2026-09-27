@@ -322,7 +322,7 @@ def test_a_run_reports_loading_simulating_and_done(
     writes = _run_recorded(factory, StrategyEngine()).writes
 
     assert writes[0] == ("loading", 0, 0, 3, 0, 0, 0)
-    assert ("loading", 20, 3, 3, 0, 0, 0) in writes
+    assert ("loading", 30, 3, 3, 0, 0, 0) in writes
     assert "signals" not in [w[0] for w in writes]  # visual rules need no Python step
     simulating = [w for w in writes if w[0] == "simulating"]
     assert simulating[0][4:6] == (0, 15) and simulating[-1] == ("simulating", 95, 3, 3, 15, 15, 1)
@@ -356,8 +356,8 @@ def test_a_python_run_passes_through_signals(
 
     stages = [w[:2] for w in _run_recorded(factory, StrategyEngine()).writes]
 
-    assert ("signals", 20) in stages and ("signals", 30) in stages
-    assert stages.index(("signals", 20)) < stages.index(("simulating", 30))
+    assert ("signals", 0) in stages and ("signals", 30) in stages  # stocks done (D61 (5))
+    assert stages.index(("signals", 30)) < stages.index(("simulating", 30))
 
 
 def test_a_failed_run_keeps_its_last_progress(
@@ -373,7 +373,7 @@ def test_a_failed_run_keeps_its_last_progress(
     run = client.get("/api/v1/backtests/run_e2e").json()
     assert run["status"] == "failed"
     progress = run["progress"]
-    assert (progress["stage"], progress["percent"], progress["symbolsDone"]) == ("loading", 10, 1)
+    assert (progress["stage"], progress["percent"], progress["symbolsDone"]) == ("loading", 15, 1)
 
 
 def test_unsupported_names_every_new_setting_and_rotation() -> None:

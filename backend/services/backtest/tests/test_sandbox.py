@@ -1,6 +1,7 @@
 """Python strategies in the sandbox (D47)."""
 
 import ast
+import json
 import re
 import subprocess
 import sys
@@ -157,6 +158,30 @@ def test_the_child_gets_no_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "NOVA_DATABASE_URL" not in seen["env"]
     assert set(seen["env"]) <= ({"SYSTEMROOT"} if sys.platform == "win32" else set())
     assert seen["command"][1] == "-I"
+
+
+def test_each_stock_runs_in_its_own_child_process(monkeypatch: pytest.MonkeyPatch) -> None:
+    """D61 (5): three stocks, three children, each given only its own stock."""
+    requests: list[dict[str, Any]] = []
+    real_run = subprocess.run
+
+    def spy(*args: Any, **kwargs: Any) -> Any:
+        requests.append(json.loads(kwargs["input"]))
+        return real_run(*args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", spy)
+    three = {symbol: BARS["INFY"] for symbol in ("INFY", "M&M", "TCS")}
+
+    signals = run_python(THRESHOLDS, three)
+
+    assert [list(r["series"]) for r in requests] == [["INFY"], ["M&M"], ["TCS"]]
+    assert signals["M&M"] == signals["INFY"] == [None, "enter", "enter", "exit", "exit"]
+
+
+def test_an_error_names_its_stock() -> None:
+    code = "class Strategy:\n    def on_bar(self, ctx):\n        return 1 / 0\n"
+    with pytest.raises(EngineError, match="Python strategy error in INFY: ZeroDivisionError"):
+        run_python(code, BARS)
 
 
 def test_the_child_has_no_dangerous_builtins_even_without_the_check(

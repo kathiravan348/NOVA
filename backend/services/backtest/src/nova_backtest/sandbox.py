@@ -6,9 +6,12 @@ import os
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import NoReturn
 
+import numpy as np
+import numpy.typing as npt
 from nova_contracts.indicators import BY_NAME, param_problems
 
 from nova_backtest.bars import Bar
@@ -28,6 +31,8 @@ ALLOWED_DUNDER_DEFS = {"__init__"}
 CTX_INDICATORS = set(BY_NAME) - {"sma"}
 CTX_METHODS = {"sma", "highest", "lowest"} | CTX_INDICATORS
 MAX_AGO = 500
+# Canonical key → (indicator name, settings) of every `ctx.<indicator>(…)` call (D51).
+Calls = dict[str, tuple[str, dict[str, float]]]
 
 
 def canonical_key(name: str, params: Mapping[str, float]) -> str:
@@ -49,8 +54,7 @@ def _number(node: ast.expr) -> float | None:
 
 class _Checker(ast.NodeVisitor):
     def __init__(self) -> None:
-        # Canonical key → (indicator name, settings) of every `ctx.<indicator>(…)` call (D51).
-        self.calls: dict[str, tuple[str, dict[str, float]]] = {}
+        self.calls: Calls = {}
 
     def refuse(self, node: ast.AST, why: str) -> NoReturn:
         raise EngineError(
@@ -122,7 +126,7 @@ class _Checker(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def check_code(code: str) -> dict[str, tuple[str, dict[str, float]]]:
+def check_code(code: str) -> Calls:
     """Refuses unsafe code; returns the `ctx.<indicator>(…)` calls by canonical key (D51)."""
     try:
         tree = ast.parse(code, filename="<strategy>")
@@ -143,33 +147,49 @@ def _environment() -> dict[str, str]:
     return {}
 
 
-def run_python(
-    code: str, bars: Mapping[str, Sequence[Bar]], timeout: float = WALL_SECONDS
-) -> dict[str, list[str | None]]:
-    calls = check_code(code) or {}
-    indicators = {
-        symbol: {
-            key: indicator(name, params, Columns.from_bars(rows))
-            for key, (name, params) in calls.items()
-        }
-        for symbol, rows in bars.items()
-    }
+NONE, ENTER, EXIT = 0, 1, 2
+CODES = {None: NONE, "enter": ENTER, "exit": EXIT}
+
+
+def run_python_one(
+    code: str,
+    symbol: str,
+    columns: Columns,
+    calls: Calls | None = None,
+    timeout: float = WALL_SECONDS,
+) -> npt.NDArray[np.int8]:
+    """One stock in its own child process and limits (D61 (5)): 0 none, 1 enter, 2 exit per bar.
+
+    `calls` are `check_code`'s answer; pass them when the code was already checked for the run.
+    """
+    if calls is None:
+        calls = check_code(code) or {}
+    indicators = {key: indicator(name, params, columns) for key, (name, params) in calls.items()}
     catalog = {
         name: [[p.key, p.default] for p in BY_NAME[name].params] for name in sorted(CTX_INDICATORS)
     }
-    series = {
-        symbol: [
-            [b.ts.isoformat(), b.open / 100, b.high / 100, b.low / 100, b.close / 100, b.volume]
-            for b in rows
-        ]
-        for symbol, rows in bars.items()
+    series = [
+        [datetime.fromtimestamp(t, UTC).isoformat(), o / 100, h / 100, lo / 100, c / 100, v]
+        for t, o, h, lo, c, v in zip(
+            columns.ts.tolist(),
+            columns.open.tolist(),
+            columns.high.tolist(),
+            columns.low.tolist(),
+            columns.close.tolist(),
+            columns.volume.tolist(),
+            strict=True,
+        )
+    ]
+    request = {
+        "code": code,
+        "series": {symbol: series},
+        "indicators": {symbol: indicators},
+        "catalog": catalog,
     }
     try:
         done = subprocess.run(  # noqa: S603 - fixed interpreter and script, JSON on stdin
             [sys.executable, "-I", str(RUNNER)],
-            input=json.dumps(
-                {"code": code, "series": series, "indicators": indicators, "catalog": catalog}
-            ),
+            input=json.dumps(request),
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -177,17 +197,33 @@ def run_python(
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
-        raise EngineError(f"Python strategy ran longer than {timeout:g} s") from exc
+        raise EngineError(f"Python strategy ran longer than {timeout:g} s in {symbol}") from exc
+    del request, series
     lines = done.stdout.strip().splitlines()
     if not lines:
-        raise EngineError("Python strategy stopped: it used too much time or memory")
+        raise EngineError(f"Python strategy stopped in {symbol}: it used too much time or memory")
     answer = json.loads(lines[-1])
     if "error" in answer:
-        raise EngineError(f"Python strategy error: {answer['error']}")
-    signals: dict[str, list[str | None]] = answer["signals"]
-    if any(len(signals.get(s, [])) != len(rows) for s, rows in bars.items()):
-        raise EngineError("Python strategy returned the wrong number of signals")
-    return signals
+        raise EngineError(f"Python strategy error in {symbol}: {answer['error']}")
+    signals: list[str | None] = answer["signals"].get(symbol, [])
+    if len(signals) != len(columns):
+        raise EngineError(f"Python strategy returned the wrong number of signals in {symbol}")
+    return np.array([CODES[s] for s in signals], dtype=np.int8)
+
+
+def run_python(
+    code: str, bars: Mapping[str, Sequence[Bar]], timeout: float = WALL_SECONDS
+) -> dict[str, list[str | None]]:
+    """Every stock through `run_python_one` (tests): the old `"enter"`/`"exit"`/None lists."""
+    calls = check_code(code) or {}  # a test replaces the check with one answering None
+    names = {code_: name for name, code_ in CODES.items()}
+    return {
+        symbol: [
+            names[c]
+            for c in run_python_one(code, symbol, Columns.from_bars(rows), calls, timeout).tolist()
+        ]
+        for symbol, rows in bars.items()
+    }
 
 
 class PythonSignals:

@@ -14,14 +14,15 @@ from nova_db.models import BacktestRun
 from sqlalchemy import update
 from sqlalchemy.orm import Session, sessionmaker
 
-# Percent band of each stage: loading per stock, signals in one step, simulating per bar event.
-BANDS = {"loading": (0, 20), "signals": (20, 30), "simulating": (30, 95), "saving": (95, 100)}
+# Percent band of each stage. Pass 1 counts stocks: `loading` for visual strategies, `signals` for
+# Python ones (each stock's sandbox run is the slow part, D61 (5)); simulating counts bars.
+BANDS = {"loading": (0, 30), "signals": (0, 30), "simulating": (30, 95), "saving": (95, 100)}
 EVERY_SECONDS = 1.0
 
 
 class ProgressSink(Protocol):
     def stage(self, name: str, total: int = 0) -> None:
-        """Starts a stage; `total`: stocks (loading), steps (signals), bar events (simulating)."""
+        """Starts a stage; `total`: stocks (loading, signals) or bars (simulating)."""
 
     def advance(
         self, done: int, simulated_to: date | None = None, trades: int | None = None
@@ -78,7 +79,7 @@ class Progress:
         self, done: int, simulated_to: date | None = None, trades: int | None = None
     ) -> None:
         self._done = min(done, self._total)
-        if self._stage == "loading":
+        if self._stage in ("loading", "signals"):
             self.values["symbols_done"] = self._done
         elif self._stage == "simulating":
             self.values["bars_done"] = self._done

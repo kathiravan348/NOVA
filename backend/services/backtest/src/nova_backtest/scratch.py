@@ -78,7 +78,6 @@ class RunScratch:
         self.path = root / run_id
         self.path.mkdir(parents=True, exist_ok=True)
         self._symbols: list[str] = []
-        self._open: dict[str, StoredSeries] = {}
 
     def _folder(self, index: int) -> Path:
         # Folders by position: symbols such as "M&M" or "NIFTY 50" never become file names.
@@ -97,23 +96,21 @@ class RunScratch:
         return list(self._symbols)
 
     def series(self, symbol: str) -> StoredSeries:
-        if symbol not in self._open:
-            folder = self._folder(self._symbols.index(symbol))
+        """New read-only memory maps on every call; they are unmapped once dropped."""
+        folder = self._folder(self._symbols.index(symbol))
 
-            def read(name: str) -> Any:  # Any: each file's own dtype (int64, int32 or bool)
-                path = folder / f"{name}.npy"
-                try:
-                    return np.load(path, mmap_mode="r")
-                except ValueError:  # an empty array cannot be memory-mapped
-                    return np.load(path)
+        def read(name: str) -> Any:  # Any: each file's own dtype (int64, int32 or bool)
+            path = folder / f"{name}.npy"
+            try:
+                return np.load(path, mmap_mode="r")
+            except ValueError:  # an empty array cannot be memory-mapped
+                return np.load(path)
 
-            columns = Columns(*(read(field) for field in FIELDS))
-            self._open[symbol] = StoredSeries(columns, read("enter"), read("exit"))
-        return self._open[symbol]
+        columns = Columns(*(read(field) for field in FIELDS))
+        return StoredSeries(columns, read("enter"), read("exit"))
 
     def close(self) -> None:
-        """Drops the memory maps (Windows cannot delete mapped files), then the folder."""
-        self._open.clear()
+        """Removes the folder; maps still open are collected first (Windows cannot delete them)."""
         gc.collect()
         shutil.rmtree(self.path, ignore_errors=True)
 
