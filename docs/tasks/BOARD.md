@@ -114,6 +114,20 @@
 | NOVA-106 | Strategy stats per strategy version (D60) | done | Claude | 104 |
 | NOVA-107 | Orbit: delete backtests, Edit as a new version, Versions table (D60) | done | Claude | 104 (merge after 105) |
 | NOVA-108 | Orbit: view any strategy version and compare two side by side (D60) | done | Claude | 104 (merge after 106) |
+| NOVA-109 | Engine: numpy bar columns; indicators and visual rules on arrays (D61) | planned | — | — |
+| NOVA-110 | Engine: two-pass streaming simulator on scratch memmaps; sells before buys (D61) | draft | — | 109 |
+| NOVA-111 | Engine: Python strategies one stock at a time; limits re-measured (D61) | draft | — | 110 |
+| NOVA-112 | Delete strategy: endpoint, audit, Orbit button (D62, migration 0016) | planned | — | — |
+| NOVA-113 | Index candles: download indices like stocks (Atlas + Relay) (D62) | planned | — | — |
+| NOVA-114 | Contracts: spec v2, rotation mode, result metrics + year table (D62) | planned | — | — |
+| NOVA-115 | Engine: ranked buys, max positions, trailing/ATR/time exits, multiplier (D62) | draft | — | 110, 114 |
+| NOVA-116 | Engine: 5 new indicators (catalog + engine), metrics, year table, tax estimate, benchmark (D62, migration 0017) | draft | — | 110, 112, 113, 114 |
+| NOVA-117 | Engine: market filter + rotation mode (D62) | draft | — | 115, 116 |
+| NOVA-118 | Orbit editor: multiplier, exits, portfolio, market filter (D62) | draft | — | 112, 114 (merge after 115) |
+| NOVA-119 | Orbit editor: rotation mode (D62) | draft | — | 118 (merge after 117) |
+| NOVA-120 | Orbit results: year-by-year table, new metrics, tax, benchmark line (D62) | draft | — | 114 |
+| NOVA-121 | Strategy library: 60 strategies as data + tests (D62) | draft | — | 114 |
+| NOVA-122 | Orbit Library page: Add / Add all, Backtest pre-filled (D62) | draft | — | 121 (merge after 117) |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -130,3 +144,4 @@
 - Scale + progress (D58): 099 → 100 → 101 (migrations in order; 100 and 101 both edit `strategy_engine.py`) → 102.
 - Worker fix (D59, live bug): 103 first; it can run alongside 099 (no shared files). 100 and 101 follow it (all edit `strategy_engine.py`).
 - Backtest versions (D60): 104 (contracts) first; then backend 105 and 106 and frontend 107 and 108 in parallel (no shared files).
+- Streaming engine + strategy research (D61, D62): 109, 112, 113, 114 run in parallel (no shared files). Engine lane 109 → 110 → 111 → 115 → 116 → 117 (all edit the engine). Frontend after 114: 118 → 119, with 120 alongside; 121 → 122. Migrations in order: 0016 (112) before 0017 (116). Screens that let the Owner save v2 features merge only after the engine runs them (118 after 115; 119 and 122 after 117), so no backtest silently ignores a setting.
