@@ -115,7 +115,7 @@
 | NOVA-107 | Orbit: delete backtests, Edit as a new version, Versions table (D60) | done | Claude | 104 (merge after 105) |
 | NOVA-108 | Orbit: view any strategy version and compare two side by side (D60) | done | Claude | 104 (merge after 106) |
 | NOVA-109 | Engine: numpy bar columns; indicators and visual rules on arrays (D61) | done | Claude | — |
-| NOVA-110 | Engine: two-pass streaming simulator on scratch memmaps; sells before buys (D61) | planned | — | 109 |
+| NOVA-110 | Engine: two-pass streaming simulator on scratch memmaps; sells before buys (D61) | done | Claude | 109 |
 | NOVA-111 | Engine: Python strategies one stock at a time; limits re-measured (D61) | planned | — | 110 |
 | NOVA-112 | Delete strategy: endpoint, audit, Orbit button (D62, migration 0016) | done | Claude | — |
 | NOVA-113 | Index candles: download indices like stocks (Atlas + Relay) (D62) | done | Claude | — |

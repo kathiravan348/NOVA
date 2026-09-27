@@ -14,7 +14,7 @@ from nova_backtest.bars import IST, Bar
 from nova_backtest.engine import EngineError
 from nova_backtest.rules import RuleSignals
 from nova_backtest.sandbox import PythonSignals, check_code, run_python
-from nova_backtest.simulate import simulate
+from nova_backtest.simulate import simulate_bars
 from nova_contracts import Charges, RuleGroup, Sizing
 from nova_contracts.strategy import Risk
 from pydantic import TypeAdapter
@@ -75,7 +75,7 @@ def test_a_python_strategy_trades_like_the_same_visual_one() -> None:
     python = PythonSignals(run_python(THRESHOLDS, BARS))
 
     def run(signals: RuleSignals | PythonSignals) -> list[tuple[int, int]]:
-        result = simulate(BARS, signals, sizing, risk, 10_000_000, DAY0, lambda *_: zero)
+        result = simulate_bars(BARS, signals, sizing, risk, 10_000_000, DAY0, lambda *_: zero)
         return [(t.entry_price, t.exit_price) for t in result.trades]
 
     assert run(python) == run(visual) == [(10_700, 9_800)]

@@ -1,6 +1,6 @@
 # NOVA-110 — Engine: two-pass streaming simulator on scratch memmaps; sells before buys (D61)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-110 · **Depends on:** NOVA-109
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-110 · **Depends on:** NOVA-109
 
 ## Goal
 Step 2 of the streaming engine (D61 (3), (4)). Pass 1 writes each stock's columns and signal arrays to a per-run scratch
@@ -60,7 +60,22 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `scratch.py`: `RunScratch` (one numbered folder per stock, so names like `M&M` never become paths; `.npy` per
+column + `enter`/`exit`, read back with `mmap_mode="r"`), `MemoryStore` (tests, `simulate_bars`), `clear_all`. `book.py`:
+`Book`, `Position`, `ClosedTrade`, `shares`, `percent_of` moved out unchanged. `timeline.py`: `walk(store, window_bars)`
+yields `(ts, [BarAt…])` per bar time, stocks in name order, windows cut so one time never spans two windows.
+`simulate.py`: steps a–d per bar time (D61 (4)); `simulate_bars` keeps the old `Bar`-list call for tests.
+`strategy_engine.py`: pass 1 per stock → `scratch.add`; pass 2 `simulate(scratch, …)`; `finally: scratch.close()`.
+- Deviations: `clear_all` runs in `cli.py` right before `run_worker` (the worker does not know the settings);
+  the D61 fill-order and scratch tests live in `test_scratch.py` / `test_timeline.py`, the oracle in
+  `tests/reference_simulate.py` (imported via the tests folder on `sys.path`).
+- Differential test: 200 seeded cases (1–6 stocks, daily and minute bars across 15:20, 15 % missing bars, open gaps,
+  averaging, stop/target, three sizings, cash-limited), window of 7 bars → same trades and equity as the oracle
+  (6.6 k trades, 1.2 k with adds). No existing expected value changed.
+- Bench (backend image, 1.5 GB limit, pass 1 + pass 2 without the DB read): 100 stocks × 5 years × 15m = 3,125,000 bars,
+  EMA 20/50 cross, 11,813 trades. **Peak RSS 509 MB**; pass 1 1.3 s, pass 2 15.3 s.
+Commands: backend-check 969 passed, 1 failed (`core/test_realtime.py::test_deleting_a_job_is_announced`, flaky:
+passes alone, untouched by this task). Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.
