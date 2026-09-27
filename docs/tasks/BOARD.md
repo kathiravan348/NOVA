@@ -117,7 +117,7 @@
 | NOVA-109 | Engine: numpy bar columns; indicators and visual rules on arrays (D61) | planned | — | — |
 | NOVA-110 | Engine: two-pass streaming simulator on scratch memmaps; sells before buys (D61) | planned | — | 109 |
 | NOVA-111 | Engine: Python strategies one stock at a time; limits re-measured (D61) | planned | — | 110 |
-| NOVA-112 | Delete strategy: endpoint, audit, Orbit button (D62, migration 0016) | planned | — | — |
+| NOVA-112 | Delete strategy: endpoint, audit, Orbit button (D62, migration 0016) | done | Claude | — |
 | NOVA-113 | Index candles: download indices like stocks (Atlas + Relay) (D62) | planned | — | — |
 | NOVA-114 | Contracts: spec v2, rotation mode, result metrics + year table (D62) | planned | — | — |
 | NOVA-115 | Engine: ranked buys, max positions, trailing/ATR/time exits, multiplier (D62) | planned | — | 111, 114 |

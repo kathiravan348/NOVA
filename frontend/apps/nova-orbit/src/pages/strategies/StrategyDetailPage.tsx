@@ -23,6 +23,7 @@ import {
   strategyStatusTone,
 } from "../../lib/format";
 import { useRunColumns } from "../backtests/runColumns";
+import { DeleteStrategyButton } from "./DeleteStrategyButton";
 import { StrategySpecCard } from "./StrategySpecCard";
 import { VersionRecord, useVersionStats } from "./StrategyVersionPage";
 
@@ -175,7 +176,7 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
               tone={strategyStatusTone[strategy.status]}
               label={strategyStatusLabel[strategy.status]}
             />
-            <div className="flex gap-2 sm:ml-auto">
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
               <Button asChild variant="secondary" size="sm">
                 <Link to={`/strategies/${strategy.id}/edit`}>
                   <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -190,6 +191,7 @@ function StrategyDetail({ strategy }: { strategy: Strategy }) {
                   </Link>
                 </Button>
               )}
+              <DeleteStrategyButton strategyId={strategy.id} name={strategy.name} />
             </div>
           </div>
           <p className="text-body text-text-secondary">{strategy.description}</p>

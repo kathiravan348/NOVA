@@ -3,9 +3,11 @@ import { Trash2 } from "lucide-react";
 import { Button, IconButton, Modal, useToast } from "@nova/ui-core";
 import { useDeleteBacktest, useDeleteBacktests } from "@nova/services";
 
-interface ConfirmDeleteProps {
+export interface ConfirmDeleteProps {
   /** What the Modal asks, e.g. "Delete IT basket and all its versions?" */
   question: string;
+  /** The line under the question; default: trades and results go too. */
+  detail?: string;
   /** Opens the Modal. */
   trigger: (open: () => void) => ReactNode;
   pending: boolean;
@@ -13,7 +15,13 @@ interface ConfirmDeleteProps {
 }
 
 /** A delete control with a "cannot be undone" confirm (D60). */
-function ConfirmDelete({ question, trigger, pending, onConfirm }: ConfirmDeleteProps) {
+export function ConfirmDelete({
+  question,
+  detail = "This cannot be undone. Trades and results are deleted too.",
+  trigger,
+  pending,
+  onConfirm,
+}: ConfirmDeleteProps) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -38,15 +46,13 @@ function ConfirmDelete({ question, trigger, pending, onConfirm }: ConfirmDeleteP
           </>
         }
       >
-        <p className="text-body text-text-secondary">
-          This cannot be undone. Trades and results are deleted too.
-        </p>
+        <p className="text-body text-text-secondary">{detail}</p>
       </Modal>
     </>
   );
 }
 
-function useFailToast() {
+export function useFailToast() {
   const toast = useToast();
   return (err: Error) =>
     toast.show({ title: "Could not delete", description: err.message, tone: "danger" });

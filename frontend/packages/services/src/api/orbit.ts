@@ -143,3 +143,17 @@ export function deleteBacktests(
 ): Promise<BacktestDeleteResult> {
   return apiPost("/backtests/delete", { ids }, BacktestDeleteResultSchema, init);
 }
+
+/** Deletes a strategy with its versions and every backtest of it (D62); answers the runs deleted. */
+export function deleteStrategy(
+  strategyId: string,
+  init?: RequestOptions,
+): Promise<BacktestDeleteResult> {
+  return apiRequest(
+    "DELETE",
+    `/strategies/${id(strategyId)}`,
+    undefined,
+    BacktestDeleteResultSchema,
+    init,
+  );
+}

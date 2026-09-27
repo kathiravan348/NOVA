@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **26 Sep 2026** (Stage B, tasks up to NOVA-108). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-112). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -86,7 +86,10 @@ Click a card. You see:
 - a **Versions** tab: every saved copy with its date, note and its **Backtests** record (how many finished
   test runs used that version and its best return, which opens that run).
 
-Buttons: **Edit** and **Run backtest**.
+Buttons: **Edit**, **Run backtest** and **Delete strategy**.
+
+**Delete a strategy.** **Delete strategy** asks first, then removes the strategy, every saved version and every
+backtest of it (their trades and results too). This cannot be undone. You go back to the strategy list.
 
 **Look at an older version.** On the **Versions** tab, press a version number (e.g. **v1**): you see that
 version's full rules, its note and date, and its backtest record. **Run backtest** there tests that exact version.
@@ -353,7 +356,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 
 - **No real buying or selling.** Placing orders is a later phase (NOVA Launch).
 - Broker accounts cannot be renamed, disabled or removed from the screen yet.
-- Strategies cannot be deleted (old test results depend on them); set them to *Archived* instead.
+- One saved version of a strategy cannot be deleted on its own: delete the whole strategy, or set it to *Archived* to hide it.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
 - Only one person (the super-admin) can sign in for now; family roles come later.
@@ -379,6 +382,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | **Edit** is missing on a backtest | It is still queued or running: edit it when it has finished. |
 | An old version has no trades or chart | Only the newest finished version keeps its full report; older versions keep their numbers. Open the newest from the **Versions** table. |
 | **Could not delete**: *A running backtest cannot be deleted* | Wait until it finishes (or fails), then delete it. |
+| **Could not delete**: *Wait for the running backtest to finish* (deleting a strategy) | One of its backtests is running. Wait until it finishes (or fails), then delete the strategy. |
 | A backtest stays **Waiting to start** | Another run is still going; runs go one at a time. If nothing is **Running** for minutes, NOVA's backtest part is not running: start the NOVA stack again. |
 | Backtest *Failed* with *needs more than … price bars* | The test is too big for NOVA in one go. Pick fewer stocks or a shorter period: 1-minute prices add up fast (one stock has about 375 bars a day). |
 | Backtest *Failed* with *The backtest worker stopped during this run* | NOVA's backtest part stopped in the middle (often it ran out of memory) and has restarted. Run it again; if it stops again, pick fewer stocks or a shorter period. |

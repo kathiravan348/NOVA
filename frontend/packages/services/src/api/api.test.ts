@@ -23,6 +23,7 @@ import {
   getBacktest,
   getBacktestResult,
   getMe,
+  deleteStrategy,
   getStrategy,
   listBacktests,
   listBacktestTrades,
@@ -104,6 +105,15 @@ describe("Orbit api", () => {
     await expect(getBacktest("nope")).rejects.toMatchObject({ status: 404, code: "not_found" });
     await expect(getBacktestResult("nope")).rejects.toMatchObject({ code: "not_found" });
     await expect(listBacktestTrades("nope")).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("deleteStrategy answers the runs deleted and maps a running backtest to 400 (D62)", async () => {
+    await expect(deleteStrategy("stg_001")).resolves.toEqual({ deletedRuns: 4 });
+    await expect(deleteStrategy("stg_002")).rejects.toMatchObject({
+      status: 400,
+      code: "invalid_request",
+    });
+    await expect(deleteStrategy("nope")).rejects.toMatchObject({ code: "not_found" });
   });
 
   it("maps error scenarios to code internal", async () => {

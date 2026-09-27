@@ -6,13 +6,18 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import CallerDep
+from nova_contracts import (
+    BacktestDeleteResult,
+    StrategyCreate,
+    StrategyUpdate,
+    StrategyVersionCreate,
+)
 from nova_contracts import Strategy as StrategyContract
-from nova_contracts import StrategyCreate, StrategyUpdate, StrategyVersionCreate
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.models import Strategy, StrategyVersion
+from nova_db.models import BacktestRun, Strategy, StrategyVersion
 from nova_db.web import Db
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from nova_strategy.stats import strategy_stats
@@ -175,3 +180,36 @@ def update_strategy(
     )
     db.commit()
     return _body(db, strategy.id)
+
+
+def _runs_text(count: int) -> str:
+    return "1 backtest run" if count == 1 else f"{count} backtest runs"
+
+
+@router.delete("/{strategy_id}")
+def delete_strategy(strategy_id: str, caller: CallerDep, db: Db) -> JSONResponse:
+    """D62 (1): the strategy, its versions and all its backtest runs (results, trades cascade)."""
+    strategy = _strategy(db, strategy_id, lock=True)
+    runs = list(
+        db.scalars(
+            select(BacktestRun).where(BacktestRun.strategy_id == strategy_id).with_for_update()
+        )
+    )
+    if any(run.status == "running" for run in runs):
+        raise ApiException(400, "invalid_request", "Wait for the running backtest to finish")
+    db.execute(delete(BacktestRun).where(BacktestRun.strategy_id == strategy_id))
+    name = strategy.name
+    db.execute(delete(Strategy).where(Strategy.id == strategy_id))
+    record_audit(
+        db,
+        action="strategy.delete",
+        actor_id=caller.id,
+        actor_name=caller.name,
+        summary=f"Deleted strategy {name} ({_runs_text(len(runs))})",
+        target_type="strategy",
+        target_id=strategy_id,
+        ip=caller.ip,
+    )
+    db.commit()
+    result = BacktestDeleteResult(deleted_runs=len(runs))
+    return JSONResponse(result.model_dump(mode="json"))
