@@ -27,8 +27,9 @@ class StoredSeries:
     columns: Columns
     enter: Bools
     exit: Bools
-    rank: Floats | None = None  # `portfolio.rank` value at each close (D62), NaN = none
+    rank: Floats | None = None  # `portfolio.rank` or the rotation score at each close (D62)
     atr: Floats | None = None  # ATR of `risk.atrStop` at each close (D62), NaN = none
+    regime: Bools | None = None  # the market filter at each close (D62); None = always on
 
 
 class Store(Protocol):
@@ -58,8 +59,9 @@ class MemoryStore:
         exit_: Bools,
         rank: Floats | None = None,
         atr: Floats | None = None,
+        regime: Bools | None = None,
     ) -> None:
-        self._series[symbol] = StoredSeries(columns, enter, exit_, rank, atr)
+        self._series[symbol] = StoredSeries(columns, enter, exit_, rank, atr, regime)
 
     def symbols(self) -> list[str]:
         return list(self._series)
@@ -74,6 +76,7 @@ class MemoryStore:
         signals: Signals,
         ranks: Mapping[str, Sequence[float]] | None = None,
         atrs: Mapping[str, Sequence[float]] | None = None,
+        regimes: Mapping[str, Sequence[bool]] | None = None,
     ) -> Self:
         """Bar lists, per-bar `enter`/`exit` answers, optional rank and ATR values (tests)."""
 
@@ -90,6 +93,7 @@ class MemoryStore:
                 np.array([signals.exit(symbol, i) for i in count], dtype=np.bool_),
                 floats(ranks, symbol),
                 floats(atrs, symbol),
+                None if regimes is None else np.array(regimes[symbol], dtype=np.bool_),
             )
         return store
 
@@ -114,6 +118,7 @@ class RunScratch:
         exit_: Bools,
         rank: Floats | None = None,
         atr: Floats | None = None,
+        regime: Bools | None = None,
     ) -> None:
         folder = self._folder(len(self._symbols))
         folder.mkdir()
@@ -121,7 +126,7 @@ class RunScratch:
             np.save(folder / f"{field}.npy", getattr(columns, field))
         np.save(folder / "enter.npy", enter)
         np.save(folder / "exit.npy", exit_)
-        for name, values in (("rank", rank), ("atr", atr)):
+        for name, values in (("rank", rank), ("atr", atr), ("regime", regime)):
             if values is not None:
                 np.save(folder / f"{name}.npy", values)
         self._symbols.append(symbol)
@@ -144,7 +149,14 @@ class RunScratch:
             return read(name) if (folder / f"{name}.npy").exists() else None
 
         columns = Columns(*(read(field) for field in FIELDS))
-        return StoredSeries(columns, read("enter"), read("exit"), optional("rank"), optional("atr"))
+        return StoredSeries(
+            columns,
+            read("enter"),
+            read("exit"),
+            optional("rank"),
+            optional("atr"),
+            optional("regime"),
+        )
 
     def close(self) -> None:
         """Removes the folder; maps still open are collected first (Windows cannot delete them)."""

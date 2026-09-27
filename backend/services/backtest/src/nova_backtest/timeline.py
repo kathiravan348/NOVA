@@ -30,6 +30,7 @@ class BarAt(NamedTuple):
     exit: bool
     rank: float  # NaN when the run ranks nothing (D62)
     atr: float  # NaN when the run has no ATR stop (D62)
+    regime: bool  # the market filter at this close; True without one (D62)
 
 
 def walk(store: Store, window_bars: int = 500_000) -> Iterator[tuple[int, list[BarAt]]]:
@@ -71,6 +72,7 @@ def walk(store: Store, window_bars: int = 500_000) -> Iterator[tuple[int, list[B
                 s.exit[part].tolist(),
                 blank if s.rank is None else s.rank[part].tolist(),
                 blank if s.atr is None else s.atr[part].tolist(),
+                [True] * len(blank) if s.regime is None else s.regime[part].tolist(),
                 strict=True,
             )
             for j, row in enumerate(rows):
