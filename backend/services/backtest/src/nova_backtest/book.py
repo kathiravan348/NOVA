@@ -40,6 +40,9 @@ class Position:
     cost: int  # exact paise paid for every buy
     last_buy: int  # price of the latest buy: the next add triggers below it (D53)
     adds: int = 0
+    highest_close: int = 0  # since the first buy (D62)
+    bars_held: int = 0  # closes seen while held, the entry bar's included (D62)
+    trail: int | None = None  # highest trailing / ATR stop level so far (D62)
 
     @property
     def average(self) -> int:

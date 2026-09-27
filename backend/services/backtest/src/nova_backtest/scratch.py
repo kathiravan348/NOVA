@@ -18,6 +18,7 @@ from nova_backtest.bars import Bar
 from nova_backtest.columns import Columns
 
 Bools = npt.NDArray[np.bool_]
+Floats = npt.NDArray[np.float64]
 FIELDS = ("ts", "open", "high", "low", "close", "volume", "day")
 
 
@@ -26,6 +27,8 @@ class StoredSeries:
     columns: Columns
     enter: Bools
     exit: Bools
+    rank: Floats | None = None  # `portfolio.rank` value at each close (D62), NaN = none
+    atr: Floats | None = None  # ATR of `risk.atrStop` at each close (D62), NaN = none
 
 
 class Store(Protocol):
@@ -47,8 +50,16 @@ class MemoryStore:
     def __init__(self) -> None:
         self._series: dict[str, StoredSeries] = {}
 
-    def add(self, symbol: str, columns: Columns, enter: Bools, exit_: Bools) -> None:
-        self._series[symbol] = StoredSeries(columns, enter, exit_)
+    def add(
+        self,
+        symbol: str,
+        columns: Columns,
+        enter: Bools,
+        exit_: Bools,
+        rank: Floats | None = None,
+        atr: Floats | None = None,
+    ) -> None:
+        self._series[symbol] = StoredSeries(columns, enter, exit_, rank, atr)
 
     def symbols(self) -> list[str]:
         return list(self._series)
@@ -57,8 +68,18 @@ class MemoryStore:
         return self._series[symbol]
 
     @classmethod
-    def from_bars(cls, bars: Mapping[str, Sequence[Bar]], signals: Signals) -> Self:
-        """Bar lists plus any per-bar `enter`/`exit` answers (tests and the Python path)."""
+    def from_bars(
+        cls,
+        bars: Mapping[str, Sequence[Bar]],
+        signals: Signals,
+        ranks: Mapping[str, Sequence[float]] | None = None,
+        atrs: Mapping[str, Sequence[float]] | None = None,
+    ) -> Self:
+        """Bar lists, per-bar `enter`/`exit` answers, optional rank and ATR values (tests)."""
+
+        def floats(values: Mapping[str, Sequence[float]] | None, symbol: str) -> Floats | None:
+            return None if values is None else np.array(values[symbol], dtype=np.float64)
+
         store = cls()
         for symbol, series in bars.items():
             count = range(len(series))
@@ -67,6 +88,8 @@ class MemoryStore:
                 Columns.from_bars(series),
                 np.array([signals.enter(symbol, i) for i in count], dtype=np.bool_),
                 np.array([signals.exit(symbol, i) for i in count], dtype=np.bool_),
+                floats(ranks, symbol),
+                floats(atrs, symbol),
             )
         return store
 
@@ -83,13 +106,24 @@ class RunScratch:
         # Folders by position: symbols such as "M&M" or "NIFTY 50" never become file names.
         return self.path / f"{index:05d}"
 
-    def add(self, symbol: str, columns: Columns, enter: Bools, exit_: Bools) -> None:
+    def add(
+        self,
+        symbol: str,
+        columns: Columns,
+        enter: Bools,
+        exit_: Bools,
+        rank: Floats | None = None,
+        atr: Floats | None = None,
+    ) -> None:
         folder = self._folder(len(self._symbols))
         folder.mkdir()
         for field in FIELDS:
             np.save(folder / f"{field}.npy", getattr(columns, field))
         np.save(folder / "enter.npy", enter)
         np.save(folder / "exit.npy", exit_)
+        for name, values in (("rank", rank), ("atr", atr)):
+            if values is not None:
+                np.save(folder / f"{name}.npy", values)
         self._symbols.append(symbol)
 
     def symbols(self) -> list[str]:
@@ -106,8 +140,11 @@ class RunScratch:
             except ValueError:  # an empty array cannot be memory-mapped
                 return np.load(path)
 
+        def optional(name: str) -> Any:  # Any: float64 array
+            return read(name) if (folder / f"{name}.npy").exists() else None
+
         columns = Columns(*(read(field) for field in FIELDS))
-        return StoredSeries(columns, read("enter"), read("exit"))
+        return StoredSeries(columns, read("enter"), read("exit"), optional("rank"), optional("atr"))
 
     def close(self) -> None:
         """Removes the folder; maps still open are collected first (Windows cannot delete them)."""

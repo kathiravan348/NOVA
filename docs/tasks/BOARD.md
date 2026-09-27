@@ -120,7 +120,7 @@
 | NOVA-112 | Delete strategy: endpoint, audit, Orbit button (D62, migration 0016) | done | Claude | — |
 | NOVA-113 | Index candles: download indices like stocks (Atlas + Relay) (D62) | done | Claude | — |
 | NOVA-114 | Contracts: spec v2, rotation mode, result metrics + year table (D62) | done | Claude | — |
-| NOVA-115 | Engine: ranked buys, max positions, trailing/ATR/time exits, multiplier (D62) | planned | — | 111, 114 |
+| NOVA-115 | Engine: ranked buys, max positions, trailing/ATR/time exits, multiplier (D62) | done | Claude | 111, 114 |
 | NOVA-116 | Engine: benchmark, new metrics, year table, tax estimate (D62, migration 0018) | planned | — | 112, 113, 114, 115 (merge after 124) |
 | NOVA-117 | Engine: market filter + rotation mode (D62) | planned | — | 116, 127 |
 | NOVA-118 | Orbit editor: multiplier, exits, portfolio, market filter (D62) | planned | — | 112, 114 (merge after 115) |

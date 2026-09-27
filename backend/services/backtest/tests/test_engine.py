@@ -145,6 +145,31 @@ def test_a_delivery_run_completes_with_charges(
     assert [row["symbol"] for row in result["bySymbol"]] == ["INFY", "TCS"]
 
 
+def test_d62_exits_and_a_ranked_portfolio_run(
+    seeded: Engine, factory: sessionmaker[Session], client: TestClient
+) -> None:
+    """NOVA-115: every new setting runs; the bars-held exit fills at the open before the stops."""
+    risk = {
+        "stopLossPercent": None,
+        "targetPercent": None,
+        "trailingStopPercent": 20,
+        "atrStop": {"period": 2, "multiplier": 3},
+        "maxHoldBars": 1,
+    }
+    rank = {"by": {"kind": "price", "field": "close", "multiplier": 2}, "order": "desc"}
+    spec = _spec(risk=risk, portfolio={"maxPositions": 1, "rank": rank})
+    with Session(seeded) as db:
+        db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
+        db.commit()
+    _queue(seeded)
+
+    run = _drain(factory)
+
+    assert run.status == "completed", run.error
+    (trade,) = client.get("/api/v1/backtests/run_e2e/trades").json()["items"]
+    assert (trade["entryPricePaise"], trade["exitPricePaise"]) == (10_700, 10_500)
+
+
 def test_a_run_over_the_bar_limit_fails_early(
     seeded: Engine, factory: sessionmaker[Session], client: TestClient
 ) -> None:
@@ -200,12 +225,8 @@ def test_rerun_replaces_the_old_result(seeded: Engine, factory: sessionmaker[Ses
         (_spec(segment="equity_intraday"), "Intraday strategies need an intraday timeframe"),
         (_spec(timeframe="5m"), "No 5m candles in the period for INFY, TCS"),
         (
-            _spec(risk={"stopLossPercent": None, "targetPercent": None, "maxHoldBars": 5}),
-            "This strategy uses an exit after N bars, which backtests do not support yet",
-        ),
-        (
             _spec(portfolio={"maxPositions": 3}, regime=NIFTY_UP),
-            "This strategy uses a market filter, a portfolio limit, which backtests do not",
+            "This strategy uses a market filter or rotation, which backtests do not support yet",
         ),
     ],
 )
@@ -376,8 +397,8 @@ def test_a_failed_run_keeps_its_last_progress(
     assert (progress["stage"], progress["percent"], progress["symbolsDone"]) == ("loading", 15, 1)
 
 
-def test_unsupported_names_every_new_setting_and_rotation() -> None:
-    """D62: until the engine runs them, a run fails instead of ignoring a setting."""
+def test_unsupported_names_only_the_market_filter_and_rotation() -> None:
+    """D62: until NOVA-117 runs them, a run fails instead of ignoring a setting."""
     multiplier = RULE | {"op": "gt", "right": {"kind": "price", "field": "open", "multiplier": 2}}
     visual = SPEC.validate_python(
         _spec(
@@ -386,7 +407,9 @@ def test_unsupported_names_every_new_setting_and_rotation() -> None:
                 "targetPercent": None,
                 "trailingStopPercent": 10,
                 "atrStop": {"period": 14, "multiplier": 3},
+                "maxHoldBars": 5,
             },
+            portfolio={"maxPositions": 3},
             entry={"combinator": "all", "conditions": [multiplier]},
         )
     )
@@ -406,6 +429,9 @@ def test_unsupported_names_every_new_setting_and_rotation() -> None:
         }
     )
 
-    assert unsupported(visual) == "a trailing stop, an ATR stop, a multiplier"
-    assert unsupported(rotation) == "rotation"
+    assert unsupported(visual) is None  # NOVA-115 runs these
+    assert unsupported(rotation) == "a market filter or rotation"
+    assert (
+        unsupported(SPEC.validate_python(_spec(regime=NIFTY_UP))) == "a market filter or rotation"
+    )
     assert unsupported(SPEC.validate_python(_spec())) is None
