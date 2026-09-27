@@ -3,6 +3,7 @@ import {
   BacktestDeleteRequestSchema,
   BacktestRunCreateSchema,
   BacktestVersionCreateSchema,
+  LibraryInstallSchema,
   LoginRequestSchema,
   StrategyCreateSchema,
   StrategyUpdateSchema,
@@ -16,6 +17,7 @@ import {
   mockBacktestResults,
   mockBacktestRuns,
   mockStrategies,
+  mockStrategyLibrary,
   mockStrategyStats,
   mockTrades,
   mockUser,
@@ -86,6 +88,36 @@ export const orbitHandlers = [
   // Registered before `/strategies/:id` so "stats" is not read as an id.
   http.get(apiPath("/strategies/stats"), () => {
     return HttpResponse.json(mockStrategyStats);
+  }),
+
+  http.get(apiPath("/strategies/library"), () => {
+    return HttpResponse.json(mockStrategyLibrary);
+  }),
+
+  // Stateless like the other mock writes: answers the drafts, stores nothing (D62 (7)).
+  http.post(apiPath("/strategies/library/install"), async ({ request }) => {
+    const parsed = LibraryInstallSchema.safeParse(await request.json().catch(() => undefined));
+    if (!parsed.success) return badRequest("Body must be { ids } with each id once");
+    const unknown = parsed.data.ids.filter(
+      (id) => !mockStrategyLibrary.entries.some((e) => e.id === id),
+    );
+    if (unknown.length > 0) return badRequest(`Unknown library strategies: ${unknown.join(", ")}`);
+    const created: Strategy[] = parsed.data.ids.map((id) => {
+      const entry = mockStrategyLibrary.entries.find((e) => e.id === id)!;
+      return {
+        id: `stg_lib_${id.toLowerCase()}`,
+        name: entry.name,
+        description: entry.summary,
+        status: "draft",
+        latestVersion: 1,
+        versions: [
+          { version: 1, createdAt: MOCK_NOW, note: `From the library (${id})`, spec: entry.spec },
+        ],
+        createdAt: MOCK_NOW,
+        updatedAt: MOCK_NOW,
+      };
+    });
+    return HttpResponse.json(created, { status: 201 });
   }),
 
   http.get(apiPath("/strategies/:id"), ({ params }) => {

@@ -4,6 +4,7 @@ import {
   BacktestRunSchema,
   StrategySchema,
   BacktestVersionSchema,
+  StrategyLibrarySchema,
   StrategyStatsSchema,
   TradeSchema,
   UserSchema,
@@ -18,6 +19,7 @@ import {
   type BacktestResult,
   type BacktestRun,
   type Strategy,
+  type StrategyLibrary,
   type StrategyStats,
   type Trade,
   type Page,
@@ -39,6 +41,16 @@ export function listStrategies(init?: RequestOptions): Promise<Strategy[]> {
 /** Backtest summary per strategy (D26). */
 export function listStrategyStats(init?: RequestOptions): Promise<StrategyStats[]> {
   return apiGet("/strategies/stats", StrategyStatsSchema.array(), init);
+}
+
+/** The 60 library strategies in their families (D62 (7)). */
+export function getStrategyLibrary(init?: RequestOptions): Promise<StrategyLibrary> {
+  return apiGet("/strategies/library", StrategyLibrarySchema, init);
+}
+
+/** Adds library entries as draft strategies, in the order given; answers the new strategies. */
+export function installLibrary(ids: string[], init?: RequestOptions): Promise<Strategy[]> {
+  return apiPost("/strategies/library/install", { ids }, StrategySchema.array(), init);
 }
 
 export function getStrategy(strategyId: string, init?: RequestOptions): Promise<Strategy> {

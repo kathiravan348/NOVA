@@ -1,0 +1,1734 @@
+[
+  {
+    "id": "C01",
+    "family": "pullback",
+    "name": "RSI(2) classic",
+    "summary": "Buy when 2-day RSI drops under 10 over the 200-day average; sell above the 5-day average.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 10
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 2
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 2
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 10
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 5
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C02",
+    "family": "pullback",
+    "name": "RSI(2) two-day",
+    "summary": "Buy after two days of 2-day RSI under 15 in an uptrend; sell when it tops 70.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 10
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 2
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 2
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 15
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 2
+              },
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 15
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 2
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 70
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C03",
+    "family": "pullback",
+    "name": "Bollinger bounce",
+    "summary": "Buy a close below the lower Bollinger band in an uptrend; sell back at the middle band.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_lower",
+              "params": {
+                "period": 20,
+                "stddev": 2.0
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_middle",
+              "params": {
+                "period": 20,
+                "stddev": 2.0
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C04",
+    "family": "pullback",
+    "name": "Three down days",
+    "summary": "Buy after three lower closes in a row in an uptrend; sell above the 5-day average.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 10
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 2
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 2
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 3
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 5
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C05",
+    "family": "pullback",
+    "name": "EMA-20 pullback",
+    "summary": "Buy a dip to EMA 20 that closes above it in a stacked uptrend; 5% stop, 8% target.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 5,
+        "targetPercent": 8
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C06",
+    "family": "pullback",
+    "name": "Stochastic turn",
+    "summary": "Buy when Stochastic %K crosses above %D below 25 in an uptrend; sell above 80.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "stoch_k",
+            "params": {
+              "period": 14,
+              "smooth": 3
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_k",
+              "params": {
+                "period": 14,
+                "smooth": 3
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "stoch_d",
+              "params": {
+                "period": 14,
+                "smooth": 3,
+                "signal": 3
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_k",
+              "params": {
+                "period": 14,
+                "smooth": 3
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 25
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_k",
+              "params": {
+                "period": 14,
+                "smooth": 3
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 80
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C07",
+    "family": "pullback",
+    "name": "Williams %R",
+    "summary": "Buy when Williams %R is under −90 in an uptrend; sell above −30 or after 15 days.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 15
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "williams_r",
+            "params": {
+              "period": 10
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "williams_r",
+              "params": {
+                "period": 10
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": -90
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "williams_r",
+              "params": {
+                "period": 10
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": -30
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C08",
+    "family": "pullback",
+    "name": "CCI dip",
+    "summary": "Buy when CCI is under −100 with ADX over 20 in an uptrend; sell when CCI tops 100.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null,
+        "maxHoldBars": 20
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "cci",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "cci",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": -100
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "cci",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 100
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C09",
+    "family": "pullback",
+    "name": "MFI dip",
+    "summary": "Buy when MFI is under 25 over the 200-day average; sell above 60.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "mfi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "mfi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 25
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "mfi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 60
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C10",
+    "family": "pullback",
+    "name": "Stoch-RSI dip",
+    "summary": "Buy when Stochastic RSI is under 10 over the 100-day EMA; sell above 80.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "stoch_rsi",
+            "params": {
+              "rsi_period": 14,
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_rsi",
+              "params": {
+                "rsi_period": 14,
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 10
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 100
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_rsi",
+              "params": {
+                "rsi_period": 14,
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 80
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C11",
+    "family": "pullback",
+    "name": "Dip + cost averaging",
+    "summary": "Buy 5% when RSI is under 35 in an uptrend, add twice on 4% falls; sell when RSI tops 70.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 5
+      },
+      "risk": {
+        "stopLossPercent": 15,
+        "targetPercent": 10
+      },
+      "averaging": {
+        "dropPercent": 4,
+        "maxAdds": 2
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 35
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 70
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C12",
+    "family": "pullback",
+    "name": "Reversal day",
+    "summary": "Buy a day that opens below yesterday's low but closes up, in an uptrend; sell above yesterday's high.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 6,
+        "targetPercent": null,
+        "maxHoldBars": 5
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 2
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "open"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "open"
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_high",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C13",
+    "family": "pullback",
+    "name": "Leaders on sale",
+    "summary": "Buy strong 6-month risers 10% below their 20-day high with RSI under 45; sell on a new 20-day high.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": 12
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 25
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 0.9
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 45
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 20
+              },
+              "offset": 1
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C14",
+    "family": "pullback",
+    "name": "Keltner snap-back",
+    "summary": "Buy a close below the lower Keltner band in an uptrend; sell back above EMA 20.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "keltner_lower",
+              "params": {
+                "period": 20,
+                "multiplier": 2.0,
+                "atr_period": 10
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  }
+]

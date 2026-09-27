@@ -22,6 +22,8 @@ import {
   getBacktestResult,
   getMe,
   getStrategy,
+  getStrategyLibrary,
+  installLibrary,
   listBacktests,
   listBacktestTrades,
   listBacktestVersions,
@@ -52,6 +54,24 @@ export function useStrategyStats() {
   return useQuery({
     queryKey: queryKeys.strategies.stats,
     queryFn: ({ signal }) => listStrategyStats({ signal }),
+  });
+}
+
+/** The strategy library; it never changes while the app runs. */
+export function useStrategyLibrary() {
+  return useQuery({
+    queryKey: queryKeys.strategyLibrary,
+    queryFn: ({ signal }) => getStrategyLibrary({ signal }),
+    staleTime: Infinity,
+  });
+}
+
+/** Adds library entries as drafts; the strategy list and stats refresh. */
+export function useInstallLibrary() {
+  const refresh = useRefreshStrategies();
+  return useMutation({
+    mutationFn: (ids: string[]) => installLibrary(ids),
+    onSuccess: refresh,
   });
 }
 

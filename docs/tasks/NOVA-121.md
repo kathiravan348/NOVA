@@ -1,6 +1,6 @@
 # NOVA-121 — Strategy library: 60 strategies as data, list + install endpoints (D62 (7))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-121 · **Depends on:** NOVA-112, NOVA-114, NOVA-127
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-121 · **Depends on:** NOVA-112, NOVA-114, NOVA-127
 
 ## Goal
 The strategy service ships the 60 strategies of `docs/STRATEGY-LIBRARY.md` as validated data. `GET /strategies/library`
@@ -66,7 +66,22 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. Contracts both sides: `LibraryFamily`, `LibraryBacktest` (period + universe, capital, benchmark), `LibraryEntry`
+(id `^[A-G][0-9]{2}$`, family enum, summary ≤ 140, spec, backtest), `StrategyLibrary`, `LibraryInstall` (1–100 unique
+ids); schemas regenerated. Data: `nova_strategy/library/*.json` (7 families, 60 entries: A12 B14 C14 D6 E2 F2 G10),
+produced by a one-off script that parses `docs/STRATEGY-LIBRARY.md` itself (tables, `[n]`, `×`, SL/TP/TRAIL/ATR/HOLD,
+averaging, sizing, rank; D code blocks verbatim) and validates every entry; summaries written per entry. `library.py`
+loads and checks everything once (`lru_cache`); `create_app` calls it so a bad file stops start-up. Routes
+`GET /strategies/library`, `POST /strategies/library/install` (drafts in order, note "From the library (A01)", one
+`strategy.create` audit each, one commit; unknown id → 400 naming it); `create_strategy` now shares `_create`.
+Services `getStrategyLibrary` / `installLibrary`, hooks `useStrategyLibrary` (own key, never stale) /
+`useInstallLibrary` (refreshes strategies and stats). Mocks: `strategyLibrary.json` (A01, B01, C11, D02, E01, F01, G01 +
+7 families), stateless handlers.
+- Tests: `test_library.py` (counts, families, segments/timeframes, param checks, A04/B03/C11/G07 equal hand-written
+  specs, D05 name/risk/code ends; GET parity; install 3 → 3 drafts + 3 audits; unknown / duplicate / malformed ids add
+  nothing); `test_library_code.py` (6 codes pass `check_code` and run on 300 bars); contract, handler, schema, API tests.
+- Families E/F have no Watch line in the doc; written from its §7/§9 wording.
+Commands: backend-check 1019 passed; `pnpm review:check` passed. Guides: API (2 rows), CONTRACTS.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

@@ -1,0 +1,676 @@
+{
+  "families": [
+    {
+      "id": "momentum_rotation",
+      "name": "A — Momentum rotation",
+      "idea": "Stocks that rose most over 3–12 months tend to keep outperforming for months.",
+      "watch": "Sharp momentum crashes (Oct 2024–Mar 2025)."
+    },
+    {
+      "id": "trend",
+      "name": "B — Trend and breakout",
+      "idea": "Ride strong trends, cut losers early; few big winners pay for many small losses.",
+      "watch": "Choppy years, low win rate."
+    },
+    {
+      "id": "pullback",
+      "name": "C — Pullback in an uptrend",
+      "idea": "In a rising stock, short dips tend to recover within days.",
+      "watch": "A dip that turns into a crash; many trades, so charges matter."
+    },
+    {
+      "id": "pattern",
+      "name": "D — Price patterns (Python)",
+      "idea": "Classic chart setups the visual rules cannot express.",
+      "watch": "The code assumes its own signal was filled; if no slot was free, it may wait for its own exit before signalling again."
+    },
+    {
+      "id": "low_turnover",
+      "name": "E — Low turnover",
+      "idea": "Hold strong stocks for months; fewer trades, more long-term (12.5%) tax.",
+      "watch": "Long holds sit through deep falls before the exit rule sells."
+    },
+    {
+      "id": "baseline",
+      "name": "F — Baselines",
+      "idea": "The bar every strategy must beat.",
+      "watch": "Not meant to pass: they show what doing nothing clever earned."
+    },
+    {
+      "id": "intraday",
+      "name": "G — Intraday, 15-minute (MIS, testing)",
+      "idea": "Same-day moves after the open, squared off from 15:20 (D46).",
+      "watch": "Charges and slippage eat small edges; intraday profit is business income (no tax estimate). Needs 1m candles for the period (15m is built from them, D58)."
+    }
+  ],
+  "entries": [
+    {
+      "id": "A01",
+      "family": "momentum_rotation",
+      "name": "12-1 momentum",
+      "summary": "Each month, hold the 10 stocks that rose most over the past year, leaving out the latest month.",
+      "spec": {
+        "mode": "rotation",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "risk": {
+          "stopLossPercent": null,
+          "targetPercent": null
+        },
+        "regime": {
+          "index": "NIFTY 50",
+          "condition": {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          "whenOff": "exit_all"
+        },
+        "rotation": {
+          "rebalance": "monthly",
+          "hold": 10,
+          "keepWithin": 20,
+          "score": [
+            {
+              "operand": {
+                "kind": "indicator",
+                "name": "roc",
+                "params": {
+                  "period": 231
+                },
+                "offset": 21
+              },
+              "weight": 1
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2021-10-01",
+        "to": "2024-09-30",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    },
+    {
+      "id": "B01",
+      "family": "trend",
+      "name": "Turtle 55/20",
+      "summary": "Buy a 55-day high breakout; sell on a 20-day low, with a 10% stop-loss.",
+      "spec": {
+        "mode": "visual",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "sizing": {
+          "type": "percent_equity",
+          "percent": 10
+        },
+        "risk": {
+          "stopLossPercent": 10,
+          "targetPercent": null
+        },
+        "portfolio": {
+          "maxPositions": 10,
+          "rank": {
+            "by": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "order": "desc"
+          }
+        },
+        "regime": {
+          "index": "NIFTY 50",
+          "condition": {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          "whenOff": "no_new_entries"
+        },
+        "entry": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "donchian_upper",
+                "params": {
+                  "period": 55
+                },
+                "offset": 1
+              }
+            }
+          ]
+        },
+        "exit": {
+          "combinator": "any",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "lt",
+              "right": {
+                "kind": "indicator",
+                "name": "donchian_lower",
+                "params": {
+                  "period": 20
+                },
+                "offset": 1
+              }
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2021-10-01",
+        "to": "2024-09-30",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    },
+    {
+      "id": "C11",
+      "family": "pullback",
+      "name": "Dip + cost averaging",
+      "summary": "Buy 5% when RSI is under 35 in an uptrend, add twice on 4% falls; sell when RSI tops 70.",
+      "spec": {
+        "mode": "visual",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "sizing": {
+          "type": "percent_equity",
+          "percent": 5
+        },
+        "risk": {
+          "stopLossPercent": 15,
+          "targetPercent": 10
+        },
+        "averaging": {
+          "dropPercent": 4,
+          "maxAdds": 2
+        },
+        "portfolio": {
+          "maxPositions": 10,
+          "rank": {
+            "by": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "order": "asc"
+          }
+        },
+        "regime": {
+          "index": "NIFTY 50",
+          "condition": {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          "whenOff": "no_new_entries"
+        },
+        "entry": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "rsi",
+                "params": {
+                  "period": 14
+                }
+              },
+              "op": "lt",
+              "right": {
+                "kind": "number",
+                "value": 35
+              }
+            },
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            }
+          ]
+        },
+        "exit": {
+          "combinator": "any",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "rsi",
+                "params": {
+                  "period": 14
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "number",
+                "value": 70
+              }
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2021-10-01",
+        "to": "2024-09-30",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    },
+    {
+      "id": "D02",
+      "family": "pattern",
+      "name": "IBS reversion",
+      "summary": "Buy a close in the bottom 15% of the day's range in an uptrend; sell a close in the top 20%.",
+      "spec": {
+        "mode": "python",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "sizing": {
+          "type": "percent_equity",
+          "percent": 10
+        },
+        "risk": {
+          "stopLossPercent": 8,
+          "targetPercent": null,
+          "maxHoldBars": 10
+        },
+        "portfolio": {
+          "maxPositions": 10,
+          "rank": {
+            "by": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "order": "desc"
+          }
+        },
+        "regime": {
+          "index": "NIFTY 50",
+          "condition": {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          "whenOff": "no_new_entries"
+        },
+        "code": "class Strategy:\n    def on_bar(self, ctx):\n        trend = ctx.sma(200)\n        if trend is None:\n            return None\n        spread = ctx.high - ctx.low\n        ibs = (ctx.close - ctx.low) / spread if spread > 0 else 0.5\n        if ibs > 0.8:\n            return \"exit\"\n        if ibs < 0.15 and ctx.close > trend:\n            return \"enter\"\n        return None\n"
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2021-10-01",
+        "to": "2024-09-30",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    },
+    {
+      "id": "E01",
+      "family": "low_turnover",
+      "name": "Trend-filtered hold",
+      "summary": "Hold stocks above a rising 200-day trend; sell only 10% below the 200-day average.",
+      "spec": {
+        "mode": "visual",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "sizing": {
+          "type": "percent_equity",
+          "percent": 10
+        },
+        "risk": {
+          "stopLossPercent": null,
+          "targetPercent": null
+        },
+        "portfolio": {
+          "maxPositions": 10,
+          "rank": {
+            "by": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 252
+              }
+            },
+            "order": "desc"
+          }
+        },
+        "regime": {
+          "index": "NIFTY 50",
+          "condition": {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          "whenOff": "no_new_entries"
+        },
+        "entry": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            },
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 50
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            }
+          ]
+        },
+        "exit": {
+          "combinator": "any",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "lt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                },
+                "multiplier": 0.9
+              }
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2021-10-01",
+        "to": "2024-09-30",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    },
+    {
+      "id": "F01",
+      "family": "baseline",
+      "name": "Equal-weight buy and hold",
+      "summary": "Put 1% of the money into every stock on the first day and hold them all to the end.",
+      "spec": {
+        "mode": "visual",
+        "segment": "equity_delivery",
+        "exchange": "NSE",
+        "timeframe": "1d",
+        "sizing": {
+          "type": "percent_equity",
+          "percent": 1
+        },
+        "risk": {
+          "stopLossPercent": null,
+          "targetPercent": null
+        },
+        "entry": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "number",
+                "value": 0
+              }
+            }
+          ]
+        },
+        "exit": {
+          "combinator": "any",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "lt",
+              "right": {
+                "kind": "number",
+                "value": 0
+              }
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2021-10-01",
+        "to": "2024-09-30",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    },
+    {
+      "id": "G01",
+      "family": "intraday",
+      "name": "Opening range breakout 15",
+      "summary": "15m: buy a break above the first 15 minutes' high over VWAP on high volume; sell below VWAP.",
+      "spec": {
+        "mode": "visual",
+        "segment": "equity_intraday",
+        "exchange": "NSE",
+        "timeframe": "15m",
+        "sizing": {
+          "type": "percent_equity",
+          "percent": 20
+        },
+        "risk": {
+          "stopLossPercent": 1,
+          "targetPercent": 2
+        },
+        "portfolio": {
+          "maxPositions": 5,
+          "rank": {
+            "by": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 4
+              }
+            },
+            "order": "desc"
+          }
+        },
+        "entry": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "crosses_above",
+              "right": {
+                "kind": "indicator",
+                "name": "or_high",
+                "params": {
+                  "minutes": 15
+                }
+              }
+            },
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "vwap",
+                "params": {}
+              }
+            },
+            {
+              "left": {
+                "kind": "price",
+                "field": "volume"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "volume_sma",
+                "params": {
+                  "period": 20
+                },
+                "multiplier": 1.5
+              }
+            }
+          ]
+        },
+        "exit": {
+          "combinator": "any",
+          "conditions": [
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "lt",
+              "right": {
+                "kind": "indicator",
+                "name": "vwap",
+                "params": {}
+              }
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "universe": {
+          "type": "index",
+          "index": "NIFTY 100"
+        },
+        "from": "2023-01-02",
+        "to": "2024-12-31",
+        "initialCapitalPaise": 100000000,
+        "benchmark": "NIFTY 50"
+      }
+    }
+  ]
+}

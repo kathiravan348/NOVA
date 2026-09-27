@@ -11,6 +11,7 @@ import {
   RateLimitSchema,
   BrokerProfileSchema,
   KiteAppSchema,
+  StrategyLibrarySchema,
   StrategySchema,
   StrategyStatsSchema,
   TradeSchema,
@@ -29,6 +30,7 @@ import rateLimitsJson from "../data/rateLimits.json";
 import brokerProfilesJson from "../data/brokerProfiles.json";
 import kiteAppsJson from "../data/kiteApps.json";
 import strategiesJson from "../data/strategies.json";
+import strategyLibraryJson from "../data/strategyLibrary.json";
 import strategyStatsJson from "../data/strategyStats.json";
 import tradesJson from "../data/trades.json";
 import userJson from "../data/user.json";
@@ -38,6 +40,8 @@ export const MOCK_NOW = "2026-09-21T06:30:00Z";
 export const mockUser = UserSchema.parse(userJson);
 export const mockStrategies = StrategySchema.array().parse(strategiesJson);
 export const mockStrategyStats = StrategyStatsSchema.array().parse(strategyStatsJson);
+/** 7 of the 60 library strategies, one per family (D62 (7)); the real list is served by the backend. */
+export const mockStrategyLibrary = StrategyLibrarySchema.parse(strategyLibraryJson);
 export const mockBacktestRuns = BacktestRunSchema.array().parse(backtestRunsJson);
 export const mockBacktestResults = BacktestResultSchema.array().parse(backtestResultsJson);
 export const mockTrades = TradeSchema.array().parse(tradesJson);

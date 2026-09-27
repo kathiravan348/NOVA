@@ -6,6 +6,7 @@ import {
   DataJobSchema,
   KiteAppSchema,
   RateLimitSchema,
+  StrategyLibrarySchema,
   StrategySchema,
   TradeSchema,
   UserSchema,
@@ -22,6 +23,7 @@ import {
   mockBrokerProfiles,
   mockKiteApps,
   mockStrategies,
+  mockStrategyLibrary,
   mockTrades,
   mockUser,
 } from "./data";
@@ -29,6 +31,13 @@ import {
 describe("Mock data schemas and general conventions", () => {
   it("validates mockUser against UserSchema", () => {
     expect(UserSchema.safeParse(mockUser).success).toBe(true);
+  });
+
+  it("validates the library sample: one entry per family, specs valid (D62)", () => {
+    expect(StrategyLibrarySchema.safeParse(mockStrategyLibrary).success).toBe(true);
+    const families = mockStrategyLibrary.families.map((f) => f.id);
+    expect(new Set(mockStrategyLibrary.entries.map((e) => e.family))).toEqual(new Set(families));
+    expect(families).toHaveLength(7);
   });
 
   it("validates mockStrategies against StrategySchema array", () => {

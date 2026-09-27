@@ -25,6 +25,8 @@ import {
   getMe,
   deleteStrategy,
   getStrategy,
+  getStrategyLibrary,
+  installLibrary,
   listBacktests,
   listBacktestTrades,
   listStrategies,
@@ -114,6 +116,14 @@ describe("Orbit api", () => {
       code: "invalid_request",
     });
     await expect(deleteStrategy("nope")).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("reads the strategy library and installs entries as drafts (D62)", async () => {
+    const library = await getStrategyLibrary();
+    expect(library.entries).toHaveLength(7);
+    const created = await installLibrary(["A01"]);
+    expect(created.map((s) => s.name)).toEqual(["12-1 momentum"]);
+    await expect(installLibrary(["Z01"])).rejects.toMatchObject({ status: 400 });
   });
 
   it("maps error scenarios to code internal", async () => {

@@ -1,0 +1,393 @@
+[
+  {
+    "id": "E01",
+    "family": "low_turnover",
+    "name": "Trend-filtered hold",
+    "summary": "Hold stocks above a rising 200-day trend; sell only 10% below the 200-day average.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 252
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              },
+              "multiplier": 0.9
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "E02",
+    "family": "low_turnover",
+    "name": "Compounders",
+    "summary": "Hold stocks with a rising 100-day average, up over 15% in a year; sell below the 200-day average.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 252
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 100
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 100
+              },
+              "offset": 63
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 100
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 252
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 15
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "F01",
+    "family": "baseline",
+    "name": "Equal-weight buy and hold",
+    "summary": "Put 1% of the money into every stock on the first day and hold them all to the end.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 1
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 0
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "F02",
+    "family": "baseline",
+    "name": "Above the 200-day",
+    "summary": "Hold up to 20 stocks while they are above their 200-day average, 5% each.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 5
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 20,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_below",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  }
+]

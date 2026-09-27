@@ -1,0 +1,44 @@
+[
+  {
+    "id": "momentum_rotation",
+    "name": "A — Momentum rotation",
+    "idea": "Stocks that rose most over 3–12 months tend to keep outperforming for months.",
+    "watch": "Sharp momentum crashes (Oct 2024–Mar 2025)."
+  },
+  {
+    "id": "trend",
+    "name": "B — Trend and breakout",
+    "idea": "Ride strong trends, cut losers early; few big winners pay for many small losses.",
+    "watch": "Choppy years, low win rate."
+  },
+  {
+    "id": "pullback",
+    "name": "C — Pullback in an uptrend",
+    "idea": "In a rising stock, short dips tend to recover within days.",
+    "watch": "A dip that turns into a crash; many trades, so charges matter."
+  },
+  {
+    "id": "pattern",
+    "name": "D — Price patterns (Python)",
+    "idea": "Classic chart setups the visual rules cannot express.",
+    "watch": "The code assumes its own signal was filled; if no slot was free, it may wait for its own exit before signalling again."
+  },
+  {
+    "id": "low_turnover",
+    "name": "E — Low turnover",
+    "idea": "Hold strong stocks for months; fewer trades, more long-term (12.5%) tax.",
+    "watch": "Long holds sit through deep falls before the exit rule sells."
+  },
+  {
+    "id": "baseline",
+    "name": "F — Baselines",
+    "idea": "The bar every strategy must beat.",
+    "watch": "Not meant to pass: they show what doing nothing clever earned."
+  },
+  {
+    "id": "intraday",
+    "name": "G — Intraday, 15-minute (MIS, testing)",
+    "idea": "Same-day moves after the open, squared off from 15:20 (D46).",
+    "watch": "Charges and slippage eat small edges; intraday profit is business income (no tax estimate). Needs 1m candles for the period (15m is built from them, D58)."
+  }
+]

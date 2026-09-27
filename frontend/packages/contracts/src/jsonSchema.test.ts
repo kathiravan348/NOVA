@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ApiErrorSchema } from "./error";
 import { LoginRequestSchema } from "./auth";
+import { LibraryInstallSchema, StrategyLibrarySchema } from "./library";
 import { AuditEntrySchema } from "./audit";
 import {
   BacktestDeleteRequestSchema,
@@ -73,6 +74,7 @@ const contracts: Record<string, z.ZodType> = {
   KiteAppUpdate: KiteAppUpdateSchema,
   KiteKeysUpdate: KiteKeysUpdateSchema,
   KitePassphrase: KitePassphraseSchema,
+  LibraryInstall: LibraryInstallSchema,
   LoginRequest: LoginRequestSchema,
   RateLimit: RateLimitSchema,
   RateLimitUpdate: RateLimitUpdateSchema,
@@ -83,6 +85,7 @@ const contracts: Record<string, z.ZodType> = {
   StrategyUpdate: StrategyUpdateSchema,
   StrategyVersionCreate: StrategyVersionCreateSchema,
   StrategyStats: StrategyStatsSchema,
+  StrategyLibrary: StrategyLibrarySchema,
   BacktestVersion: BacktestVersionSchema,
   BacktestVersionCreate: BacktestVersionCreateSchema,
   BacktestDeleteRequest: BacktestDeleteRequestSchema,

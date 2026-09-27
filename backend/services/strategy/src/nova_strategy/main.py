@@ -8,6 +8,7 @@ from nova_common import install_error_handlers, openapi_url
 from nova_db import create_db_engine, create_session_factory
 
 from nova_strategy import routes
+from nova_strategy.library import load_library
 from nova_strategy.settings import StrategySettings, get_strategy_settings
 
 API_PREFIX = "/api/v1"
@@ -15,6 +16,7 @@ API_PREFIX = "/api/v1"
 
 def create_app(settings: StrategySettings | None = None) -> FastAPI:
     settings = settings or get_strategy_settings()
+    load_library()  # refuse to start on an invalid library file (D62 (7))
     engine = create_db_engine(settings.database_url.get_secret_value())
 
     @asynccontextmanager

@@ -1,0 +1,377 @@
+[
+  {
+    "id": "D01",
+    "family": "pattern",
+    "name": "NR7 inside-bar breakout",
+    "summary": "Buy a breakout from an inside bar that is the narrowest of 7 days, over the 200-day average.",
+    "spec": {
+      "mode": "python",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 6,
+        "targetPercent": null,
+        "maxHoldBars": 8
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "code": "class Strategy:\n    def __init__(self):\n        self.highs = []\n        self.lows = []\n\n    def on_bar(self, ctx):\n        self.highs.append(ctx.high)\n        self.lows.append(ctx.low)\n        highs, lows = self.highs, self.lows\n        fast = ctx.sma(10)\n        trend = ctx.sma(200)\n        if fast is None or trend is None or len(highs) < 9:\n            return None\n        if ctx.close < fast:\n            return \"exit\"\n        ranges = [highs[i] - lows[i] for i in range(-8, -1)]\n        inside = highs[-2] < highs[-3] and lows[-2] > lows[-3]\n        if inside and ranges[-1] <= min(ranges) and ctx.close > highs[-2] and ctx.close > trend:\n            return \"enter\"\n        return None\n"
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "D02",
+    "family": "pattern",
+    "name": "IBS reversion",
+    "summary": "Buy a close in the bottom 15% of the day's range in an uptrend; sell a close in the top 20%.",
+    "spec": {
+      "mode": "python",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null,
+        "maxHoldBars": 10
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "code": "class Strategy:\n    def on_bar(self, ctx):\n        trend = ctx.sma(200)\n        if trend is None:\n            return None\n        spread = ctx.high - ctx.low\n        ibs = (ctx.close - ctx.low) / spread if spread > 0 else 0.5\n        if ibs > 0.8:\n            return \"exit\"\n        if ibs < 0.15 and ctx.close > trend:\n            return \"enter\"\n        return None\n"
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "D03",
+    "family": "pattern",
+    "name": "VCP-lite",
+    "summary": "Buy a breakout from tightening ranges on quiet volume over the 50-day average; 12% trailing stop.",
+    "spec": {
+      "mode": "python",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "trailingStopPercent": 12
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "code": "class Strategy:\n    def __init__(self):\n        self.highs = []\n        self.lows = []\n        self.volumes = []\n\n    def on_bar(self, ctx):\n        self.highs.append(ctx.high)\n        self.lows.append(ctx.low)\n        self.volumes.append(ctx.volume)\n        mid = ctx.sma(50)\n        if mid is None or len(self.highs) < 51:\n            return None\n        if ctx.close < mid:\n            return \"exit\"\n        highs, lows, vols = self.highs, self.lows, self.volumes\n        r20 = max(highs[-21:-1]) - min(lows[-21:-1])\n        r10 = max(highs[-11:-1]) - min(lows[-11:-1])\n        r5 = max(highs[-6:-1]) - min(lows[-6:-1])\n        tight = r20 > r10 > r5 and r5 < 0.06 * ctx.close\n        quiet = sum(vols[-6:-1]) / 5 < 0.7 * sum(vols[-51:-1]) / 50\n        if tight and quiet and ctx.close > max(highs[-21:-1]):\n            return \"enter\"\n        return None\n"
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "D04",
+    "family": "pattern",
+    "name": "Pocket pivot",
+    "summary": "Buy an up day whose volume beats every down day of the last 10, close to the 10-day average.",
+    "spec": {
+      "mode": "python",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "code": "class Strategy:\n    def __init__(self):\n        self.closes = []\n        self.volumes = []\n\n    def on_bar(self, ctx):\n        self.closes.append(ctx.close)\n        self.volumes.append(ctx.volume)\n        trend = ctx.sma(50)\n        near = ctx.sma(10)\n        closes, vols = self.closes, self.volumes\n        if trend is None or near is None or len(closes) < 12:\n            return None\n        if ctx.close < trend:\n            return \"exit\"\n        down = [vols[i] for i in range(-11, -1) if closes[i] < closes[i - 1]]\n        biggest = max(down) if down else 0\n        if closes[-1] > closes[-2] and ctx.volume > biggest and abs(ctx.close / near - 1) < 0.03:\n            return \"enter\"\n        return None\n"
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "D05",
+    "family": "pattern",
+    "name": "Weekly trend on daily bars",
+    "summary": "Weekly check: buy if last week's close is 5% above a month ago; sell below its 10-week average.",
+    "spec": {
+      "mode": "python",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 12,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "code": "class Strategy:\n    def __init__(self):\n        self.last_day = None\n        self.prev_close = None\n        self.week_closes = []\n\n    def day_number(self, text):\n        y, m, d = int(text[0:4]), int(text[5:7]), int(text[8:10])\n        y -= m <= 2\n        era = (y if y >= 0 else y - 399) // 400\n        yoe = y - era * 400\n        doy = (153 * (m + (-3 if m > 2 else 9)) + 2) // 5 + d - 1\n        doe = yoe * 365 + yoe // 4 - yoe // 100 + doy\n        return era * 146097 + doe - 719468 + (1 if int(text[11:13]) >= 18 else 0)\n\n    def on_bar(self, ctx):\n        day = self.day_number(ctx.time)\n        signal = None\n        if self.last_day is not None and (\n            (day + 3) % 7 < (self.last_day + 3) % 7 or day - self.last_day >= 7\n        ):\n            self.week_closes.append(self.prev_close)\n            weeks = self.week_closes\n            if len(weeks) >= 11:\n                if weeks[-1] < sum(weeks[-10:]) / 10:\n                    signal = \"exit\"\n                elif weeks[-1] / weeks[-5] - 1 > 0.05:\n                    signal = \"enter\"\n        self.last_day = day\n        self.prev_close = ctx.close\n        return signal\n"
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "D06",
+    "family": "pattern",
+    "name": "Volatility expansion",
+    "summary": "Buy a close above the upper band soon after the narrowest Bollinger width in 6 months; sell below EMA 20.",
+    "spec": {
+      "mode": "python",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 8,
+        "targetPercent": null
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      },
+      "code": "class Strategy:\n    def __init__(self):\n        self.widths = []\n        self.armed = 0\n\n    def on_bar(self, ctx):\n        upper = ctx.bb_upper(20, 2)\n        lower = ctx.bb_lower(20, 2)\n        middle = ctx.bb_middle(20, 2)\n        trend = ctx.sma(200)\n        exit_line = ctx.ema(20)\n        if None in (upper, lower, middle, trend, exit_line) or middle <= 0:\n            return None\n        width = (upper - lower) / middle\n        history = self.widths[-126:]\n        self.widths.append(width)\n        if len(history) == 126 and width <= min(history):\n            self.armed = 10\n        elif self.armed > 0:\n            self.armed -= 1\n        if ctx.close < exit_line:\n            return \"exit\"\n        if self.armed > 0 and ctx.close > upper and ctx.close > trend:\n            return \"enter\"\n        return None\n"
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 100"
+      },
+      "from": "2021-10-01",
+      "to": "2024-09-30",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  }
+]
