@@ -11,6 +11,7 @@ from nova_db.models.broker import (
     RateLimitRule,
     RecorderSetting,
 )
+from nova_db.models.coverage import COVERAGE_TIMEFRAMES, CandleDay
 from nova_db.models.data import (
     AuditEntry,
     Candle,
@@ -35,7 +36,9 @@ __all__ = [
     "BrokerKiteApp",
     "BrokerProfile",
     "BrokerSession",
+    "COVERAGE_TIMEFRAMES",
     "Candle",
+    "CandleDay",
     "ChargeRate",
     "DataJob",
     "DataJobStep",

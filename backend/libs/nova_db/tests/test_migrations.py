@@ -28,6 +28,7 @@ EXPECTED_TABLES = {
     "recorder_settings",
     "data_job_steps",
     "download_settings",
+    "candle_days",
 }
 
 
@@ -47,11 +48,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0016(engine: Engine) -> None:
+def test_head_revision_is_0017(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0016"
+    assert head == "0017"
 
 
 def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:
@@ -240,3 +241,36 @@ def test_strategy_delete_is_an_audit_action_until_downgraded(
     _log_strategy_delete(engine)
     with engine.begin() as connection:
         connection.execute(text("DELETE FROM audit_entries WHERE id = 'aud_del'"))
+
+
+def test_candle_days_are_filled_from_the_stored_candles(engine: Engine, database_url: str) -> None:
+    """D63: 0017 counts bars per IST day of each 1m and 1d series once; others are skipped."""
+    rows = [
+        ("RELIANCE", "1m", "2026-09-24 03:45+00"),
+        ("RELIANCE", "1m", "2026-09-24 03:46+00"),
+        ("RELIANCE", "1m", "2026-09-25 03:45+00"),
+        ("RELIANCE", "1d", "2026-09-24 18:30+00"),  # 00:00 IST on 25 Sep
+        ("RELIANCE", "5m", "2026-09-24 03:45+00"),
+    ]
+    with engine.begin() as connection:
+        for symbol, timeframe, ts in rows:
+            connection.execute(
+                text("INSERT INTO candles VALUES ('NSE', :s, :t, :ts, 100, 110, 90, 105, 10)"),
+                {"s": symbol, "t": timeframe, "ts": ts},
+            )
+    try:
+        downgrade(database_url, "0016")
+        upgrade(database_url)
+        with engine.connect() as connection:
+            days = connection.execute(
+                text("SELECT timeframe, day::text, bars FROM candle_days ORDER BY 1, 2")
+            ).all()
+        assert [tuple(d) for d in days] == [
+            ("1d", "2026-09-25", 1),
+            ("1m", "2026-09-24", 2),
+            ("1m", "2026-09-25", 1),
+        ]
+    finally:
+        with engine.begin() as connection:
+            connection.execute(text("DELETE FROM candles WHERE symbol = 'RELIANCE'"))
+            connection.execute(text("DELETE FROM candle_days WHERE symbol = 'RELIANCE'"))

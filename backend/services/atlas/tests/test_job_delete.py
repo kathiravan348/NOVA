@@ -6,7 +6,7 @@ from nova_atlas.broker_client import BrokerData
 from nova_atlas.download import Pacer, run_download
 from nova_atlas.jobs import queue_download
 from nova_atlas.universe import sync_instruments
-from nova_db.models import AuditEntry, Candle, DataJob, DataJobStep
+from nova_db.models import AuditEntry, Candle, CandleDay, DataJob, DataJobStep
 from nova_db.queue import claim_next
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, func, select, update
@@ -136,3 +136,30 @@ def test_candles_only_for_downloads_and_unknown_jobs_404(
     assert refused.status_code == 400
     assert client.delete(f"{JOBS}/{sync['id']}").status_code == 200
     assert client.delete(f"{JOBS}/job_missing").status_code == 404
+
+
+def _days(engine: Engine, symbol: str, timeframe: str = "1d") -> int:
+    with Session(engine) as db:
+        count = db.scalar(
+            select(func.count())
+            .select_from(CandleDay)
+            .where(CandleDay.symbol == symbol, CandleDay.timeframe == timeframe)
+        )
+        return count or 0
+
+
+def test_the_day_summary_follows_downloads_and_deletes(
+    synced: Engine, broker: BrokerData, client: TestClient
+) -> None:
+    """D63: each step recounts its days; deleting a job with its candles recounts them too."""
+    job_id = _download(synced, broker, ["INFY"], date(2026, 9, 15))
+    assert _days(synced, "INFY") == 12
+    _download(synced, broker, ["INFY"], date(2026, 9, 1))  # overlaps: still one row per day
+    assert _days(synced, "INFY") == 22
+
+    client.delete(f"{JOBS}/{job_id}", params={"candles": "true"})
+
+    assert _days(synced, "INFY") == 10  # 1-14 Sep are left
+    with Session(synced) as db:
+        bars = db.scalars(select(CandleDay.bars).where(CandleDay.symbol == "INFY")).all()
+    assert set(bars) == {1}

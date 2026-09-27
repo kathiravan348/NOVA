@@ -22,6 +22,7 @@ from sqlalchemy import delete, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from nova_atlas.candle_days import recount_days
 from nova_atlas.download import IST, market_hours_mode
 from nova_atlas.jobs import to_contract
 from nova_atlas.plan import create_download
@@ -213,6 +214,10 @@ def _delete_candles(db: Session, job: DataJob) -> int:
             Candle.ts < end,
         )
     )
+    for symbol in job.symbols:  # D63: the per-day summary follows the candles
+        recount_days(
+            db, job.exchange, symbol, job.timeframe, start, end - timedelta(microseconds=1)
+        )
     return int(result.rowcount or 0)  # type: ignore[attr-defined]
 
 
