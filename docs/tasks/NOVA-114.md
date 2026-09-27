@@ -4,7 +4,7 @@
 
 ## Goal
 The wire contracts can describe D62 (3), (4) and (6) on both sides, with parity tests, and Orbit shows the new spec parts as
-read-only text. Engine support comes in NOVA-115–117, the editor inputs in NOVA-118/119, and the 5 new indicators in NOVA-116.
+read-only text. Engine support comes in NOVA-115–117, the editor inputs in NOVA-118/119, and the 5 new indicators in NOVA-127.
 
 ## Read first
 - `AGENTS.md`; `docs/DECISIONS.md` D51, D53, D60, D62; `docs/CONTRACTS.md`; every file under Files
@@ -55,7 +55,7 @@ Modify:
 - [ ] `docker compose run --rm backend-check` and `pnpm review:check` pass. Guides: none (users cannot create these yet).
 
 ## Out of scope
-- Engine behaviour (NOVA-115–117), editor inputs (NOVA-118/119), results screens (NOVA-120), new indicators and DB columns (NOVA-116).
+- Engine behaviour (NOVA-115–117), editor inputs (NOVA-118/119), results screens (NOVA-120), new indicators (NOVA-127), DB columns (NOVA-116).
 
 ## Questions
 _(implementer writes here if blocked)_

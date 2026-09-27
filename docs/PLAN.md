@@ -84,7 +84,7 @@ Database design → NOVA Core (gateway + auth) → Broker service (Kite login, t
 
 Futures and options engines come after 059; options wait for the data vendor decision.
 
-### Strategy research (D61, D62; Owner goal 2026-09-27)
+### Strategy research (D61–D63; Owner goal 2026-09-27)
 Goal: ₹10 L → ≥ ₹2.5 L a year after tax, NIFTY 100, backtests ≤ 5 years. The Owner runs backtests by hand;
 Claude ranks the results from the database after each stage (v1 in-sample, v2 out-of-sample, v3 full).
 
@@ -92,9 +92,10 @@ Claude ranks the results from the database after each stage (v1 in-sample, v2 ou
 |---|---|---|
 | 1. Streaming engine (D61) | 109 columns + indicators + rules on arrays · 110 two-pass simulator · 111 Python per stock + limits | 15m and 1m on 100 stocks × 5 years inside 1.5 GB |
 | 2. Housekeeping (D62) | 112 delete strategy · 113 index candles | Old strategies removed from Orbit; NIFTY 50 candles for benchmark and market filter |
-| 3. Spec v2 (D62) | 114 contracts · 115 ranking, max positions, trailing/ATR/time exits, multiplier · 116 indicators, metrics, year table, tax · 117 market filter + rotation | Momentum rotation, trend and pullback families can be expressed |
+| 3. Spec v2 (D62) | 114 contracts · 115 ranking, max positions, trailing/ATR/time exits, multiplier · 127 five indicators · 116 benchmark, metrics, year table, tax · 117 market filter + rotation | Momentum rotation, trend and pullback families can be expressed |
 | 4. Screens (D62) | 118 editor fields · 119 rotation editor · 120 results: years, tax, benchmark | Everything above editable and visible in Orbit |
 | 5. Library (D62) | 121 60 strategies as data (`docs/STRATEGY-LIBRARY.md`) · 122 Library page | Owner adds all 60 and backtests them |
+| 6. Stored data (D63) | 123 contracts · 124 `candle_days` + coverage endpoints · 125 DataTable groups · 126 Relay page | Owner sees stored history and gaps per stock, grouped by index or sector, and fixes gaps with Download missing |
 
 Later: seconds bars from recorded ticks + jump-ahead simulator (D61 (7)); combining 2–3 strategies in one portfolio; paper trading (Phase 2).
 
