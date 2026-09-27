@@ -1,6 +1,6 @@
 # NOVA-118 — Orbit editor: multiplier, exits, portfolio, market filter (D62)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-118 · **Depends on:** NOVA-112, NOVA-114 · **Merge after:** NOVA-115
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-118 · **Depends on:** NOVA-112, NOVA-114 · **Merge after:** NOVA-115
 
 ## Goal
 The visual and Python editors can set and save every D62 (3) field: operand multiplier, trailing stop, ATR stop, max hold,
@@ -60,7 +60,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `operandForm.ts` (new): operand form schema with `multiplier`, checks (`operandIssues`), spec conversion (× 1 and
+bars ago 0 never written). `editorFormExtras.ts`: fields, checks, `extrasFromSpec` / `extrasToSpec` for trailing stop,
+ATR stop, exit after N bars, max positions + rank (switch **Rank buys**, operand limited to price/indicator, order) and
+the market filter (index, one condition, when it fails). `editorForm.ts` uses both (320 → 214 lines).
+`OperandFields`: `rank` and `regime.*` paths, `kinds` prop, a **×** box (placeholder 1). New cards `ExitsFields`,
+`PortfolioFields` (next to each other on desktop, stacked below `lg`), `RegimeFields` (default NIFTY 50 close > SMA(200),
+**No new buys**; index list from `useMarketIndices`), shown in both modes; the spec preview shows them. **Save draft**
+is disabled after a submit while errors remain. The detail page's Versions column already used `modeLabel`.
+- Tests: `editorFormExtras.test.ts` (Turtle round trip, clearing removes, × only when ≠ 1, every range message);
+  `editor.test.tsx` (Turtle page save posts the identical spec, messages + Save disabled/enabled, filter defaults);
+  `editorForm.test.ts` now round-trips every visual/python mock including the Turtle one.
+- Checked in the preview (mock mode): the Turtle edit page renders all cards; no horizontal overflow at 360/375 px;
+  no console errors. Screenshots were not possible (the pane did not paint), so light/dark was not eyeballed.
+- Deviation: `operandForm.ts` is a new file (shared by both form modules).
+Commands: `pnpm review:check` passed. Guides: USER-GUIDE (Step 4 items 5–9).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

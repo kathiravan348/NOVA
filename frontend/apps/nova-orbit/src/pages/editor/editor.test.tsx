@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { EditorView } from "@codemirror/view";
 import { setupServer } from "msw/node";
-import { handlers } from "@nova/mocks";
+import { handlers, mockStrategies } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -56,11 +56,11 @@ describe("Strategy editor", () => {
 
     fireEvent.change(indicator, { target: { value: "macd_signal" } });
     await waitFor(() =>
-      expect(settings()).toEqual(["Fast=12", "Slow=26", "Signal=9", "Bars ago=0"]),
+      expect(settings()).toEqual(["Fast=12", "Slow=26", "Signal=9", "Bars ago=0", "× multiplier="]),
     );
 
     fireEvent.change(indicator, { target: { value: "rsi" } });
-    await waitFor(() => expect(settings()).toEqual(["Period=14", "Bars ago=0"]));
+    await waitFor(() => expect(settings()).toEqual(["Period=14", "Bars ago=0", "× multiplier="]));
   });
 
   it("shows errors and no toast for an invalid form", async () => {
@@ -159,5 +159,53 @@ describe("Strategy editor", () => {
 
     expect(await screen.findByLabelText(/^Add every/)).toHaveValue("5");
     expect(screen.getByLabelText(/^Max extra buys/)).toHaveValue("3");
+  });
+
+  it("saves the ranked Turtle mock unchanged, with every D62 card filled (NOVA-118)", async () => {
+    renderApp("/strategies/stg_004/edit");
+    expect(await screen.findByDisplayValue("Turtle 55/20 (ranked)")).toBeInTheDocument();
+    for (const title of ["Exits", "Portfolio", "Market filter"]) {
+      expect(screen.getByText(title)).toBeInTheDocument();
+    }
+    expect(screen.getByLabelText(/^Trailing stop/)).toHaveValue("15");
+    expect(screen.getByRole("switch", { name: /ATR stop/ })).toBeChecked();
+    expect(screen.getByLabelText(/^Max positions/)).toHaveValue("10");
+    expect(screen.getByRole("switch", { name: /Use a market filter/ })).toBeChecked();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+
+    await waitFor(() => expect(posted).toHaveLength(1));
+    const turtle = mockStrategies.find((s) => s.id === "stg_004")!;
+    const spec = turtle.versions.find((v) => v.version === turtle.latestVersion)!.spec;
+    expect((posted[0]!.body as { spec: unknown }).spec).toEqual(spec);
+  });
+
+  it("checks the new fields and keeps Save off until they are fixed", async () => {
+    renderApp("/strategies/new");
+    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: "Checks" } });
+    fireEvent.change(screen.getByLabelText(/^Quantity/), { target: { value: "5" } });
+    fireEvent.change(screen.getByLabelText(/^Trailing stop/), { target: { value: "60" } });
+    fireEvent.change(screen.getByLabelText(/^Exit after N bars/), { target: { value: "0" } });
+    fireEvent.change(screen.getByLabelText(/^Max positions/), { target: { value: "101" } });
+    const save = screen.getByRole("button", { name: "Save draft" });
+    fireEvent.click(save);
+
+    expect(await screen.findByText("Leave empty, or above 0 and at most 50")).toBeInTheDocument();
+    expect(screen.getByText("Leave empty or a whole number from 1 to 5000")).toBeInTheDocument();
+    expect(screen.getByText("Leave empty or a whole number from 1 to 100")).toBeInTheDocument();
+    await waitFor(() => expect(save).toBeDisabled());
+
+    fireEvent.change(screen.getByLabelText(/^Trailing stop/), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText(/^Exit after N bars/), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText(/^Max positions/), { target: { value: "" } });
+    await waitFor(() => expect(save).toBeEnabled());
+  });
+
+  it("switches the market filter on with NIFTY 50 above SMA(200), no new buys", async () => {
+    renderApp("/strategies/new");
+    fireEvent.click(await screen.findByRole("switch", { name: /Use a market filter/ }));
+
+    expect(await screen.findByLabelText(/^When the filter fails/)).toHaveValue("no_new_entries");
+    expect(screen.getAllByLabelText(/^Period, market filter/)[0]).toHaveValue("200");
   });
 });

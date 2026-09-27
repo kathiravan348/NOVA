@@ -14,8 +14,11 @@ import {
 import { QueryState } from "../../components/QueryState";
 import { BasicsFields } from "./BasicsFields";
 import { EditorFormSchema, emptyForm, fromSpec, toSpec, type EditorForm } from "./editorForm";
+import { ExitsFields } from "./ExitsFields";
 import { ModeSwitch } from "./ModeSwitch";
+import { PortfolioFields } from "./PortfolioFields";
 import { PythonFields } from "./PythonFields";
+import { RegimeFields } from "./RegimeFields";
 import { RuleGroupEditor } from "./RuleGroupEditor";
 import { SpecPreview } from "./SpecPreview";
 
@@ -88,6 +91,11 @@ function StrategyEditor({
       <form onSubmit={form.handleSubmit(onValid)} noValidate className="flex flex-col gap-6">
         <ModeSwitch />
         <BasicsFields />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ExitsFields />
+          <PortfolioFields />
+        </div>
+        <RegimeFields />
         {mode === "visual" ? (
           <div className="flex flex-col gap-6">
             <RuleGroupEditor group="entry" title="Entry rules" />
@@ -98,7 +106,9 @@ function StrategyEditor({
         )}
         <SpecPreview />
         <div className="flex flex-wrap gap-3">
-          <Button type="submit">Save draft</Button>
+          <Button type="submit" disabled={form.formState.isSubmitted && !form.formState.isValid}>
+            Save draft
+          </Button>
           <Button asChild variant="secondary">
             <Link to={cancelTo}>Cancel</Link>
           </Button>
