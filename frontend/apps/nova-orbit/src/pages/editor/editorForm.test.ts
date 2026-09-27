@@ -15,10 +15,8 @@ const validForm = (): EditorForm => ({
 
 describe("editorForm", () => {
   it("round-trips every mock spec, visual and python", () => {
-    // The D62 mocks (portfolio, exits, market filter, rotation) get editor fields in NOVA-118/119.
-    const v2 = new Set(["stg_004", "stg_005"]);
+    // Rotation (stg_005) gets its editor in NOVA-119; stg_004 has every D62 visual setting.
     const all = mockStrategies
-      .filter((s) => !v2.has(s.id))
       .flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })))
       .filter(
         (x): x is typeof x & { spec: Exclude<typeof x.spec, { mode: "rotation" }> } =>

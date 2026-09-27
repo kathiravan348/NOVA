@@ -1,50 +1,43 @@
 import { z } from "zod";
 import {
-  ConditionOpSchema,
   ExchangeSchema,
-  IndicatorNameSchema,
-  PriceFieldSchema,
   RuleGroupCombinatorSchema,
   SegmentSchema,
   StrategySpecPythonSchema,
   StrategySpecVisualSchema,
   TimeframeSchema,
-  indicatorDef,
-  type IndicatorName,
-  type Operand,
   type RuleGroup,
   type StrategySpec,
 } from "@nova/contracts";
+import {
+  ExtrasFormShape,
+  emptyExtras,
+  extrasFromSpec,
+  extrasIssues,
+  extrasToSpec,
+} from "./editorFormExtras";
+import {
+  ConditionFormSchema,
+  emptyOperand,
+  isPositive,
+  isPositiveInt,
+  operandFromSpec,
+  operandIssues,
+  operandToSpec,
+} from "./operandForm";
+
+export { defaultParams, emptyOperand, OperandFormSchema, type OperandForm } from "./operandForm";
 
 /**
  * Form shape for the strategy editor (visual rules or Python). Numeric inputs stay strings
  * (what `<input>` gives) and are checked here; `toSpec` turns a valid form into a contract spec.
  * Rule groups are only validated in visual mode, so hidden rows never block a Python save.
+ * The D62 exits, portfolio and market filter live in `editorFormExtras.ts`.
  */
-
-const isNumber = (v: string) => v.trim() !== "" && Number.isFinite(Number(v));
-const isPositive = (v: string) => isNumber(v) && Number(v) > 0;
-const isPositiveInt = (v: string) => isPositive(v) && Number.isInteger(Number(v));
-const isOffset = (v: string) =>
-  isNumber(v) && Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 500;
-
-export const OperandFormSchema = z.object({
-  kind: z.enum(["price", "indicator", "number"]),
-  field: PriceFieldSchema,
-  name: IndicatorNameSchema,
-  /** The indicator's settings by catalog key (D51). */
-  params: z.record(z.string(), z.string()),
-  /** Bars ago (D51), for price and indicator operands. */
-  offset: z.string(),
-  value: z.string(),
-});
-export type OperandForm = z.infer<typeof OperandFormSchema>;
 
 export const RuleGroupFormSchema = z.object({
   combinator: RuleGroupCombinatorSchema,
-  conditions: z.array(
-    z.object({ left: OperandFormSchema, op: ConditionOpSchema, right: OperandFormSchema }),
-  ),
+  conditions: z.array(ConditionFormSchema),
 });
 export type RuleGroupForm = z.infer<typeof RuleGroupFormSchema>;
 
@@ -86,6 +79,7 @@ export const EditorFormSchema = z
     entry: RuleGroupFormSchema,
     exit: RuleGroupFormSchema,
     code: z.string(),
+    ...ExtrasFormShape,
   })
   .superRefine((f, ctx) => {
     const issue = (path: (string | number)[], message: string) =>
@@ -111,6 +105,7 @@ export const EditorFormSchema = z
         issue(["averagingMaxAdds"], "Whole number from 1 to 10");
       }
     }
+    extrasIssues(f, issue);
     if (f.mode === "python") {
       if (f.code.trim() === "") issue(["code"], "Code is required");
       return;
@@ -121,60 +116,14 @@ export const EditorFormSchema = z
       }
       f[group].conditions.forEach((c, i) => {
         for (const side of ["left", "right"] as const) {
-          const o = c[side];
-          const at = [group, "conditions", i, side];
-          if (o.kind === "indicator") {
-            for (const [key, message] of paramIssues(o)) issue([...at, "params", key], message);
+          for (const [path, message] of operandIssues(c[side])) {
+            issue([group, "conditions", i, side, ...path], message);
           }
-          if (o.kind !== "number" && !isOffset(o.offset)) {
-            issue([...at, "offset"], "Whole number from 0 to 500");
-          }
-          if (o.kind === "number" && !isNumber(o.value)) issue([...at, "value"], "Enter a number");
         }
       });
     }
   });
 export type EditorForm = z.infer<typeof EditorFormSchema>;
-
-/** Field problems of an indicator operand's settings, checked against the catalog (D51). */
-function paramIssues(o: OperandForm): [string, string][] {
-  const params = indicatorDef(o.name)?.params ?? [];
-  const found: [string, string][] = [];
-  for (const p of params) {
-    const v = o.params[p.key] ?? "";
-    if (p.integer ? !isPositiveInt(v) : !isPositive(v)) {
-      found.push([p.key, p.integer ? "Whole number above 0" : "Number above 0"]);
-    }
-  }
-  const fast = o.params["fast"];
-  const slow = o.params["slow"];
-  if (
-    fast !== undefined &&
-    slow !== undefined &&
-    isPositive(fast) &&
-    isPositive(slow) &&
-    Number(fast) >= Number(slow)
-  ) {
-    found.push(["fast", "Must be less than Slow"]);
-  }
-  return found;
-}
-
-/** The catalog defaults of an indicator as form strings. */
-export function defaultParams(name: IndicatorName): Record<string, string> {
-  return Object.fromEntries(
-    (indicatorDef(name)?.params ?? []).map((p) => [p.key, String(p.default)]),
-  );
-}
-
-export const emptyOperand = (kind: OperandForm["kind"]): OperandForm => ({
-  kind,
-  field: "close",
-  name: "sma",
-  params: defaultParams("sma"),
-  offset: "0",
-  value: "0",
-});
 
 export const emptyCondition = (): RuleGroupForm["conditions"][number] => ({
   left: emptyOperand("price"),
@@ -201,32 +150,8 @@ export const emptyForm = (): EditorForm => ({
   entry: { combinator: "all", conditions: [emptyCondition()] },
   exit: { combinator: "any", conditions: [emptyCondition()] },
   code: "",
+  ...emptyExtras(),
 });
-
-/** Known settings come from the spec, missing ones get defaults, unknown ones are dropped (D51). */
-function operandFromSpec(o: Operand): OperandForm {
-  const base = emptyOperand(o.kind);
-  if (o.kind === "number") return { ...base, value: String(o.value) };
-  const offset = String(o.offset ?? 0);
-  if (o.kind === "price") return { ...base, field: o.field, offset };
-  const params = defaultParams(o.name);
-  for (const key of Object.keys(params)) {
-    const value = o.params[key];
-    if (value !== undefined) params[key] = String(value);
-  }
-  return { ...base, name: o.name, params, offset };
-}
-
-function operandToSpec(o: OperandForm): Operand {
-  if (o.kind === "number") return { kind: "number", value: Number(o.value) };
-  const offset = Number(o.offset);
-  const bars = offset > 0 ? { offset } : {};
-  if (o.kind === "price") return { kind: "price", field: o.field, ...bars };
-  const params = Object.fromEntries(
-    (indicatorDef(o.name)?.params ?? []).map((p) => [p.key, Number(o.params[p.key])]),
-  );
-  return { kind: "indicator", name: o.name, params, ...bars };
-}
 
 const groupFromSpec = (g: RuleGroup): RuleGroupForm => ({
   combinator: g.combinator,
@@ -277,6 +202,7 @@ export function fromSpec(
     ...(spec.mode === "visual"
       ? { entry: groupFromSpec(spec.entry), exit: groupFromSpec(spec.exit) }
       : { code: spec.code }),
+    ...extrasFromSpec(spec),
   };
 }
 
@@ -284,6 +210,7 @@ const optionalPercent = (v: string) => (v.trim() === "" ? null : Number(v));
 
 /** Valid form → contract spec, checked with the contract schema for its mode. */
 export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotation" }> {
+  const extras = extrasToSpec(form);
   const base = {
     segment: form.segment,
     exchange: form.exchange,
@@ -297,8 +224,9 @@ export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotatio
     risk: {
       stopLossPercent: optionalPercent(form.stopLossPercent),
       targetPercent: optionalPercent(form.targetPercent),
+      ...extras.risk,
     },
-    // Written only when on, so specs without it round-trip unchanged (D53).
+    // Written only when on, so specs without it round-trip unchanged (D53, D62).
     ...(form.averagingOn
       ? {
           averaging: {
@@ -307,6 +235,8 @@ export function toSpec(form: EditorForm): Exclude<StrategySpec, { mode: "rotatio
           },
         }
       : {}),
+    ...(extras.portfolio ? { portfolio: extras.portfolio } : {}),
+    ...(extras.regime ? { regime: extras.regime } : {}),
   };
   if (form.mode === "python") {
     return StrategySpecPythonSchema.parse({ mode: "python", ...base, code: form.code });

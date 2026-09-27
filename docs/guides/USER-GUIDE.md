@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-127). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-118). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -140,8 +140,26 @@ Go to **Strategies → New strategy** (or **Edit** on an existing one).
      and 3 → buy at ₹100, again at ₹95, ₹90.25 and ₹85.74. Stop-loss and target then count from the
      **average** buy price. In the results the whole position is **one trade**: all the shares, at the
      average price.
-5. The **Spec preview (JSON)** box shows the same rules in computer form. You can ignore it.
-6. Press **Save draft**.
+5. **Exits** (all optional; leave a box empty to not use it):
+   - **Trailing stop** %: sells when the price falls that much below the highest closing price since you
+     bought. It follows the price up and never moves down.
+   - **ATR stop**: the same idea, but the gap is a number of ATRs (**× ATR**) instead of a percentage, so it
+     is wider for jumpy stocks. **Period** is how many candles the ATR averages.
+   - **Exit after N bars**: sells at the next opening price once the stock has been held that many candles.
+   - If a stop-loss, trailing stop and ATR stop are all set, the highest of them counts.
+6. **Portfolio**: **Max positions** is the most stocks held at the same time (empty = no limit). When more
+   stocks want to be bought on the same day than there are free places, **Rank buys** picks which ones:
+   *rank* means sorting them by a number you choose in **Rank buys by** (for example the 6-month rate of
+   change) with **Highest first** or **Lowest first**.
+7. **Market filter**: a *market filter* only lets the strategy trade while the whole market looks healthy.
+   Switch on **Use a market filter**, pick an **Index** and one rule on that index's own prices (it starts
+   as NIFTY 50 close above its 200-day SMA). **When the filter fails**: **No new buys** keeps what you hold
+   but buys nothing new; **Sell everything** sells all holdings at the next open. The index's prices must be
+   downloaded (Step 6b).
+   - The **×** box next to any price or indicator multiplies it, e.g. *Volume > 1.5 × Volume SMA(50)*.
+     Empty means × 1.
+8. The **Spec preview (JSON)** box shows the same rules in computer form. You can ignore it.
+9. Press **Save draft**. It stays greyed out after a try while a box shows an error: fix the boxes in red.
    - New strategy → it is created as version 1 and opens.
    - Existing strategy → a **new version** is saved (the old one stays untouched).
 
