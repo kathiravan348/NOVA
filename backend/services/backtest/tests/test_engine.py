@@ -82,7 +82,12 @@ def seeded(clean: Engine) -> Engine:
     return clean
 
 
-def _queue(engine: Engine, version: int = 2, symbols: tuple[str, ...] = ("INFY", "TCS")) -> str:
+def _queue(
+    engine: Engine,
+    version: int = 2,
+    symbols: tuple[str, ...] = ("INFY", "TCS"),
+    benchmark: str | None = None,
+) -> str:
     with Session(engine) as db:
         db.add(
             BacktestRun(
@@ -95,7 +100,7 @@ def _queue(engine: Engine, version: int = 2, symbols: tuple[str, ...] = ("INFY",
                 date_from=date(2025, 1, 1),
                 date_to=date(2025, 1, 5),
                 initial_capital_paise=10_000_000,
-                benchmark=None,
+                benchmark=benchmark,
             )
         )
         db.commit()
@@ -168,6 +173,50 @@ def test_d62_exits_and_a_ranked_portfolio_run(
     assert run.status == "completed", run.error
     (trade,) = client.get("/api/v1/backtests/run_e2e/trades").json()["items"]
     assert (trade["entryPricePaise"], trade["exitPricePaise"]) == (10_700, 10_500)
+
+
+def test_new_results_carry_the_d62_numbers_and_a_benchmark(
+    seeded: Engine, factory: sessionmaker[Session], client: TestClient, parity: Parity
+) -> None:
+    """NOVA-116: no index candles → null benchmark, the run completes; with them it starts at
+    the initial capital."""
+    _queue(seeded, benchmark="NIFTY 50")
+
+    assert _drain(factory).status == "completed"
+    result = client.get("/api/v1/backtests/run_e2e/result").json()
+    parity.assert_valid(result, "BacktestResult")
+    assert {p["benchmarkPaise"] for p in result["equityCurve"]} == {None}
+    m = result["metrics"]
+    assert m["benchmarkReturnPercent"] is None and m["exposurePercent"] > 0
+    assert m["afterTaxNetPnlPaise"] == m["netPnlPaise"] - m["estimatedTaxPaise"]
+    (year,) = result["years"]
+    assert (year["year"], year["profitPaise"]) == (1, m["netPnlPaise"])
+
+    with Session(seeded) as db:
+        for i, close in enumerate((20_000, 20_200, 19_800, 20_400, 21_000)):
+            ts = datetime.combine(date(2025, 1, 1) + timedelta(days=i), time(0), tzinfo=IST)
+            paise = close * 100
+            db.add(
+                Candle(
+                    exchange="NSE",
+                    symbol="NIFTY 50",
+                    timeframe="1d",
+                    ts=ts,
+                    open_paise=paise,
+                    high_paise=paise,
+                    low_paise=paise,
+                    close_paise=paise,
+                    volume=0,
+                )
+            )
+        db.execute(update(BacktestRun).values(status="queued"))
+        db.commit()
+    _drain(factory)
+    result = client.get("/api/v1/backtests/run_e2e/result").json()
+    curve = [p["benchmarkPaise"] for p in result["equityCurve"]]
+    assert curve[0] == 10_000_000 and curve[-1] == 10_500_000
+    assert result["metrics"]["benchmarkReturnPercent"] == 5.0
+    assert result["years"][0]["benchmarkPercent"] == 5.0
 
 
 def test_a_run_over_the_bar_limit_fails_early(

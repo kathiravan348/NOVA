@@ -48,11 +48,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0017(engine: Engine) -> None:
+def test_head_revision_is_0018(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0017"
+    assert head == "0018"
 
 
 def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:

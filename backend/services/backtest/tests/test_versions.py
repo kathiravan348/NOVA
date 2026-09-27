@@ -124,7 +124,8 @@ def test_a_completed_version_trims_the_older_ones(
     parity: Parity,
 ) -> None:
     v1 = _first(client, factory)
-    before = client.get(f"{BACKTESTS}/{v1}/result").json()["metrics"]
+    before_result = client.get(f"{BACKTESTS}/{v1}/result").json()
+    before, before_years = before_result["metrics"], before_result["years"]
     assert _count(seeded, Trade, v1) == 1
     v2 = client.post(f"{BACKTESTS}/{v1}/versions", json=_body()).json()["id"]
 
@@ -135,6 +136,7 @@ def test_a_completed_version_trims_the_older_ones(
     trimmed = client.get(f"{BACKTESTS}/{v1}/result").json()
     assert trimmed["metrics"] == before
     assert (trimmed["equityCurve"], trimmed["bySymbol"]) == ([], [])
+    assert trimmed["years"] and trimmed["years"] == before_years  # D62: the year table stays
     assert client.get(f"{BACKTESTS}/{v2}").json()["reportKept"] is True
     assert _count(seeded, Trade, v2) == 1
     versions = client.get(f"{BACKTESTS}/{v1}/versions").json()
