@@ -1,6 +1,6 @@
 # NOVA-126 — Relay: Stored data page, group by index/sector, Download missing (D63 (4))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-126 · **Depends on:** NOVA-113, NOVA-123, NOVA-125 · **Merge after:** NOVA-124
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-126 · **Depends on:** NOVA-113, NOVA-123, NOVA-125 · **Merge after:** NOVA-124
 
 ## Goal
 Relay gets a **Stored data** page. It shows, per stock or index and per timeframe, the stored first and last day, the missing
@@ -67,7 +67,18 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. Relay **Stored data** (`/stored-data`, menu after **Instruments**): Timeframe (1d/1m), From/To (last 5 years),
+Group by (None/Index/Sector, default Index), **Only with gaps**, search, calendar note; table Symbol (opens the missing-days
+window), Name, First day, Last day, Days, Missing days, Status badge. `coverageGroups.tsx`: groups (a stock under each of
+its indices; indices under "Indices"), summary ("N stocks · complete · with gaps · partial · no data · missing days"),
+**Download missing** per group. `MissingDaysModal.tsx`: stored range + missing ranges + **Download missing**. Download
+missing navigates to New download with router state `{symbols (not complete), timeframe, from, to}`; > 200 → toast.
+`NewDownloadPage` reads that state (checked with `DataJobPlanRequestSchema`, 1m/1d only; index names go under **Indices**).
+Empty state "No prices stored yet" → New download.
+- Extra files: `ui-core` DataTable `groups` became optional in the grouped props (so a page can switch grouping off);
+  `test/renderApp.tsx` accepts a location with router state.
+- Checked in a mock Relay at desktop (NIFTY BANK open) and 360 px (group cards), dark.
+Commands: `pnpm review:check` passed (851 tests). Guides: USER-GUIDE (Relay Step 6b, §7 row).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass; the real-mode check waits for the deploy (migration 0017). Merged.

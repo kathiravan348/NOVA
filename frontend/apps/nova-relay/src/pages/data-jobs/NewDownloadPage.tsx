@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   DataJobPlanRequestSchema,
@@ -43,6 +43,24 @@ type Draft = DataJob & { plan: DataJobPlan };
 const DOWNLOAD_TIMEFRAMES: Timeframe[] = ["1m", "1d"];
 const message = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 
+/**
+ * Starting values sent by Stored data's **Download missing** (D63); anything invalid is ignored.
+ * Index names contain spaces (NIFTY 50); stock symbols never do.
+ */
+function usePrefill() {
+  const { state } = useLocation() as { state: unknown };
+  const parsed = DataJobPlanRequestSchema.safeParse(state);
+  if (!parsed.success || !DOWNLOAD_TIMEFRAMES.includes(parsed.data.timeframe)) return null;
+  const { symbols, timeframe, from, to } = parsed.data;
+  return {
+    stocks: symbols.filter((s) => !s.includes(" ")),
+    indices: symbols.filter((s) => s.includes(" ")),
+    timeframe,
+    from,
+    to,
+  };
+}
+
 /** Plan a historical download, check what it costs, then **Start** it (D54, D57). */
 export function NewDownloadPage() {
   const toast = useToast();
@@ -51,11 +69,12 @@ export function NewDownloadPage() {
   const plan = usePlanDataJob();
   const change = useChangeDataJob();
   const discard = useDeleteDataJob();
-  const [symbols, setSymbols] = useState<string[]>([]);
-  const [indices, setIndices] = useState<string[]>([]);
-  const [timeframe, setTimeframe] = useState<Timeframe>("1d");
-  const [from, setFrom] = useState(istDaysAgo(365));
-  const [to, setTo] = useState(todayIst());
+  const prefill = usePrefill();
+  const [symbols, setSymbols] = useState<string[]>(prefill?.stocks ?? []);
+  const [indices, setIndices] = useState<string[]>(prefill?.indices ?? []);
+  const [timeframe, setTimeframe] = useState<Timeframe>(prefill?.timeframe ?? "1d");
+  const [from, setFrom] = useState(prefill?.from ?? istDaysAgo(365));
+  const [to, setTo] = useState(prefill?.to ?? todayIst());
   const [segment, setSegment] = useState<Segment>("equity_delivery");
   const [touched, setTouched] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);

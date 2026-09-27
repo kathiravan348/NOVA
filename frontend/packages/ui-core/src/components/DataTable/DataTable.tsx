@@ -54,7 +54,7 @@ interface DataTableGroupedProps<TData> {
    * Rows in collapsible groups, not paginated. Not combined with selection: a row in two groups
    * would show two checkboxes for one choice.
    */
-  groups: DataTableGroups<TData>;
+  groups?: DataTableGroups<TData>;
   selectedIds?: never;
   onSelectedIdsChange?: never;
   isRowSelectable?: never;
