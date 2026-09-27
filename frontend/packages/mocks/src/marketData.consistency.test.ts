@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { mockBacktestRuns, mockCandles, mockInstruments, mockTrades } from "./data";
+import {
+  mockBacktestRuns,
+  mockCandles,
+  mockCoverageDetails,
+  mockCoverageLists,
+  mockInstruments,
+  mockTrades,
+} from "./data";
+import { mockUniverse } from "./handlers/marketData";
 
 describe("Market data consistency rules", () => {
   it("every candle series belongs to a known instrument and timeframe", () => {
@@ -94,5 +102,39 @@ describe("Market data consistency rules", () => {
     const symbols = mockInstruments.map((i) => i.symbol);
     expect(new Set(symbols).size).toBe(symbols.length);
     expect(symbols.length).toBe(24);
+  });
+});
+
+describe("Stored data mocks (D63)", () => {
+  it("lists every stock of the stock list with its sector and indices", () => {
+    for (const list of mockCoverageLists) {
+      const stocks = list.rows.filter((r) => r.kind === "stock");
+      expect(stocks.map((r) => r.symbol).sort()).toEqual(mockUniverse.map((e) => e.symbol).sort());
+      for (const r of stocks) {
+        const entry = mockUniverse.find((e) => e.symbol === r.symbol)!;
+        expect([r.sector, r.indices]).toEqual([entry.sector, entry.indices]);
+      }
+    }
+  });
+
+  it("has every status and details that match their rows", () => {
+    const statuses = new Set(mockCoverageLists.flatMap((l) => l.rows.map((r) => r.status)));
+    expect([...statuses].sort()).toEqual(["complete", "gaps", "none", "partial"]);
+    for (const detail of mockCoverageDetails) {
+      const r = mockCoverageLists
+        .find((l) => l.timeframe === detail.timeframe)!
+        .rows.find((x) => x.symbol === detail.symbol)!;
+      expect([detail.firstDay, detail.lastDay, detail.days, detail.missingDays]).toEqual([
+        r.firstDay,
+        r.lastDay,
+        r.days,
+        r.missingDays,
+      ]);
+    }
+    const withGaps = mockCoverageLists.flatMap((l) =>
+      l.rows.filter((r) => r.status === "gaps").map((r) => `${r.symbol}:${l.timeframe}`),
+    );
+    const detailed = mockCoverageDetails.map((d) => `${d.symbol}:${d.timeframe}`);
+    expect(detailed).toEqual(expect.arrayContaining(withGaps));
   });
 });

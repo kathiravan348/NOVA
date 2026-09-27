@@ -15,5 +15,6 @@ export * from "./error";
 export * from "./marketData";
 export * from "./strategyStats";
 export * from "./universe";
+export * from "./coverage";
 export * from "./recorder";
 export * from "./realtime";

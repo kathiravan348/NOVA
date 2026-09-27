@@ -44,5 +44,9 @@ export const queryKeys = {
     indices: ["market-data", "indices"] as const,
     candles: (symbol: string, timeframe: string) =>
       ["market-data", "candles", symbol, timeframe] as const,
+    coverageAll: ["market-data", "coverage"] as const,
+    coverage: (query: object) => ["market-data", "coverage", "list", query] as const,
+    coverageDetail: (symbol: string, query: object) =>
+      ["market-data", "coverage", "detail", symbol, query] as const,
   },
 };

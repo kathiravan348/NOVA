@@ -30,6 +30,7 @@ import {
   DataJobSchema,
   DownloadSettingsSchema,
 } from "./dataJob";
+import { CoverageDetailSchema, CoverageListSchema } from "./coverage";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema, MarketIndexSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
@@ -59,6 +60,8 @@ const contracts: Record<string, z.ZodType> = {
   BrokerAccountCreate: BrokerAccountCreateSchema,
   BrokerProfile: BrokerProfileSchema,
   Candle: CandleSchema,
+  CoverageDetail: CoverageDetailSchema,
+  CoverageList: CoverageListSchema,
   DataJob: DataJobSchema,
   DataJobCreate: DataJobCreateSchema,
   DataJobDeleteResult: DataJobDeleteResultSchema,

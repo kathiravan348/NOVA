@@ -1,6 +1,6 @@
 # NOVA-123 — Stored data: contracts, mocks, MSW, services (D63)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-123 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-123 · **Depends on:** —
 
 ## Goal
 The wire types for D63 (3) exist on both sides with parity, with static mocks, MSW handlers and TanStack Query hooks. The
@@ -57,7 +57,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `contracts/src/coverage.ts`: `CoverageTimeframe` (`1m`/`1d`), `CoverageStatus`, `CoverageRow`, `CoverageList`
+(+ `calendar`), `MissingRange`, `CoverageDetail`, `CoverageQuery`; Python mirror `nova_contracts/coverage.py` with parity
+tests; schemas `CoverageList.json`, `CoverageDetail.json`. Mock `data/coverage.json` (`lists` for 1d and 1m over
+2026-06-29 → 2026-09-18, every stock of the mock stock list + NIFTY 50 for 1d; all four statuses; `details` for RELIANCE 1d,
+HDFCBANK 1d, INFY 1m, PIDILITIND 1d), generated from `instruments.json`. MSW: `GET /market-data/coverage` (echoes the
+period) and `/coverage/:symbol` (detail, a plain row without gaps, or 404). Services `getCoverage`, `getCoverageDetail`,
+`useCoverage`, `useCoverageDetail` (60 s stale; deleting a job also refreshes coverage).
+- Extra file: `services/src/queries/downloads.ts` (job delete invalidates coverage). Service tests in the new
+  `api/coverage.test.ts` as planned.
+Commands: backend-check 725 passed; `pnpm review:check` passed (840 tests). Maps: CONTRACTS. Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

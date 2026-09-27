@@ -41,7 +41,10 @@ export function useDeleteDataJob() {
       deleteDataJob(jobId, { candles }),
     onSuccess: (result) => {
       removeJobFromCache(queryClient, result.id);
-      return queryClient.invalidateQueries({ queryKey: queryKeys.marketData.instruments });
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.marketData.instruments }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.marketData.coverageAll }),
+      ]);
     },
   });
 }

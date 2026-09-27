@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Timeframe, UniverseEntryWrite } from "@nova/contracts";
+import type { CoverageQuery, Timeframe, UniverseEntryWrite } from "@nova/contracts";
 import {
   createUniverseEntry,
   deleteUniverseEntry,
+  getCoverage,
+  getCoverageDetail,
   listCandles,
   listInstruments,
   listMarketIndices,
@@ -103,4 +105,23 @@ export function useRefreshAfterSync() {
       queryClient.invalidateQueries({ queryKey: queryKeys.marketData.indices }),
       queryClient.invalidateQueries({ queryKey: queryKeys.marketData.instruments }),
     ]);
+}
+
+/** Stored history per stock (D63); refreshed at most once a minute and after a job is deleted. */
+export function useCoverage(query: CoverageQuery) {
+  return useQuery({
+    queryKey: queryKeys.marketData.coverage(query),
+    queryFn: ({ signal }) => getCoverage(query, { signal }),
+    staleTime: 60_000,
+  });
+}
+
+/** One stock's missing ranges (D63); only fetched while `symbol` is set. */
+export function useCoverageDetail(symbol: string | null, query: CoverageQuery) {
+  return useQuery({
+    queryKey: queryKeys.marketData.coverageDetail(symbol ?? "", query),
+    queryFn: ({ signal }) => getCoverageDetail(symbol ?? "", query, { signal }),
+    enabled: Boolean(symbol),
+    staleTime: 60_000,
+  });
 }
