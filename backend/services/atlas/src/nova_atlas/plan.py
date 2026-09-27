@@ -9,7 +9,7 @@ from nova_contracts import MAX_DOWNLOAD_SYMBOLS, DataJobPlan, DataJobPlanSymbol
 from nova_db import new_id
 from nova_db.audit import record_audit
 from nova_db.enums import DOWNLOAD_MODES, DOWNLOAD_TIMEFRAMES, SEGMENTS
-from nova_db.models import DataJob, DataJobStep, Instrument
+from nova_db.models import DataJob, DataJobStep
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
@@ -20,6 +20,7 @@ from nova_atlas.download import (
     plan_chunks,
     request_gap,
 )
+from nova_atlas.tokens import index_names, kite_tokens
 from nova_atlas.universe import load_universe
 
 # Bars in one NSE session (09:15-15:30, 375 minutes) by timeframe.
@@ -102,10 +103,10 @@ def check_request(
     symbols = list(dict.fromkeys(s.strip().upper() for s in symbols if s.strip()))
     if not symbols or len(symbols) > MAX_DOWNLOAD_SYMBOLS:
         raise ValueError(f"Give 1-{MAX_DOWNLOAD_SYMBOLS} symbols")
-    known = {row.symbol for row in load_universe(db)}
+    known = {row.symbol for row in load_universe(db)} | index_names(db)
     unknown = [s for s in symbols if s not in known]
     if unknown:
-        raise ValueError(f"Not in the stock list: {', '.join(unknown)}")
+        raise ValueError(f"Not in the stock list or the indices: {', '.join(unknown)}")
     if timeframe not in DOWNLOAD_TIMEFRAMES:
         raise ValueError("Download 1m or 1d; 3m to 1h are built from 1m")
     if first > last:
@@ -143,15 +144,7 @@ def build_plan(
 ) -> tuple[DataJobPlan, list[PlannedStep]]:
     """Steps in run order (stock by stock, oldest chunk first) and the plan shown before Start."""
     chunks = plan_chunks(first, last, timeframe)
-    synced = set(
-        db.scalars(
-            select(Instrument.symbol).where(
-                Instrument.exchange == exchange,
-                Instrument.symbol.in_(symbols),
-                Instrument.instrument_token.is_not(None),
-            )
-        )
-    )
+    synced = {s for s, token in kite_tokens(db, exchange, symbols).items() if token is not None}
     steps: list[PlannedStep] = []
     per_symbol: list[DataJobPlanSymbol] = []
     rows = 0

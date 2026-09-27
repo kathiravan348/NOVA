@@ -197,3 +197,31 @@ def test_queue_download_is_audited(clean: Engine) -> None:
     with Session(clean) as db:
         entry = db.scalars(select(AuditEntry)).one()
     assert entry.action == "data_job.create" and entry.target_id == job_id
+
+
+def test_an_index_downloads_like_a_stock(synced: Engine, broker: BrokerData) -> None:
+    """D62 (2): index candles are stored under the index name."""
+    for _ in range(2):  # the second run skips nothing but writes the same rows
+        job_id = _queue(synced, ["NIFTY 50"], "1d", date(2026, 9, 1), date(2026, 9, 30))
+        with Session(synced) as db:
+            run_download(db, job_id, broker)
+            job = db.get(DataJob, job_id)
+            assert job is not None and job.status == "completed"
+
+    with Session(synced) as db:
+        symbols = db.scalars(select(Candle.symbol).distinct()).all()
+        count = db.scalar(select(func.count()).select_from(Candle))
+    assert symbols == ["NIFTY 50"] and count == 22
+
+
+def test_an_index_without_a_kite_token_fails_like_a_stock(
+    synced: Engine, broker: BrokerData
+) -> None:
+    job_id = _queue(synced, ["NIFTY BANK"], "1d", date(2026, 9, 1), date(2026, 9, 5))
+
+    with Session(synced) as db:
+        run_download(db, job_id, broker)
+        job = db.get(DataJob, job_id)
+
+    assert job is not None and job.status == "failed"
+    assert job.error == "Not synced with Kite: NIFTY BANK. Run Sync with Kite on Instruments first."

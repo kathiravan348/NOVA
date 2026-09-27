@@ -1,6 +1,6 @@
 # NOVA-113 — Index candles: download indices like stocks (Atlas + Relay) (D62)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-113 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-113 · **Depends on:** —
 
 ## Goal
 An index from `market_indices` (e.g. NIFTY 50) can be downloaded from Relay like a stock, in 1m or 1d. Its candles
@@ -55,7 +55,17 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `nova_atlas/tokens.py`: `kite_tokens` (stocks from `instruments`, then index names from `market_indices`) and
+`index_names`. `check_request` accepts index names ("Not in the stock list or the indices: …"); `build_plan` and
+`run_download` use `kite_tokens`, so an index is planned, skipped/overwritten and stored like a stock under its name.
+Relay **New download** gets an **Indices** card (checkbox per index, "Index prices, used for the benchmark and the
+market filter"); chosen names are appended to the request's `symbols`.
+- Deviation: indices have their own card and count (**Indices (N chosen)**) instead of sharing the stock picker's title
+  and **Clear**; clearer, and the stock picker stays generic.
+- Extra file: `packages/mocks/src/handlers/downloads.ts` (the demo plan accepts index names).
+- Checked in a mock Relay (page text; tests cover the clicks).
+- Real mode: after the image rebuild, download NIFTY 50 and NIFTY 100 **1 day** from 2020-01-01 (Owner).
+Commands: backend-check 706 passed; `pnpm review:check` passed (818 tests). Guides: API, DATABASE, USER-GUIDE.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass; the real-mode download waits for the deploy. Merged.

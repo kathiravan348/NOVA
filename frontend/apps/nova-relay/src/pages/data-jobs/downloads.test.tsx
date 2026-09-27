@@ -82,6 +82,26 @@ describe("New download", () => {
     expect(await screen.findByText("Stocks (0 chosen)")).toBeInTheDocument();
   });
 
+  it("adds index prices to the request and the plan (D62)", async () => {
+    let sent: string[] = [];
+    const capture = async ({ request }: { request: Request }) => {
+      if (new URL(request.url).pathname.endsWith("/data-jobs/plan")) {
+        const body = (await request.clone().json()) as { symbols: string[] };
+        sent = body.symbols;
+      }
+    };
+    server.events.on("request:start", capture);
+    await pickInfy();
+    const nifty = await screen.findByRole("checkbox", { name: "NIFTY 50" });
+    fireEvent.click(nifty);
+    expect(screen.getByText("Indices (1 chosen)")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Check plan" }));
+    expect(await screen.findByText("Check the plan")).toBeInTheDocument();
+    expect(screen.getAllByText("NIFTY 50").length).toBeGreaterThan(0);
+    expect(sent).toEqual(["INFY", "NIFTY 50"]);
+    server.events.removeListener("request:start", capture);
+  });
+
   it("shows the plan, re-plans on Overwrite and starts", async () => {
     await pickInfy();
     fireEvent.click(screen.getByRole("button", { name: "Check plan" }));
