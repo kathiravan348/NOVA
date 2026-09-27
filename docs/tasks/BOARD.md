@@ -125,7 +125,7 @@
 | NOVA-117 | Engine: market filter + rotation mode (D62) | done | Claude | 116, 127 |
 | NOVA-118 | Orbit editor: multiplier, exits, portfolio, market filter (D62) | done | Claude | 112, 114 (merge after 115) |
 | NOVA-119 | Orbit editor: rotation mode (D62) | done | Claude | 118 (merge after 117) |
-| NOVA-120 | Orbit results: year-by-year table, new metrics, tax, benchmark line (D62) | planned | — | 114 |
+| NOVA-120 | Orbit results: year-by-year table, new metrics, tax, benchmark line (D62) | done | Claude | 114 |
 | NOVA-121 | Strategy library: 60 strategies as data, list + install endpoints (D62) | planned | — | 112, 114, 127 |
 | NOVA-122 | Orbit Library page: Add / Add all, Backtest pre-filled (D62) | planned | — | 121 (merge after 117, 119) |
 | NOVA-123 | Stored data: contracts, mocks, MSW, services (D63) | done | Claude | — |

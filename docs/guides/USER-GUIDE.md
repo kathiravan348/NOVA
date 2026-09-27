@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-119). NOVA **never places real orders**: it only
+> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-120). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -228,6 +228,20 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 Open a run from **Backtests**. You see:
 - **Metrics**: Net P&L, Gross P&L, Charges, CAGR (average yearly growth), Max drawdown (biggest fall from a
   high point), Sharpe (profit vs. risk; higher is better), Win rate, number of Trades.
+- A second row of numbers (older runs show "—" for them):
+  - **After-tax CAGR**: the yearly growth after an *estimate* of income tax on share profits at today's rates
+    (short-term 20%, long-term 12.5% above ₹1.25 L a year, plus 4% cess). The card also shows the estimated
+    tax. Intraday runs get no estimate (that income is taxed at your slab rate).
+  - **Benchmark return**: what the same money would have made just following the index you chose (e.g.
+    NIFTY 50) over the same dates. The index prices must be downloaded.
+  - **Time invested**: the share of days on which money was in at least one trade.
+  - **Avg days held**: how long a trade lasted on average.
+  - **Profit factor**: money won on winning trades divided by money lost on losing ones (above 1 = more won
+    than lost).
+  - **Calmar**: CAGR divided by the max drawdown; higher means more growth for each bit of pain.
+- **Year by year**: the run cut into 12-month blocks from its start date (the last may be shorter). Each row
+  shows that year's return, profit, worst fall and the benchmark's return. A year that lost more than 5%
+  gets a red **Below −5%** badge. The profits of all rows add up to the Net P&L.
 - **Equity curve**: a line of your pretend money over time, next to NIFTY 50 if you asked for it.
 - **Results by symbol**: which shares made or lost money. **Show trades** filters the trade list to that share.
 - **Trades**: every pretend buy and sell, with price, quantity, profit and a **charges breakdown**
@@ -241,9 +255,11 @@ closed at 15:20 like Zerodha MIS.
 settings (the strategy stays the same; you can pick another strategy version, other stocks, dates, capital or
 name). **Queue new version** runs it as the next *version* of the same backtest (v2, v3…). The **Backtests**
 list shows only the newest version, with "· v3" after its name. On the run page, the **Versions** table lists
-every version with its settings and key numbers (Net P&L, Return, Win rate, Max drawdown, Trades), so you
+every version with its settings and key numbers (Net P&L, Return, Win rate, Max drawdown, After-tax CAGR,
+Trades), so you
 can see which change helped. To save space, only the newest finished version keeps its full report; an
-older version keeps just its numbers ("Older version: only the summary is kept").
+older version keeps just its numbers and its **Year by year** table ("Older version: only the summary is
+kept").
 
 **Delete backtests you don't want.** On a run's page press **Delete** (you are asked first): the backtest
 and all its versions, trades and results are gone for good. In the **Versions** table the bin button deletes
@@ -251,8 +267,9 @@ just that one older version. In the **Backtests** list, tick several runs and pr
 A run that is still **Running** cannot be deleted or edited; wait for it to finish.
 
 ### Step 7 — Compare runs
-Go to **Compare**, tick two or more runs. NOVA shows their metrics side by side (the best value in each row
-is marked **Best**) and their equity curves together.
+Go to **Compare**, tick two or more runs. NOVA shows their metrics side by side, including after-tax CAGR,
+benchmark return, profit factor and Calmar (the best value in each row is marked **Best**; a row where a run
+shows "—" is not marked) and their equity curves together.
 
 ### Step 8 — Look at market data
 Go to **Market data**. A table lists every share we have prices for, in any candle size (also shares with

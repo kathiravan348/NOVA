@@ -1,6 +1,6 @@
 # NOVA-120 — Orbit results: year-by-year table, new metrics, tax, benchmark line (D62 (6))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-120 · **Depends on:** NOVA-114
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-120 · **Depends on:** NOVA-114
 
 ## Goal
 A backtest's page answers "did it make ₹2.5 L every year after tax?". It shows a **Year by year** table, the new metrics
@@ -54,7 +54,20 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `MetricsGrid`: second row **After-tax CAGR** (caption "Estimated tax ₹…", or "No tax estimate for intraday" /
+"Not estimated for this run"), **Benchmark return** ("NIFTY 50, same period" / "No benchmark prices"), **Time
+invested**, **Avg days held**, **Profit factor**, **Calmar**; null → "—", never 0; takes `benchmark` and `segment`
+(from the run's strategy version). `YearsTable`: card **Year by year** (Year n · period, Return, Profit, Max drawdown,
+Benchmark), `PnLText`/signed mono numbers, **Below −5%** danger badge, hidden when `years` is empty; shown on full and
+slim (older version) runs. The equity curve already draws the benchmark with its "NIFTY 50" legend.
+`VersionsTable`: **After-tax CAGR** column (hidden on mobile). `compareMetrics`: rows After-tax CAGR, Benchmark
+return (not ranked), Profit factor, Calmar; a row where any run has no value is not ranked.
+- Tests: `years.test.tsx` (5-year result served by an MSW override: five labelled rows, badge, "—" benchmark cell, net
+  card equals the rows' sum, new cards; older result → "—" cards, intraday caption, no year card);
+  `compareMetrics.test.ts` (nulls). Mocks were not changed: their runs are 2 weeks long, so the 5-year case lives in
+  the test.
+- Preview (mock, run_001): cards and Year by year render; no overflow at 360 px.
+Commands: `pnpm review:check` passed. Guides: USER-GUIDE (Step 6 numbers and Year by year, Step 7).
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

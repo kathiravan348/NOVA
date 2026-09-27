@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { AlertTriangle, GitCompare, Pencil } from "lucide-react";
-import type { BacktestRun } from "@nova/contracts";
+import type { BacktestRun, Segment } from "@nova/contracts";
 import {
   Button,
   Card,
@@ -29,6 +29,7 @@ import { progressLine } from "./progressText";
 import { SymbolBreakdown } from "./SymbolBreakdown";
 import { TradesTable } from "./TradesTable";
 import { VersionsTable } from "./VersionsTable";
+import { YearsTable } from "./YearsTable";
 
 function RunHeader({ run }: { run: BacktestRun }) {
   const strategy = useStrategy(run.strategyId);
@@ -103,8 +104,15 @@ function RunHeader({ run }: { run: BacktestRun }) {
   );
 }
 
+/** The segment of the run's strategy version (intraday runs have no tax estimate, D62). */
+function useRunSegment(run: BacktestRun): Segment | undefined {
+  const strategy = useStrategy(run.strategyId);
+  return strategy.data?.versions.find((v) => v.version === run.strategyVersion)?.spec.segment;
+}
+
 function CompletedRun({ run }: { run: BacktestRun }) {
   const result = useBacktestResult(run.id);
+  const segment = useRunSegment(run);
   const trades = useBacktestTrades(run.id);
   const [symbol, setSymbol] = useState("");
   const showTrades = (s: string) => {
@@ -119,7 +127,8 @@ function CompletedRun({ run }: { run: BacktestRun }) {
         <QueryError error={result.error} onRetry={() => void result.refetch()} />
       ) : (
         <>
-          <MetricsGrid metrics={result.data.metrics} />
+          <MetricsGrid metrics={result.data.metrics} benchmark={run.benchmark} segment={segment} />
+          <YearsTable years={result.data.years} />
           <Card title="Equity curve">
             <EquityCurve
               points={result.data.equityCurve}
@@ -160,6 +169,7 @@ function CompletedRun({ run }: { run: BacktestRun }) {
 /** An older version keeps only its metrics (D60). */
 function SummaryOnly({ run, newestId }: { run: BacktestRun; newestId?: string }) {
   const result = useBacktestResult(run.id);
+  const segment = useRunSegment(run);
   return (
     <>
       <p className="text-body text-text-secondary">
@@ -175,7 +185,10 @@ function SummaryOnly({ run, newestId }: { run: BacktestRun; newestId?: string })
       ) : result.isError ? (
         <QueryError error={result.error} onRetry={() => void result.refetch()} />
       ) : (
-        <MetricsGrid metrics={result.data.metrics} />
+        <>
+          <MetricsGrid metrics={result.data.metrics} benchmark={run.benchmark} segment={segment} />
+          <YearsTable years={result.data.years} />
+        </>
       )}
     </>
   );

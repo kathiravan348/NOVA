@@ -41,3 +41,15 @@ describe("compareMetrics", () => {
     expect(row("drawdown").format(a!.metrics)).toBe("−0.11%");
   });
 });
+
+describe("D62 rows (NOVA-120)", () => {
+  it("show — for a missing number and never rank a row with one", () => {
+    const x = withMetrics("x", { afterTaxCagrPercent: 12, calmar: 1.2 });
+    const y = withMetrics("y", { afterTaxCagrPercent: null, calmar: 0.4 });
+    expect(row("afterTaxCagr").format(y.metrics)).toBe("—");
+    expect(row("afterTaxCagr").format(x.metrics)).toBe("+12.00%");
+    expect(bestRunId(row("afterTaxCagr"), [x, y])).toBeNull();
+    expect(bestRunId(row("calmar"), [x, y])).toBe("x");
+    expect(bestRunId(row("benchmark"), [x, y])).toBeNull(); // the same index: not ranked
+  });
+});
