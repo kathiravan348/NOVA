@@ -2,18 +2,19 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators_volume import mfi, obv, volume_sma
 
 T0 = datetime(2026, 9, 1, 4, 0, tzinfo=UTC)
 
 
-def _bars(*cv: tuple[float, int]) -> list[Bar]:
+def _bars(*cv: tuple[float, int]) -> Columns:
     """Bars from (close, volume) with no range: typical price = close."""
     bars = []
     for i, (close, volume) in enumerate(cv):
         paise = round(close * 100)
         bars.append(Bar(T0 + timedelta(days=i), paise, paise, paise, paise, volume))
-    return bars
+    return Columns.from_bars(bars)
 
 
 def test_obv_adds_on_up_closes_and_subtracts_on_down_closes() -> None:

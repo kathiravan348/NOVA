@@ -14,7 +14,6 @@ from nova_contracts.strategy import (
     spec_operands,
 )
 from nova_db import new_id
-from nova_db.candles import read_bars
 from nova_db.models import BacktestResult, BacktestRun, Instrument, StrategyVersion, Trade
 from nova_ledger import ChargeRates, rates_for, trade_charges
 from pydantic import TypeAdapter, ValidationError
@@ -22,10 +21,12 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST, Bar
+from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
 from nova_backtest.metrics import summarize
 from nova_backtest.progress import ProgressSink
-from nova_backtest.rules import RuleSignals
+from nova_backtest.rules import Bools, RuleSignals, check_group
+from nova_backtest.rules import signals as rule_signals
 from nova_backtest.sandbox import PythonSignals, run_python
 from nova_backtest.simulate import Signals, simulate
 from nova_backtest.versions import trim_older_versions
@@ -97,14 +98,6 @@ def _symbols(db: Session, run: BacktestRun) -> list[str]:
     return list(rows)
 
 
-def _bars(db: Session, symbol: str, timeframe: str, start: datetime, end: datetime) -> list[Bar]:
-    """3m–1h are rolled up from 1m (D58)."""
-    rows = read_bars(db, "NSE", symbol, timeframe, start, end)
-    return [
-        Bar(r.ts, r.open_paise, r.high_paise, r.low_paise, r.close_paise, r.volume) for r in rows
-    ]
-
-
 def _ist_midnight(day: date) -> datetime:
     return datetime.combine(day, time(0, 0), tzinfo=IST).astimezone(UTC)
 
@@ -118,25 +111,35 @@ class StrategyEngine:
         self,
         db: Session,
         symbols: list[str],
-        timeframe: str,
+        spec: StrategySpecVisual | StrategySpecPython,
         span: tuple[datetime, datetime],
         limit: int,
         progress: ProgressSink,
-    ) -> dict[str, list[Bar]]:
-        """Loads one symbol at a time and stops as soon as the run passes the bar limit (D59)."""
+    ) -> tuple[dict[str, list[Bar]], dict[str, tuple[Bools, Bools]]]:
+        """One stock at a time (D59, D61): its columns, then (visual) its signal arrays at once.
+
+        Stops as soon as the run passes the bar limit. 3m–1h are rolled up from 1m (D58).
+        """
         progress.stage("loading", len(symbols))
+        if isinstance(spec, StrategySpecVisual):
+            check_group(spec.entry)
+            check_group(spec.exit)
         bars: dict[str, list[Bar]] = {}
+        arrays: dict[str, tuple[Bools, Bools]] = {}
         total = 0
         for done, symbol in enumerate(symbols, start=1):
-            bars[symbol] = _bars(db, symbol, timeframe, *span)
-            total += len(bars[symbol])
+            columns = load_columns(db, "NSE", symbol, spec.timeframe, *span)
+            total += len(columns)
             if total > limit:
                 raise EngineError(
                     f"This run needs more than {limit:,} price bars (stopped at {symbol}). "
                     "Pick fewer stocks or a shorter period."
                 )
+            if isinstance(spec, StrategySpecVisual):
+                arrays[symbol] = rule_signals(columns, spec.entry, spec.exit)
+            bars[symbol] = columns.to_bars()  # the simulator still takes Bar lists (NOVA-110)
             progress.advance(done)
-        return bars
+        return bars, arrays
 
     def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         run = db.get(BacktestRun, run_id)
@@ -148,7 +151,7 @@ class StrategyEngine:
         end = _ist_midnight(run.date_to + timedelta(days=1))
         warm_up = timedelta(days=WARM_UP_DAYS.get(spec.timeframe, INTRADAY_WARM_UP_DAYS))
         limit = self.max_bars if isinstance(spec, StrategySpecVisual) else self.max_bars_python
-        bars = self._load(db, symbols, spec.timeframe, (start - warm_up, end), limit, progress)
+        bars, arrays = self._load(db, symbols, spec, (start - warm_up, end), limit, progress)
         missing = [s for s, series in bars.items() if not any(b.ts >= start for b in series)]
         if missing:
             raise EngineError(
@@ -169,7 +172,7 @@ class StrategyEngine:
 
         signals: Signals
         if isinstance(spec, StrategySpecVisual):
-            signals = RuleSignals(bars, spec.entry, spec.exit)
+            signals = RuleSignals.from_arrays(arrays)
         else:
             progress.stage("signals", 1)
             signals = PythonSignals(run_python(spec.code, bars))

@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators import indicator
 from nova_backtest.indicators_trend import (
     adx,
@@ -21,19 +22,21 @@ def _p(rupees: float) -> int:
     return round(rupees * 100)
 
 
-def _bars(*hlc: tuple[float, float, float]) -> list[Bar]:
+def _bars(*hlc: tuple[float, float, float]) -> Columns:
     """Daily bars from (high, low, close) in rupees; open = close."""
-    return [
-        Bar(
-            T0 + timedelta(days=i),
-            round(c * 100),
-            round(h * 100),
-            round(low * 100),
-            round(c * 100),
-            100,
-        )
-        for i, (h, low, c) in enumerate(hlc)
-    ]
+    return Columns.from_bars(
+        [
+            Bar(
+                T0 + timedelta(days=i),
+                round(c * 100),
+                round(h * 100),
+                round(low * 100),
+                round(c * 100),
+                100,
+            )
+            for i, (h, low, c) in enumerate(hlc)
+        ]
+    )
 
 
 def test_wma_weights_the_newest_bar_most() -> None:

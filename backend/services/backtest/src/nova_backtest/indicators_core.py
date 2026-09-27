@@ -7,7 +7,7 @@ one value per bar, `None` until there are enough bars.
 import math
 from collections.abc import Sequence
 
-from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 
 Series = list[float | None]
 
@@ -71,21 +71,22 @@ def macd(closes: Sequence[float], fast: int, slow: int) -> Series:
     ]
 
 
-def vwap(bars: Sequence[Bar]) -> Series:
+def vwap(bars: Columns) -> Series:
     """Volume-weighted typical price, restarting each IST day (a daily bar is its own day)."""
     out: Series = []
     day, value, volume = None, 0.0, 0
-    for bar in bars:
-        if bar.ist_date != day:
-            day, value, volume = bar.ist_date, 0.0, 0
-        typical = (bar.high + bar.low + bar.close) / 300  # rupees
-        value += typical * bar.volume
-        volume += bar.volume
+    columns = (bars.day, bars.high, bars.low, bars.close, bars.volume)
+    for bar_day, high, low, close, bar_volume in zip(*(c.tolist() for c in columns), strict=True):
+        if bar_day != day:
+            day, value, volume = bar_day, 0.0, 0
+        typical = (high + low + close) / 300  # rupees
+        value += typical * bar_volume
+        volume += bar_volume
         out.append(value / volume if volume else typical)
     return out
 
 
-def atr(bars: Sequence[Bar], period: int) -> Series:
+def atr(bars: Columns, period: int) -> Series:
     return wilder(true_ranges(bars), period, period - 1)
 
 
@@ -121,16 +122,12 @@ def ema_of(values: Series, period: int) -> Series:
     return out + tail
 
 
-def rupees(bars: Sequence[Bar]) -> tuple[list[float], list[float], list[float]]:
+def rupees(bars: Columns) -> tuple[list[float], list[float], list[float]]:
     """Highs, lows and closes in rupees."""
-    return (
-        [bar.high / 100 for bar in bars],
-        [bar.low / 100 for bar in bars],
-        [bar.close / 100 for bar in bars],
-    )
+    return (bars.high / 100).tolist(), (bars.low / 100).tolist(), (bars.close / 100).tolist()
 
 
-def true_ranges(bars: Sequence[Bar]) -> list[float]:
+def true_ranges(bars: Columns) -> list[float]:
     highs, lows, closes = rupees(bars)
     return [
         highs[i] - lows[i]

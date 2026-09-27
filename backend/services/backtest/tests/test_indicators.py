@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators import atr, bollinger, ema, indicator, rsi, sma, vwap
 
 
@@ -28,18 +29,20 @@ def test_rsi_uses_wilder_smoothing() -> None:
 
 def test_vwap_restarts_each_ist_day() -> None:
     day = datetime(2026, 9, 24, 3, 45, tzinfo=UTC)
-    bars = [
-        _bar(day, 100, 0, volume=100),
-        _bar(day + timedelta(minutes=5), 110, 0, volume=300),
-        _bar(day + timedelta(days=1), 200, 0, volume=50),
-    ]
+    bars = Columns.from_bars(
+        [
+            _bar(day, 100, 0, volume=100),
+            _bar(day + timedelta(minutes=5), 110, 0, volume=300),
+            _bar(day + timedelta(days=1), 200, 0, volume=50),
+        ]
+    )
 
     assert vwap(bars) == [100.0, 107.5, 200.0]
 
 
 def test_atr_and_bollinger() -> None:
     t0 = datetime(2026, 9, 1, tzinfo=UTC)
-    bars = [_bar(t0 + timedelta(days=i), 100, spread=1) for i in range(5)]
+    bars = Columns.from_bars([_bar(t0 + timedelta(days=i), 100, spread=1) for i in range(5)])
 
     assert atr(bars, 3)[:2] == [None, None]
     assert atr(bars, 3)[4] == pytest.approx(2.0)  # constant ₹2 range
@@ -48,6 +51,6 @@ def test_atr_and_bollinger() -> None:
 
 def test_bad_parameters_are_refused() -> None:
     with pytest.raises(ValueError, match="period"):
-        indicator("sma", {"period": 0}, [])
+        indicator("sma", {"period": 0}, Columns.from_bars([]))
     with pytest.raises(ValueError, match="period"):
-        indicator("rsi", {"period": 2.5}, [])
+        indicator("rsi", {"period": 2.5}, Columns.from_bars([]))

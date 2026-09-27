@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime, time, timedelta
 
 import pytest
 from nova_backtest.bars import IST, Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators import indicator
 from nova_backtest.indicators_levels import donchian, keltner, level
 from nova_backtest.strategy_engine import StrategyEngine
@@ -22,7 +23,9 @@ def _bar(ts: datetime, high: float, low: float, close: float) -> Bar:
 
 def test_donchian_includes_the_current_bar() -> None:
     hlc = [(10, 8, 9), (12, 9, 11), (11, 7, 8)]
-    bars = [_bar(T0 + timedelta(days=i), h, low, c) for i, (h, low, c) in enumerate(hlc)]
+    bars = Columns.from_bars(
+        [_bar(T0 + timedelta(days=i), h, low, c) for i, (h, low, c) in enumerate(hlc)]
+    )
 
     assert donchian(bars, 2, upper=True) == [None, 12, 12]
     assert donchian(bars, 2, upper=False) == [None, 8, 7]
@@ -30,7 +33,7 @@ def test_donchian_includes_the_current_bar() -> None:
 
 def test_keltner_is_ema_plus_minus_atr() -> None:
     # closes 10, 10, 10 with a ₹2 range: EMA(2) 10, ATR(2) 2 → 10 ± 1.5 · 2
-    bars = [_bar(T0 + timedelta(days=i), 11, 9, 10) for i in range(3)]
+    bars = Columns.from_bars([_bar(T0 + timedelta(days=i), 11, 9, 10) for i in range(3)])
 
     assert keltner(bars, 2, 1.5, 2, upper=True) == pytest.approx([None, 13, 13])
     assert keltner(bars, 2, 1.5, 2, upper=False) == pytest.approx([None, 7, 7])
@@ -39,13 +42,15 @@ def test_keltner_is_ema_plus_minus_atr() -> None:
 def test_previous_ist_day_levels_on_five_minute_bars() -> None:
     # 18:25 UTC is 23:55 IST; 10 minutes later it is the next IST day.
     late = datetime(2026, 9, 1, 18, 25, tzinfo=UTC)
-    bars = [
-        _bar(late - timedelta(minutes=5), 105, 100, 102),  # IST 1 Sep
-        _bar(late, 108, 101, 104),  # IST 1 Sep → H 108, L 100, C 104
-        _bar(late + timedelta(minutes=10), 110, 103, 109),  # IST 2 Sep
-        _bar(late + timedelta(days=1), 112, 99, 100),  # IST 2 Sep 23:55 → H 112, L 99, C 100
-        _bar(late + timedelta(days=1, minutes=10), 101, 98, 99),  # IST 3 Sep
-    ]
+    bars = Columns.from_bars(
+        [
+            _bar(late - timedelta(minutes=5), 105, 100, 102),  # IST 1 Sep
+            _bar(late, 108, 101, 104),  # IST 1 Sep → H 108, L 100, C 104
+            _bar(late + timedelta(minutes=10), 110, 103, 109),  # IST 2 Sep
+            _bar(late + timedelta(days=1), 112, 99, 100),  # IST 2 Sep 23:55 → H 112, L 99, C 100
+            _bar(late + timedelta(days=1, minutes=10), 101, 98, 99),  # IST 3 Sep
+        ]
+    )
 
     assert level(bars, "prev_day_high") == [None, None, 108, 108, 112]
     assert level(bars, "prev_day_low") == [None, None, 100, 100, 99]
@@ -57,7 +62,9 @@ def test_previous_ist_day_levels_on_five_minute_bars() -> None:
 
 def test_daily_bars_use_the_previous_bar() -> None:
     start = datetime(2026, 9, 1, tzinfo=IST).astimezone(UTC)
-    bars = [_bar(start + timedelta(days=i), 10 + i, 5 + i, 8 + i) for i in range(3)]
+    bars = Columns.from_bars(
+        [_bar(start + timedelta(days=i), 10 + i, 5 + i, 8 + i) for i in range(3)]
+    )
 
     assert indicator("prev_day_high", {}, bars) == [None, 10, 11]
     assert indicator("prev_day_close", {}, bars) == [None, 8, 9]

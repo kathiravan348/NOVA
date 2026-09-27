@@ -12,6 +12,7 @@ from typing import NoReturn
 from nova_contracts.indicators import BY_NAME, param_problems
 
 from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.engine import EngineError
 from nova_backtest.indicators import indicator
 
@@ -147,7 +148,10 @@ def run_python(
 ) -> dict[str, list[str | None]]:
     calls = check_code(code) or {}
     indicators = {
-        symbol: {key: indicator(name, params, rows) for key, (name, params) in calls.items()}
+        symbol: {
+            key: indicator(name, params, Columns.from_bars(rows))
+            for key, (name, params) in calls.items()
+        }
         for symbol, rows in bars.items()
     }
     catalog = {

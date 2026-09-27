@@ -9,6 +9,7 @@ dependencies = [
     "nova-contracts",
     "nova-db",
     "nova-ledger",
+    "numpy==2.5.3",
     "uvicorn==0.53.0",
 ]
 

@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 
+import numpy as np
 import pytest
 from nova_backtest.bars import Bar
 from nova_backtest.engine import EngineError
@@ -85,7 +86,8 @@ def test_close_above_the_previous_high() -> None:
 
     # previous highs −, 10, 12, 12: bar 1 11 > 10, bar 2 13 > 12, bar 3 13 > 12; bar 0 has none
     assert [holds(group, cache, i) for i in range(4)] == [False, True, True, True]
-    assert cache.values(_price(3)) == [None, None, None, 9.0]
+    values = cache.values(_price(3))  # NaN where no bar is 3 bars back (D61 arrays)
+    assert np.isnan(values[:3]).all() and values[3] == 9.0
 
 
 def _price(offset: int) -> OperandPrice:

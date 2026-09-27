@@ -1,6 +1,6 @@
 # NOVA-109 — Engine: numpy bar columns; indicators and visual rules on arrays (D61)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-109 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-109 · **Depends on:** —
 
 ## Goal
 Step 1 of the streaming engine (D61). Bars are loaded as numpy columns, indicators return float64 arrays and
@@ -57,7 +57,20 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `numpy==2.5.3` (exact pin, `uv.lock`). `columns.py`: `Columns` (int64 `ts` epoch seconds, OHLC paise, volume;
+int32 IST `day`), `from_bars`, `to_bars`, `time(i)`, and `load()` that reads one IST calendar year at a time and turns each
+window into arrays at once. Indicators take `Columns` (same algorithms, same float results: `rupees()` is `col / 100`);
+`indicator()` still returns the `None`-padded list (exact engine values, Python ctx JSON), `indicator_array()` gives
+float64 with NaN. `rules.py`: `SeriesCache` of arrays, `condition_holds` / `group_holds` over whole arrays (NaN never
+holds; crosses need both previous values; `eq` within 1e-9), `signals(columns, entry, exit)`, `check_group`,
+`RuleSignals.from_arrays`; `holds(group, cache, i)` kept for bar-by-bar callers. The engine loads each stock as columns and
+computes its visual signal arrays straight away, then hands `to_bars()` lists to the unchanged simulator.
+- Deviation: `indicator()` keeps returning lists (with `indicator_array()` beside it) so every expected value and the
+  sandbox JSON stay as they were. The per-bar reference lives inside `test_columns.py` (pytest does not import sibling
+  modules here), not in `reference_rules.py`.
+- Tests: 30 random series × 84 rule groups equal the per-bar reference; every catalog indicator's array equals its list
+  (daily and 15m bars); `load()` over 3 years equals one `read_bars` for 1d and rolled-up 15m. Existing values unchanged.
+Commands: backend-check 766 passed. Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

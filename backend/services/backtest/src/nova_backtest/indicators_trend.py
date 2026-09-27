@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 
-from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators_core import Series, atr, ema_of, macd, rupees, true_ranges, wilder
 
 
@@ -28,7 +28,7 @@ def macd_hist(closes: Sequence[float], fast: int, slow: int, signal: int) -> Ser
     ]
 
 
-def supertrend(bars: Sequence[Bar], period: int, multiplier: float) -> Series:
+def supertrend(bars: Columns, period: int, multiplier: float) -> Series:
     """The active band: the lower band in an up-trend, the upper band in a down-trend.
 
     Bands are hl2 ± multiplier × ATR, carried the standard way; the first value counts as up-trend.
@@ -58,7 +58,7 @@ def supertrend(bars: Sequence[Bar], period: int, multiplier: float) -> Series:
     return out
 
 
-def _directional(bars: Sequence[Bar], period: int) -> tuple[Series, Series]:
+def _directional(bars: Columns, period: int) -> tuple[Series, Series]:
     """+DI and −DI (Wilder): defined from index `period`."""
     highs, lows, _ = rupees(bars)
     plus_dm, minus_dm = [0.0], [0.0]
@@ -79,15 +79,15 @@ def _directional(bars: Sequence[Bar], period: int) -> tuple[Series, Series]:
     return plus, minus
 
 
-def plus_di(bars: Sequence[Bar], period: int) -> Series:
+def plus_di(bars: Columns, period: int) -> Series:
     return _directional(bars, period)[0]
 
 
-def minus_di(bars: Sequence[Bar], period: int) -> Series:
+def minus_di(bars: Columns, period: int) -> Series:
     return _directional(bars, period)[1]
 
 
-def adx(bars: Sequence[Bar], period: int) -> Series:
+def adx(bars: Columns, period: int) -> Series:
     """Wilder average of DX; the first value is at index 2 × period − 1."""
     plus, minus = _directional(bars, period)
     dx = [0.0] * len(bars)
@@ -97,7 +97,7 @@ def adx(bars: Sequence[Bar], period: int) -> Series:
     return wilder(dx, period, 2 * period - 1)
 
 
-def psar(bars: Sequence[Bar], step: float, maximum: float) -> Series:
+def psar(bars: Columns, step: float, maximum: float) -> Series:
     """Wilder's Parabolic SAR. Starts in an up-trend at bar 1 with SAR = bar 0 low, EP = bar 0 high.
 
     On a reversal the bar's value is the new SAR (the previous extreme point).

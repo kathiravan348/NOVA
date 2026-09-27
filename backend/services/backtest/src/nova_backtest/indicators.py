@@ -4,11 +4,13 @@ Settings are checked against `nova_contracts.indicators`; missing ones get the c
 Every series has one value per bar, `None` until there are enough bars; values are rupee floats.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 
+import numpy as np
+import numpy.typing as npt
 from nova_contracts.indicators import BY_NAME, check_params
 
-from nova_backtest.bars import Bar
+from nova_backtest.columns import Columns
 from nova_backtest.indicators_core import (
     Series,
     atr,
@@ -33,7 +35,20 @@ from nova_backtest.indicators_trend import (
 )
 from nova_backtest.indicators_volume import mfi, obv, volume_sma
 
-__all__ = ["Series", "atr", "bollinger", "ema", "indicator", "rsi", "sma", "vwap"]
+Floats = npt.NDArray[np.float64]
+
+__all__ = [
+    "Floats",
+    "Series",
+    "atr",
+    "bollinger",
+    "ema",
+    "indicator",
+    "indicator_array",
+    "rsi",
+    "sma",
+    "vwap",
+]
 
 
 class Settings:
@@ -49,7 +64,7 @@ class Settings:
         return self._values[key]
 
 
-Compute = Callable[[Sequence[Bar], list[float], Settings], Series]
+Compute = Callable[[Columns, list[float], Settings], Series]
 
 _DISPATCH: dict[str, Compute] = {
     "sma": lambda _, c, s: sma(c, s.whole("period")),
@@ -104,6 +119,12 @@ def settings_for(name: str, params: dict[str, float]) -> Settings:
     return Settings(BY_NAME[name].defaults() | params)
 
 
-def indicator(name: str, params: dict[str, float], bars: Sequence[Bar]) -> Series:
+def indicator(name: str, params: dict[str, float], bars: Columns) -> Series:
+    """One value per bar, `None` until there are enough bars (the engine's exact values)."""
     settings = settings_for(name, params)
-    return _DISPATCH[name](bars, [bar.close / 100 for bar in bars], settings)
+    return _DISPATCH[name](bars, (bars.close / 100).tolist(), settings)
+
+
+def indicator_array(name: str, params: dict[str, float], bars: Columns) -> Floats:
+    """The same values as a float64 array, NaN where `indicator` gives `None` (D61)."""
+    return np.array(indicator(name, params, bars), dtype=np.float64)
