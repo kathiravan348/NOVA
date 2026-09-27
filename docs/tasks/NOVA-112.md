@@ -1,6 +1,6 @@
 # NOVA-112 — Delete strategy: endpoint, audit, Orbit button (D62, migration 0016)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-112 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-112 · **Depends on:** —
 
 ## Goal
 The Owner can delete a strategy from its Orbit page. This removes every version and every backtest of it
@@ -60,7 +60,17 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `DELETE /strategies/{id}` (locks the strategy and its runs, 400 while one is `running`, deletes runs → results/trades
+cascade, then the strategy → versions cascade, audit `strategy.delete`, answers `BacktestDeleteResult`). Migration 0016 adds
+the audit action (downgrade removes those rows). Orbit: **Delete strategy** on the detail page (confirm names how many
+backtests go, toast, back to the list); `ConfirmDelete`/`useFailToast` exported from `DeleteBacktestButton.tsx` with a
+`detail` line. Services `deleteStrategy` / `useDeleteStrategy`; stateless MSW handler; Relay audit label "Strategy deleted".
+- Extra files: `apps/nova-relay/src/lib/labels.ts` (audit label, found by typecheck); `.claude/launch.json` gains
+  `nova-orbit-check` / `nova-relay-check` mock previews on 3100/3101 (the Owner's real-mode apps use 3000/3001).
+- Checked in a mock Orbit at 360 px and desktop (dark): the buttons wrap, the confirm reads "…4 backtests…".
+- Real mode needs the backend image rebuilt (`strategy` service) and migration 0016; done with the deploy after this batch.
+Commands: backend-check 702 passed; `pnpm review:check` passed (817 tests). Guides: API, DATABASE, USER-GUIDE.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. All acceptance checks pass except the real-mode throwaway check, which waits for the
+image rebuild (tests cover the same flow against a real database). Merged.

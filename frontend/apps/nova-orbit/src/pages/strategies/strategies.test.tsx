@@ -122,6 +122,34 @@ describe("Strategy detail", () => {
     expect(await screen.findByText(/Python strategy/)).toBeInTheDocument();
   });
 
+  it("deletes a strategy after a confirm and goes back to the list (D62)", async () => {
+    const { router } = renderApp("/strategies/stg_001");
+    fireEvent.click(await screen.findByRole("button", { name: "Delete strategy" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete VWAP Momentum Intraday?" });
+    expect(
+      await within(dialog).findByText(
+        "This cannot be undone. All its versions and 4 backtests are deleted too.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByText("Deleted VWAP Momentum Intraday")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/strategies");
+  });
+
+  it("keeps the strategy when the confirm is cancelled or a backtest is running", async () => {
+    const { router } = renderApp("/strategies/stg_002");
+    fireEvent.click(await screen.findByRole("button", { name: "Delete strategy" }));
+    let dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Keep it" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete strategy" }));
+    dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByText("Wait for the running backtest to finish")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/strategies/stg_002");
+  });
+
   it("shows Not found for an unknown id", async () => {
     renderApp("/strategies/nope");
     expect(await screen.findByText("Not found")).toBeInTheDocument();

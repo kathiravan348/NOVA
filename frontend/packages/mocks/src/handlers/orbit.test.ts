@@ -300,6 +300,16 @@ describe("Orbit MSW handlers", () => {
     expect((await del("nope")).status).toBe(404);
   });
 
+  it("DELETE /api/v1/strategies/:id deletes it with its backtests (D62)", async () => {
+    const del = (id: string) =>
+      fetch(`http://localhost/api/v1/strategies/${id}`, { method: "DELETE" });
+    const res = await del("stg_001");
+    expect(res.status).toBe(200);
+    expect(BacktestDeleteResultSchema.parse(await res.json()).deletedRuns).toBe(4);
+    expect((await del("stg_002")).status).toBe(400); // one of its runs is running
+    expect((await del("stg_nope")).status).toBe(404);
+  });
+
   it("POST /api/v1/backtests/delete removes whole backtests", async () => {
     const post = (ids: string[]) =>
       fetch("http://localhost/api/v1/backtests/delete", {

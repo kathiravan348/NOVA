@@ -47,11 +47,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0015(engine: Engine) -> None:
+def test_head_revision_is_0016(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0015"
+    assert head == "0016"
 
 
 def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:
@@ -212,3 +212,31 @@ def test_deletes_are_announced_until_downgraded(engine: Engine, database_url: st
 
     upgrade(database_url)
     assert "OR DELETE" in _trigger_events(engine)
+
+
+def _log_strategy_delete(engine: Engine) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO audit_entries (id, actor_name, action, summary)"
+                " VALUES ('aud_del', 'Owner', 'strategy.delete', 'Deleted strategy X')"
+            )
+        )
+
+
+def test_strategy_delete_is_an_audit_action_until_downgraded(
+    engine: Engine, database_url: str
+) -> None:
+    _log_strategy_delete(engine)
+
+    downgrade(database_url, "0015")
+    with engine.connect() as connection:
+        left = connection.execute(
+            text("SELECT count(*) FROM audit_entries WHERE action = 'strategy.delete'")
+        ).scalar_one()
+    assert left == 0
+
+    upgrade(database_url)
+    _log_strategy_delete(engine)
+    with engine.begin() as connection:
+        connection.execute(text("DELETE FROM audit_entries WHERE id = 'aud_del'"))

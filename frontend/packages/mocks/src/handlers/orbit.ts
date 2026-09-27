@@ -139,6 +139,17 @@ export const orbitHandlers = [
     return HttpResponse.json({ ...strategy, ...parsed.data, updatedAt: MOCK_NOW });
   }),
 
+  http.delete(apiPath("/strategies/:id"), ({ params }) => {
+    const id = params["id"] as string;
+    if (!mockStrategies.some((s) => s.id === id)) return notFound(`Strategy ${id} not found`);
+    const runs = mockBacktestRuns.filter((r) => r.strategyId === id);
+    if (runs.some((r) => r.status === "running")) {
+      return badRequest("Wait for the running backtest to finish");
+    }
+    const body: BacktestDeleteResult = { deletedRuns: runs.length };
+    return HttpResponse.json(body);
+  }),
+
   http.get(apiPath("/backtests"), ({ request }) => {
     const strategyId = new URL(request.url).searchParams.get("strategyId");
     const newest = mockBacktestRuns.filter(isNewest);

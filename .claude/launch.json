@@ -18,6 +18,46 @@
       "port": 3000
     },
     {
+      "name": "nova-orbit-check",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "--filter",
+        "nova-orbit",
+        "exec",
+        "vite",
+        "--port",
+        "3100",
+        "--strictPort"
+      ],
+      "port": 3100
+    },
+    {
+      "name": "nova-relay-check",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=24",
+        "--",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "--filter",
+        "nova-relay",
+        "exec",
+        "vite",
+        "--port",
+        "3101",
+        "--strictPort"
+      ],
+      "port": 3101
+    },
+    {
       "name": "nova-orbit-real",
       "runtimeExecutable": "fnm",
       "runtimeArgs": [

@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 27 Sep 2026 (NOVA-106). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 27 Sep 2026 (NOVA-112). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -86,6 +86,7 @@ rate-limiter slot first (up to 20 s, else 503).
 | `POST /strategies` | Creates a strategy as `draft`, version 1 (note "First version"). Audit: `strategy.create`. | `StrategyCreate {name, description, spec}` | 201 `Strategy` |
 | `POST /strategies/{id}/versions` | Saves a **new immutable version** (latest + 1). Old versions never change. Audit: `strategy.update`. | `StrategyVersionCreate {note, spec}` | 201 `Strategy` |
 | `PATCH /strategies/{id}` | Renames, changes description or status (`draft` / `active` / `archived`). At least one field. Audit: `strategy.update`. | `StrategyUpdate {name?, description?, status?}` | `Strategy`; 400 if empty |
+| `DELETE /strategies/{id}` | Deletes the strategy, all its versions and every backtest run of it (their results and trades too), D62. Refused while one of its runs is `running`; `queued` runs are deleted. Audit: `strategy.delete` ("Deleted strategy X (N backtest runs)"). | path | `BacktestDeleteResult {deletedRuns}`; 400 a run is running; 404 |
 
 Visual specs (D51): indicator operands use the 38-indicator catalog (`frontend/packages/contracts/schema/indicators.json`:
 name, label, group, params with default and whole-number flag). Price and indicator operands take optional
@@ -100,7 +101,7 @@ the whole position is one `Trade` (qty = all shares, `entryPricePaise` = average
 
 `spec` holds: mode (`visual` rules or `python` code), segment, exchange, timeframe, entry/exit rule groups
 (`all`/`any` of conditions *operand · op · operand*), sizing (fixed qty / fixed amount / percentage), stop-loss %, target %.
-No delete in Phase 1 (runs refer to versions).
+Versions are never deleted on their own; `DELETE /strategies/{id}` removes a whole strategy with its versions and backtests (D62).
 
 ## 4. Backtest service — runs, results, trades (`/backtests`)
 

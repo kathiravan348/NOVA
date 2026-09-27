@@ -17,6 +17,7 @@ import {
   addBacktestVersion,
   deleteBacktest,
   deleteBacktests,
+  deleteStrategy,
   getBacktest,
   getBacktestResult,
   getMe,
@@ -239,5 +240,20 @@ export function useDeleteBacktests() {
   return useMutation({
     mutationFn: (ids: string[]) => deleteBacktests(ids),
     onSuccess: (_, ids) => forget(ids),
+  });
+}
+
+/** Deletes a strategy (D62): forget its page, refresh strategies, stats and every backtest list. */
+export function useDeleteStrategy() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (strategyId: string) => deleteStrategy(strategyId),
+    onSuccess: (_, strategyId) => {
+      client.removeQueries({ queryKey: queryKeys.strategies.detail(strategyId) });
+      return Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.strategies.all }),
+        client.invalidateQueries({ queryKey: queryKeys.backtests.all }),
+      ]);
+    },
   });
 }

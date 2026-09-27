@@ -16,6 +16,7 @@ AuditAction = Literal[
     "broker.kite_app_update",
     "strategy.create",
     "strategy.update",
+    "strategy.delete",
     "backtest.run",
     "backtest.edit",
     "backtest.delete",
