@@ -1,6 +1,6 @@
 # NOVA-125 — ui-core DataTable: group rows (D63 (5))
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-125 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-125 · **Depends on:** —
 
 ## Goal
 `DataTable` can show its rows in collapsible groups. A row may sit in several groups, and each group header shows a summary
@@ -58,7 +58,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done. `DataTableGroups.tsx`: `DataTableGroups<T>` (`of`, `label`, `summary`, `actions`, `order`, `defaultOpen`),
+`groupRows` (filtered + sorted rows into groups; a row may sit in several), `useOpenGroups`, `DataRow` (shared body row),
+`DataTableGroupBodies` (desktop: one `<tbody>` per group, header `<th scope="rowgroup">` with a real `<button
+aria-expanded>`, summary, actions) and `DataTableGroupCards` (mobile: header card + that group's cards). `DataTable` gets
+`groups` (props are a union: groups or selection, never both), no pagination while grouped, empty state when no row is
+in any group. `DataTableCards` gets an optional `rows` subset.
+- Deviation: the header row moved to a new `DataTableHead.tsx` to keep `DataTable.tsx` under 300 lines.
+- Stories: Grouped, GroupedOpen, GroupedWithSearch, GroupedLoading, GroupedEmpty (fruit by colour; Apple is red and green).
+- Checked in Storybook: GroupedOpen at desktop and 360 px (dark).
+Commands: `pnpm review:check` passed. Maps: COMPONENTS. Guides: none.
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Built and reviewed by Claude. Acceptance checks pass. Merged.

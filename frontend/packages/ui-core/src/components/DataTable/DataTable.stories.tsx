@@ -2,7 +2,18 @@ import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { DataTable } from "./DataTable";
 import { Select } from "../Select/Select";
-import { fileColumns, fileSearchText, sampleFiles, type FileItem } from "./storyData";
+import {
+  fileColumns,
+  fileSearchText,
+  fruitColumns,
+  fruitSearchText,
+  sampleFiles,
+  sampleFruits,
+  type FileItem,
+  type Fruit,
+} from "./storyData";
+import type { DataTableGroups } from "./DataTableGroups";
+import { Button } from "../Button/Button";
 
 const meta: Meta<typeof DataTable<FileItem>> = {
   title: "Core/DataTable",
@@ -144,4 +155,76 @@ export const EmptySearchResult: Story = {
     setter?.call(input, "zzz");
     input.dispatchEvent(new Event("input", { bubbles: true }));
   },
+};
+
+const byColour = (defaultOpen = false): DataTableGroups<Fruit> => ({
+  of: (fruit) => fruit.colours,
+  summary: (_, rows) =>
+    `${rows.length} ${rows.length === 1 ? "fruit" : "fruits"} · ${rows.reduce((n, f) => n + f.stock, 0)} in stock`,
+  actions: (colour) => (
+    <Button size="sm" variant="secondary">
+      Order {colour.toLowerCase()}
+    </Button>
+  ),
+  defaultOpen,
+});
+
+/** Rows in collapsible groups (D63); Apple is both red and green. */
+export const Grouped: Story = {
+  render: () => (
+    <DataTable<Fruit>
+      caption="Fruit by colour"
+      columns={fruitColumns}
+      data={sampleFruits}
+      groups={byColour()}
+    />
+  ),
+};
+
+export const GroupedOpen: Story = {
+  render: () => (
+    <DataTable<Fruit>
+      caption="Fruit by colour, open"
+      columns={fruitColumns}
+      data={sampleFruits}
+      groups={byColour(true)}
+      initialSort={[{ id: "stock", desc: true }]}
+    />
+  ),
+};
+
+export const GroupedWithSearch: Story = {
+  render: () => (
+    <DataTable<Fruit>
+      caption="Fruit by colour with search"
+      columns={fruitColumns}
+      data={sampleFruits}
+      groups={byColour(true)}
+      search={{ label: "Search fruit", getText: fruitSearchText }}
+    />
+  ),
+};
+
+export const GroupedLoading: Story = {
+  render: () => (
+    <DataTable<Fruit>
+      caption="Fruit by colour, loading"
+      columns={fruitColumns}
+      data={[]}
+      groups={byColour()}
+      loading
+    />
+  ),
+};
+
+export const GroupedEmpty: Story = {
+  render: () => (
+    <DataTable<Fruit>
+      caption="Fruit by colour, empty"
+      columns={fruitColumns}
+      data={[]}
+      groups={byColour()}
+      emptyState="No fruit yet"
+    />
+  ),
 };

@@ -130,7 +130,7 @@
 | NOVA-122 | Orbit Library page: Add / Add all, Backtest pre-filled (D62) | planned | — | 121 (merge after 117, 119) |
 | NOVA-123 | Stored data: contracts, mocks, MSW, services (D63) | done | Claude | — |
 | NOVA-124 | Atlas: `candle_days` summary, trading calendar, coverage endpoints (D63, migration 0017) | planned | — | 112, 113, 123 |
-| NOVA-125 | ui-core DataTable: group rows (D63) | planned | — | — |
+| NOVA-125 | ui-core DataTable: group rows (D63) | done | Claude | — |
 | NOVA-126 | Relay: Stored data page, group by index/sector, Download missing (D63) | planned | — | 113, 123, 125 (merge after 124) |
 | NOVA-127 | Five new indicators: catalog, engine, Python ctx (D62) | planned | — | 111, 114 |
 
