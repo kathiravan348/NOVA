@@ -1,6 +1,6 @@
 # NOVA-135 — Index backtests skip members with no prices in the period (D68, migration 0021, live bug)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-135 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-135 · **Depends on:** —
 
 ## Goal
 A backtest on a whole index (e.g. NIFTY 100, 2021–2024) runs on the members that have prices and skips the
@@ -64,4 +64,16 @@ The NIFTY 100 mock example is run_006 (retained older version), keeping current 
 Skipped symbols are assigned after simulation, before save_result, avoiding progress row-lock contention.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- `strategy_engine.py`: the index "no stock has prices" message joined into one literal (text unchanged).
+- `backtest.ts`: dropped the `SymbolSchema` import alias; uses `UniverseSymbolSchema` by its own name.
+**Checked:** warm-up-only bars count as missing; chosen-symbol runs keep the old error; `barsTotal` now
+counts only stored bars; `save_result` gets loaded symbols only; migration default matches the model.
+**Change requests (if sent back):** none.
+**Guides checked:** API and DATABASE match the diff. USER-GUIDE step 4 ("a big index needs prices for all its
+shares first") is now too strict; NOVA-136 already plans that update.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none (NOVA-136 shows the list in Orbit).
+backend-check (1,203 tests) and `pnpm review:check` pass after the review fixes.

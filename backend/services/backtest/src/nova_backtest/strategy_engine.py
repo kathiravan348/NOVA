@@ -205,8 +205,7 @@ class StrategyEngine:
             if not loaded:
                 raise EngineError(
                     f"No stock in {run.universe['index']} has {spec.timeframe} prices "
-                    "in the period "
-                    "(download them first)"
+                    "in the period (download them first)"
                 )
             result = self._simulate(db, run, spec, scratch, start, total, progress)
             run.skipped_symbols = sorted(missing)
