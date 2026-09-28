@@ -1,6 +1,6 @@
 # NOVA-130 — Agent account contracts, mocks and services (D67)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-130 · **Depends on:** —
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-130 · **Depends on:** —
 
 ## Goal
 The contracts, mocks and service hooks for the agent role and the approval queue exist (Zod + Pydantic
