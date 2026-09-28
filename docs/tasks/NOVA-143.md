@@ -1,6 +1,6 @@
 # NOVA-143 — Strategy card: CAGR range, one value for one run
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-143 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-143 · **Depends on:** —
 
 ## Goal
 Strategy cards compare runs by CAGR (runs of different lengths are comparable), and a strategy with one
@@ -36,10 +36,10 @@ Modify:
    explain CAGR once: average growth per year, so short and long tests compare fairly).
 
 ## Acceptance checks
-- [ ] A strategy with 1 completed + 1 running run shows **Return** and **CAGR**, no Best/Worst pair.
-- [ ] With 2 completed runs of different lengths the card shows **Best CAGR** / **Worst CAGR** from the API.
-- [ ] `test_stats.py` checks the two new fields against seeded results; contract tests refuse worst > best.
-- [ ] Stories checked at 360px and desktop, dark and light.
+- [x] A strategy with 1 completed + 1 running run shows **Return** and **CAGR**, no Best/Worst pair.
+- [x] With 2 completed runs of different lengths the card shows **Best CAGR** / **Worst CAGR** from the API.
+- [x] `test_stats.py` checks the two new fields against seeded results; contract tests refuse worst > best.
+- [x] Stories checked at 360px and desktop, dark and light.
 - [ ] Definition of done in `AGENTS.md` §9 (backend-check and `pnpm review:check`).
 
 ## Out of scope
@@ -47,10 +47,18 @@ Modify:
   (NOVA-142), compare page, backtest result page.
 
 ## Questions
-_(implementer writes here if blocked)_
+Owner approval requested: add the new CAGR fields to the existing StrategyStats row in docs/CONTRACTS.md (omitted from Files).
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** SQL/contract CAGR extrema, static mocks, one-run card values, multiple-run CAGR range and CAGR sorting.
+**Files changed:** all files listed above.
+**Commands run:** focused frontend (60 tests), focused backend (37 tests), schema:update, pnpm review:check and backend-check (1,220 tests) pass.
+**Checked:** Default / OneCompletedRun / NoCompletedRuns: 360px ✓ · 1440px ✓ · dark ✓ · light ✓.
+**New dependencies:** none.
+**Maps updated:** pending contract-map permission.
+**Guides updated:** USER-GUIDE, API.
+**Deviations from task:** none.
+**Known gaps:** contract-map update awaits Owner approval. Initial backend gate hit a realtime WebSocket teardown CancelledError; full rerun passed.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

@@ -34,6 +34,9 @@ export function StrategyStatsList({
   className,
 }: StrategyStatsListProps): React.ReactElement {
   const s = stats;
+  const singleRun = s.runsCompleted === 1;
+  const firstPercent = singleRun ? s.bestReturnPercent : s.bestCagrPercent;
+  const secondPercent = singleRun ? s.bestCagrPercent : s.worstCagrPercent;
   const winRate =
     s.winRateMinPercent === null || s.winRateMaxPercent === null
       ? null
@@ -50,20 +53,20 @@ export function StrategyStatsList({
         <Stat label="Active">{formatQuantity(s.runsInProgress)}</Stat>
       </dl>
       {s.bestNetPnl === null ||
-      s.bestReturnPercent === null ||
-      s.worstReturnPercent === null ||
+      firstPercent === null ||
+      secondPercent === null ||
       s.worstDrawdownPercent === null ? (
         <p className="text-body-sm text-text-muted">No completed runs yet.</p>
       ) : (
         <dl className="grid grid-cols-2 gap-3">
-          <Stat label="Best return">
-            <span className={signedTone(s.bestReturnPercent)}>
-              {formatPercent(s.bestReturnPercent, { signed: true })}
+          <Stat label={singleRun ? "Return" : "Best CAGR"}>
+            <span className={signedTone(firstPercent)}>
+              {formatPercent(firstPercent, { signed: true })}
             </span>
           </Stat>
-          <Stat label="Worst return">
-            <span className={signedTone(s.worstReturnPercent)}>
-              {formatPercent(s.worstReturnPercent, { signed: true })}
+          <Stat label={singleRun ? "CAGR" : "Worst CAGR"}>
+            <span className={signedTone(secondPercent)}>
+              {formatPercent(secondPercent, { signed: true })}
             </span>
           </Stat>
           <Stat label="Win rate">{winRate}</Stat>

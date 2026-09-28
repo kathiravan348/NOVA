@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-141). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-143). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -73,11 +73,12 @@ Each strategy is a **card**. A card shows:
 - its **status**: *Draft* (still working on it), *Active* (in use), *Archived* (put away);
 - how it is built (*Visual rules* or *Python*), the type of trading (delivery = hold for days, intraday = same day),
   and the candle size (1 day, 5 minutes…);
-- test results so far: number of runs, best and worst return, win rate, worst drop, and best net profit
-  (click it to open that test).
+- test results so far: number of runs, **Best CAGR** and **Worst CAGR**, win rate, worst drop, and best net profit
+  (click it to open that test). **CAGR** means average growth per year, so short and long tests compare fairly.
+  With just one completed test, the card shows one **Return** and one **CAGR**, even while another test runs.
 
 Use **Status** to show only drafts/active/archived, and **Sort by** to order by *Recently updated*,
-*Best return* or *Most runs*.
+**Best CAGR** or *Most runs*.
 
 ### Step 3 — Open one strategy
 Click a card. You see:
@@ -261,7 +262,7 @@ Open a run from **Backtests**. You see:
   in this period: HYUNDAI, TATACAP**, for example. It lists up to 10 names, then says how many more.
   The note also stays on an older version with only its summary, and appears on a running run when
   the skipped shares are known. There is no note when nothing was skipped.
-- **Metrics**: Net P&L, Gross P&L, Charges, CAGR (average yearly growth), Max drawdown (biggest fall from a
+- **Metrics**: Net P&L, Gross P&L, Charges, CAGR, Max drawdown (biggest fall from a
   high point), Sharpe (profit vs. risk; higher is better), Win rate, number of Trades.
 - A second row of numbers (older runs show "—" for them):
   - **After-tax CAGR**: the yearly growth after an *estimate* of income tax on share profits at today's rates

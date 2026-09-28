@@ -10,6 +10,8 @@ const withRuns: StrategyStats = {
   lastRunAt: "2026-09-21T06:20:00Z",
   bestReturnPercent: 0.5,
   worstReturnPercent: 0.46,
+  bestCagrPercent: 13.87,
+  worstCagrPercent: 10.39,
   winRateMinPercent: 70,
   winRateMaxPercent: 75,
   worstDrawdownPercent: -0.11,
@@ -29,6 +31,8 @@ const noCompleted: StrategyStats = {
   lastRunAt: "2026-09-21T06:15:00Z",
   bestReturnPercent: null,
   worstReturnPercent: null,
+  bestCagrPercent: null,
+  worstCagrPercent: null,
   winRateMinPercent: null,
   winRateMaxPercent: null,
   worstDrawdownPercent: null,
@@ -59,6 +63,9 @@ describe("StrategyStatsSchema", () => {
   });
 
   it("rejects worst above best, min above max and positive drawdown", () => {
+    expect(StrategyStatsSchema.safeParse({ ...withRuns, worstCagrPercent: 14 }).success).toBe(
+      false,
+    );
     expect(StrategyStatsSchema.safeParse({ ...withRuns, worstReturnPercent: 0.6 }).success).toBe(
       false,
     );
@@ -68,6 +75,23 @@ describe("StrategyStatsSchema", () => {
     expect(StrategyStatsSchema.safeParse({ ...withRuns, worstDrawdownPercent: 1 }).success).toBe(
       false,
     );
+  });
+
+  it("requires the CAGR pair exactly when a run completed", () => {
+    for (const field of ["bestCagrPercent", "worstCagrPercent"] as const) {
+      expect(StrategyStatsSchema.safeParse({ ...withRuns, [field]: null }).success).toBe(false);
+      expect(StrategyStatsSchema.safeParse({ ...withRuns, [field]: undefined }).success).toBe(
+        false,
+      );
+      expect(StrategyStatsSchema.safeParse({ ...noCompleted, [field]: 1 }).success).toBe(false);
+    }
+    expect(
+      StrategyStatsSchema.safeParse({
+        ...withRuns,
+        bestCagrPercent: -1,
+        worstCagrPercent: -4,
+      }).success,
+    ).toBe(true);
   });
 
   it("rejects lastRunAt without runs and extra keys", () => {

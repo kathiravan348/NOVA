@@ -22,6 +22,8 @@ const withResults: StrategyStats = {
   lastRunAt: "2026-09-21T06:20:00Z",
   bestReturnPercent: 8.4,
   worstReturnPercent: -2.15,
+  bestCagrPercent: 13.87,
+  worstCagrPercent: -4.6,
   winRateMinPercent: 48,
   winRateMaxPercent: 71.5,
   worstDrawdownPercent: -6.2,
@@ -37,6 +39,8 @@ const noResults: StrategyStats = {
   runsInProgress: 1,
   bestReturnPercent: null,
   worstReturnPercent: null,
+  bestCagrPercent: null,
+  worstCagrPercent: null,
   winRateMinPercent: null,
   winRateMaxPercent: null,
   worstDrawdownPercent: null,
@@ -72,6 +76,27 @@ export const NoCompletedRuns: Story = {
         title="Delivery Mean Reversion"
         status={<StatusBadge tone="neutral" label="Draft" />}
         stats={noResults}
+      />
+    </Frame>
+  ),
+};
+
+export const OneCompletedRun: Story = {
+  render: () => (
+    <Frame>
+      <StrategyCard
+        {...base}
+        stats={{
+          ...withResults,
+          runsTotal: 2,
+          runsCompleted: 1,
+          runsFailed: 0,
+          runsInProgress: 1,
+          worstReturnPercent: withResults.bestReturnPercent,
+          worstCagrPercent: withResults.bestCagrPercent,
+          winRateMinPercent: withResults.winRateMaxPercent,
+          byVersion: [{ version: 1, runsCompleted: 1, bestReturnPercent: 8.4, bestRunId: "r1" }],
+        }}
       />
     </Frame>
   ),

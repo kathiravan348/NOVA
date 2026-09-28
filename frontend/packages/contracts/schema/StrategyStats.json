@@ -50,6 +50,18 @@
         "null"
       ]
     },
+    "bestCagrPercent": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "worstCagrPercent": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
     "winRateMinPercent": {
       "anyOf": [
         {
@@ -163,6 +175,8 @@
     "lastRunAt",
     "bestReturnPercent",
     "worstReturnPercent",
+    "bestCagrPercent",
+    "worstCagrPercent",
     "winRateMinPercent",
     "winRateMaxPercent",
     "worstDrawdownPercent",
