@@ -1,6 +1,6 @@
 # NOVA-132 — Core: approve/reject held requests, agent account endpoints (D67)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-132 · **Depends on:** NOVA-131
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-132 · **Depends on:** NOVA-131
 
 ## Goal
 The super-admin can list, approve (which runs the saved request as the agent) and reject agent requests, and
