@@ -53,6 +53,67 @@ describe("Backtest result", () => {
     expect((await screen.findAllByText("RELIANCE")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("TCS").length).toBeGreaterThan(0);
     expect(screen.getByText("RELIANCE, TCS, INFY")).toBeInTheDocument();
+    expect(screen.queryByText(/^Skipped \d+ stocks/)).not.toBeInTheDocument();
+  });
+
+  it("names skipped members on the NIFTY 100 summary-only run", async () => {
+    renderApp("/backtests/run_006");
+    expect(
+      await screen.findByText("Skipped 2 stocks with no prices in this period: HYUNDAI, TATACAP"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Older version: only the summary is kept/)).toBeInTheDocument();
+  });
+
+  it.each(["completed", "running"] as const)(
+    "names skipped members on a %s run",
+    async (status) => {
+      const run = mockBacktestRuns.find((r) => r.id === "run_001")!;
+      server.use(
+        http.get("*/api/v1/backtests/run_001", () =>
+          HttpResponse.json({
+            ...run,
+            status,
+            universe: { type: "index", index: "NIFTY 100" },
+            skippedSymbols: ["HYUNDAI", "TATACAP"],
+          }),
+        ),
+      );
+      renderApp("/backtests/run_001");
+      expect(
+        await screen.findByText("Skipped 2 stocks with no prices in this period: HYUNDAI, TATACAP"),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it("lists at most ten skipped members and counts the rest", async () => {
+    const run = mockBacktestRuns.find((r) => r.id === "run_006")!;
+    const skippedSymbols = Array.from(
+      { length: 12 },
+      (_, i) => `STOCK${String(i + 1).padStart(2, "0")}`,
+    );
+    server.use(
+      http.get("*/api/v1/backtests/run_006", () => HttpResponse.json({ ...run, skippedSymbols })),
+    );
+    renderApp("/backtests/run_006");
+    const note = await screen.findByText(/^Skipped 12 stocks/);
+    expect(note.textContent).toBe(
+      `Skipped 12 stocks with no prices in this period: ${skippedSymbols.slice(0, 10).join(", ")} and 2 more`,
+    );
+    expect(note).not.toHaveTextContent("STOCK11");
+    expect(note).not.toHaveTextContent("STOCK12");
+  });
+
+  it("uses the singular for one skipped member", async () => {
+    const run = mockBacktestRuns.find((r) => r.id === "run_006")!;
+    server.use(
+      http.get("*/api/v1/backtests/run_006", () =>
+        HttpResponse.json({ ...run, skippedSymbols: ["HYUNDAI"] }),
+      ),
+    );
+    renderApp("/backtests/run_006");
+    expect(
+      await screen.findByText("Skipped 1 stock with no prices in this period: HYUNDAI"),
+    ).toBeInTheDocument();
   });
 
   it("shows results by symbol and filters trades by symbol", async () => {

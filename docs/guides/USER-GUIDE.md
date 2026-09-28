@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-133). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-136). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -240,8 +240,10 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
      *Select all shown*. The count of chosen shares shows above the list.
    - **A whole index**: e.g. all NIFTY 50 shares. You can pick any of the 19 NSE indices NOVA knows
      (NIFTY 500, NIFTY MIDCAP 100, NIFTY IT …); the number after each is how many shares it has. A big
-     index needs prices downloaded for all its shares first.
-5. Press **Queue backtest**. If some shares have no price data for your dates, NOVA marks them
+     index needs downloaded prices. Members with no prices during your dates are skipped and named
+     on the run page. A share listed during the period joins from its first day with prices; a share
+     listed after the period is skipped. If no member has prices, the run fails.
+5. Press **Queue backtest**. For **Chosen symbols**, if some shares have no price data for your dates, NOVA marks them
    *Partial data* and asks whether to **Drop and queue** without them.
    A daily strategy needs daily prices. Every other candle size (3, 5, 15, 30 minutes, 1 hour) is built
    from 1-minute prices, so a 5-minute strategy needs 1-minute prices; a share with daily prices only
@@ -255,6 +257,10 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 
 ### Step 6 — Read the results
 Open a run from **Backtests**. You see:
+- If any index members were left out, a note below the run details says **Skipped 2 stocks with no prices
+  in this period: HYUNDAI, TATACAP**, for example. It lists up to 10 names, then says how many more.
+  The note also stays on an older version with only its summary, and appears on a running run when
+  the skipped shares are known. There is no note when nothing was skipped.
 - **Metrics**: Net P&L, Gross P&L, Charges, CAGR (average yearly growth), Max drawdown (biggest fall from a
   high point), Sharpe (profit vs. risk; higher is better), Win rate, number of Trades.
 - A second row of numbers (older runs show "—" for them):
@@ -511,6 +517,7 @@ approval**; in Demo mode the demo banner appears instead.
 | **Sent to Admin for approval** | The change is waiting. The Owner opens **Approvals**, checks it and presses **Approve** or **Reject**. Check **History** for the result; if it expired, request the change again. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
 | A backtest says prices are missing, or you are not sure what is downloaded | Open **Stored data** (Step 6b), choose the timeframe and period, group by **Index**, and press **Download missing** on the index you test. |
+| My index run has fewer stocks than the index | Read the **Skipped** note on the run page. Those shares had no prices during your dates. A share listed later has no earlier prices to download. For other missing prices, check **Stored data** and use **Download missing**. |
 | A download *Failed* with *Not synced with Kite* | The stock is not synced with Kite yet. Press **Sync with Kite** on the Instruments page, then queue it again. |
 | A download *Failed* with *Kite is not logged in today* | Do the daily Kite login on the **Broker** page, then queue the download again. |
 | A download *Failed* with *The broker service did not answer* | NOVA's broker part is not running. Start the whole NOVA stack again, then queue the download again. |
