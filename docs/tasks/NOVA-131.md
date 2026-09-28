@@ -1,6 +1,6 @@
 # NOVA-131 — Core: agent role, deny-by-default gateway, held writes (D67, migration 0020)
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-131 · **Depends on:** NOVA-130
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-131 · **Depends on:** NOVA-130
 
 ## Goal
 An `agent` user can sign in; the gateway refuses anything not on its rule table (broker always), passes free
@@ -67,4 +67,18 @@ Modify:
 **Known gaps / open questions:** none within 131; approval decisions and account management remain in 132.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- Held `path` is now stored relative to `/api/v1` (`/backtests`), matching the contract mocks and the audit summary;
+  `send_upstream` takes that relative path, so 132 replays `row.path` as stored. Test and guides updated.
+**Checked:** rules table (broker + unknown prefixes blocked, only `POST /data-jobs/plan` free, dot/`%` paths
+blocked); held body ≤ 64 KB JSON, nothing sent upstream; disabled agent refused on sign-in, HTTP and `/ws`;
+migration 0020 audit CHECKs follow rev0016 and downgrade cleans up; super-admin forwarding unchanged.
+Kept the catch-all `UnknownRoute` (403 for the agent on unknown `/api/v1` paths, 404 otherwise): correct,
+and it only runs for requests no other route matched.
+**Change requests:** none.
+**Guides checked:** API.md, DATABASE.md match the diff (path wording fixed directly). STRUCTURE updated.
+**Rulebook issues found:** none. `backend-check` 1173 pass (one run hit a timing flake in
+`test_realtime.py::test_quick_updates_of_one_job_are_coalesced`, passed on rerun); `pnpm review:check` passes.
+**Follow-up tasks created:** none.

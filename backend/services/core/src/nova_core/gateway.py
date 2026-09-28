@@ -30,6 +30,7 @@ ROUTES: dict[str, str] = {
     "backtests": "backtest_url",
 }
 METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+API_PREFIX = "/api/v1"
 TIMEOUT_SECONDS = 30.0
 MAX_BODY_BYTES = 64 * 1024
 JSON_BODY: TypeAdapter[JsonValue] = TypeAdapter(JsonValue)
@@ -59,9 +60,9 @@ async def send_upstream(
     ip: str | None,
     accept: str = "application/json",
 ) -> Response:
-    """Replayable forwarding; path is absolute under /api/v1, query is the raw query string."""
-    prefix = path.removeprefix("/api/v1/").split("/", 1)[0]
-    url = upstream_base(settings, prefix) + path
+    """Replayable forwarding; path is relative to /api/v1 (as stored), query is raw."""
+    prefix = path.removeprefix("/").split("/", 1)[0]
+    url = upstream_base(settings, prefix) + API_PREFIX + path
     if query:
         url += "?" + query
     headers = {
@@ -110,11 +111,12 @@ async def hold(request: Request, user: User, db: Session) -> JSONResponse:
         )
     except ValueError as exc:
         raise ApiException(400, "invalid_request", "Approval body must be JSON") from exc
+    path = request.url.path.removeprefix(API_PREFIX)
     row = ApprovalRequest(
         id=new_id("apr"),
         agent_id=user.id,
         method=request.method,
-        path=request.url.path,
+        path=path,
         query=request.url.query,
         body=body,
         status="pending",
@@ -125,7 +127,7 @@ async def hold(request: Request, user: User, db: Session) -> JSONResponse:
         action="approval.request",
         actor_id=user.id,
         actor_name=user.name,
-        summary=f"Asked: {request.method} {request.url.path.removeprefix('/api/v1')}",
+        summary=f"Asked: {request.method} {path}",
         target_type="approval_request",
         target_id=row.id,
         ip=client_ip(request),
@@ -159,7 +161,7 @@ def _invalid_constant(value: str) -> None:
 
 async def forward(request: Request, user: SignedIn, settings: AppSettings, db: Db) -> Response:
     if user_role(db, user.id) == "agent":
-        rule = classify(request.method, request.url.path.removeprefix("/api/v1"))
+        rule = classify(request.method, request.url.path.removeprefix(API_PREFIX))
         if rule == "blocked":
             raise ApiException(403, "forbidden", "The agent account may not do this")
         if rule == "held":
@@ -168,7 +170,7 @@ async def forward(request: Request, user: SignedIn, settings: AppSettings, db: D
         request.app,
         settings,
         method=request.method,
-        path=request.url.path,
+        path=request.url.path.removeprefix(API_PREFIX),
         query=request.url.query,
         body=await request.body(),
         content_type=request.headers.get("content-type"),

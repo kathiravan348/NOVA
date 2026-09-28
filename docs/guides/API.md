@@ -47,7 +47,7 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 cannot sign in or use existing HTTP/WebSocket sessions. `/me`, `/audit`, sign-out and `/ws` accept both roles.
 The agent may GET under `/strategies`, `/backtests`, `/market-data`, `/data-jobs`, and POST exactly
 `/data-jobs/plan` (draft only). Every other POST/PUT/PATCH/DELETE under those prefixes is held: Core saves
-method, full `/api/v1/...` path, raw query and optional JSON body (at most 64 KB), audits `approval.request`
+method, path relative to `/api/v1` (e.g. `/backtests`), raw query and optional JSON body (at most 64 KB), audits `approval.request`
 ("Asked: POST /backtests", target `approval_request`), and returns **202 `ApprovalRequest`** with
 `x-nova-approval: apr_...`. The service is not called. Invalid JSON or an oversized body returns 400.
 Every `/broker` request and every unlisted prefix is refused with **403 `forbidden`**,

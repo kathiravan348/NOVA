@@ -85,7 +85,7 @@ def test_agent_writes_are_held(
     approval = response.json()
     assert response.headers["x-nova-approval"] == approval["id"]
     assert approval["status"] == "pending" and approval["agentName"] == "Debug Agent"
-    assert approval["path"] == f"/api/v1{path}" and approval["query"] == "x=1&x=2"
+    assert approval["path"] == path and approval["query"] == "x=1&x=2"
     assert approval["body"] == body
     with Session(engine) as db:
         row = db.get(ApprovalRequest, approval["id"])
