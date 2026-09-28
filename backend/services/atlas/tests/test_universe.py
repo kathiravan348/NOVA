@@ -63,11 +63,15 @@ def test_kite_list_keeps_stocks_and_skips_bonds() -> None:
         '5,5,GS2030-GS,"GSEC",0,,0,0.05,1,EQ,NSE,NSE',
         '6,6,ACME-N1,"BOND",0,,0,0.05,1,EQ,NSE,NSE',
         '7,7,NIFTY IT,"NIFTY IT",0,,0,0,0,EQ,INDICES,NSE',
+        '8,8,BAJAJ-AUTO,"BAJAJ AUTO",0,,0,0.05,1,EQ,NSE,NSE',
+        '9,9,NAM-INDIA,"NIPPON AMC",0,,0,0.05,1,EQ,NSE,NSE',
+        '10,10,ACME-RE,"ACME RIGHTS",0,,0,0.05,1,EQ,NSE,NSE',
+        '11,11,SGBMAR28-GB,"SGB",0,,0,0.05,1,EQ,NSE,NSE',
     ]
 
     stocks, indices = kite_stocks("\n".join([KITE_HEADER, *rows]))
 
-    assert sorted(stocks) == ["ABCD-SM", "INFY", "XYZ-BE"]
+    assert sorted(stocks) == ["ABCD-SM", "BAJAJ-AUTO", "INFY", "NAM-INDIA", "XYZ-BE"]
     assert indices == {"NIFTY IT": 7}
 
 
