@@ -6,7 +6,7 @@ from pydantic import Field
 
 from nova_contracts.common import Contract, Email, Id, UtcDateTime
 
-UserRole = Literal["super_admin"]
+UserRole = Literal["super_admin", "agent"]
 
 
 class User(Contract):

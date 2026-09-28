@@ -15,6 +15,10 @@ describe("UserSchema", () => {
     expect(UserSchema.safeParse(validUser).success).toBe(true);
   });
 
+  it("accepts the agent role", () => {
+    expect(UserSchema.parse({ ...validUser, role: "agent" }).role).toBe("agent");
+  });
+
   it("accepts a user with null lastLoginAt", () => {
     expect(UserSchema.safeParse({ ...validUser, lastLoginAt: null }).success).toBe(true);
   });

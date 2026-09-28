@@ -24,6 +24,22 @@ afterEach(async () => {
 afterAll(() => server.close());
 
 describe("session", () => {
+  it.each(["mock", "real"])("preserves the agent role in %s mode", async (mode) => {
+    vi.stubEnv("VITE_DATA_MODE", mode);
+    const session = await signIn("agent@example.com", "demo password");
+    expect(session.role).toBe("agent");
+    expect(getSession()).toEqual(session);
+  });
+
+  it("reads old sessions as super_admin and rejects unknown stored roles", () => {
+    sessionStorage.setItem("nova-session", JSON.stringify({ userId: "old", displayName: "Admin" }));
+    expect(getSession()?.role).toBe("super_admin");
+    sessionStorage.setItem(
+      "nova-session",
+      JSON.stringify({ userId: "old", displayName: "Admin", role: "unknown" }),
+    );
+    expect(getSession()).toBeNull();
+  });
   it("rejects an empty username or password", async () => {
     await expect(signIn("asha", "  ")).rejects.toMatchObject({
       status: 401,
@@ -35,7 +51,11 @@ describe("session", () => {
 
   it("stores the mock user on sign-in and clears it on sign-out", async () => {
     const session = await signIn("asha", "pw");
-    expect(session).toEqual({ userId: mockUser.id, displayName: mockUser.name });
+    expect(session).toEqual({
+      userId: mockUser.id,
+      displayName: mockUser.name,
+      role: "super_admin",
+    });
     expect(getSession()).toEqual(session);
     expect(JSON.parse(sessionStorage.getItem("nova-session") ?? "null")).toEqual(session);
     await signOut();
@@ -63,7 +83,11 @@ describe("session", () => {
     const session = await signIn("owner@example.com", "a long password");
     await signOut();
 
-    expect(session).toEqual({ userId: mockUser.id, displayName: mockUser.name });
+    expect(session).toEqual({
+      userId: mockUser.id,
+      displayName: mockUser.name,
+      role: "super_admin",
+    });
     expect(requests).toEqual(["POST /api/v1/auth/login", "POST /api/v1/auth/logout"]);
     expect(getSession()).toBeNull();
   });

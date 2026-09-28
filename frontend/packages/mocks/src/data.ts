@@ -1,4 +1,6 @@
 import {
+  ApprovalRequestSchema,
+  AgentAccountSchema,
   AuditEntrySchema,
   BacktestResultSchema,
   BacktestRunSchema,
@@ -38,6 +40,58 @@ import userJson from "../data/user.json";
 export const MOCK_NOW = "2026-09-21T06:30:00Z";
 
 export const mockUser = UserSchema.parse(userJson);
+export const mockAgentAccount = AgentAccountSchema.parse({
+  id: "usr_agent",
+  name: "Debug Agent",
+  email: "agent@example.com",
+  enabled: true,
+  createdAt: "2026-09-21T06:30:00Z",
+  lastLoginAt: null,
+});
+export const mockApprovals = ApprovalRequestSchema.array().parse([
+  {
+    id: "approval_pending",
+    method: "POST",
+    path: "/backtests",
+    query: "",
+    body: { name: "Agent backtest" },
+    status: "pending",
+    agentName: "Debug Agent",
+    createdAt: "2026-09-21T06:30:00Z",
+    decidedAt: null,
+    decidedBy: null,
+    resultStatus: null,
+    resultBody: null,
+  },
+  {
+    id: "approval_done",
+    method: "PATCH",
+    path: "/strategies/stg_001",
+    query: "",
+    body: { name: "Updated strategy" },
+    status: "done",
+    agentName: "Debug Agent",
+    createdAt: "2026-09-21T06:20:00Z",
+    decidedAt: "2026-09-21T06:25:00Z",
+    decidedBy: "Admin",
+    resultStatus: 200,
+    resultBody: "{}",
+  },
+  {
+    id: "approval_rejected",
+    method: "DELETE",
+    path: "/backtests/run_001",
+    query: "scope=all",
+    body: null,
+    status: "rejected",
+    agentName: "Debug Agent",
+    createdAt: "2026-09-21T06:10:00Z",
+    decidedAt: "2026-09-21T06:15:00Z",
+    decidedBy: "Admin",
+    resultStatus: null,
+    resultBody: null,
+  },
+]);
 export const mockStrategies = StrategySchema.array().parse(strategiesJson);
 export const mockStrategyStats = StrategyStatsSchema.array().parse(strategyStatsJson);
 /** 7 of the 60 library strategies, one per family (D62 (7)); the real list is served by the backend. */

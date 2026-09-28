@@ -1,4 +1,9 @@
 export const queryKeys = {
+  approvals: {
+    all: ["approvals"] as const,
+    list: (status?: string) => ["approvals", "list", status] as const,
+  },
+  agent: ["agent"] as const,
   me: ["me"] as const,
   strategies: {
     all: ["strategies"] as const,

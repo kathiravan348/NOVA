@@ -11,6 +11,7 @@
             "not_found",
             "invalid_request",
             "unauthorized",
+            "forbidden",
             "internal"
           ]
         },

@@ -8,6 +8,7 @@ export * from "./api/downloads";
 export * from "./queries/keys";
 export * from "./queries/orbit";
 export * from "./queries/relay";
+export * from "./queries/approvals";
 export * from "./queries/downloads";
 export * from "./queries/paging";
 export * from "./queries/queryClient";

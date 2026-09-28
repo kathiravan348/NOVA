@@ -76,6 +76,15 @@ export const orbitHandlers = [
   http.post(apiPath("/auth/login"), async ({ request }) => {
     const parsed = LoginRequestSchema.safeParse(await request.json().catch(() => undefined));
     if (!parsed.success) return badRequest("Body must be { email, password }");
+    if (parsed.data.email.startsWith("agent@")) {
+      return HttpResponse.json({
+        ...mockUser,
+        id: "usr_agent",
+        name: "Debug Agent",
+        email: parsed.data.email,
+        role: "agent",
+      });
+    }
     return HttpResponse.json(mockUser);
   }),
 

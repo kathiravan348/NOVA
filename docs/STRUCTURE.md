@@ -30,11 +30,11 @@
 │  │  │  └─ schema/     generated JSON Schema per wire contract (D34; do not edit)
 │  │  ├─ services/      data layer (mock | real)
 │  │  │  ├─ src/api/    one fetch function per endpoint (validated by contract schema)
-│  │  │  ├─ src/queries/ TanStack Query keys, hooks, createQueryClient
+│  │  │  ├─ src/queries/ TanStack Query keys, hooks, createQueryClient; approvals.ts = approval + agent hooks (D67)
 │  │  │  └─ src/session.ts mock sign-in session (D23)
 │  │  └─ mocks/         static JSON per contract + MSW handlers
 │  │     ├─ data/       static mock JSON per contract
-│  │     ├─ src/handlers/ MSW handlers for contracts and scenarios
+│  │     ├─ src/handlers/ MSW handlers for contracts and scenarios; approvals.ts = approval + agent mocks (D67)
 │  │     └─ src/browser.ts MSW browser worker (apps' main.tsx, mock mode)
 │  └─ apps/             each: public/mockServiceWorker.js, src/routes.tsx, layout/, pages/
 │     ├─ nova-orbit/    strategy builder + backtesting (port 3000)

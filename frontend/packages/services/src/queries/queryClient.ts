@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { ApiRequestError } from "../http";
 
 export function shouldRetry(failureCount: number, error: unknown): boolean {
+  if (error instanceof ApiRequestError && error.code === "approval_pending") return false;
   if (error instanceof ApiRequestError && error.status >= 400 && error.status < 500) return false;
   return failureCount < 1;
 }
