@@ -28,14 +28,16 @@ def _run(run_id: str, strategy_id: str, status: str, minutes: int, version: int 
     )
 
 
-def _result(run_id: str, ret: str, win: str, drawdown: str, net: int) -> BacktestResult:
+def _result(
+    run_id: str, ret: str, win: str, drawdown: str, net: int, cagr: str = "1"
+) -> BacktestResult:
     return BacktestResult(
         run_id=run_id,
         gross_pnl_paise=net + 100,
         charges_paise=100,
         net_pnl_paise=net,
         return_percent=Decimal(ret),
-        cagr_percent=Decimal("1"),
+        cagr_percent=Decimal(cagr),
         max_drawdown_percent=Decimal(drawdown),
         sharpe=Decimal("1"),
         win_rate_percent=Decimal(win),
@@ -57,11 +59,13 @@ def test_stats_summarise_runs_per_strategy(
         )
         ids.append(response.json()["id"])
     busy, idle, failing = ids
+    longer = _run("run_b", busy, "completed", 2)
+    longer.date_from = date(2024, 1, 1)
     with Session(clean) as db:
         db.add_all(
             [
                 _run("run_a", busy, "completed", 1),
-                _run("run_b", busy, "completed", 2),
+                longer,
                 _run("run_c", busy, "running", 3),
                 _run("run_d", busy, "queued", 4),
                 _run("run_e", failing, "failed", 5),
@@ -70,8 +74,8 @@ def test_stats_summarise_runs_per_strategy(
         db.flush()
         db.add_all(
             [
-                _result("run_a", "12.5", "60", "-8.25", 1_250_000),
-                _result("run_b", "-3.1", "40", "-15.5", -310_000),
+                _result("run_a", "12.5", "60", "-8.25", 1_250_000, cagr="12.5"),
+                _result("run_b", "-3.1", "40", "-15.5", -310_000, cagr="-1.56"),
             ]
         )
         db.commit()
@@ -89,6 +93,8 @@ def test_stats_summarise_runs_per_strategy(
         "lastRunAt": "2026-09-01T00:04:00Z",
         "bestReturnPercent": 12.5,
         "worstReturnPercent": -3.1,
+        "bestCagrPercent": 12.5,
+        "worstCagrPercent": -1.56,
         "winRateMinPercent": 40.0,
         "winRateMaxPercent": 60.0,
         "worstDrawdownPercent": -15.5,
@@ -99,6 +105,8 @@ def test_stats_summarise_runs_per_strategy(
     }
     assert body[idle]["runsTotal"] == 0 and body[idle]["lastRunAt"] is None
     assert body[failing]["runsFailed"] == 1 and body[failing]["bestNetPnl"] is None
+    for sid in (idle, failing):
+        assert body[sid]["bestCagrPercent"] is None and body[sid]["worstCagrPercent"] is None
     assert list(body) == ids
 
 

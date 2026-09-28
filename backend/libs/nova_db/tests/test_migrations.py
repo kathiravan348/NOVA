@@ -51,11 +51,73 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0022(engine: Engine) -> None:
+def test_head_revision_is_0023(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0022"
+    assert head == "0023"
+
+
+def test_benchmark_foreign_key_round_trip(engine: Engine, database_url: str) -> None:
+    downgrade(database_url, "0022")
+    try:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO strategies (id, name, status, latest_version)"
+                    " VALUES ('stg_benchmark_migration', 'Test', 'active', 1)"
+                )
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO strategy_versions (strategy_id, version, spec)"
+                    " VALUES ('stg_benchmark_migration', 1, '{}')"
+                )
+            )
+            for i, benchmark in enumerate(["NIFTY 50", None]):
+                connection.execute(
+                    text(
+                        "INSERT INTO backtest_runs (id, root_id, strategy_id,"
+                        " strategy_version, name,"
+                        " universe, status, date_from, date_to, initial_capital_paise, benchmark)"
+                        " VALUES (:id, :id, 'stg_benchmark_migration', 1, 'Test', '{}', 'queued',"
+                        " '2025-01-01', '2025-01-05', 100, :benchmark)"
+                    ),
+                    {"id": f"run_benchmark_migration_{i}", "benchmark": benchmark},
+                )
+        upgrade(database_url)
+        assert diff(database_url) == []
+        with engine.begin() as connection:
+            assert connection.execute(
+                text(
+                    "SELECT benchmark FROM backtest_runs"
+                    " WHERE strategy_id = 'stg_benchmark_migration'"
+                    " ORDER BY id"
+                )
+            ).scalars().all() == ["NIFTY 50", None]
+            connection.execute(
+                text(
+                    "UPDATE backtest_runs SET benchmark = 'NIFTY 500'"
+                    " WHERE id = 'run_benchmark_migration_1'"
+                )
+            )
+        downgrade(database_url, "0022")
+        with engine.connect() as connection:
+            assert connection.execute(
+                text(
+                    "SELECT benchmark FROM backtest_runs"
+                    " WHERE strategy_id = 'stg_benchmark_migration'"
+                    " ORDER BY id"
+                )
+            ).scalars().all() == ["NIFTY 50", None]
+    finally:
+        upgrade(database_url)
+        with engine.begin() as connection:
+            connection.execute(
+                text("DELETE FROM backtest_runs WHERE strategy_id = 'stg_benchmark_migration'")
+            )
+            connection.execute(text("DELETE FROM strategies WHERE id = 'stg_benchmark_migration'"))
+    assert diff(database_url) == []
 
 
 def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:

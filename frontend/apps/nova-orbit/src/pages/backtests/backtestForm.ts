@@ -26,7 +26,7 @@ export const BacktestFormSchema = z
     from: z.string().min(1, "Start date is required"),
     to: z.string().min(1, "End date is required"),
     capitalRupees: z.string(),
-    benchmark: z.boolean(),
+    benchmark: z.union([z.literal(""), IndexNameSchema]),
   })
   .superRefine((f, ctx) => {
     if (f.universeType === "symbols" && f.symbols.length === 0) {
@@ -75,7 +75,7 @@ export function defaultsFor(
     from: monthsBefore(to, 2),
     to,
     capitalRupees: "1000000",
-    benchmark: true,
+    benchmark: "NIFTY 50",
   };
 }
 
@@ -96,7 +96,7 @@ export function toRunCreate(form: BacktestForm): BacktestRunCreate {
     from: form.from,
     to: form.to,
     initialCapitalPaise: Math.round(Number(form.capitalRupees) * 100),
-    benchmark: form.benchmark ? "NIFTY 50" : null,
+    benchmark: form.benchmark || null,
   };
 }
 
@@ -112,7 +112,7 @@ export function defaultsFromRun(run: BacktestRun): BacktestForm {
     from: run.from,
     to: run.to,
     capitalRupees: String(run.initialCapitalPaise / 100),
-    benchmark: run.benchmark !== null,
+    benchmark: run.benchmark ?? "",
   };
 }
 
@@ -158,7 +158,9 @@ export function defaultsFromParams(
     found.capitalRupees = String(capital);
   }
   const benchmark = params.get("benchmark");
-  if (benchmark === "NIFTY 50" || benchmark === "none") found.benchmark = benchmark === "NIFTY 50";
+  const checkedBenchmark = IndexNameSchema.safeParse(benchmark);
+  if (benchmark === "none") found.benchmark = "";
+  else if (checkedBenchmark.success) found.benchmark = checkedBenchmark.data;
   const name = params.get("name")?.trim() ?? "";
   if (name.length > 0 && name.length <= 200) found.name = name;
   return found;

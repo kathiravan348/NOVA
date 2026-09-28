@@ -82,6 +82,7 @@ export function ComparePage() {
                     <EquityCurve
                       points={data.equityCurve}
                       initialCapitalPaise={source.initialCapitalPaise}
+                      benchmarkLabel={source.benchmark ?? undefined}
                       height={220}
                       ariaLabel={`Equity curve for ${run.name}`}
                     />

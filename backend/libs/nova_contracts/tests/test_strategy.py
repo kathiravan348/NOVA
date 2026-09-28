@@ -78,9 +78,23 @@ def test_unknown_operand_kind_is_rejected(parity: Parity) -> None:
 def test_stats_rules_are_enforced(parity: Parity) -> None:
     completed = parity.mock("strategyStats")[0]
 
-    for change in ({"runsTotal": 99}, {"bestNetPnl": None}, {"worstReturnPercent": 5}):
+    for change in (
+        {"runsTotal": 99},
+        {"bestNetPnl": None},
+        {"worstReturnPercent": 5},
+        {"worstCagrPercent": 99},
+        {"bestCagrPercent": None},
+        {"worstCagrPercent": None},
+    ):
         with pytest.raises(ValidationError):
             StrategyStats.model_validate_json(json.dumps(completed | change))
+    for field in ("bestCagrPercent", "worstCagrPercent"):
+        missing = {k: v for k, v in completed.items() if k != field}
+        with pytest.raises(ValidationError):
+            StrategyStats.model_validate_json(json.dumps(missing))
+        empty = parity.mock("strategyStats")[1] | {field: 1}
+        with pytest.raises(ValidationError):
+            StrategyStats.model_validate_json(json.dumps(empty))
 
 
 def _visual(left: dict[str, object]) -> dict[str, object]:

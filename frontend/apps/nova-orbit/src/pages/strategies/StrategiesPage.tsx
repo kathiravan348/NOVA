@@ -20,13 +20,13 @@ type StatusFilter = StrategyStatus | "all";
 
 const latestSpec = (s: Strategy) => s.versions.find((v) => v.version === s.latestVersion)!.spec;
 
-/** Ties (and "updated") go newest first; strategies without a completed run sort last by return. */
+/** Ties (and "updated") go newest first; strategies without a completed run sort last by CAGR. */
 export function sortStrategies(
   list: Strategy[],
   statsById: Map<string, StrategyStats>,
   sort: SortKey,
 ): Strategy[] {
-  const best = (s: Strategy) => statsById.get(s.id)?.bestReturnPercent ?? -Infinity;
+  const best = (s: Strategy) => statsById.get(s.id)?.bestCagrPercent ?? -Infinity;
   const runs = (s: Strategy) => statsById.get(s.id)?.runsTotal ?? 0;
   return [...list].sort((a, b) => {
     if (sort === "best" && best(a) !== best(b)) return best(b) > best(a) ? 1 : -1;
@@ -67,7 +67,7 @@ function StrategyGrid({ strategies }: { strategies: Strategy[] }) {
           onChange={(e) => setSort(e.target.value as SortKey)}
           options={[
             { value: "updated", label: "Recently updated" },
-            { value: "best", label: "Best return" },
+            { value: "best", label: "Best CAGR" },
             { value: "runs", label: "Most runs" },
           ]}
         />

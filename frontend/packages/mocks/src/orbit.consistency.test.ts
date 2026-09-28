@@ -35,11 +35,18 @@ describe("Strategy stats match the runs and results (D26)", () => {
         runId: r.id,
         m: mockBacktestResults.find((x) => x.runId === r.id)!.metrics,
       }));
-      if (metrics.length === 0) continue;
+      if (metrics.length === 0) {
+        expect(stats.bestCagrPercent).toBeNull();
+        expect(stats.worstCagrPercent).toBeNull();
+        continue;
+      }
       const returns = metrics.map((x) => x.m.returnPercent);
+      const cagrs = metrics.map((x) => x.m.cagrPercent);
       const winRates = metrics.map((x) => x.m.winRatePercent);
       expect(stats.bestReturnPercent).toBe(Math.max(...returns));
       expect(stats.worstReturnPercent).toBe(Math.min(...returns));
+      expect(stats.bestCagrPercent).toBe(Math.max(...cagrs));
+      expect(stats.worstCagrPercent).toBe(Math.min(...cagrs));
       expect(stats.winRateMinPercent).toBe(Math.min(...winRates));
       expect(stats.winRateMaxPercent).toBe(Math.max(...winRates));
       expect(stats.worstDrawdownPercent).toBe(

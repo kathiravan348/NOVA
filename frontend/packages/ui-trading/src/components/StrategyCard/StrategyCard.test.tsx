@@ -12,6 +12,8 @@ const stats: StrategyStats = {
   lastRunAt: "2026-09-21T06:20:00Z",
   bestReturnPercent: 0.5,
   worstReturnPercent: -1.25,
+  bestCagrPercent: 13.87,
+  worstCagrPercent: -4.6,
   winRateMinPercent: 60,
   winRateMaxPercent: 75,
   worstDrawdownPercent: -0.11,
@@ -32,11 +34,32 @@ describe("StrategyCard", () => {
     expect(screen.getByText("VWAP Momentum")).toBeInTheDocument();
     expect(screen.getByText("Visual · Equity intraday · 5 min · v2")).toBeInTheDocument();
     expect(screen.getByText("Runs").nextSibling).toHaveTextContent("3");
-    expect(screen.getByText("+0.50%")).toHaveClass("text-profit");
-    expect(screen.getByText("−1.25%")).toHaveClass("text-loss");
+    expect(screen.getByText("Best CAGR").nextSibling).toHaveTextContent("+13.87%");
+    expect(screen.getByText("Worst CAGR").nextSibling).toHaveTextContent("−4.60%");
+    expect(screen.getByText("+13.87%")).toHaveClass("text-profit");
+    expect(screen.getByText("−4.60%")).toHaveClass("text-loss");
+    expect(screen.queryByText("Best return")).not.toBeInTheDocument();
+    expect(screen.queryByText("Worst return")).not.toBeInTheDocument();
     expect(screen.getByText("60%–75%")).toBeInTheDocument();
     expect(screen.getByText("+₹4,994.74")).toBeInTheDocument();
     expect(screen.getByText("21 Sep 2026")).toBeInTheDocument();
+  });
+
+  it("shows one Return and CAGR for one completed plus one running run", () => {
+    const one: StrategyStats = {
+      ...stats,
+      runsTotal: 2,
+      runsCompleted: 1,
+      worstReturnPercent: stats.bestReturnPercent,
+      worstCagrPercent: stats.bestCagrPercent,
+      winRateMinPercent: 75,
+      byVersion: [{ version: 1, runsCompleted: 1, bestReturnPercent: 0.5, bestRunId: "run_001" }],
+    };
+    render(<StrategyCard {...props} stats={one} />);
+    expect(screen.getByText("Return").nextSibling).toHaveTextContent("+0.50%");
+    expect(screen.getByText("CAGR").nextSibling).toHaveTextContent("+13.87%");
+    expect(screen.queryByText(/^Best CAGR$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Worst CAGR$/)).not.toBeInTheDocument();
   });
 
   it("wraps the best net P&L with renderBestRun", () => {
@@ -60,6 +83,8 @@ describe("StrategyCard", () => {
       runsFailed: 2,
       bestReturnPercent: null,
       worstReturnPercent: null,
+      bestCagrPercent: null,
+      worstCagrPercent: null,
       winRateMinPercent: null,
       winRateMaxPercent: null,
       worstDrawdownPercent: null,

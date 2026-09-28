@@ -6,7 +6,7 @@ import {
   PaiseSchema,
   UtcDateTimeSchema,
 } from "./common";
-import { UniverseSchema } from "./strategy";
+import { IndexNameSchema, UniverseSchema } from "./strategy";
 import { UniverseSymbolSchema } from "./universe";
 
 export const BacktestRunStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
@@ -28,7 +28,7 @@ export const BacktestProgressSchema = z.strictObject({
 });
 export type BacktestProgress = z.infer<typeof BacktestProgressSchema>;
 
-export const BacktestBenchmarkSchema = z.literal("NIFTY 50");
+export const BacktestBenchmarkSchema = IndexNameSchema;
 export type BacktestBenchmark = z.infer<typeof BacktestBenchmarkSchema>;
 
 export const BacktestRunSchema = z

@@ -267,6 +267,12 @@ def test_valid_rows_are_accepted(seeded: Session) -> None:
     seeded.flush()
 
 
+@pytest.mark.parametrize("benchmark", ["NIFTY 500", None])
+def test_any_stored_benchmark_or_none_is_accepted(seeded: Session, benchmark: str | None) -> None:
+    seeded.add(_run(benchmark=benchmark))
+    seeded.flush()
+
+
 @pytest.mark.parametrize(
     ("factory", "overrides"), [(f, o) for _, f, o in CASES], ids=[name for name, _, _ in CASES]
 )

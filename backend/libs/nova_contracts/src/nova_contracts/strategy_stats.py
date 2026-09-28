@@ -42,6 +42,8 @@ class StrategyStats(Contract):
     last_run_at: UtcDateTime | None
     best_return_percent: float | None
     worst_return_percent: float | None
+    best_cagr_percent: float | None
+    worst_cagr_percent: float | None
     win_rate_min_percent: Percent | None
     win_rate_max_percent: Percent | None
     worst_drawdown_percent: Annotated[float, Field(le=0)] | None
@@ -57,6 +59,8 @@ class StrategyStats(Contract):
         results = (
             self.best_return_percent,
             self.worst_return_percent,
+            self.best_cagr_percent,
+            self.worst_cagr_percent,
             self.win_rate_min_percent,
             self.win_rate_max_percent,
             self.worst_drawdown_percent,
@@ -68,6 +72,9 @@ class StrategyStats(Contract):
         best, worst = self.best_return_percent, self.worst_return_percent
         if best is not None and worst is not None and worst > best:
             raise ValueError("worstReturnPercent must be at most bestReturnPercent")
+        best_cagr, worst_cagr = self.best_cagr_percent, self.worst_cagr_percent
+        if best_cagr is not None and worst_cagr is not None and worst_cagr > best_cagr:
+            raise ValueError("worstCagrPercent must be at most bestCagrPercent")
         low, high = self.win_rate_min_percent, self.win_rate_max_percent
         if low is not None and high is not None and low > high:
             raise ValueError("winRateMinPercent must be at most winRateMaxPercent")

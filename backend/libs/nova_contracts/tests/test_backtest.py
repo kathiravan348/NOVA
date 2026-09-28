@@ -54,6 +54,20 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
 
     assert dumped == body
     parity.assert_valid(dumped, "BacktestRunCreate")
+    for benchmark in ("NIFTY 500", "NIFTY MIDCAP 100", None):
+        varied = body | {"benchmark": benchmark}
+        for model, schema in (
+            (BacktestRunCreate, "BacktestRunCreate"),
+            (BacktestVersionCreate, "BacktestVersionCreate"),
+        ):
+            payload = (
+                varied
+                if model is BacktestRunCreate
+                else {k: v for k, v in varied.items() if k != "strategyId"}
+            )
+            dumped = model.model_validate_json(json.dumps(payload)).model_dump(mode="json")
+            assert dumped == payload
+            parity.assert_valid(dumped, schema)
 
 
 def test_runs_require_skipped_symbols(parity: Parity) -> None:

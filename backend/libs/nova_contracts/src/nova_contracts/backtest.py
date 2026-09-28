@@ -10,7 +10,7 @@ from nova_contracts.universe import Symbol
 
 BacktestRunStatus = Literal["queued", "running", "completed", "failed"]
 BacktestStage = Literal["loading", "signals", "simulating", "saving", "done"]
-BacktestBenchmark = Literal["NIFTY 50"]
+BacktestBenchmark = IndexName
 Count = Annotated[int, Field(ge=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
 Percent = Annotated[float, Field(ge=0, le=100)]
