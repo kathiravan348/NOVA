@@ -1,6 +1,6 @@
 # NOVA-138 — Data screens start at 1 Jan 2020 (D69)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-138 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-138 · **Depends on:** —
 
 ## Goal
 Relay's **New download** and **Stored data** open with **From = 2020-01-01** (today: 365 days back and
@@ -35,10 +35,10 @@ Modify:
 6. Guides: update the lines above.
 
 ## Acceptance checks
-- [ ] New download and Stored data open with From = 1 Jan 2020 and To = today; both still editable.
-- [ ] **Download missing** from Stored data still opens New download with Stored data's period.
-- [ ] Coverage API default `from` = 2020-01-01; `to` before 2020 without `from` → 200.
-- [ ] 360px and desktop unchanged apart from the dates. `pnpm review:check` and
+- [x] New download and Stored data open with From = 1 Jan 2020 and To = today; both still editable.
+- [x] **Download missing** from Stored data still opens New download with Stored data's period.
+- [x] Coverage API default `from` = 2020-01-01; `to` before 2020 without `from` → 200.
+- [x] 360px and desktop unchanged apart from the dates. `pnpm review:check` and
       `docker compose run --rm backend-check` pass.
 
 ## Out of scope
@@ -50,7 +50,30 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** `DATA_START_DAY = "2020-01-01"` in `format.ts`; New download and Stored data start From there
+(Download missing prefill still wins). Coverage API: `DEFAULT_FROM = date(2020, 1, 1)`, a missing `from`
+becomes `min(DEFAULT_FROM, to)`; the 29 Feb branch is gone.
+**Files changed:** the nine under Files, plus this task and BOARD.md.
+**Commands run:** relay data-jobs + stored-data vitest (35 pass); `pnpm review:check`: pass;
+`docker compose run --rm backend-check` (ruff, format, mypy, 1,204 tests): pass.
+**Tests added:** both screens open with From 2020-01-01; coverage default from 2020-01-01 and `to=2019-06-30`
+without `from` → 200 (period 2019-06-30 to 2019-06-30). Prefill keeps its From: existing test
+"downloads a group's missing stocks with the chosen period".
+**Checked:** 360px / desktop / dark / light: not opened in a browser; only the initial date value changed,
+no layout change. **New dependencies:** none. **Maps updated:** none needed.
+**Guides:** USER-GUIDE (Stored data and New download From), API (coverage default `from`).
+**Deviations from task:** none. `istDaysAgo` kept (ArchiveModal uses it).
+**Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed; same session, not a fresh one).
+**Fixed directly (review: commits):** none.
+**Checked:** diff matches Build 1-6 exactly; no leftover `DEFAULT_YEARS` / `fiveYearsBefore`; `istDaysAgo` still used
+by ArchiveModal. Both coverage endpoints (list and `/{symbol}`) share `_period`, so both get the new default.
+Download missing prefill still wins (existing test). Relay always sends `from`, so the API default only affects
+other callers. Expected effect: more rows may show **Partial** on Stored data (stocks whose history starts after
+2020 and were never asked from 2020) — intended by D69. Checks: `pnpm review:check` and backend-check pass.
+**Change requests (if sent back):** none.
+**Guides checked:** match the diff (USER-GUIDE Stored data + New download, API coverage row).
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

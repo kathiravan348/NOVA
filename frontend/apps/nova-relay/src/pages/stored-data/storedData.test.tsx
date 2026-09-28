@@ -33,6 +33,11 @@ describe("Stored data (D63)", () => {
     ).toBeInTheDocument();
   });
 
+  it("starts the period on 1 Jan 2020 (D69)", async () => {
+    renderApp("/stored-data");
+    expect(await screen.findByLabelText("From")).toHaveValue("2020-01-01");
+  });
+
   it("shows every status without grouping, and Only with gaps hides complete rows", async () => {
     renderApp("/stored-data");
     const groupBy = await screen.findByLabelText("Group by");

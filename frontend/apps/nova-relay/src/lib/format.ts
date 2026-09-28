@@ -29,6 +29,9 @@ export function formatPeriod(from: string, to: string): string {
   return `${start} – ${formatCalendarDate(to)}`;
 }
 
+/** D69: where Relay's data screens start their period (New download, Stored data). */
+export const DATA_START_DAY = "2020-01-01";
+
 /** Today's calendar date in India, `2026-09-25`. */
 export function todayIst(now: Date = new Date()): string {
   return formatInTimeZone(now, IST, "yyyy-MM-dd");

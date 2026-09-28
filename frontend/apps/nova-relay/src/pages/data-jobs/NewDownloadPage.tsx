@@ -21,7 +21,7 @@ import {
   useSession,
 } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
-import { istDaysAgo, todayIst } from "../../lib/format";
+import { DATA_START_DAY, todayIst } from "../../lib/format";
 import { segmentLabel, timeframeLabel } from "../../lib/labels";
 import { BulkStockPicker } from "./BulkStockPicker";
 import { IndexPicker } from "./IndexPicker";
@@ -75,7 +75,7 @@ export function NewDownloadPage() {
   const [symbols, setSymbols] = useState<string[]>(prefill?.stocks ?? []);
   const [indices, setIndices] = useState<string[]>(prefill?.indices ?? []);
   const [timeframe, setTimeframe] = useState<Timeframe>(prefill?.timeframe ?? "1d");
-  const [from, setFrom] = useState(prefill?.from ?? istDaysAgo(365));
+  const [from, setFrom] = useState(prefill?.from ?? DATA_START_DAY);
   const [to, setTo] = useState(prefill?.to ?? todayIst());
   const [segment, setSegment] = useState<Segment>("equity_delivery");
   const [touched, setTouched] = useState(false);
