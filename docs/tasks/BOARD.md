@@ -137,7 +137,7 @@
 | NOVA-129 | Charge rates from 2020: the 2024 schedule backdated (D66, migration 0019, live bug) | done | Claude | — |
 | NOVA-130 | Agent account contracts, mocks and services (D67) | done | Claude | — |
 | NOVA-131 | Core: agent role, deny-by-default gateway, held writes (D67, migration 0020) | done | Claude | 130 |
-| NOVA-132 | Core: approve/reject held requests, agent account endpoints (D67) | in-progress | ChatGPT | 131 |
+| NOVA-132 | Core: approve/reject held requests, agent account endpoints (D67) | ready-for-review | ChatGPT | 131 |
 | NOVA-133 | Relay Approvals page, agent view in Relay and Orbit (D67) | planned | — | 130 (merge after 132) |
 
 ## Parallel lanes (tasks that can run at the same time)
