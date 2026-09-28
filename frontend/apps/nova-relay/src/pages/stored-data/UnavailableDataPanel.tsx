@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import type { CoverageQuery, UnavailableDay, UnavailableQuery } from "@nova/contracts";
 import { Card, LoadMore, Select } from "@nova/ui-core";
 import { UnavailableDataTable } from "@nova/ui-trading";
@@ -44,6 +44,11 @@ export function UnavailableDataPanel({ query }: { query: CoverageQuery }) {
           rows={history.data?.pages.flatMap((page) => page.items) ?? []}
           loading={history.isPending}
           onRecheck={recheck}
+          renderJobLink={(content, jobId) => (
+            <Link className="text-action-text hover:underline" to={`/data-jobs/${jobId}`}>
+              {content}
+            </Link>
+          )}
           error={
             history.isError ? (
               <QueryError error={history.error} onRetry={() => void history.refetch()} />

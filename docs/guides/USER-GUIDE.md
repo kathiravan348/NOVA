@@ -438,6 +438,8 @@ Your saved prices stay. **100%** means all requests finished; it does not overri
 Open **Stored data** and click the share to see the missing dates. The check uses the trading days known
 to the platform; it cannot find a day missing from that calendar too. It does not invent daily prices
 from minute prices. Successfully checked missing dates appear under **Unavailable data**, while the saved history remains incomplete.
+A normal download does not fail again on dates already listed there: it shows **Completed** with a note naming the
+shares and the known missing days. **Check again** still shows **Failed** if the broker still has no prices.
 
 **Updates appear by themselves.** In Real mode a small **Live** badge sits at the top right: job lists and job
 pages change the moment the work moves on, with no reload. If it shows **Reconnecting…**, the connection

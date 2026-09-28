@@ -21,7 +21,15 @@ const meta: Meta<typeof UnavailableDataTable> = {
   title: "Trading/UnavailableDataTable",
   component: UnavailableDataTable,
   parameters: { layout: "padded" },
-  args: { rows: [row], onRecheck: () => undefined },
+  args: {
+    rows: [row],
+    onRecheck: () => undefined,
+    renderJobLink: (content, jobId) => (
+      <a className="text-action-text hover:underline" href={`#${jobId}`}>
+        {content}
+      </a>
+    ),
+  },
 };
 export default meta;
 type Story = StoryObj<typeof UnavailableDataTable>;

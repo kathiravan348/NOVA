@@ -17,6 +17,8 @@ export interface UnavailableDataTableProps {
   loading?: boolean;
   error?: ReactNode;
   onRecheck?: (row: UnavailableDay) => void;
+  /** Wraps "View job", e.g. in a router link to that job. Without it the label is plain text. */
+  renderJobLink?: (content: ReactNode, jobId: string) => ReactNode;
 }
 
 /** Exact source gaps and successful-check history; prices and session inference are supplied by props. */
@@ -25,6 +27,7 @@ export function UnavailableDataTable({
   loading,
   error,
   onRecheck,
+  renderJobLink,
 }: UnavailableDataTableProps) {
   const columns = useMemo<DataTableProps<UnavailableDay, unknown>["columns"]>(
     () => [
@@ -67,16 +70,9 @@ export function UnavailableDataTable({
         id: "job",
         header: "Last job",
         cell: ({ row }) =>
-          row.original.lastJobId ? (
-            <a
-              className="rounded-xs text-text-primary underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
-              href={`/data-jobs/${row.original.lastJobId}`}
-            >
-              View job
-            </a>
-          ) : (
-            "—"
-          ),
+          row.original.lastJobId
+            ? (renderJobLink?.("View job", row.original.lastJobId) ?? "View job")
+            : "—",
       },
       {
         id: "check",
@@ -94,7 +90,7 @@ export function UnavailableDataTable({
         ),
       },
     ],
-    [onRecheck],
+    [onRecheck, renderJobLink],
   );
 
   return (

@@ -148,7 +148,9 @@ job because all requests finished. The check does not infer unavailable dates be
 the last stored day, or days missing from the observed calendar itself. It never synthesises daily bars.
 Successful historical responses persist `UnavailableDay` evidence for missing internal sessions. Failed responses do not.
 `skip_existing` treats unresolved recorded dates as explained; `overwrite` rechecks them. Neither adds synthetic candles.
-Valid prices resolve history automatically; source gaps still fail validation and do not become Complete.
+Valid prices resolve history automatically. A `skip_existing` job does not fail on gaps already recorded (unresolved, first
+checked before the job was created): it ends `completed` with the counts in `summary`. New gaps, and any gap in an
+`overwrite` job, still set `failed`. Recorded gaps never make coverage `complete`.
 
 | Method & path | What it does | Input | Output |
 |---|---|---|---|

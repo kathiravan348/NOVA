@@ -285,3 +285,40 @@ def test_download_records_empty_check_and_resolves_on_valid_candle(
                 assert row.attempts == (1 if state == "unavailable" else 2)
         finally:
             client.close()
+
+
+def test_routine_download_completes_on_known_gaps_but_overwrite_fails(
+    clean: Engine, broker: BrokerData
+) -> None:
+    new_day = date(2026, 9, 24)
+    _seed(clean, broker, [FIRST, MIDDLE, LAST, new_day])
+    with Session(clean) as db:
+        record_check(
+            db, exchange="NSE", symbol="INFY", timeframe="1d", first=FIRST, last=LAST,
+            check_id="earlier", at=datetime(2026, 9, 27, tzinfo=UTC),
+        )  # fmt: skip
+        db.commit()
+
+    def response(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json={"candles": [_bar(d) for d in (FIRST, LAST, new_day)]})
+
+    client = BrokerData("http://broker", "test", transport=httpx2.MockTransport(response))
+    try:
+        for mode, status in [("skip_existing", "completed"), ("overwrite", "failed")]:
+            with Session(clean) as db:
+                job = create_download(
+                    db, symbols=["INFY"], timeframe="1d", first=FIRST, last=new_day,
+                    segment="equity_delivery", mode=mode, start=True, actor_id=None,
+                    actor_name="Console", ip=None,
+                )  # fmt: skip
+                db.commit()
+                run_download(db, job.id, client, Pacer(sleep=lambda _: None))
+                db.refresh(job)
+                assert job.status == status
+                if status == "completed":
+                    assert job.error is None and job.summary is not None
+                    assert "Known broker-unavailable days remain (INFY: 1)" in job.summary
+                else:
+                    assert job.error is not None and "INFY: 1" in job.error
+    finally:
+        client.close()

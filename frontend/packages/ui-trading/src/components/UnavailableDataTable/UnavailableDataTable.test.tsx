@@ -21,7 +21,13 @@ const row: UnavailableDay = {
 describe("UnavailableDataTable", () => {
   it("shows exact dates and evidence, links the job and rechecks the chosen date", () => {
     const recheck = vi.fn();
-    render(<UnavailableDataTable rows={[row]} onRecheck={recheck} />);
+    render(
+      <UnavailableDataTable
+        rows={[row]}
+        onRecheck={recheck}
+        renderJobLink={(content, jobId) => <a href={`/data-jobs/${jobId}`}>{content}</a>}
+      />,
+    );
     const table = within(screen.getByRole("table", { name: "Unavailable data" }));
     expect(table.getByText("5 May 2022")).toBeInTheDocument();
     expect(table.getByText("No usable candle returned")).toBeInTheDocument();
