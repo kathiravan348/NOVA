@@ -142,7 +142,7 @@
 | NOVA-134 | Instrument sync keeps hyphenated stocks such as BAJAJ-AUTO (D68, live bug) | done | Claude | — |
 | NOVA-135 | Index backtests skip members with no prices in the period (D68, migration 0021, live bug) | done | Claude | — |
 | NOVA-136 | Orbit shows the stocks an index backtest skipped (D68) | done | Claude | 135 |
-| NOVA-137 | Backtest worker no longer freezes on index runs that skip stocks (D68, live bug) | planned | Claude | 135 |
+| NOVA-137 | Backtest worker no longer freezes on index runs that skip stocks (D68, live bug) | in-progress | Claude | 135 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

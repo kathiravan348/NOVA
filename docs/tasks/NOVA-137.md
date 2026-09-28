@@ -1,6 +1,6 @@
 # NOVA-137 — Backtest worker no longer freezes on index runs that skip stocks (D68 (4), live bug)
 
-**Status:** planned · **Owner:** Claude · **Branch:** task/NOVA-137 · **Depends on:** 135
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-137 · **Depends on:** 135
 
 ## Goal
 An index backtest that skips members (NOVA-135) and has a benchmark completes, instead of freezing the
