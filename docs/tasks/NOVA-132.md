@@ -1,6 +1,6 @@
 # NOVA-132 — Core: approve/reject held requests, agent account endpoints (D67)
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-132 · **Depends on:** NOVA-131
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-132 · **Depends on:** NOVA-131
 
 ## Goal
 The super-admin can list, approve (which runs the saved request as the agent) and reject agent requests, and
@@ -69,4 +69,16 @@ agent permissions, access/password session revocation; Swagger Agent group after
 **Known gaps:** none. Docker stack stopped after checks. No self-review or merge.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none needed.
+**Checked:** approve claims with one committed conditional update before replay (concurrent test proves a
+single run); replay uses the stored `/api/v1`-relative path as the agent; result cut to 8,000 chars; no answer
+→ `failed` + message; expiry and reject touch only unclaimed rows; agent 403 on decide and `/agent`
+(405 shim keeps other verbs 403-first); access off / new password revoke all agent sessions; single-agent
+create locked on the role row; Swagger `Agent` tag after Auth.
+**Note:** only an unexpected non-`ApiException` error during replay would leave a claimed row `pending`
+(it cannot expire or be rejected). No realistic path today; revisit if replay grows.
+**Gates:** `docker compose run --rm backend-check` 1,196 passed; `pnpm review:check` passed.
+**Guides checked:** API.md matches the diff (7 new rows, agent section); STRUCTURE updated. USER-GUIDE/DATABASE not affected.
+**Rulebook issues found:** none. **Follow-up tasks created:** none (screens are NOVA-133).
