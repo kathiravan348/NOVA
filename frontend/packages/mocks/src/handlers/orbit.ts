@@ -14,6 +14,7 @@ import {
   type Strategy,
 } from "@nova/contracts";
 import {
+  mockAgentUser,
   mockBacktestResults,
   mockBacktestRuns,
   mockStrategies,
@@ -68,15 +69,13 @@ function deleted(targets: BacktestRun[]): Response {
 }
 
 export const orbitHandlers = [
-  http.get(apiPath("/me"), () => {
-    return HttpResponse.json(mockUser);
-  }),
+  http.get(apiPath("/me"), () => HttpResponse.json(mockUser)),
 
-  // Mock sign-in (D38 shape): any valid email and password signs in as the mock user.
+  // Mock sign-in (D38): any valid email signs in as the mock user; `agent@…` as the agent (D67).
   http.post(apiPath("/auth/login"), async ({ request }) => {
     const parsed = LoginRequestSchema.safeParse(await request.json().catch(() => undefined));
     if (!parsed.success) return badRequest("Body must be { email, password }");
-    return HttpResponse.json(mockUser);
+    return HttpResponse.json(parsed.data.email.startsWith("agent@") ? mockAgentUser : mockUser);
   }),
 
   http.post(apiPath("/auth/logout"), () => new HttpResponse(null, { status: 204 })),

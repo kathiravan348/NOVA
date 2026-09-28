@@ -1,5 +1,6 @@
 export * from "./common";
 export * from "./user";
+export * from "./approval";
 export * from "./auth";
 export * from "./charges";
 export * from "./trade";

@@ -1,4 +1,12 @@
 import {
+  AgentAccountSchema,
+  ApprovalRequestSchema,
+  type ApprovalRequest,
+  type ApprovalStatus,
+  type AgentAccount,
+  type AgentAccountCreate,
+  type AgentPasswordUpdate,
+  type AgentAccessUpdate,
   AuditEntrySchema,
   BrokerAccountSchema,
   type BrokerAccountCreate,
@@ -30,6 +38,46 @@ import {
 import { apiGet, apiPost, apiRequest, apiSend, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
+
+export function listApprovals(
+  query: PageQuery & { status?: ApprovalStatus } = {},
+  init?: RequestOptions,
+): Promise<Page<ApprovalRequest>> {
+  return apiGet(withQuery("/approvals", { ...query }), pageSchema(ApprovalRequestSchema), init);
+}
+
+export function approveRequest(requestId: string, init?: RequestOptions): Promise<ApprovalRequest> {
+  return apiPost(`/approvals/${id(requestId)}/approve`, undefined, ApprovalRequestSchema, init);
+}
+
+export function rejectRequest(requestId: string, init?: RequestOptions): Promise<ApprovalRequest> {
+  return apiPost(`/approvals/${id(requestId)}/reject`, undefined, ApprovalRequestSchema, init);
+}
+
+export function getAgentAccount(init?: RequestOptions): Promise<AgentAccount> {
+  return apiGet("/agent", AgentAccountSchema, init);
+}
+
+export function createAgentAccount(
+  body: AgentAccountCreate,
+  init?: RequestOptions,
+): Promise<AgentAccount> {
+  return apiPost("/agent", body, AgentAccountSchema, init);
+}
+
+export function updateAgentPassword(
+  body: AgentPasswordUpdate,
+  init?: RequestOptions,
+): Promise<AgentAccount> {
+  return apiRequest("PUT", "/agent/password", body, AgentAccountSchema, init);
+}
+
+export function updateAgentAccess(
+  body: AgentAccessUpdate,
+  init?: RequestOptions,
+): Promise<AgentAccount> {
+  return apiRequest("PATCH", "/agent", body, AgentAccountSchema, init);
+}
 
 export function listBrokerAccounts(init?: RequestOptions): Promise<BrokerAccount[]> {
   return apiGet("/broker/accounts", BrokerAccountSchema.array(), init);

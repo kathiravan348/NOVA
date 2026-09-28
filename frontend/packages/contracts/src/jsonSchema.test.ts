@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ApiErrorSchema } from "./error";
+import {
+  ApprovalRequestSchema,
+  AgentAccountSchema,
+  AgentAccountCreateSchema,
+  AgentPasswordUpdateSchema,
+  AgentAccessUpdateSchema,
+} from "./approval";
 import { LoginRequestSchema } from "./auth";
 import { LibraryInstallSchema, StrategyLibrarySchema } from "./library";
 import { AuditEntrySchema } from "./audit";
@@ -51,6 +58,11 @@ import { RealtimeMessageSchema } from "./realtime";
 // Wire contracts (request/response bodies) exported as JSON Schema for backend parity tests (D34).
 // Regenerate with `pnpm --filter @nova/contracts schema:update`. Refinements are not part of JSON Schema.
 const contracts: Record<string, z.ZodType> = {
+  ApprovalRequest: ApprovalRequestSchema,
+  AgentAccount: AgentAccountSchema,
+  AgentAccountCreate: AgentAccountCreateSchema,
+  AgentPasswordUpdate: AgentPasswordUpdateSchema,
+  AgentAccessUpdate: AgentAccessUpdateSchema,
   ApiError: ApiErrorSchema,
   ArchiveJobCreate: ArchiveJobCreateSchema,
   AuditEntry: AuditEntrySchema,

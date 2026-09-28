@@ -4,7 +4,8 @@ import { getApiBaseUrl } from "./config";
 
 export const API_PREFIX = "/api/v1";
 
-export type ApiRequestErrorCode = ApiErrorCode | "invalid_response" | "network" | "unauthorized";
+export type ApiRequestErrorCode =
+  ApiErrorCode | "invalid_response" | "network" | "approval_pending";
 
 export class ApiRequestError extends Error {
   readonly status: number;
@@ -57,6 +58,7 @@ export async function apiGet<T>(
     throw new ApiRequestError(0, "network", `Network error for GET ${path}`);
   }
 
+  checkApproval(res);
   const body: unknown = await res.json().catch(() => undefined);
 
   if (!res.ok) throw toApiError(res.status, body, `GET ${path}`);
@@ -75,6 +77,16 @@ function toApiError(status: number, body: unknown, what: string): ApiRequestErro
     return new ApiRequestError(status, parsed.data.error.code, parsed.data.error.message);
   }
   return new ApiRequestError(status, "internal", `${what} failed with ${status}`);
+}
+
+function checkApproval(res: Response): void {
+  if (res.status === 202 && res.headers.has("x-nova-approval")) {
+    throw new ApiRequestError(
+      202,
+      "approval_pending",
+      `Sent to Admin for approval (${res.headers.get("x-nova-approval")}). It runs when Admin approves it.`,
+    );
+  }
 }
 
 /** Sends a JSON body and expects an empty success response (e.g. 204). */
@@ -99,6 +111,7 @@ export async function apiSend(
     throw new ApiRequestError(0, "network", `Network error for ${method} ${path}`);
   }
 
+  checkApproval(res);
   if (!res.ok) {
     const errorBody: unknown = await res.json().catch(() => undefined);
     throw toApiError(res.status, errorBody, `${method} ${path}`);
@@ -137,6 +150,7 @@ export async function apiRequest<T>(
     throw new ApiRequestError(0, "network", `Network error for ${method} ${path}`);
   }
 
+  checkApproval(res);
   const answer: unknown = await res.json().catch(() => undefined);
   if (!res.ok) throw toApiError(res.status, answer, `${method} ${path}`);
   const parsed = schema.safeParse(answer);

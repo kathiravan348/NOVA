@@ -1,5 +1,13 @@
 """Pydantic models mirroring `@nova/contracts` (D34)."""
 
+from nova_contracts.approval import (
+    AgentAccessUpdate,
+    AgentAccount,
+    AgentAccountCreate,
+    AgentPasswordUpdate,
+    ApprovalRequest,
+    ApprovalStatus,
+)
 from nova_contracts.audit import AuditAction, AuditEntry, AuditTargetType
 from nova_contracts.auth import LoginRequest
 from nova_contracts.backtest import (
@@ -135,6 +143,12 @@ from nova_contracts.universe import UniverseEntry, UniverseEntryWrite, UniverseS
 from nova_contracts.user import User, UserRole
 
 __all__ = [
+    "AgentAccessUpdate",
+    "AgentAccount",
+    "AgentAccountCreate",
+    "AgentPasswordUpdate",
+    "ApprovalRequest",
+    "ApprovalStatus",
     "LibraryBacktest",
     "LibraryEntry",
     "LibraryFamily",

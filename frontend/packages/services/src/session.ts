@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { LoginRequestSchema, UserSchema } from "@nova/contracts";
+import { LoginRequestSchema, UserSchema, type UserRole } from "@nova/contracts";
 import { getMe } from "./api/orbit";
 import { getDataMode } from "./config";
 import { ApiRequestError, apiPost, apiSend, onUnauthorized } from "./http";
@@ -11,6 +11,7 @@ import { ApiRequestError, apiPost, apiSend, onUnauthorized } from "./http";
 export interface Session {
   userId: string;
   displayName: string;
+  role: UserRole;
 }
 
 const STORAGE_KEY = "nova-session";
@@ -40,8 +41,16 @@ export function getSession(): Session | null {
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as Partial<Session>;
-      if (typeof parsed.userId === "string" && typeof parsed.displayName === "string") {
-        cachedSession = { userId: parsed.userId, displayName: parsed.displayName };
+      if (
+        typeof parsed.userId === "string" &&
+        typeof parsed.displayName === "string" &&
+        (parsed.role === undefined || parsed.role === "super_admin" || parsed.role === "agent")
+      ) {
+        cachedSession = {
+          userId: parsed.userId,
+          displayName: parsed.displayName,
+          role: parsed.role ?? "super_admin",
+        };
       }
     } catch {
       // corrupt value: treat as signed out
@@ -83,12 +92,14 @@ export async function signIn(identifier: string, password: string): Promise<Sess
       throw new ApiRequestError(400, "invalid_request", "Enter a valid email address.");
     }
     const user = await apiPost("/auth/login", body.data, UserSchema);
-    const session: Session = { userId: user.id, displayName: user.name };
+    const session: Session = { userId: user.id, displayName: user.name, role: user.role };
     store(session);
     return session;
   }
-  const me = await getMe();
-  const session: Session = { userId: me.id, displayName: me.name };
+  const me = identifier.trim().startsWith("agent@")
+    ? await apiPost("/auth/login", { email: identifier.trim(), password }, UserSchema)
+    : await getMe();
+  const session: Session = { userId: me.id, displayName: me.name, role: me.role };
   store(session);
   return session;
 }

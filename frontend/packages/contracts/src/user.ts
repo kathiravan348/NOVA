@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { IdSchema, UtcDateTimeSchema } from "./common";
 
-export const UserRoleSchema = z.literal("super_admin");
+export const UserRoleSchema = z.enum(["super_admin", "agent"]);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
 export const UserSchema = z.strictObject({

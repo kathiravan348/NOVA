@@ -5,6 +5,7 @@ export const ApiErrorCodeSchema = z.enum([
   "not_found",
   "invalid_request",
   "unauthorized",
+  "forbidden",
   "internal",
 ]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;
