@@ -1,6 +1,6 @@
 # NOVA-141 — Compact Approvals with bulk decisions and request details
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-141 · **Depends on:** NOVA-133
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-141 · **Depends on:** NOVA-133
 
 ## Goal
 Make batches of agent requests easy to inspect and decide without scrolling through full JSON cards.
