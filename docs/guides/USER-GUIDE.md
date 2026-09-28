@@ -213,9 +213,10 @@ its **Idea** and what to **Watch out** for:
 
 Use the family buttons or **Search** to narrow the list. **Add** copies a strategy into your **Strategies** as a
 draft (then it shows **Added**); **Add all** adds every one you do not have yet, after you confirm. **Backtest**
-adds it if needed and opens **Run backtest** already filled in. The original 60 use NIFTY 100 stocks and NIFTY 50 as the benchmark. The 40 new
-ideas use NIFTY 50 stocks and the NIFTY 50 benchmark, ₹10,00,000, 2 Jan 2023 – 31 Dec 2024. Library strategies are textbook ideas, not tuned for you: backtests are
-evidence, not promises.
+adds it if needed and opens **Run backtest** already filled in. The original 60 use NIFTY 100 stocks, NIFTY 50 as
+the benchmark, ₹10,00,000 and the test period below. The 40 new ideas use NIFTY 50 stocks and the NIFTY 50
+benchmark, ₹10,00,000, 2 Jan 2023 – 31 Dec 2024. Library strategies are textbook ideas, not tuned for you:
+backtests are evidence, not promises.
 
 **How to test a Library strategy fairly (three versions of one backtest):**
 1. **v1 in-sample** — the period the Backtest button fills in (1 Oct 2021 – 30 Sep 2024; intraday 2 Jan 2023 –
