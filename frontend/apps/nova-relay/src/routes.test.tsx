@@ -37,6 +37,27 @@ async function signInWithForm() {
 }
 
 describe("Relay routes", () => {
+  it.each(["/", "/broker", "/broker/brk_001", "/broker/unknown/path", "/data-jobs"])(
+    "makes no broker calls as agent at %s",
+    async (path) => {
+      const brokerCalls: string[] = [];
+      const track = ({ request }: { request: Request }) => {
+        if (new URL(request.url).pathname.startsWith("/api/v1/broker"))
+          brokerCalls.push(request.url);
+      };
+      server.events.on("request:start", track);
+      sessionStorage.setItem(
+        "nova-session",
+        JSON.stringify({ userId: "usr_agent", displayName: "Debug Agent", role: "agent" }),
+      );
+      const router = renderAt(path);
+      await screen.findByText(path === "/data-jobs" ? "Download pace" : "Recent activity");
+      expect(screen.queryByRole("link", { name: "Broker" })).not.toBeInTheDocument();
+      expect(brokerCalls).toEqual([]);
+      if (path.startsWith("/broker")) expect(router.state.location.pathname).toBe("/");
+      server.events.removeListener("request:start", track);
+    },
+  );
   it("redirects a signed-out visitor to /login with next", async () => {
     const router = renderAt("/audit");
     await screen.findByRole("button", { name: "Sign in" });

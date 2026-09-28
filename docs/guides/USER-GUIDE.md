@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-128). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-133). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -470,6 +470,28 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 
 ---
 
+### Step 9 — Approvals and the agent account
+
+Open **Approvals** to see changes requested by the agent account, a separate sign-in used by an AI
+assistant to help check the screens. The menu shows how many requests are waiting. **Waiting** refreshes
+every five seconds. Check the time, action, address and request details, then press **Approve** or
+**Reject** and confirm. Approving runs the saved change once; rejecting runs nothing. Requests expire
+after 30 minutes. **History** shows completed, failed, rejected and expired requests, the answer status
+and a short result. Press **Load more** for older entries.
+
+Under **Agent account**, press **Create agent**, enter its name and email, and enter the same password
+twice (at least 12 characters). **Set new password** replaces its password. Turn **Agent access** off
+to stop sign-ins and sign out its active sessions.
+
+The agent can read strategies, backtests, stored prices, data jobs, the audit log and approvals. It can
+check a download plan without approval. Other changes show **Sent to Admin for approval** and wait for
+your decision. **Back** keeps its download draft; unused drafts expire after 24 hours. The agent cannot
+open **Broker**, see broker details, use broker controls, manage its account or approve requests. Its
+**Approvals** page is read-only. In Real mode both apps show **Agent account: changes wait for Admin
+approval**; in Demo mode the demo banner appears instead.
+
+---
+
 ## 6. What is NOT there yet (not bugs)
 
 - **No real buying or selling.** Placing orders is a later phase (NOVA Launch).
@@ -477,7 +499,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 - One saved version of a strategy cannot be deleted on its own: delete the whole strategy, or set it to *Archived* to hide it.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
-- Only one person (the super-admin) can sign in for now; family roles come later.
+- The Owner and one agent account can sign in; family roles come later.
 
 ---
 
@@ -486,6 +508,7 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 | Problem | What to do |
 |---|---|
 | Yellow bar at the top | You are in demo mode: nothing you do is saved. |
+| **Sent to Admin for approval** | The change is waiting. The Owner opens **Approvals**, checks it and presses **Approve** or **Reject**. Check **History** for the result; if it expired, request the change again. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
 | A backtest says prices are missing, or you are not sure what is downloaded | Open **Stored data** (Step 6b), choose the timeframe and period, group by **Index**, and press **Download missing** on the index you test. |
 | A download *Failed* with *Not synced with Kite* | The stock is not synced with Kite yet. Press **Sync with Kite** on the Instruments page, then queue it again. |

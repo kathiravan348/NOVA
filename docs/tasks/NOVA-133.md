@@ -1,6 +1,6 @@
 # NOVA-133 — Relay Approvals page, agent view in Relay and Orbit (D67)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-133 · **Depends on:** NOVA-130 (merge after 132)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-133 · **Depends on:** NOVA-130 (merge after 132)
 
 ## Goal
 The Owner approves or rejects agent requests and manages the agent account on a new Relay **Approvals** page;
@@ -37,9 +37,9 @@ Modify:
    how to turn access off), and a row in "what do I do if".
 
 ## Acceptance checks
-- [ ] Tests: approve/reject call the API; agent sees no Broker menu and no `/broker` request is made (MSW);
+- [x] Tests: approve/reject call the API; agent sees no Broker menu and no `/broker` request is made (MSW);
       agent sees no buttons on Approvals; Back keeps the draft for the agent.
-- [ ] 360px and desktop, dark and light. `pnpm review:check` passes. Definition of done (`AGENTS.md` §9).
+- [x] 360px and desktop, dark and light. `pnpm review:check` passes. Definition of done (`AGENTS.md` §9).
 
 ## Out of scope
 - Backend (131, 132). New ui-core components (reuse `DemoBanner`, `Card`, `DataTable`, `Modal`, `Switch`).
@@ -49,7 +49,32 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Approvals, confirmation decisions, paged history, agent account controls and broker-free agent views.
+**Files changed:** `frontend/apps/nova-relay/src/pages/approvals/{ApprovalsPage,ApprovalList,AgentAccountCard}.tsx`, `approvals.test.tsx`.
+`frontend/apps/nova-relay/src/{routes.tsx,routes.test.tsx,layout/AppLayout.tsx}`; `frontend/apps/nova-orbit/src/layout/AppLayout.tsx`.
+`frontend/apps/nova-relay/src/pages/overview/OverviewPage.tsx`; `pages/data-jobs/{DataJobsPage,NewDownloadPage}.tsx`, `downloads.test.tsx`.
+`docs/{STRUCTURE.md,guides/USER-GUIDE.md,tasks/BOARD.md,tasks/NOVA-133.md}`.
+**Commands run:** Affected tests (40 passed); Relay typecheck; `pnpm review:check` passed (955 tests, format, lint, typecheck, Orbit/Relay/Storybook builds).
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓; mobile password form and approval confirmation fit; no horizontal overflow at 360px/1440px.
+**New dependencies:** none. Existing UI primitives and their stories reused.
+**Maps updated:** STRUCTURE (new approvals folder).
+**Guides updated:** USER-GUIDE (Approvals, agent limits and troubleshooting).
+**Deviations from task:** none; pending count loads all pending pages and refreshes every 5 s; history refreshes too.
+**Known gaps:** none in task scope. Mock writes remain stateless by design. Backend unchanged; independent review remains.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- `ApprovalList.tsx`: status pill no longer stretches full card width (`self-start`); `pending` uses the
+  `warning` tone, as in the ui-core StatusBadge story.
+**Checked, no change:** agent sees no Broker menu, `/broker*` redirects, Overview/Data jobs make no `/broker`
+calls (routes test); agent's free reads (`/audit`, `/approvals`, market data) match `agent_rules.py`;
+`approval_pending` toast comes from services (`http.ts`), no per-screen code. Auto-load of all pending pages
+stops after a failed page (measured: no retry loop). History is filtered client-side (API takes one status):
+acceptable, a page may show fewer rows.
+**Visual:** Approvals at 375px (no horizontal scroll) and desktop, dark theme; light per implementer.
+**Checks:** `pnpm review:check` passed; Relay lint, typecheck, approvals tests after the fix.
+**Guides checked:** USER-GUIDE matches the diff and backend (30 min expiry, access off ends sessions, message text).
+**Rulebook issues found:** none (`overview.test.tsx` listed but unchanged; covered by `routes.test.tsx`).
+**Follow-up tasks created:** none.

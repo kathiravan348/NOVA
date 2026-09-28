@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { CircleCheck } from "lucide-react";
 import { Card, Skeleton, StatCard } from "@nova/ui-core";
-import { useAuditEntries, useBrokerAccounts, useRateLimits } from "@nova/services";
+import { useAuditEntries, useBrokerAccounts, useRateLimits, useSession } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
 import { needsLogin } from "../../lib/session";
@@ -44,7 +44,7 @@ function RecentActivity() {
   );
 }
 
-export function OverviewPage() {
+function BrokerOverview() {
   const accounts = useBrokerAccounts();
   const limits = useRateLimits();
 
@@ -87,4 +87,8 @@ export function OverviewPage() {
       <RecentActivity />
     </div>
   );
+}
+
+export function OverviewPage() {
+  return useSession()?.role === "agent" ? <RecentActivity /> : <BrokerOverview />;
 }

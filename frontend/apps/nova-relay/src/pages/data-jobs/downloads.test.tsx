@@ -34,6 +34,24 @@ async function pickInfy() {
 }
 
 describe("New download", () => {
+  it("keeps the draft when the agent goes Back", async () => {
+    sessionStorage.setItem(
+      "nova-session",
+      JSON.stringify({ userId: "usr_agent", displayName: "Debug Agent", role: "agent" }),
+    );
+    renderApp("/data-jobs/new", { signedIn: false });
+    const table = await screen.findByRole("table", { name: "Stocks to download" });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search stocks" }), {
+      target: { value: "INFY" },
+    });
+    const row = (await within(table).findByText("INFY")).closest("tr")!;
+    fireEvent.click(within(row).getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Check plan" }));
+    await screen.findByText("Check the plan");
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    await screen.findByRole("button", { name: "Check plan" });
+    expect(calls).not.toContain("DELETE /api/v1/data-jobs/job_plan");
+  });
   it("opens from the jobs list", async () => {
     renderApp("/data-jobs");
     fireEvent.click(await screen.findByRole("link", { name: "New download" }));
