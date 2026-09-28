@@ -1,6 +1,6 @@
 # NOVA-142 — Benchmark: any index, defaulting to the universe's index
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-142 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-142 · **Depends on:** —
 
 ## Goal
 A backtest can be compared with any stored index (e.g. NIFTY 500 for a NIFTY 500 universe), not only NIFTY 50
@@ -70,4 +70,16 @@ Modify:
 - No live migration applied. Reviewer must merge; no self-review performed.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- `EquityCurve` legend, line name and tooltip were hardcoded "NIFTY 50": new `benchmarkLabel` prop (default
+  NIFTY 50), passed the run's benchmark on the result and compare pages; test + `OtherIndex` story.
+- `NewBacktestPage.tsx`: doc comments and blank lines had been stripped to stay ≤ 300 lines. Restored them and
+  moved the **Benchmark** select + follow-the-index effect into `BenchmarkField.tsx` (295 lines now).
+- `docs/COMPONENTS.md` EquityCurve row; USER-GUIDE result-page **Equity curve** line (named after the index).
+**Change requests:** none.
+**Guides checked:** API, DATABASE match the diff; USER-GUIDE fixed directly (equity curve line).
+**Rulebook issues found:** §8 files ≤ 300 lines was met by deleting comments instead of splitting the file.
+Gates: `pnpm review:check` (988 tests) and `backend-check` (1,225 tests) pass after the fixes.
+**Follow-up tasks created:** none.
