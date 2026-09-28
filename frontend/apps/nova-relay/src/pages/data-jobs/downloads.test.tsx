@@ -68,6 +68,11 @@ describe("New download", () => {
     expect(select).toHaveValue("1d");
   });
 
+  it("starts the period on 1 Jan 2020 (D69)", async () => {
+    renderApp("/data-jobs/new");
+    expect(await screen.findByLabelText("From")).toHaveValue("2020-01-01");
+  });
+
   it("needs a stock and a period in order", async () => {
     renderApp("/data-jobs/new");
     await screen.findByRole("table", { name: "Stocks to download" });

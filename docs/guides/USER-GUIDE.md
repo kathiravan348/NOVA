@@ -400,7 +400,7 @@ belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its price
 ### Step 6b — Stored data (which prices are saved)
 **Stored data** in the menu shows, for every stock and every index, which prices NOVA already has.
 Choose the **Timeframe** (**Daily (1d)** or **1 minute (1m)**; 3-minute to 1-hour prices are built from 1-minute ones)
-and the period with **From** and **To** (the last 5 years at first). Each row shows the **First day** and **Last day** saved,
+and the period with **From** and **To** (1 Jan 2020 to today at first). Each row shows the **First day** and **Last day** saved,
 how many trading **Days** are saved in the period, how many trading days are **Missing**, and a **Status**:
 - **Complete**: every trading day of the period is there. A stock listed during the period is complete from its
   listing day once a download has asked Kite for the days before it (Kite has nothing earlier).
@@ -430,7 +430,7 @@ dropped for a moment; the pages then refresh every few seconds until **Live** is
 
 **To download past prices:** press **New download**, choose the **Timeframe** (the size of each price bar:
 **1 minute** or **1 day**; 3-minute to 1-hour candles are built from 1-minute prices, so download
-**1 minute** to test a 5-minute strategy), the **From** and **To** dates and the stocks. Tick stocks one by one (use the
+**1 minute** to test a 5-minute strategy), the **From** and **To** dates (1 Jan 2020 to today at first) and the stocks. Tick stocks one by one (use the
 search box), or add a whole group with **Add index…** (for example all of NIFTY BANK) or **Add sector…**;
 **Clear** empties the list. Only stocks *synced* with Kite can be picked. Under **Indices** you can tick index
 prices too (for example **NIFTY 50**): backtests use them for the benchmark line and the market filter. Before a

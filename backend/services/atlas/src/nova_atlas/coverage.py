@@ -26,7 +26,7 @@ IST = ZoneInfo("Asia/Kolkata")
 EXCHANGE = "NSE"
 CALENDAR_INDEX = "NIFTY 50"
 MIN_STOCKS_A_DAY = 10
-DEFAULT_YEARS = 5
+DEFAULT_FROM = date(2020, 1, 1)  # D69: where stored history starts by default
 
 
 def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal["index", "stocks"]]:
@@ -139,10 +139,7 @@ def _numbers(series: _Series | None, first: date, last: date, days: list[date]) 
 def _period(first: date | None, last: date | None) -> tuple[date, date]:
     last = last or datetime.now(IST).date()
     if first is None:
-        try:
-            first = last.replace(year=last.year - DEFAULT_YEARS)
-        except ValueError:  # 29 February
-            first = last.replace(year=last.year - DEFAULT_YEARS, day=28)
+        first = min(DEFAULT_FROM, last)
     if first > last:
         raise ApiException(400, "invalid_request", "From must be on or before To")
     return first, last

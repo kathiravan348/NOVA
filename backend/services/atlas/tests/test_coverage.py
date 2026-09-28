@@ -162,6 +162,17 @@ def test_the_period_clips_what_counts(client: TestClient, clean: Engine) -> None
     assert client.get(COVERAGE, params=PERIOD | {"from": "2026-09-30"}).status_code == 400
 
 
+def test_the_period_starts_on_1_jan_2020_by_default(client: TestClient, clean: Engine) -> None:
+    """D69: without `from` the period starts 2020-01-01, or at `to` when that is earlier."""
+    _market(clean)
+
+    body, _ = _rows(client, {"timeframe": "1d", "to": "2026-09-25"})
+    early, _ = _rows(client, {"timeframe": "1d", "to": "2019-06-30"})
+
+    assert (body["from"], body["to"]) == ("2020-01-01", "2026-09-25")
+    assert (early["from"], early["to"]) == ("2019-06-30", "2019-06-30")
+
+
 def test_detail_merges_missing_days_into_ranges(
     client: TestClient, clean: Engine, parity: Parity
 ) -> None:

@@ -21,7 +21,7 @@ import {
 } from "@nova/ui-core";
 import { useCoverage } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
-import { formatCalendarDate, todayIst } from "../../lib/format";
+import { DATA_START_DAY, formatCalendarDate, todayIst } from "../../lib/format";
 import {
   coverageGroups,
   needsDownload,
@@ -39,7 +39,6 @@ export interface DownloadMissingState {
   to: string;
 }
 
-const fiveYearsBefore = (day: string) => `${Number(day.slice(0, 4)) - 5}${day.slice(4)}`;
 const dayOrDash = (day: string | null) => (day ? formatCalendarDate(day) : "—");
 
 /** Stored history per stock and index, its gaps, grouped by index or sector (D63). */
@@ -48,7 +47,7 @@ export function StoredDataPage() {
   const navigate = useNavigate();
   const today = todayIst();
   const [timeframe, setTimeframe] = useState<CoverageTimeframe>("1d");
-  const [from, setFrom] = useState(fiveYearsBefore(today).replace("-02-29", "-02-28"));
+  const [from, setFrom] = useState(DATA_START_DAY);
   const [to, setTo] = useState(today);
   const [groupBy, setGroupBy] = useState<GroupBy>("index");
   const [onlyGaps, setOnlyGaps] = useState(false);
