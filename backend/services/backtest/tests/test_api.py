@@ -49,6 +49,18 @@ def test_bad_run_requests(
     assert client.post(BACKTESTS, json=run_body | change).status_code == status
 
 
+def test_benchmark_must_be_a_stored_index(
+    client: TestClient, run_body: dict[str, object], parity: Parity
+) -> None:
+    invalid = client.post(BACKTESTS, json=run_body | {"benchmark": "SENSEX"})
+    assert invalid.status_code == 400
+    assert invalid.json()["error"]["code"] == "invalid_request"
+    assert invalid.json()["error"]["message"] == "Unknown benchmark: SENSEX"
+    run = _queue(client, run_body | {"benchmark": "NIFTY 500"})
+    assert run["benchmark"] == "NIFTY 500"
+    parity.assert_valid(run, "BacktestRun")
+
+
 def test_list_is_paged_newest_first_and_filters_by_strategy(
     client: TestClient, run_body: dict[str, object]
 ) -> None:

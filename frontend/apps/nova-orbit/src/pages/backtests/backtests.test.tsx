@@ -195,6 +195,45 @@ describe("Backtest result", () => {
 });
 
 describe("New backtest form", () => {
+  it("follows the universe's index until Benchmark is changed", async () => {
+    renderApp("/backtests/new?strategy=stg_001");
+    const benchmark = await screen.findByLabelText("Benchmark");
+    expect(benchmark).toHaveValue("NIFTY 50");
+    await within(benchmark).findByRole("option", { name: /^NIFTY 100 \(/ });
+    expect(within(benchmark).getAllByRole("option")).toHaveLength(20);
+    fireEvent.change(screen.getByLabelText("Test on"), { target: { value: "index" } });
+    fireEvent.change(screen.getByLabelText("Index"), { target: { value: "NIFTY 100" } });
+    await waitFor(() => expect(benchmark).toHaveValue("NIFTY 100"));
+    fireEvent.change(benchmark, { target: { value: "NIFTY 50" } });
+    fireEvent.change(screen.getByLabelText("Index"), { target: { value: "NIFTY BANK" } });
+    expect(benchmark).toHaveValue("NIFTY 50");
+    fireEvent.change(benchmark, { target: { value: "NIFTY 500" } });
+    fireEvent.change(screen.getByLabelText("Index"), { target: { value: "NIFTY 200" } });
+    expect(benchmark).toHaveValue("NIFTY 500");
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
+    expect(posted[0]).toMatchObject({ benchmark: "NIFTY 500" });
+  });
+
+  it("keeps None after changing the universe and submits null", async () => {
+    renderApp("/backtests/new?strategy=stg_001");
+    const benchmark = await screen.findByLabelText("Benchmark");
+    fireEvent.change(benchmark, { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Test on"), { target: { value: "index" } });
+    expect(benchmark).toHaveValue("");
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
+    expect(posted[0]).toMatchObject({ benchmark: null });
+  });
+
+  it("keeps an explicit Library benchmark and defaults an index-only link to that index", async () => {
+    renderApp("/backtests/new?strategy=stg_001&index=NIFTY%20100&benchmark=NIFTY%20500");
+    expect(await screen.findByLabelText("Benchmark")).toHaveValue("NIFTY 500");
+    cleanup();
+    renderApp("/backtests/new?strategy=stg_001&index=NIFTY%20100");
+    await waitFor(() => expect(screen.getByLabelText("Benchmark")).toHaveValue("NIFTY 100"));
+  });
+
   it("preselects the strategy from the query string", async () => {
     renderApp("/backtests/new?strategy=stg_001");
     expect(await screen.findByDisplayValue("VWAP Momentum Intraday backtest")).toBeInTheDocument();

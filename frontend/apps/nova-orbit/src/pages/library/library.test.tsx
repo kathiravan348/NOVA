@@ -83,7 +83,7 @@ describe("Library page (NOVA-122)", () => {
     expect(screen.getByLabelText(/^Strategy/)).toHaveValue("stg_005");
     expect(screen.getByLabelText(/^Index/)).toHaveValue("NIFTY 100");
     expect(screen.getByLabelText(/^Initial capital/)).toHaveValue("1000000");
-    expect(screen.getByRole("switch", { name: /Compare with NIFTY 50/ })).toBeChecked();
+    expect(screen.getByLabelText("Benchmark")).toHaveValue("NIFTY 50");
     expect(installs()).toHaveLength(0); // already there: nothing is added
     const search = new URLSearchParams(router.state.location.search);
     expect([search.get("from"), search.get("to")]).toEqual(["2021-10-01", "2024-09-30"]);

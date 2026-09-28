@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-141). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-142). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -234,7 +234,10 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 1. **Strategy** and **Version** — which idea, and which saved copy of it.
 2. **Run name** — any name you will recognise later.
 3. **Period and capital** — **From** and **To** dates, **Initial capital** (pretend starting money, in ₹),
-   and tick **Compare with NIFTY 50** to see how the market itself did.
+   and **Benchmark** — the index to compare your result with, or **None** for no comparison. It starts
+   at **NIFTY 50**. Choosing **A whole index** makes it follow that index until you change **Benchmark**
+   yourself. Editing a run keeps its saved benchmark. Download the chosen index's daily prices to see
+   its return, line and year-by-year comparison.
 4. **Symbols → Test on**:
    - **Chosen symbols**: search by name, filter by index, sector or "F&O only", tick rows or press
      *Select all shown*. The count of chosen shares shows above the list.

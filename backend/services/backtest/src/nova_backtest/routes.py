@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session, aliased
 from nova_backtest.convert import result_contract, run_contract, trade_contract
 from nova_backtest.versions import (
     add_version,
+    check_benchmark,
     check_symbols,
     delete_backtests,
     delete_version,
@@ -117,6 +118,7 @@ def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONRespons
         )
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
+    check_benchmark(db, body.benchmark)
     run_id = new_id("run")
     run = BacktestRun(
         id=run_id,

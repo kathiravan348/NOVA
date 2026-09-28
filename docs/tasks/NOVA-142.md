@@ -1,6 +1,6 @@
 # NOVA-142 — Benchmark: any index, defaulting to the universe's index
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-142 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-142 · **Depends on:** —
 
 ## Goal
 A backtest can be compared with any stored index (e.g. NIFTY 500 for a NIFTY 500 universe), not only NIFTY 50
@@ -37,21 +37,36 @@ Modify:
    USER-GUIDE Step "Run a backtest" (the **Benchmark** field and its default).
 
 ## Acceptance checks
-- [ ] Queueing with `NIFTY 500` saves it; the result shows NIFTY 500's return and the year table's column.
-- [ ] `SENSEX` (not in `market_indices`) → 400 from both endpoints; a direct insert fails on the FK.
-- [ ] Form tests: default NIFTY 50; choosing index NIFTY 100 sets it; a changed choice is kept; None → `null`.
-- [ ] Migration upgrade/downgrade test passes with existing `NIFTY 50` and `null` rows.
-- [ ] Definition of done in `AGENTS.md` §9 (backend-check and `pnpm review:check`).
+- [x] Queueing with `NIFTY 500` saves it; the result shows NIFTY 500's return and the year table's column.
+- [x] `SENSEX` (not in `market_indices`) → 400 from both endpoints; a direct insert fails on the FK.
+- [x] Form tests: default NIFTY 50; choosing index NIFTY 100 sets it; a changed choice is kept; None → `null`.
+- [x] Migration upgrade/downgrade test passes with existing `NIFTY 50` and `null` rows.
+- [x] Definition of done in `AGENTS.md` §9 (backend-check and `pnpm review:check`).
 
 ## Out of scope
 - Library data (`library/*.json` keep NIFTY 50), result metrics, benchmark maths, strategy stats (NOVA-143).
 - Re-running or editing existing runs; the runs queued today stay as they are.
 
 ## Questions
-_(implementer writes here if blocked)_
+- Full frontend check: `frontend/apps/nova-orbit/src/pages/library/library.test.tsx:86` still expects
+  the removed switch. Owner approved updating that assertion in this session (file absent from scope).
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- Built by ChatGPT, 28 Sep 2026, branch `task/NOVA-142`; independent review required.
+- Changed: migration 0023 + model FK, Python/TS benchmark contracts + five generated schemas,
+  both queue endpoints, Orbit benchmark select/defaults, tests, and the three guides.
+- Any stored index is accepted; unknown names return 400 `invalid_request` before insert.
+- Defaults follow the universe until Benchmark is dirty; explicit NIFTY 50, None, Library links,
+  and existing run values are preserved. Automatic defaults reset RHF's benchmark baseline.
+- Tests: targeted frontend 55 passed; targeted backend 102 passed.
+- Gates: `pnpm review:check` passed (986 tests; lint, typecheck, formatting, Orbit/Relay/Storybook builds).
+- `docker compose run --rm backend-check` passed (1225 tests; ruff, format, strict mypy).
+- First full backend run hit an unrelated WebSocket teardown cancellation; unchanged rerun passed.
+- Visual QA: run form at 360px and 1440px, dark/light; reused existing ui-core Select stories.
+- Guides: API, DATABASE (0023), USER-GUIDE updated; no new dependencies.
+- Owner approved the one-line Library test update outside the original Files list (see Questions).
+- Downgrade preserves runs but clears non-NIFTY-50 benchmarks to null for the old constraint.
+- No live migration applied. Reviewer must merge; no self-review performed.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

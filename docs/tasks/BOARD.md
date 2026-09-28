@@ -147,7 +147,7 @@
 | NOVA-139 | Validate download coverage and do not skip small gaps | done | Claude | 124, 128 |
 | NOVA-140 | Automatic broker-unavailable date history in Stored data | done | Claude | 139 |
 | NOVA-141 | Compact Approvals: bulk decisions, details and tabs | done | Claude | 133 |
-| NOVA-142 | Benchmark: any index, defaulting to the universe's index (D72) | planned | — | — |
+| NOVA-142 | Benchmark: any index, defaulting to the universe's index (D72) | in-progress | ChatGPT | — |
 | NOVA-143 | Strategy card: CAGR range, one value for one run (D72) | planned | — | — |
 
 ## Parallel lanes (tasks that can run at the same time)
