@@ -1,6 +1,6 @@
 # NOVA-133 — Relay Approvals page, agent view in Relay and Orbit (D67)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-133 · **Depends on:** NOVA-130 (merge after 132)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-133 · **Depends on:** NOVA-130 (merge after 132)
 
 ## Goal
 The Owner approves or rejects agent requests and manages the agent account on a new Relay **Approvals** page;
@@ -63,4 +63,18 @@ _(implementer writes here if blocked)_
 **Known gaps:** none in task scope. Mock writes remain stateless by design. Backend unchanged; independent review remains.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- `ApprovalList.tsx`: status pill no longer stretches full card width (`self-start`); `pending` uses the
+  `warning` tone, as in the ui-core StatusBadge story.
+**Checked, no change:** agent sees no Broker menu, `/broker*` redirects, Overview/Data jobs make no `/broker`
+calls (routes test); agent's free reads (`/audit`, `/approvals`, market data) match `agent_rules.py`;
+`approval_pending` toast comes from services (`http.ts`), no per-screen code. Auto-load of all pending pages
+stops after a failed page (measured: no retry loop). History is filtered client-side (API takes one status):
+acceptable, a page may show fewer rows.
+**Visual:** Approvals at 375px (no horizontal scroll) and desktop, dark theme; light per implementer.
+**Checks:** `pnpm review:check` passed; Relay lint, typecheck, approvals tests after the fix.
+**Guides checked:** USER-GUIDE matches the diff and backend (30 min expiry, access off ends sessions, message text).
+**Rulebook issues found:** none (`overview.test.tsx` listed but unchanged; covered by `routes.test.tsx`).
+**Follow-up tasks created:** none.
