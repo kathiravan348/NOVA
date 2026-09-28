@@ -1,6 +1,6 @@
 # NOVA-131 — Core: agent role, deny-by-default gateway, held writes (D67, migration 0020)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-131 · **Depends on:** NOVA-130
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-131 · **Depends on:** NOVA-130
 
 ## Goal
 An `agent` user can sign in; the gateway refuses anything not on its rule table (broker always), passes free
