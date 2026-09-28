@@ -17,7 +17,8 @@ Modify:
 - `backend/services/core/src/nova_core/main.py`, `cli.py` (share `create_user(role=…)` with `create-admin`)
 - `backend/services/core/src/nova_core/sessions.py` (revoke every session of a user)
 - `backend/services/core/tests/test_cli.py`
-- `docs/guides/API.md`
+- `backend/services/core/src/nova_core/api_docs.py`, `backend/services/core/tests/test_api_docs.py` (new tag)
+- `docs/guides/API.md`, `docs/STRUCTURE.md`
 
 ## Build
 1. `GET /approvals?status=&limit=&cursor=`: newest first, `Page<ApprovalRequest>`. Super-admin sees all; the
@@ -33,7 +34,9 @@ Modify:
    otherwise; email not already used; audit `agent.create`); `PUT /agent/password` (revokes its sessions; audit
    `agent.password`); `PATCH /agent {enabled}` (sets/clears `disabled_at`; off revokes its sessions; audit
    `agent.access` "Agent access off"). Passwords use the same rules and hash as `create-admin`.
-5. Tests: approve runs once (second approve 400), result stored, expired cannot be approved, agent cannot
+5. `api_docs.py`: add tag `("Agent", ("agent", "approvals"), "The agent account and approvals of its held
+   requests (D67).")` after Auth; update `test_schema_groups_operations_by_area` for it.
+6. Tests: approve runs once (second approve 400), result stored, expired cannot be approved, agent cannot
    approve/reject or call `/agent` (403), turning access off ends a live agent session. API.md rows for all.
 
 ## Acceptance checks
@@ -47,6 +50,8 @@ The new endpoints cause `test_schema_groups_operations_by_area` to fail: `/agent
 are grouped as `Other` by `nova_core/api_docs.py`. May the planner add that file to Modify so these
 Core endpoints can be grouped under Auth? The task also creates four files but omits `docs/STRUCTURE.md`
 from Modify; please add it for the required map update (AGENTS §4). Implementation remains in-progress.
+**Answer (Claude, planner):** Owner chose a separate `Agent` tag, not Auth (Build step 5).
+`api_docs.py`, `test_api_docs.py` and `docs/STRUCTURE.md` added to Modify. Continue.
 
 ## Handoff
 **Progress:** approval and agent endpoints implemented; stopped on scope question above.
