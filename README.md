@@ -169,6 +169,6 @@ Development is run by AI agents following a shared rulebook:
 
 - [`AGENTS.md`](AGENTS.md): rules for every agent (read first).
 - [`docs/tasks/BOARD.md`](docs/tasks/BOARD.md): task board. One task per branch (`task/NOVA-###`).
-- [`CLAUDE.md`](CLAUDE.md) / [`GEMINI.md`](GEMINI.md): per-agent roles.
+- [`CLAUDE.md`](CLAUDE.md) / [`CHATGPT.md`](CHATGPT.md) / [`GEMINI.md`](GEMINI.md): per-agent roles (Claude and ChatGPT plan, build and review; Gemini only builds).
 - [`docs/DECISIONS.md`](docs/DECISIONS.md): why things are the way they are.
 - [`START-HERE.md`](START-HERE.md): first-time setup.

@@ -34,4 +34,4 @@ _(implementer writes here if blocked)_
 _(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
 
 ## Review
-_(Claude, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

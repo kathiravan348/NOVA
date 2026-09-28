@@ -1,6 +1,7 @@
 # NOVA — Agent Rulebook
 
-> Every agent reads this file first, every session. Keep it short: details live in `docs/`.
+> Every agent reads this file first, every session, then its own file: `CLAUDE.md`, `CHATGPT.md` or `GEMINI.md`.
+> Keep it short: details live in `docs/`.
 > NOVA = Networked Order & Value Analytics. A private trading platform for one family.
 > Brand names come from `brand.config.ts` only. Never hardcode "NOVA" in UI text.
 
@@ -10,41 +11,49 @@ Goal: build the backend behind the frozen screens and contracts, then switch scr
 Only the broker service may call Zerodha (D35). No orders. Screens and contracts change only through a task.
 Full plan: `docs/PLAN.md`. Do not build anything from a later phase (paper or live trading).
 
-## 2. Roles
-| Agent | Role | May change code? |
-|---|---|---|
-| Claude (Claude Code) | Planner, architect, reviewer | Only for tasks in `in-review` it owns |
-| Gemini (Antigravity) | Implementer | Only for tasks in `in-progress` or `changes-requested` it owns |
-| Owner (human) | Approves plans, merges final decisions | Always |
+## 2. Roles (D64)
+Three roles: **planner** (plans, architecture, task files), **implementer** (builds a task), **reviewer** (reviews, fixes, merges).
 
-Only Claude edits `AGENTS.md`, `docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` and task files' scope.
-Gemini never changes a plan. If a task is unclear or wrong, stop and write the question in the task's `Questions` section.
+| Agent | Roles it may take | Own file |
+|---|---|---|
+| Claude (Claude Code) | Planner, implementer, reviewer | `CLAUDE.md` |
+| ChatGPT (ChatGPT app / Codex) | Planner, implementer, reviewer | `CHATGPT.md` |
+| Gemini (Antigravity) | Implementer **only** | `GEMINI.md` |
+| Owner (human) | Approves plans, merges final decisions | — |
+
+**Lead agents** = Claude and ChatGPT. Either may stand in for the other, or for Gemini. Gemini never stands in for a lead agent.
+- The Owner says which role an agent takes in a session ("Plan", "Review", "Build NOVA-###"). No role given: a lead agent works as planner/reviewer (review first, then plan); Gemini works as implementer.
+- One role per task at a time. May change code: the implementer only for tasks `in-progress` / `changes-requested` it owns; the reviewer only for tasks `in-review` it owns; the planner only task files, the board and the plan docs.
+- Only a lead agent edits `AGENTS.md`, the agent files, `docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` and task files' scope, and only while acting as planner or reviewer.
+- An implementer (any agent) never changes a plan. If a task is unclear or wrong, stop and write the question in the task's `Questions` section.
+- **No self-review by default:** the reviewer should not be the agent that built the task (Claude built → ChatGPT reviews, and the other way round). If the Owner says the other lead agent is not available, the same agent may review in a **fresh session** and writes `Self-review: yes` in the review note.
+- **Taking over:** an agent replacing another sets itself as owner on the board, reads the task's `Questions`, `Handoff` and branch commits, and continues on the same branch. Never take over a task another agent is still working on unless the Owner says it has stopped.
 
 ## 3. Task workflow (status = lock)
-Board: `docs/tasks/BOARD.md`. Read it at the start of every session.
+Board: `docs/tasks/BOARD.md`. Read it at the start of every session. `Owner` column = the agent doing the current step (Claude, ChatGPT or Gemini).
 
-`draft` (Claude writing) → `planned` → `in-progress` (Gemini) → `ready-for-review` → `in-review` (Claude) → `done`
+`draft` (planner writing) → `planned` → `in-progress` (implementer) → `ready-for-review` → `in-review` (reviewer) → `done`
 
-From `in-review`, Claude may send a task back: `changes-requested` (Gemini) → `ready-for-review`.
+From `in-review`, the reviewer may send a task back: `changes-requested` (implementer) → `ready-for-review`.
 
 Rules:
 1. Change the status on the board **before** starting work, and set yourself as owner.
 2. Never edit files of a task you do not own.
 3. Two tasks whose `Files` lists overlap may not be `in-progress` and `in-review` at the same time. Exception: `frontend/pnpm-lock.yaml` is generated. On a conflict, rebase and re-run `pnpm install`. Never hand-edit it.
    Shared list files do not count as overlap either: `frontend/packages/*/package.json` (dependency lines), `frontend/packages/*/src/index.ts` (export lines), `backend/libs/nova_contracts/src/nova_contracts/__init__.py` (export lines), `frontend/packages/contracts/schema/*.json` (generated; re-run `schema:update` after a rebase), `docs/COMPONENTS.md`, `docs/CONTRACTS.md`, `docs/STRUCTURE.md`, `docs/guides/*.md`. Only add or edit your own lines/sections in them; on a conflict, rebase and keep both sides.
-4. One branch per task: `task/NOVA-###`. Commit all work (`NOVA-###: …`) on it before setting `ready-for-review`. Claude's review fixes are committed on the same branch with prefix `review:`.
-5. Claude priority: review `ready-for-review` tasks first, then plan. Keep 1–2 tasks `planned` ahead so Gemini is never idle.
-6. Claude fixes small/medium issues directly. If the fix means rewriting most of the task, write a precise change request and set `changes-requested`.
-7. Only Claude merges to `main`, after tests pass.
+4. One branch per task: `task/NOVA-###`. Commit all work (`NOVA-###: …`) on it before setting `ready-for-review`. The reviewer's fixes are committed on the same branch with prefix `review:`.
+5. Lead agent priority: review `ready-for-review` tasks first, then plan. Keep 1–2 tasks `planned` ahead so no implementer is idle.
+6. The reviewer fixes small/medium issues directly. If the fix means rewriting most of the task, write a precise change request and set `changes-requested`.
+7. Only a lead agent acting as reviewer merges to `main`, after tests pass. Gemini never merges.
 
 ## 4. Token-saving rules (mandatory)
 - Read only: this file, `docs/tasks/BOARD.md`, your task file, and the files the task lists. Nothing else unless the task says so.
 - Never scan or list the whole repo. Use the maps: `docs/STRUCTURE.md`, `docs/CONTRACTS.md`, `docs/COMPONENTS.md`.
 - One task per session. Start a fresh session for the next task.
 - Handoff note ≤ 20 lines (`docs/templates/HANDOFF.md`). Review note ≤ 20 lines (`docs/templates/REVIEW.md`).
-- Claude reviews `git diff main...task/NOVA-###`, not whole files.
+- The reviewer reads `git diff main...task/NOVA-###`, not whole files.
 - Prove work with tests and a build, not by re-reading code.
-- While working, run only the checks for the packages you touch (e.g. `pnpm vitest run packages/mocks`, `pnpm --filter @nova/mocks lint`). Run the full `pnpm review:check` once, before `ready-for-review` (Claude: once, before merge). Backend: `docker compose run --rm backend-check` once, before `ready-for-review`, when the task touches `backend/`.
+- While working, run only the checks for the packages you touch (e.g. `pnpm vitest run packages/mocks`, `pnpm --filter @nova/mocks lint`). Run the full `pnpm review:check` once, before `ready-for-review` (reviewer: once, before merge). Backend: `docker compose run --rm backend-check` once, before `ready-for-review`, when the task touches `backend/`.
 - Do not restate the task or this rulebook in replies. Report only: done / changed files / open questions.
 - Update the maps (`STRUCTURE`, `CONTRACTS`, `COMPONENTS`) and the guides (`docs/guides/`, §7a) in the same task that changes them.
   Read only the guide section you change.

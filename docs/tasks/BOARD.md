@@ -2,7 +2,7 @@
 
 > Read at the start of every session. Update status + owner BEFORE starting work.
 > Statuses: planned · in-progress · ready-for-review · in-review · changes-requested · done
-> A task is written when it has a file in `docs/tasks/`. Claude writes each next task file from `docs/templates/TASK.md` before it becomes `planned`; until then its status is `draft`.
+> A task is written when it has a file in `docs/tasks/`. The planner (Claude or ChatGPT) writes each next task file from `docs/templates/TASK.md` before it becomes `planned`; until then its status is `draft`.
 
 | ID | Title | Status | Owner | Depends on |
 |---|---|---|---|---|

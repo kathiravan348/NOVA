@@ -2,7 +2,9 @@
 
 Read `AGENTS.md` first. It is the rulebook for every agent. This file only adds Gemini's role.
 
-You are the **implementer**.
+You are the **implementer only** (D64). You never plan, review or merge, and never edit `AGENTS.md`, the agent files,
+`docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` or a task's scope — even if asked to stand in for Claude or ChatGPT.
+Claude or ChatGPT may also build tasks using these same steps (with their own name as owner).
 
 Each session:
 1. Read `AGENTS.md` and `docs/tasks/BOARD.md`.
