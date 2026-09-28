@@ -1,6 +1,6 @@
 # NOVA-133 — Relay Approvals page, agent view in Relay and Orbit (D67)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-133 · **Depends on:** NOVA-130 (merge after 132)
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-133 · **Depends on:** NOVA-130 (merge after 132)
 
 ## Goal
 The Owner approves or rejects agent requests and manages the agent account on a new Relay **Approvals** page;
