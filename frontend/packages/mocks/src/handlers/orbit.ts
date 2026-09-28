@@ -205,6 +205,7 @@ export const orbitHandlers = [
       rootId: "run_new",
       version: 1,
       reportKept: true,
+      skippedSymbols: [],
     };
     return HttpResponse.json(queued, { status: 201 });
   }),
@@ -251,6 +252,7 @@ export const orbitHandlers = [
       rootId: run.rootId,
       version: chain[0]!.version + 1,
       reportKept: true,
+      skippedSymbols: [],
     };
     return HttpResponse.json(queued, { status: 201 });
   }),

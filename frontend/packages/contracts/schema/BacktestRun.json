@@ -221,6 +221,13 @@
     },
     "reportKept": {
       "type": "boolean"
+    },
+    "skippedSymbols": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z0-9&-]{1,20}$"
+      }
     }
   },
   "required": [
@@ -241,7 +248,8 @@
     "progress",
     "rootId",
     "version",
-    "reportKept"
+    "reportKept",
+    "skippedSymbols"
   ],
   "additionalProperties": false
 }

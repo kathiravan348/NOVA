@@ -56,6 +56,13 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
     parity.assert_valid(dumped, "BacktestRunCreate")
 
 
+def test_runs_require_skipped_symbols(parity: Parity) -> None:
+    raw = parity.mock("backtestRuns")[0].copy()
+    raw.pop("skippedSymbols")
+    with pytest.raises(ValidationError):
+        BacktestRun.model_validate_json(json.dumps(raw))
+
+
 @pytest.mark.parametrize(
     ("mock", "model", "change"),
     [
@@ -64,6 +71,8 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
         ("backtestRuns", BacktestRun, {"universe": {"type": "index", "index": "sensex"}}),
         ("backtestRuns", BacktestRun, {"progress": None}),  # completed needs done at 100%
         ("backtestRuns", BacktestRun, {"version": 2}),  # v2 cannot be its own root (D60)
+        ("backtestRuns", BacktestRun, {"skippedSymbols": ["bad symbol"]}),
+        ("backtestRuns", BacktestRun, {"skippedSymbols": None}),
         (
             "backtestRuns",
             BacktestRun,

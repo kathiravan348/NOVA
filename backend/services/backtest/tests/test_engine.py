@@ -10,10 +10,10 @@ from nova_backtest.bars import IST
 from nova_backtest.progress import Progress
 from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_one, run_worker
-from nova_db.models import BacktestRun, Candle, StrategyVersion
+from nova_db.models import BacktestRun, Candle, Instrument, StrategyVersion
 from nova_db.queue import claim_next
 from nova_testing.parity import Parity
-from sqlalchemy import Engine, update
+from sqlalchemy import Engine, delete, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 RULE = {"left": {"kind": "price", "field": "close"}, "right": {"kind": "number", "value": 0}}
@@ -238,6 +238,65 @@ def test_a_run_over_the_bar_limit_fails_early(
 def test_a_run_at_the_bar_limit_completes(seeded: Engine, factory: sessionmaker[Session]) -> None:
     _queue(seeded)
     assert _drain(factory, max_bars=10, max_bars_python=1).status == "completed"
+
+
+@pytest.mark.parametrize("all_missing", [False, True])
+def test_index_runs_skip_members_without_prices(
+    seeded: Engine,
+    factory: sessionmaker[Session],
+    client: TestClient,
+    parity: Parity,
+    all_missing: bool,
+) -> None:
+    _queue(seeded)
+    with Session(seeded) as db:
+        db.execute(update(Instrument).values(indices=[]))
+        db.execute(
+            update(Instrument)
+            .where(Instrument.symbol.in_(["INFY", "TCS"]))
+            .values(indices=["NIFTY 100"])
+        )
+        assert set(
+            db.scalars(select(Instrument.symbol).where(Instrument.symbol.in_(["INFY", "TCS"])))
+        ) == {"INFY", "TCS"}
+        db.execute(update(BacktestRun).values(universe={"type": "index", "index": "NIFTY 100"}))
+        # Warm-up bars alone do not count as prices in the run's period.
+        db.execute(
+            update(Candle).where(Candle.symbol == "TCS").values(ts=Candle.ts - timedelta(days=10))
+        )
+        if all_missing:
+            db.execute(delete(Candle).where(Candle.symbol == "INFY"))
+        db.commit()
+
+    run = _drain(factory)
+    wire = client.get("/api/v1/backtests/run_e2e").json()
+    parity.assert_valid(wire, "BacktestRun")
+    if all_missing:
+        assert run.status == "failed"
+        assert run.error == (
+            "No stock in NIFTY 100 has 1d prices in the period (download them first)"
+        )
+        assert client.get("/api/v1/backtests/run_e2e/result").status_code == 404
+    else:
+        assert run.status == "completed", run.error
+        assert run.skipped_symbols == wire["skippedSymbols"] == ["TCS"]
+        assert wire["progress"]["barsTotal"] == 5
+        result = client.get("/api/v1/backtests/run_e2e/result").json()
+        assert [row["symbol"] for row in result["bySymbol"]] == ["INFY"]
+
+
+def test_chosen_symbols_still_fail_when_one_has_no_prices(
+    seeded: Engine, factory: sessionmaker[Session]
+) -> None:
+    _queue(seeded)
+    with Session(seeded) as db:
+        db.execute(delete(Candle).where(Candle.symbol == "TCS"))
+        db.commit()
+
+    run = _drain(factory)
+
+    assert run.status == "failed"
+    assert run.error == "No 1d candles in the period for TCS (download them first)"
 
 
 def test_python_runs_have_their_own_bar_limit(

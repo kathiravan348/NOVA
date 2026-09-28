@@ -41,6 +41,7 @@ def run_contract(row: BacktestRun) -> RunContract:
             "root_id": row.root_id,
             "version": row.version,
             "report_kept": row.report_kept,
+            "skipped_symbols": list(row.skipped_symbols),
         }
     )
 

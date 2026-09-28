@@ -50,11 +50,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0020(engine: Engine) -> None:
+def test_head_revision_is_0021(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0020"
+    assert head == "0021"
 
 
 def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:
@@ -80,6 +80,21 @@ def test_super_admin_role_is_seeded(engine: Engine) -> None:
 
 
 def test_models_match_the_migrated_database(engine: Engine, database_url: str) -> None:
+    assert diff(database_url) == []
+
+
+def test_skipped_symbols_column_round_trip(engine: Engine, database_url: str) -> None:
+    column = next(
+        c for c in inspect(engine).get_columns("backtest_runs") if c["name"] == "skipped_symbols"
+    )
+    assert column["nullable"] is False
+    assert column["default"] == "'{}'::text[]"
+
+    downgrade(database_url, "0020")
+    assert "skipped_symbols" not in {
+        c["name"] for c in inspect(engine).get_columns("backtest_runs")
+    }
+    upgrade(database_url)
     assert diff(database_url) == []
 
 
