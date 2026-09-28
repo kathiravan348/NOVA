@@ -41,6 +41,7 @@ describe("Backtest schemas", () => {
     rootId: "run-001",
     version: 1,
     reportKept: true,
+    skippedSymbols: [],
   };
 
   const validMetrics: BacktestMetrics = {
@@ -102,6 +103,19 @@ describe("Backtest schemas", () => {
   describe("BacktestRunSchema", () => {
     it("accepts a valid completed run", () => {
       expect(BacktestRunSchema.safeParse(validRun).success).toBe(true);
+    });
+
+    it("requires skippedSymbols and validates every symbol", () => {
+      expect(
+        BacktestRunSchema.safeParse({ ...validRun, skippedSymbols: ["HYUNDAI", "TATACAP"] })
+          .success,
+      ).toBe(true);
+      expect(BacktestRunSchema.safeParse({ ...validRun, skippedSymbols: undefined }).success).toBe(
+        false,
+      );
+      expect(
+        BacktestRunSchema.safeParse({ ...validRun, skippedSymbols: ["bad symbol"] }).success,
+      ).toBe(false);
     });
 
     it("accepts a running run with progress and a queued run without", () => {

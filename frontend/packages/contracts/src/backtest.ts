@@ -7,6 +7,7 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 import { UniverseSchema } from "./strategy";
+import { UniverseSymbolSchema } from "./universe";
 
 export const BacktestRunStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
 export type BacktestRunStatus = z.infer<typeof BacktestRunStatusSchema>;
@@ -52,6 +53,7 @@ export const BacktestRunSchema = z
     version: z.number().int().min(1),
     /** False for an older version trimmed to its summary (no trades, curve or per-symbol rows). */
     reportKept: z.boolean(),
+    skippedSymbols: z.array(UniverseSymbolSchema),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",

@@ -25,6 +25,7 @@ def test_queue_a_run(
 
     parity.assert_valid(run, "BacktestRun")
     assert run["status"] == "queued" and run["startedAt"] is None
+    assert run["skippedSymbols"] == []
     assert run["from"] == "2025-01-01" and run["universe"] == run_body["universe"]
     assert client.get(f"{BACKTESTS}/{run['id']}").json() == run
     with Session(clean) as db:

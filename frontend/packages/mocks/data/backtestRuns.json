@@ -29,6 +29,7 @@
     },
     "rootId": "run_001",
     "version": 1,
+    "skippedSymbols": [],
     "reportKept": true
   },
   {
@@ -61,6 +62,7 @@
     },
     "rootId": "run_006",
     "version": 2,
+    "skippedSymbols": [],
     "reportKept": true
   },
   {
@@ -93,6 +95,7 @@
     },
     "rootId": "run_003",
     "version": 1,
+    "skippedSymbols": [],
     "reportKept": true
   },
   {
@@ -129,6 +132,7 @@
     "progress": null,
     "rootId": "run_004",
     "version": 1,
+    "skippedSymbols": [],
     "reportKept": true
   },
   {
@@ -161,6 +165,7 @@
     },
     "rootId": "run_005",
     "version": 1,
+    "skippedSymbols": [],
     "reportKept": true
   },
   {
@@ -170,7 +175,7 @@
     "name": "VWAP Intraday v2 Backtest",
     "universe": {
       "type": "index",
-      "index": "NIFTY 50"
+      "index": "NIFTY 100"
     },
     "status": "completed",
     "from": "2026-08-14",
@@ -184,8 +189,8 @@
     "progress": {
       "stage": "done",
       "percent": 100,
-      "symbolsDone": 50,
-      "symbolsTotal": 50,
+      "symbolsDone": 100,
+      "symbolsTotal": 100,
       "barsDone": 70000,
       "barsTotal": 70000,
       "tradesSoFar": 4,
@@ -193,6 +198,7 @@
     },
     "rootId": "run_006",
     "version": 1,
+    "skippedSymbols": ["HYUNDAI", "TATACAP"],
     "reportKept": false
   }
 ]

@@ -6,6 +6,7 @@ from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Id, IsoDate, NonNegPaise, Paise, UtcDateTime
 from nova_contracts.market_data import IndexName
+from nova_contracts.universe import Symbol
 
 BacktestRunStatus = Literal["queued", "running", "completed", "failed"]
 BacktestStage = Literal["loading", "signals", "simulating", "saving", "done"]
@@ -70,6 +71,7 @@ class BacktestRun(_Period):
     root_id: Id
     version: Annotated[int, Field(ge=1)]
     report_kept: bool
+    skipped_symbols: list[Symbol]
 
     @model_validator(mode="after")
     def _root_is_first_version(self) -> Self:
