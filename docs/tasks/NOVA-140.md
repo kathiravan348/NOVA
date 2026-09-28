@@ -1,6 +1,6 @@
 # NOVA-140 — Automatic broker-unavailable date history in Stored data
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-140 · **Depends on:** NOVA-139
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-140 · **Depends on:** NOVA-139
 
 ## Goal
 Record successful checks that leave internal trading dates without usable candles, show history, skip routine retries and resolve records when prices arrive. No manual verification gate.
@@ -54,3 +54,17 @@ Derived prices, vendor switching, verified official holiday catalogue/auto-sync,
 - Stories verified desktop/360px, dark/light, all states; default accessibility scan: zero violations in both themes.
 - Guides/maps updated. Dependencies: none. Official holiday catalogue remains out of scope; all-data missing sessions remain unknown.
 - Independent lead review required; branch stacks on NOVA-139. No self-review or merge.
+
+## Review
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- A routine (`skip_existing`) download failed forever on gaps already recorded (1d requests span the whole period,
+  so every NIFTY 500 update failed on AWL/FORCEMOT/NIFTY 500). Now it fails only on gaps first recorded after the
+  job was created; known gaps go to `summary`. Overwrite still fails (Owner choice). Test added.
+- `UnavailableDataTable`: raw `<a href>` replaced by `renderJobLink` (StrategyStatsList pattern); Relay passes a router `Link`.
+- D70 was outside the decisions table (blank line); joined. API, USER-GUIDE, D70 describe the new rule.
+**Change requests:** none. **Noted, not changed:** `calendar()` runs twice per step (~26 ms live), acceptable.
+**Guides checked:** API, DATABASE, USER-GUIDE match the diff (fixed as above). **Rulebook issues found:** none.
+**Follow-up tasks created:** none. **Deploy:** the live Atlas API/worker still run the pre-review code.
+**Gates:** backend-check 1,220 passed (one Core realtime timing flake under load, passed on re-run); review:check passed.
