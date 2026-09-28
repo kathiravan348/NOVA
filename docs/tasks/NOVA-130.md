@@ -1,6 +1,6 @@
 # NOVA-130 — Agent account contracts, mocks and services (D67)
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-130 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-130 · **Depends on:** —
 
 ## Goal
 The contracts, mocks and service hooks for the agent role and the approval queue exist (Zod + Pydantic
@@ -78,4 +78,20 @@ Scope correction needed: allow modifying `frontend/packages/contracts/src/jsonSc
 **Known gaps:** none in task scope. Host pytest launcher has a missing interpreter; Docker validation passed. Independent review remains.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- `mocks/src/handlers/orbit.ts` was 309 lines (§8 limit 300): agent sign-in user moved to `mockAgentUser` in
+  `data.ts`; login handler now a one-line choice; file is 299 lines.
+- `handlers/index.ts`: approval handlers registered after download handlers so the "download handlers first"
+  comment stays true.
+**Checked:** contracts match D67 (roles, `forbidden`, statuses, 8,000-char result body, ≥ 12-char passwords);
+Zod/Pydantic parity; 202 + `x-nova-approval` → `approval_pending` in all three request helpers, never retried;
+old stored sessions default to `super_admin`; password mutations keep `gcTime: 0`.
+**Notes for 133:** mock `GET /me` always answers the super-admin; the agent view should read the role from the
+session. `useApproveRequest` invalidates approvals only; the approved write may change other lists.
+**Checks:** `pnpm review:check` passed; `nova_contracts` pytest 202 passed (backend unchanged by review;
+implementer's Docker `backend-check` passed).
+**Guides checked:** not affected (no screen, endpoint or table yet).
+**Rulebook issues found:** §8 file length (fixed).
+**Follow-up tasks created:** none.

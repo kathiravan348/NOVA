@@ -48,6 +48,14 @@ export const mockAgentAccount = AgentAccountSchema.parse({
   createdAt: "2026-09-21T06:30:00Z",
   lastLoginAt: null,
 });
+/** What mock sign-in answers for an `agent@…` email (D67). */
+export const mockAgentUser = UserSchema.parse({
+  ...mockUser,
+  id: mockAgentAccount.id,
+  name: mockAgentAccount.name,
+  email: mockAgentAccount.email,
+  role: "agent",
+});
 export const mockApprovals = ApprovalRequestSchema.array().parse([
   {
     id: "approval_pending",

@@ -6,8 +6,8 @@ import { relayHandlers } from "./relay";
 
 // Download handlers first: `/data-jobs/settings` must win over `/data-jobs/:id`.
 export const handlers = [
-  ...approvalHandlers,
   ...downloadHandlers,
+  ...approvalHandlers,
   ...orbitHandlers,
   ...relayHandlers,
   ...marketDataHandlers,
