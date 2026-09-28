@@ -235,7 +235,10 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 1. **Strategy** and **Version** — which idea, and which saved copy of it.
 2. **Run name** — any name you will recognise later.
 3. **Period and capital** — **From** and **To** dates, **Initial capital** (pretend starting money, in ₹),
-   and tick **Compare with NIFTY 50** to see how the market itself did.
+   and **Benchmark** — the index to compare your result with, or **None** for no comparison. It starts
+   at **NIFTY 50**. Choosing **A whole index** makes it follow that index until you change **Benchmark**
+   yourself. Editing a run keeps its saved benchmark. Download the chosen index's daily prices to see
+   its return, line and year-by-year comparison.
 4. **Symbols → Test on**:
    - **Chosen symbols**: search by name, filter by index, sector or "F&O only", tick rows or press
      *Select all shown*. The count of chosen shares shows above the list.
@@ -278,7 +281,8 @@ Open a run from **Backtests**. You see:
 - **Year by year**: the run cut into 12-month blocks from its start date (the last may be shorter). Each row
   shows that year's return, profit, worst fall and the benchmark's return. A year that lost more than 5%
   gets a red **Below −5%** badge. The profits of all rows add up to the Net P&L.
-- **Equity curve**: a line of your pretend money over time, next to NIFTY 50 if you asked for it.
+- **Equity curve**: a line of your pretend money over time, next to a dashed line for the **Benchmark** index
+  you chose (named after it), if you chose one and its daily prices are downloaded.
 - **Results by symbol**: which shares made or lost money. **Show trades** filters the trade list to that share.
 - **Trades**: every pretend buy and sell, with price, quantity, profit and a **charges breakdown**
   (brokerage, STT, exchange fee, SEBI fee, stamp duty, GST, DP charge) — calculated with Zerodha's real rates.

@@ -1,6 +1,6 @@
 # NOVA-143 — Strategy card: CAGR range, one value for one run
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-143 · **Depends on:** —
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-143 · **Depends on:** —
 
 ## Goal
 Strategy cards compare runs by CAGR (runs of different lengths are comparable), and a strategy with one

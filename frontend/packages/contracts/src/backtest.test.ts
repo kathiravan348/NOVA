@@ -184,7 +184,7 @@ describe("Backtest schemas", () => {
     });
 
     it("rejects an invalid benchmark name", () => {
-      const invalid = { ...validRun, benchmark: "S&P 500" };
+      const invalid = { ...validRun, benchmark: "sensex" };
       expect(BacktestRunSchema.safeParse(invalid).success).toBe(false);
     });
   });
@@ -266,6 +266,9 @@ describe("BacktestRunCreateSchema (D44)", () => {
   it("accepts a run request", () => {
     expect(BacktestRunCreateSchema.safeParse(body).success).toBe(true);
     expect(BacktestRunCreateSchema.safeParse({ ...body, benchmark: null }).success).toBe(true);
+    expect(BacktestRunCreateSchema.safeParse({ ...body, benchmark: "NIFTY 500" }).success).toBe(
+      true,
+    );
   });
 
   it("rejects a reversed period, no capital or server-owned fields", () => {

@@ -11,7 +11,6 @@ import {
   Modal,
   Select,
   Skeleton,
-  Switch,
   useToast,
 } from "@nova/ui-core";
 import {
@@ -33,6 +32,7 @@ import {
   toVersionCreate,
   type BacktestForm,
 } from "./backtestForm";
+import { BenchmarkField } from "./BenchmarkField";
 import { UniverseFields } from "./UniverseFields";
 
 /** The new-backtest form; with `editing` it queues the next version of that run (D60). */
@@ -65,6 +65,7 @@ export function BacktestFormView({
       ? defaultsFromRun(editing)
       : {
           ...defaultsFor(preselected, todayIst(), latestData),
+          ...(linked?.universeType === "index" ? { benchmark: linked.index } : {}),
           ...(preselectedVersion ? { version: String(preselectedVersion) } : {}),
           ...linked,
         },
@@ -227,17 +228,9 @@ export function BacktestFormView({
             error={errors.capitalRupees?.message}
             {...register("capitalRupees")}
           />
-          <Controller
-            control={control}
-            name="benchmark"
-            render={({ field }) => (
-              <Switch
-                label="Compare with NIFTY 50"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                containerClassName="sm:self-end sm:pb-2"
-              />
-            )}
+          <BenchmarkField
+            form={form}
+            locked={editing !== undefined || linked?.benchmark !== undefined}
           />
         </div>
       </Card>

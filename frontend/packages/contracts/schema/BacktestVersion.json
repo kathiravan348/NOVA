@@ -94,7 +94,9 @@
       "anyOf": [
         {
           "type": "string",
-          "const": "NIFTY 50"
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[A-Z0-9 &-]+$"
         },
         {
           "type": "null"

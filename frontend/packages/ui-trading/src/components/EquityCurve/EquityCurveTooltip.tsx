@@ -5,9 +5,14 @@ import { formatInr } from "../../format/money";
 
 export interface EquityCurveTooltipProps {
   point?: EquityPoint;
+  /** Name of the benchmark row. Default: NIFTY 50. */
+  benchmarkLabel?: string;
 }
 
-export function EquityCurveTooltip({ point }: EquityCurveTooltipProps): React.ReactElement | null {
+export function EquityCurveTooltip({
+  point,
+  benchmarkLabel = "NIFTY 50",
+}: EquityCurveTooltipProps): React.ReactElement | null {
   if (!point) return null;
   return (
     <div className="bg-bg-raised border border-border-default rounded-md p-3 text-body-sm">
@@ -20,7 +25,7 @@ export function EquityCurveTooltip({ point }: EquityCurveTooltipProps): React.Re
       </p>
       {point.benchmarkPaise !== null && (
         <p className="flex justify-between gap-4">
-          <span className="text-text-secondary">NIFTY 50</span>
+          <span className="text-text-secondary">{benchmarkLabel}</span>
           <span className="font-mono text-text-primary">
             {formatInr(point.benchmarkPaise, { decimals: 0 })}
           </span>

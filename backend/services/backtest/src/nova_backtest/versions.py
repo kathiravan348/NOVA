@@ -12,7 +12,7 @@ from nova_contracts import BacktestDeleteResult, BacktestVersionCreate
 from nova_contracts import BacktestVersion as VersionContract
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.models import BacktestResult, BacktestRun, Instrument, Trade
+from nova_db.models import BacktestResult, BacktestRun, Instrument, MarketIndex, Trade
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
@@ -51,6 +51,12 @@ def check_symbols(db: Session, universe: dict[str, object]) -> None:
         raise ApiException(400, "invalid_request", f"Unknown symbols: {', '.join(unknown)}")
 
 
+def check_benchmark(db: Session, name: str | None) -> None:
+    """400 when the benchmark is not a stored index; null means no benchmark."""
+    if name is not None and db.get(MarketIndex, name) is None:
+        raise ApiException(400, "invalid_request", f"Unknown benchmark: {name}")
+
+
 def list_versions(db: Session, run_id: str) -> list[VersionContract]:
     runs = chain(db, _run(db, run_id).root_id)
     results = {
@@ -72,6 +78,7 @@ def add_version(
     newest = runs[0]
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
+    check_benchmark(db, body.benchmark)
     run = BacktestRun(
         id=new_id("run"),
         strategy_id=newest.strategy_id,

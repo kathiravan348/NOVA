@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { mockStrategies } from "@nova/mocks";
+import { mockBacktestRuns, mockStrategies } from "@nova/mocks";
 import {
   BacktestFormSchema,
   defaultsFor,
   defaultsFromParams,
+  defaultsFromRun,
   todayIst,
   toRunCreate,
   toUniverse,
+  toVersionCreate,
   type BacktestForm,
 } from "./backtestForm";
 import { formatPeriod } from "../../lib/format";
@@ -27,7 +29,7 @@ describe("backtestForm", () => {
       from: "2026-07-21",
       to: "2026-09-21",
       capitalRupees: "1000000",
-      benchmark: true,
+      benchmark: "NIFTY 50",
       universeType: "symbols",
       symbols: ["TCS"],
     });
@@ -82,7 +84,7 @@ describe("backtestForm", () => {
     const body = toRunCreate({
       ...valid,
       capitalRupees: "250000.5",
-      benchmark: false,
+      benchmark: "",
       name: " Run ",
     });
 
@@ -92,6 +94,19 @@ describe("backtestForm", () => {
       initialCapitalPaise: 25_000_050,
       benchmark: null,
       universe: { type: "symbols", symbols: ["TCS"] },
+    });
+  });
+
+  it("preserves any index in create, edit and version bodies", () => {
+    const run = { ...mockBacktestRuns[0]!, benchmark: "NIFTY 500" };
+    const form = defaultsFromRun(run);
+    expect(form.benchmark).toBe("NIFTY 500");
+    expect(toRunCreate(form).benchmark).toBe("NIFTY 500");
+    expect(toVersionCreate(form).benchmark).toBe("NIFTY 500");
+    expect(defaultsFromRun({ ...run, benchmark: null }).benchmark).toBe("");
+    expect(toVersionCreate({ ...form, benchmark: "" }).benchmark).toBeNull();
+    expect(defaultsFromParams(new URLSearchParams("benchmark=NIFTY%20500"))).toEqual({
+      benchmark: "NIFTY 500",
     });
   });
 
@@ -106,15 +121,15 @@ describe("backtestForm", () => {
       from: "2021-10-01",
       to: "2024-09-30",
       capitalRupees: "1000000",
-      benchmark: true,
+      benchmark: "NIFTY 50",
       name: "12-1 momentum — v1 in-sample",
     });
     const bad = new URLSearchParams(
-      "index=&from=2024-13-01&to=2024-09-30&capital=500&benchmark=SENSEX&name=%20",
+      "index=&from=2024-13-01&to=2024-09-30&capital=500&benchmark=sensex&name=%20",
     );
     expect(defaultsFromParams(bad, "2026-09-27")).toEqual({});
     const future = new URLSearchParams("from=2026-09-01&to=2027-01-01&benchmark=none");
-    expect(defaultsFromParams(future, "2026-09-27")).toEqual({ benchmark: false });
+    expect(defaultsFromParams(future, "2026-09-27")).toEqual({ benchmark: "" });
     expect(defaultsFromParams(new URLSearchParams("strategy=stg_001"), "2026-09-27")).toEqual({});
   });
 });

@@ -24,11 +24,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from nova_db.enums import (
     BACKTEST_STAGES,
     BACKTEST_STATUSES,
-    BENCHMARKS,
     EXCHANGES,
     SEGMENTS,
     SIDES,
-    sql_in,
 )
 from nova_db.models.base import Base, Json, JsonList, check_in, created_at_column
 
@@ -49,9 +47,6 @@ class BacktestRun(Base):
             ["strategy_versions.strategy_id", "strategy_versions.version"],
         ),
         check_in("status", "status", BACKTEST_STATUSES),
-        CheckConstraint(
-            f"benchmark IS NULL OR {sql_in('benchmark', BENCHMARKS)}", name="benchmark"
-        ),
         CheckConstraint("date_from <= date_to", name="period"),
         CheckConstraint("initial_capital_paise > 0", name="initial_capital"),
         CheckConstraint("error IS NULL OR status = 'failed'", name="error_only_failed"),
@@ -74,7 +69,7 @@ class BacktestRun(Base):
     date_from: Mapped[date]
     date_to: Mapped[date]
     initial_capital_paise: Mapped[int] = mapped_column(BigInteger)
-    benchmark: Mapped[str | None]
+    benchmark: Mapped[str | None] = mapped_column(ForeignKey("market_indices.name"))
     created_at: Mapped[datetime] = created_at_column()
     started_at: Mapped[datetime | None]
     finished_at: Mapped[datetime | None]
