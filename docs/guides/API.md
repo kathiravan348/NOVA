@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 28 Sep 2026 (NOVA-128). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 28 Sep 2026 (NOVA-131). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -23,8 +23,8 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 - Base path `/api/v1`. Everything except `POST /auth/login` and `GET /health` needs a signed-in session → else `401 unauthorized`.
 - Services only accept calls from Core (internal token); they are not reachable from the browser directly.
 - JSON field names are camelCase. Money is **integer paise** (`₹1 = 100`), fields end in `Paise`. Times are UTC ISO-8601.
-- Errors always look like `{ "code": "invalid_request" | "unauthorized" | "not_found" | "internal", "message": "…" }`
-  with status 400 / 401 / 404 / 5xx. `502` = a service is down; `503` = Kite rate limit busy.
+- Errors always look like `{ "code": "invalid_request" | "unauthorized" | "forbidden" | "not_found" | "internal", "message": "…" }`
+  with status 400 / 401 / 403 / 404 / 5xx. `502` = a service is down; `503` = Kite rate limit busy.
 - Paged lists return `{ "items": [...], "nextCursor": "…" | null }`. Query `limit` 1–200 (default 50), and
   `cursor` = the previous `nextCursor` to get the next page.
 - Every write is recorded in the audit log (action name shown per endpoint below).
@@ -36,12 +36,23 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
 | `GET /health` | Liveness check (each service has one). | — | `{status:"ok"}` |
-| `POST /auth/login` | Signs in the super-admin. Checks email (case-insensitive) + password; sets the `nova_session` cookie (valid `NOVA_SESSION_HOURS`, default 12 h). Failed tries are audited too. Audit: `auth.login`. | `LoginRequest {email, password}` | `User`; 401 "Wrong email or password" |
+| `POST /auth/login` | Signs in a super-admin or enabled agent. Checks email (case-insensitive) + password; sets the `nova_session` cookie (valid `NOVA_SESSION_HOURS`, default 12 h). Failed tries are audited too. Audit: `auth.login`. | `LoginRequest {email, password}` | `User`; 401 "Wrong email or password" |
 | `POST /auth/logout` | Revokes the current session and clears the cookie. Audit: `auth.logout`. | cookie | 204 |
 | `GET /me` | Who is signed in (the apps call it on start-up). | cookie | `User {id, name, email, role, createdAt, lastLoginAt}` |
 | `GET /audit` | The audit log, newest first, paged. | `limit`, `cursor` | `Page<AuditEntry>` |
 | `GET /openapi.json`, `GET /docs` | Merged OpenAPI schema + Swagger UI of all services. Only when `NOVA_API_DOCS=true`. | — | JSON / HTML |
 | `GET /ws` (WebSocket) | Live updates for signed-in screens (D57). Signed in with the `nova_session` cookie; without a valid one the socket is accepted and closed with code **4401**. Server sends `{type:"hello"}` first, `{type:"ping"}` every 25 s (`NOVA_WS_PING_SECONDS`), `{type:"data_job.updated", data: DataJob}` whenever any data job is created or changed (at most one per job per 250 ms; always the latest state), and `{type:"data_job.deleted", data:{id}}` when one is deleted. The session is re-checked every 60 s (`NOVA_WS_SESSION_CHECK_SECONDS`); a signed-out or expired session is closed with 4401. Client messages are ignored (`{type:"pong"}` expected). | cookie | `RealtimeMessage` stream |
+
+**Agent gateway rules (D67, NOVA-131):** `User.role` is `super_admin` or `agent`. Disabled agents
+cannot sign in or use existing HTTP/WebSocket sessions. `/me`, `/audit`, sign-out and `/ws` accept both roles.
+The agent may GET under `/strategies`, `/backtests`, `/market-data`, `/data-jobs`, and POST exactly
+`/data-jobs/plan` (draft only). Every other POST/PUT/PATCH/DELETE under those prefixes is held: Core saves
+method, full `/api/v1/...` path, raw query and optional JSON body (at most 64 KB), audits `approval.request`
+("Asked: POST /backtests", target `approval_request`), and returns **202 `ApprovalRequest`** with
+`x-nova-approval: apr_...`. The service is not called. Invalid JSON or an oversized body returns 400.
+Every `/broker` request and every unlisted prefix is refused with **403 `forbidden`**,
+"The agent account may not do this". Super-admin forwarding is unchanged. Approval replay/listing and
+agent account management endpoints are not implemented yet (NOVA-132).
 
 ## 2. Broker service — Zerodha accounts, Kite login, rate limits (`/broker`)
 

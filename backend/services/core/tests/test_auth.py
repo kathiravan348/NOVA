@@ -103,3 +103,17 @@ def test_login_updates_last_login(signed_in: TestClient, engine: Engine, admin: 
     with Session(engine) as db:
         user = db.get(User, admin)
         assert user is not None and user.last_login_at is not None
+
+
+def test_disabled_agent_cannot_sign_in(
+    client: TestClient, agent: str, engine: Engine, agent_credentials: dict[str, str]
+) -> None:
+    with Session(engine) as db:
+        db.execute(update(User).where(User.id == agent).values(disabled_at=datetime.now(UTC)))
+        db.commit()
+    response = client.post(LOGIN, json=agent_credentials)
+    assert response.status_code == 401
+    assert response.json()["error"]["message"] == "Wrong email or password"
+    assert COOKIE_NAME not in response.cookies
+    with Session(engine) as db:
+        assert db.scalars(select(AuthSession)).all() == []

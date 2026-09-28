@@ -90,6 +90,12 @@ export const auditActionLabel: Record<AuditAction, string> = {
   "instrument.clear_new": "Cleared new listing",
   "settings.update": "Settings changed",
   "download_settings.update": "Download pace changed",
+  "approval.request": "Approval requested",
+  "approval.approve": "Request approved",
+  "approval.reject": "Request rejected",
+  "agent.create": "Agent account created",
+  "agent.password": "Agent password changed",
+  "agent.access": "Agent access changed",
 };
 
 export const AUDIT_GROUPS = [
@@ -100,6 +106,8 @@ export const AUDIT_GROUPS = [
   "data_job",
   "instrument",
   "settings",
+  "approval",
+  "agent",
 ] as const;
 export type AuditGroup = (typeof AUDIT_GROUPS)[number];
 
@@ -111,6 +119,8 @@ export const auditGroupLabel: Record<AuditGroup, string> = {
   data_job: "Data jobs",
   instrument: "Instruments",
   settings: "Settings",
+  approval: "Approvals",
+  agent: "Agent account",
 };
 
 export const auditGroup = (action: AuditAction): AuditGroup => {

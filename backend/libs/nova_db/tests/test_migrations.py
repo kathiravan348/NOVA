@@ -1,8 +1,10 @@
+from nova_db.enums import AUDIT_ACTIONS
 from nova_db.migrate import diff, downgrade, upgrade
 from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "approval_requests",
     "users",
     "roles",
     "user_roles",
@@ -48,11 +50,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0019(engine: Engine) -> None:
+def test_head_revision_is_0020(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0019"
+    assert head == "0020"
 
 
 def test_candles_compression_goes_with_a_downgrade(engine: Engine, database_url: str) -> None:
@@ -74,7 +76,7 @@ def test_super_admin_role_is_seeded(engine: Engine) -> None:
     with engine.connect() as connection:
         roles = connection.execute(text("SELECT id FROM roles")).scalars()
 
-        assert list(roles) == ["super_admin"]
+        assert set(roles) == {"super_admin", "agent"}
 
 
 def test_models_match_the_migrated_database(engine: Engine, database_url: str) -> None:
@@ -274,3 +276,25 @@ def test_candle_days_are_filled_from_the_stored_candles(engine: Engine, database
         with engine.begin() as connection:
             connection.execute(text("DELETE FROM candles WHERE symbol = 'RELIANCE'"))
             connection.execute(text("DELETE FROM candle_days WHERE symbol = 'RELIANCE'"))
+
+
+def test_agent_audits_are_removed_on_downgrade(engine: Engine, database_url: str) -> None:
+    insert = text(
+        "INSERT INTO audit_entries (id, actor_name, action, summary, target_type, target_id)"
+        " VALUES (:action, 'Agent', :action, 'Test', 'approval_request', 'apr_test')"
+    )
+    with engine.begin() as connection:
+        for action in AUDIT_ACTIONS:
+            if action.startswith(("agent.", "approval.")):
+                connection.execute(insert, {"action": action})
+    downgrade(database_url, "0019")
+    with engine.connect() as connection:
+        assert "approval_requests" not in inspect(connection).get_table_names()
+        assert (
+            connection.execute(
+                text("SELECT id FROM audit_entries WHERE target_type = 'approval_request'")
+            ).first()
+            is None
+        )
+    upgrade(database_url)
+    assert diff(database_url) == []
