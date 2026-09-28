@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **27 Sep 2026** (Stage B, tasks up to NOVA-122). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-128). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -392,13 +392,14 @@ belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its price
   NSE stock back).
 
 ### Step 6b — Stored data (which prices are saved)
-**Stored data** in the menu shows, for every stock (and every index you downloaded), which prices NOVA already has.
+**Stored data** in the menu shows, for every stock and every index, which prices NOVA already has.
 Choose the **Timeframe** (**Daily (1d)** or **1 minute (1m)**; 3-minute to 1-hour prices are built from 1-minute ones)
 and the period with **From** and **To** (the last 5 years at first). Each row shows the **First day** and **Last day** saved,
 how many trading **Days** are saved in the period, how many trading days are **Missing**, and a **Status**:
-- **Complete**: every trading day of the period is there.
+- **Complete**: every trading day of the period is there. A stock listed during the period is complete from its
+  listing day once a download has asked Kite for the days before it (Kite has nothing earlier).
 - **Gaps**: some days in the middle are missing (for example a download that stopped halfway).
-- **Partial**: the prices start after the period starts or end before it ends (a newly listed stock, or not downloaded yet).
+- **Partial**: the prices start after the period starts or end before it ends (not downloaded yet).
 - **No data**: nothing is saved for this period.
 
 *Trading days* are the days the market was open: NOVA takes them from NIFTY 50's daily prices (download them once),
@@ -408,7 +409,8 @@ group shows how many stocks are complete, have gaps or have no data. **Only with
 symbol to see its missing date ranges. **Download missing** (on a group or in that window) opens **New download** with
 those stocks, the timeframe and the period filled in; check the plan and press **Start** as usual.
 Example: before a 5-year backtest on NIFTY 100, choose **Daily**, group by **Index**, open **NIFTY 100** and press
-**Download missing** if anything is not complete.
+**Download missing** if anything is not complete. Also check **NIFTY 50** in the **Indices** group: a strategy with a
+market filter on NIFTY 50 cannot run without its daily prices, and the benchmark line needs them too.
 
 ### Step 7 — Data jobs
 Background work that fills our price database: **historical downloads** (past candles from Zerodha),

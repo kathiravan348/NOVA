@@ -1,11 +1,11 @@
 """Stored data endpoints (D63): trading calendar, missing days, statuses, missing ranges."""
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
 from fastapi.testclient import TestClient
 from nova_atlas.coverage import missing_ranges
-from nova_db.models import CandleDay
+from nova_db.models import CandleDay, DataJob, DataJobStep
 from nova_testing.parity import Parity
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
@@ -22,6 +22,42 @@ def _store(engine: Engine, symbol: str, days: list[date], timeframe: str = "1d")
         db.add_all(
             CandleDay(exchange="NSE", symbol=symbol, timeframe=timeframe, day=d, bars=1)
             for d in days
+        )
+        db.commit()
+
+
+def _asked(engine: Engine, symbol: str, first: date, last: date, timeframe: str = "1d") -> None:
+    """A finished download step that asked Kite for the IST days [first, last]."""
+    start = datetime.combine(first, time(), UTC) - timedelta(hours=5, minutes=30)
+    end = datetime.combine(last, time(), UTC) + timedelta(hours=18, minutes=29)
+    job_id = f"job_{symbol}_{timeframe}"
+    with Session(engine) as db:
+        db.add(
+            DataJob(
+                id=job_id,
+                type="historical_download",
+                status="completed",
+                exchange="NSE",
+                segment="equity_delivery",
+                symbols=[symbol],
+                timeframe=timeframe,
+                date_from=first,
+                date_to=last,
+                progress_percent=100,
+                finished_at=end,
+            )
+        )
+        db.flush()
+        db.add(
+            DataJobStep(
+                job_id=job_id,
+                seq=0,
+                symbol=symbol,
+                start_at=start,
+                end_at=end,
+                status="done",
+                finished_at=end,
+            )
         )
         db.commit()
 
@@ -73,6 +109,44 @@ def test_the_index_calendar_wins_and_indices_are_listed(client: TestClient, clea
     assert rows["INFY"]["status"] == "complete"  # 25 Sep is not a trading day now
     nifty = rows["NIFTY 50"]
     assert (nifty["kind"], nifty["sector"], nifty["indices"]) == ("index", "Index", [])
+
+
+def test_a_later_listing_kite_had_nothing_before_is_complete(
+    client: TestClient, clean: Engine
+) -> None:
+    _market(clean)
+    _store(clean, "TCS", DAYS[4:])  # listed on 18 Sep: asked from 14 Sep, Kite had nothing earlier
+    _asked(clean, "TCS", DAYS[0], DAYS[-1])
+    _store(clean, "INFY", DAYS[4:])  # only asked from 18 Sep: the start was never downloaded
+    _asked(clean, "INFY", DAYS[4], DAYS[-1])
+    _store(clean, "WIPRO", DAYS[5:])  # from Mon 21 Sep, asked from Sat 19 Sep: no trading day asked
+    _asked(clean, "WIPRO", date(2026, 9, 19), DAYS[-1])
+    _store(clean, "HCLTECH", DAYS[4:])  # asked from 14 Sep, but for another timeframe
+    _asked(clean, "HCLTECH", DAYS[0], DAYS[-1], timeframe="1m")
+
+    _, rows = _rows(client, PERIOD)
+    _, later = _rows(client, PERIOD | {"from": "2026-09-16"})
+
+    assert (rows["TCS"]["status"], rows["TCS"]["missingDays"]) == ("complete", 0)
+    assert rows["TCS"]["firstDay"] == "2026-09-18"
+    assert rows["INFY"]["status"] == "partial"
+    assert rows["WIPRO"]["status"] == "partial"
+    assert rows["HCLTECH"]["status"] == "partial"
+    assert later["TCS"]["status"] == "complete"
+
+
+def test_indices_without_candles_are_listed_as_no_data(client: TestClient, clean: Engine) -> None:
+    _market(clean)
+
+    _, rows = _rows(client, PERIOD)
+
+    nifty = rows["NIFTY 50"]
+    assert (nifty["kind"], nifty["status"], nifty["days"], nifty["firstDay"]) == (
+        "index",
+        "none",
+        0,
+        None,
+    )
 
 
 def test_the_period_clips_what_counts(client: TestClient, clean: Engine) -> None:
