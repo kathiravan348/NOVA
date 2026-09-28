@@ -1,6 +1,6 @@
 # NOVA-140 — Automatic broker-unavailable date history in Stored data
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-140 · **Depends on:** NOVA-139
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-140 · **Depends on:** NOVA-139
 
 ## Goal
 Record successful checks that leave internal trading dates without usable candles, show history, skip routine retries and resolve records when prices arrive. No manual verification gate.
