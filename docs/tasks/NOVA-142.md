@@ -1,6 +1,6 @@
 # NOVA-142 — Benchmark: any index, defaulting to the universe's index
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-142 · **Depends on:** —
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-142 · **Depends on:** —
 
 ## Goal
 A backtest can be compared with any stored index (e.g. NIFTY 500 for a NIFTY 500 universe), not only NIFTY 50
