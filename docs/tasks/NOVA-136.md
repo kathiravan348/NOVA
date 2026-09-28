@@ -1,6 +1,6 @@
 # NOVA-136 — Orbit shows the stocks an index backtest skipped (D68)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-136 · **Depends on:** NOVA-135
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-136 · **Depends on:** NOVA-135
 
 ## Goal
 A run page tells the user which index members were left out because they have no prices in the period, so a
