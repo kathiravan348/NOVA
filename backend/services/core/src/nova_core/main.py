@@ -10,7 +10,15 @@ from fastapi import APIRouter, FastAPI
 from nova_common import install_error_handlers
 from nova_db import create_db_engine, create_session_factory
 
-from nova_core import api_docs, audit_routes, auth_routes, gateway, realtime
+from nova_core import (
+    agent_routes,
+    api_docs,
+    approval_routes,
+    audit_routes,
+    auth_routes,
+    gateway,
+    realtime,
+)
 from nova_core.settings import CoreSettings, get_core_settings
 
 API_PREFIX = "/api/v1"
@@ -61,6 +69,8 @@ def create_app(
         router.include_router(api_docs.router)
     router.include_router(auth_routes.router)
     router.include_router(audit_routes.router)
+    router.include_router(approval_routes.router)
+    router.include_router(agent_routes.router)
     router.include_router(realtime.router)
     router.include_router(gateway.router)
     app.include_router(router)

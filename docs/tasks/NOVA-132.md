@@ -1,6 +1,6 @@
 # NOVA-132 — Core: approve/reject held requests, agent account endpoints (D67)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-132 · **Depends on:** NOVA-131
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-132 · **Depends on:** NOVA-131
 
 ## Goal
 The super-admin can list, approve (which runs the saved request as the agent) and reject agent requests, and
@@ -43,10 +43,25 @@ Modify:
 - Screens (133). Push of new approvals over `/ws` (the Approvals page polls). More than one agent account.
 
 ## Questions
-_(implementer writes here if blocked)_
+The new endpoints cause `test_schema_groups_operations_by_area` to fail: `/agent` and `/approvals`
+are grouped as `Other` by `nova_core/api_docs.py`. May the planner add that file to Modify so these
+Core endpoints can be grouped under Auth? The task also creates four files but omits `docs/STRUCTURE.md`
+from Modify; please add it for the required map update (AGENTS §4). Implementation remains in-progress.
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Progress:** approval and agent endpoints implemented; stopped on scope question above.
+**Files changed:** `approval_routes.py`, `agent_routes.py`, `main.py`, `cli.py`, `sessions.py`;
+`test_approvals.py`, `test_agent_account.py`, `test_cli.py`; `docs/guides/API.md`; task + board.
+**Checks:** Core ruff lint/format pass; Docker Core mypy pass; affected tests 69 passed.
+**Core suite:** initial run 181 passed / 9 failed; eight method-denial failures fixed and verified.
+**Remaining:** Swagger grouping failure requires `api_docs.py`; full backend gate still to run.
+**Frontend:** `fnm exec --using=24 -- pnpm --dir frontend review:check` passed (942 tests + build).
+**UI checks:** not applicable (backend only).
+**New dependencies:** none.
+**Maps:** STRUCTURE update needs scope addition; CONTRACTS/COMPONENTS unchanged.
+**Guides updated:** API. USER-GUIDE/DATABASE unchanged.
+**Environment:** host mypy cannot launch the existing venv Python; used pinned Docker runtime.
+**Status:** in-progress, ChatGPT; no self-review or merge.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
