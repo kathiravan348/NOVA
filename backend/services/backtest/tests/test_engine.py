@@ -13,7 +13,7 @@ from nova_backtest.worker import run_one, run_worker
 from nova_db.models import BacktestRun, Candle, Instrument, StrategyVersion
 from nova_db.queue import claim_next
 from nova_testing.parity import Parity
-from sqlalchemy import Engine, delete, select, update
+from sqlalchemy import Engine, create_engine, delete, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 RULE = {"left": {"kind": "price", "field": "close"}, "right": {"kind": "number", "value": 0}}
@@ -243,12 +243,11 @@ def test_a_run_at_the_bar_limit_completes(seeded: Engine, factory: sessionmaker[
 @pytest.mark.parametrize("all_missing", [False, True])
 def test_index_runs_skip_members_without_prices(
     seeded: Engine,
-    factory: sessionmaker[Session],
     client: TestClient,
     parity: Parity,
     all_missing: bool,
 ) -> None:
-    _queue(seeded)
+    _queue(seeded, benchmark="NIFTY 50")  # the benchmark query used to autoflush the run row
     with Session(seeded) as db:
         db.execute(update(Instrument).values(indices=[]))
         db.execute(
@@ -268,7 +267,12 @@ def test_index_runs_skip_members_without_prices(
             db.execute(delete(Candle).where(Candle.symbol == "INFY"))
         db.commit()
 
-    run = _drain(factory)
+    # NOVA-137: the engine's row lock made the progress write wait for ever; fail fast instead.
+    strict = create_engine(seeded.url, connect_args={"options": "-c lock_timeout=5000"})
+    try:
+        run = _drain(sessionmaker(bind=strict, expire_on_commit=False))
+    finally:
+        strict.dispose()
     wire = client.get("/api/v1/backtests/run_e2e").json()
     parity.assert_valid(wire, "BacktestRun")
     if all_missing:

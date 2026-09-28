@@ -1,6 +1,6 @@
 # NOVA-137 — Backtest worker no longer freezes on index runs that skip stocks (D68 (4), live bug)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-137 · **Depends on:** 135
+**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-137 · **Depends on:** 135
 
 ## Goal
 An index backtest that skips members (NOVA-135) and has a benchmark completes, instead of freezing the
@@ -31,9 +31,9 @@ Modify:
    (the progress write errors, the run fails) instead of hanging the test suite.
 
 ## Acceptance checks
-- [ ] The updated engine test fails on `main` (run failed with a lock timeout) and passes on the branch.
-- [ ] Index run with a skipped member and a benchmark: completed, `skipped_symbols` stored, result saved.
-- [ ] `docker compose run --rm backend-check` passes.
+- [x] The updated engine test fails on `main` (run failed with a lock timeout) and passes on the branch.
+- [x] Index run with a skipped member and a benchmark: completed, `skipped_symbols` stored, result saved.
+- [x] `docker compose run --rm backend-check` passes.
 - [ ] Real data (after rebuild): the NIFTY 100 index runs that froze complete.
 
 ## Out of scope
@@ -43,7 +43,15 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer writes here)_
+**Done:** `save_result` takes `skipped` and stores it with `completed`, after the last progress write;
+`StrategyEngine.run` no longer touches the run row.
+**Files changed:** the three under Files, plus this task and BOARD.md.
+**Commands run:** the engine test on unfixed code: `LockNotAvailable` on the `saving` progress UPDATE (reproduced);
+backend-check (ruff, format, mypy, 1,203 tests): pass.
+**Checked:** 360px / desktop / dark / light: N/A (no screens). **New dependencies:** none.
+**Maps updated:** none. **Guides:** none (no API, table or screen change).
+**Deviations from task:** none.
+**Known gaps:** real-data check after the rebuild (acceptance item 4) is done by the reviewer.
 
 ## Review
 _(reviewer writes here)_

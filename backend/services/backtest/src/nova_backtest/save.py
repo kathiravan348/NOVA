@@ -27,11 +27,16 @@ def save_result(
     run: BacktestRun,
     segment: str,
     symbols: list[str],
+    skipped: list[str],
     result: Simulation,
     period: tuple[datetime, datetime],
     progress: ProgressSink,
 ) -> None:
-    """Writes the run's trades and result and marks it completed, in the run's transaction."""
+    """Writes the run's trades and result and marks it completed, in the run's transaction.
+
+    The run row changes only after the last progress write: `Progress` updates that row from its own
+    session, and an earlier change (autoflushed by any query) makes it wait for ever (NOVA-137).
+    """
     initial = run.initial_capital_paise
     dates = [day for day, _ in result.equity]
     closes = index_closes(db, run.benchmark, *period) if run.benchmark else []
@@ -120,6 +125,7 @@ def save_result(
             years=wire["years"],
         )
     )
+    run.skipped_symbols = skipped
     run.status = "completed"
     run.finished_at = datetime.now(UTC)
     run.stage = "done"
