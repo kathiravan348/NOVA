@@ -5,6 +5,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 from nova_db.models import AuthSession, User
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 COOKIE_NAME = "nova_session"
@@ -46,3 +47,7 @@ def revoke_session(db: Session, token: str) -> None:
     row = db.get(AuthSession, token_hash(token))
     if row is not None:
         db.delete(row)
+
+
+def revoke_user_sessions(db: Session, user_id: str) -> None:
+    db.execute(delete(AuthSession).where(AuthSession.user_id == user_id))

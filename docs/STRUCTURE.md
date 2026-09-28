@@ -50,7 +50,7 @@
    │  ├─ nova_contracts/ Pydantic models mirroring @nova/contracts + parity tests (D34)
    │  └─ nova_testing/  shared test helpers: `parity.Parity`, `db` + `redis` fixtures, `kite.FakeKite`, `broker.FakeBroker`
    └─ services/
-      ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; agent_rules.py denies unlisted agent requests and holds writes for approval (D67), API docs when NOVA_API_DOCS (D50); `python -m nova_core create-admin`
+      ├─ core/          NOVA Core: sign-in, /me, /audit, gateway to services; agent_rules.py denies unlisted agent requests and holds writes (D67); approval_routes.py lists/replays/rejects held requests, agent_routes.py manages the single agent account; sessions.py revokes user sessions, cli.py shares create_user; tests/test_approvals.py and test_agent_account.py cover decisions and account access; API docs when NOVA_API_DOCS (D50), with an Agent tag (D67); `python -m nova_core create-admin`
       ├─ broker/        the only Kite caller (D35): accounts, profile, daily login, rate limiter (Redis, D40),
       │                 `/internal/kite/*` data for other services (D41); live tick recorder (D49);
       │                 `python -m nova_broker add-account | new-token-key | record-ticks | recorder` (always-on, D54)

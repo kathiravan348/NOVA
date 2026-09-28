@@ -1,5 +1,5 @@
 import pytest
-from nova_core.cli import create_admin, main
+from nova_core.cli import create_admin, create_user, main
 from nova_core.passwords import verify_password
 from nova_core.settings import get_core_settings
 from nova_db.models import User, UserRole
@@ -41,6 +41,17 @@ def test_create_admin_rejects_bad_input(
         db.flush()
         with pytest.raises(ValueError, match=message):
             create_admin(db, email=email, name="Someone", password=password)
+
+
+def test_shared_create_user_grants_agent_role(empty: Engine) -> None:
+    with Session(empty) as db:
+        user = create_user(
+            db, email="Agent@Example.com", name="Agent", password="x" * 12, role="agent"
+        )
+        db.commit()
+        assert db.scalar(select(UserRole.role_id).where(UserRole.user_id == user.id)) == "agent"
+        assert user.email == "agent@example.com"
+        assert verify_password("x" * 12, user.password_hash)
 
 
 def test_main_reads_the_password_from_the_environment(

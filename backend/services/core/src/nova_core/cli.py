@@ -22,9 +22,13 @@ from nova_core.settings import get_core_settings
 MIN_PASSWORD_LENGTH = 12
 
 
-def create_admin(db: Session, *, email: str, name: str, password: str) -> User:
+def validate_password(password: str) -> None:
     if len(password) < MIN_PASSWORD_LENGTH:
         raise ValueError(f"Password must be at least {MIN_PASSWORD_LENGTH} characters")
+
+
+def create_user(db: Session, *, email: str, name: str, password: str, role: str) -> User:
+    validate_password(password)
     try:
         LoginRequest(email=email, password=password)
     except ValidationError as exc:
@@ -36,8 +40,12 @@ def create_admin(db: Session, *, email: str, name: str, password: str) -> User:
     )
     db.add(user)
     db.flush()
-    db.add(UserRole(user_id=user.id, role_id=ROLE_SUPER_ADMIN))
+    db.add(UserRole(user_id=user.id, role_id=role))
     return user
+
+
+def create_admin(db: Session, *, email: str, name: str, password: str) -> User:
+    return create_user(db, email=email, name=name, password=password, role=ROLE_SUPER_ADMIN)
 
 
 def main(argv: list[str] | None = None) -> int:

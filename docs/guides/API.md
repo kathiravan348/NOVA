@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 28 Sep 2026 (NOVA-131). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 28 Sep 2026 (NOVA-132). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -40,6 +40,13 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | `POST /auth/logout` | Revokes the current session and clears the cookie. Audit: `auth.logout`. | cookie | 204 |
 | `GET /me` | Who is signed in (the apps call it on start-up). | cookie | `User {id, name, email, role, createdAt, lastLoginAt}` |
 | `GET /audit` | The audit log, newest first, paged. | `limit`, `cursor` | `Page<AuditEntry>` |
+| `GET /approvals` | Held requests, newest first; admins see all, agents only their own. Expires unclaimed pending requests after 30 minutes before listing. | optional `status`, `limit`, `cursor` | `Page<ApprovalRequest>` |
+| `POST /approvals/{id}/approve` | Admin only. Durably claims a pending request, then replays its saved method/path/query/JSON as the agent. Stores upstream status and first 8,000 response characters; `done` for 2xx, otherwise `failed`. No answer stores `failed` and the error message, with null `resultStatus`. Audit: `approval.approve` ("Approved POST /backtests → 201"). | — | `ApprovalRequest`; 400 "Already decided or expired" if missing, expired or already claimed/decided |
+| `POST /approvals/{id}/reject` | Admin only. Rejects an unclaimed pending request. Audit: `approval.reject`. | — | `ApprovalRequest`; 400 "Already decided or expired" otherwise |
+| `GET /agent` | Admin only. Reads the single agent account. | — | `AgentAccount`; 404 if none |
+| `POST /agent` | Admin only. Creates the single agent account, enabled initially; email must be unused (case-insensitive), password at least 12 characters, stored with the same scrypt hash as the admin. Audit: `agent.create`. | `AgentAccountCreate {name, email, password}` | 201 `AgentAccount`; 400 for invalid input, duplicate email or existing agent |
+| `PUT /agent/password` | Admin only. Changes password and revokes every agent session. Audit: `agent.password`. | `AgentPasswordUpdate {password}` (at least 12 characters) | `AgentAccount`; 404 if none, 400 for invalid input |
+| `PATCH /agent` | Admin only. Sets/clears `disabled_at`; off revokes every agent session and refuses sign-in. On requires a fresh sign-in. Audit: `agent.access` ("Agent access off" / "Agent access on"). | `AgentAccessUpdate {enabled}` | `AgentAccount`; 404 if none |
 | `GET /openapi.json`, `GET /docs` | Merged OpenAPI schema + Swagger UI of all services. Only when `NOVA_API_DOCS=true`. | — | JSON / HTML |
 | `GET /ws` (WebSocket) | Live updates for signed-in screens (D57). Signed in with the `nova_session` cookie; without a valid one the socket is accepted and closed with code **4401**. Server sends `{type:"hello"}` first, `{type:"ping"}` every 25 s (`NOVA_WS_PING_SECONDS`), `{type:"data_job.updated", data: DataJob}` whenever any data job is created or changed (at most one per job per 250 ms; always the latest state), and `{type:"data_job.deleted", data:{id}}` when one is deleted. The session is re-checked every 60 s (`NOVA_WS_SESSION_CHECK_SECONDS`); a signed-out or expired session is closed with 4401. Client messages are ignored (`{type:"pong"}` expected). | cookie | `RealtimeMessage` stream |
 
@@ -51,8 +58,9 @@ method, path relative to `/api/v1` (e.g. `/backtests`), raw query and optional J
 ("Asked: POST /backtests", target `approval_request`), and returns **202 `ApprovalRequest`** with
 `x-nova-approval: apr_...`. The service is not called. Invalid JSON or an oversized body returns 400.
 Every `/broker` request and every unlisted prefix is refused with **403 `forbidden`**,
-"The agent account may not do this". Super-admin forwarding is unchanged. Approval replay/listing and
-agent account management endpoints are not implemented yet (NOVA-132).
+"The agent account may not do this". Agents also receive 403 for approval decisions and every agent
+account management endpoint. Super-admin forwarding is unchanged. Approval claims set `decidedAt`
+and `decidedBy` before replay; a claimed request cannot run again, be rejected or expire while running.
 
 ## 2. Broker service — Zerodha accounts, Kite login, rate limits (`/broker`)
 
