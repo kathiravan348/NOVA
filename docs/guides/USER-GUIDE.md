@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-136). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-139). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -404,7 +404,8 @@ and the period with **From** and **To** (1 Jan 2020 to today at first). Each row
 how many trading **Days** are saved in the period, how many trading days are **Missing**, and a **Status**:
 - **Complete**: every trading day of the period is there. A stock listed during the period is complete from its
   listing day once a download has asked Kite for the days before it (Kite has nothing earlier).
-- **Gaps**: some days in the middle are missing (for example a download that stopped halfway).
+- **Gaps**: some days in the middle are missing. A download may have stopped, or Kite may have no
+  historical prices for those dates. Repeating a download cannot fill prices Kite does not return.
 - **Partial**: the prices start after the period starts or end before it ends (not downloaded yet).
 - **No data**: nothing is saved for this period.
 
@@ -419,6 +420,13 @@ Example: before a 5-year backtest on NIFTY 100, choose **Daily**, group by **Ind
 market filter on NIFTY 50 cannot run without its daily prices, and the benchmark line needs them too.
 
 ### Step 7 — Data jobs
+After the requests finish, a download checks for missing days inside each share's stored history, within
+the dates you requested. If gaps remain, it shows **Failed** with the shares and missing-day counts.
+Your saved prices stay. **100%** means all requests finished; it does not override **Failed**.
+Open **Stored data** and click the share to see the missing dates. The check uses the trading days known
+to the platform; it cannot find a day missing from that calendar too. It does not invent daily prices
+from minute prices. If Kite has no prices for those dates, they remain visible as **Gaps**.
+
 Background work that fills our price database: **historical downloads** (past candles from Zerodha),
 **tick recording** (live prices during market hours) and **archiving** (moving old live prices to files).
 Each job shows status, symbols, period, progress % and rows written. Open one for details or the error if it

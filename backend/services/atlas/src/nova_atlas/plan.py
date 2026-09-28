@@ -13,6 +13,7 @@ from nova_db.models import DataJob, DataJobStep
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from nova_atlas.candle_days import calendar
 from nova_atlas.download import (
     IST,
     Chunk,
@@ -85,11 +86,17 @@ def stored_dates(
     return list(rows.scalars())
 
 
-def is_covered(days: list[date], first: date, last: date) -> bool:
+def is_covered(
+    days: list[date], first: date, last: date, trading_days: list[date] | None = None
+) -> bool:
     """Stored candles span `first`..`last` give or take `GAP_DAYS`, with no longer hole."""
     inside = [d for d in days if first <= d <= last]
     if not inside:
         return False
+    if trading_days is not None:
+        stored = set(inside)
+        if any(first <= day <= last and day not in stored for day in trading_days):
+            return False
     gap = timedelta(days=GAP_DAYS)
     if inside[0] - first > gap or last - inside[-1] > gap:
         return False
@@ -144,6 +151,7 @@ def build_plan(
 ) -> tuple[DataJobPlan, list[PlannedStep]]:
     """Steps in run order (stock by stock, oldest chunk first) and the plan shown before Start."""
     chunks = plan_chunks(first, last, timeframe)
+    trading_days, _source = calendar(db, first, last)
     synced = {s for s, token in kite_tokens(db, exchange, symbols).items() if token is not None}
     steps: list[PlannedStep] = []
     per_symbol: list[DataJobPlanSymbol] = []
@@ -153,7 +161,9 @@ def build_plan(
         skipped = 0
         for chunk in chunks:
             chunk_first, chunk_last = chunk.start.date(), chunk.end.date()
-            covered = mode == "skip_existing" and is_covered(days, chunk_first, chunk_last)
+            covered = mode == "skip_existing" and is_covered(
+                days, chunk_first, chunk_last, trading_days
+            )
             steps.append(PlannedStep(symbol, chunk, covered))
             if covered:
                 skipped += 1

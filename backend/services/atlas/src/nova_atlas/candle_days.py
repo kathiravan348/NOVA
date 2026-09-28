@@ -1,13 +1,73 @@
 """The per-day candle summary `candle_days` (D63): kept current by downloads and job deletes."""
 
 from datetime import date, datetime, time, timedelta
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 from nova_db.models import COVERAGE_TIMEFRAMES
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Session
+from sqlalchemy.types import Date
 
 IST = ZoneInfo("Asia/Kolkata")
+
+
+def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal["index", "stocks"]]:
+    """Observed NSE trading days: NIFTY 50 daily bars, else at least ten stocks (D63)."""
+    period = {"first": first, "last": last}
+    index_days = db.scalars(
+        text(
+            "SELECT day FROM candle_days WHERE exchange = 'NSE' AND symbol = 'NIFTY 50'"
+            " AND timeframe = '1d' AND day BETWEEN :first AND :last ORDER BY day"
+        ),
+        period,
+    ).all()
+    if index_days:
+        return list(index_days), "index"
+    stock_days = db.scalars(
+        text(
+            "SELECT day FROM candle_days WHERE exchange = 'NSE' AND timeframe = '1d'"
+            " AND day BETWEEN :first AND :last GROUP BY day HAVING count(*) >= 10 ORDER BY day"
+        ),
+        period,
+    ).all()
+    return list(stock_days), "stocks"
+
+
+_MISSING = text(
+    """
+    WITH cal AS (SELECT unnest(:days) AS day), bounds AS (
+        SELECT symbol, min(day) AS first, max(day) AS last FROM candle_days
+        WHERE exchange = :exchange AND timeframe = :timeframe AND symbol IN :symbols
+        GROUP BY symbol
+    )
+    SELECT b.symbol, count(*) FROM bounds b JOIN cal c ON c.day BETWEEN b.first AND b.last
+    LEFT JOIN candle_days d ON d.exchange = :exchange AND d.timeframe = :timeframe
+        AND d.symbol = b.symbol AND d.day = c.day
+    WHERE d.day IS NULL GROUP BY b.symbol ORDER BY b.symbol
+    """
+).bindparams(bindparam("days", type_=ARRAY(Date())), bindparam("symbols", expanding=True))
+
+
+def missing_download_days(
+    db: Session, exchange: str, timeframe: str, symbols: list[str], first: date, last: date
+) -> dict[str, int]:
+    """Check internal gaps without inferring dates before listing or after delisting."""
+    if exchange != "NSE" or not symbols:
+        return {}
+    days, _source = calendar(db, first, last)
+    if not days:
+        return {}
+    return dict(
+        db.execute(
+            _MISSING,
+            {"days": days, "exchange": exchange, "timeframe": timeframe, "symbols": symbols},
+        )
+        .tuples()
+        .all()
+    )
+
 
 _DELETE_DAYS = text(
     "DELETE FROM candle_days WHERE exchange = :exchange AND symbol = :symbol"

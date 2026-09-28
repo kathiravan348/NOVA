@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from nova_atlas.broker_client import BrokerData, BrokerDataError
-from nova_atlas.candle_days import recount_days
+from nova_atlas.candle_days import missing_download_days, recount_days
 from nova_atlas.tokens import kite_tokens
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -243,4 +243,17 @@ def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | No
         db.rollback()
         finish_job(db, job, str(exc) or type(exc).__name__)
         return
-    finish_job(db, job, None)
+    gaps = missing_download_days(
+        db, job.exchange, job.timeframe, list(job.symbols), job.date_from, job.date_to
+    )
+    error = None
+    if gaps:
+        summary = ", ".join(f"{symbol}: {count}" for symbol, count in list(gaps.items())[:3])
+        if len(gaps) > 3:
+            summary += f", {len(gaps) - 3} more symbols"
+        error = (
+            f"Missing trading days remain ({summary}). "
+            "The broker returned no usable candles for these dates. Saved prices are kept. "
+            "Check Stored data; repeated downloads may not fill broker history gaps."
+        )
+    finish_job(db, job, error)
