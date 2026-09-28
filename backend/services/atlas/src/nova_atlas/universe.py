@@ -15,9 +15,10 @@ from nova_atlas.broker_client import BrokerData, BrokerDataError
 
 EXCHANGE = "NSE"
 UNCLASSIFIED = "Unclassified"
-# Kite's NSE equity rows: plain symbols (main board, ETFs) and the trade-for-trade / SME series.
-# Other suffixes are bonds, SGBs, T-bills and the like (D56).
-STOCK_SYMBOL = re.compile(r"^[A-Z0-9&]+(-(BE|BZ|SM|ST))?$")
+# Kite's NSE equity rows: plain symbols (main board, ETFs), hyphenated names such as BAJAJ-AUTO
+# (parts of 3+ characters) and the trade-for-trade / SME series. Other 2-character suffixes are
+# bonds, SGBs, T-bills, rights and the like (D56, D68).
+STOCK_SYMBOL = re.compile(r"^[A-Z0-9&]+(-[A-Z0-9&]{3,})*(-(BE|BZ|SM|ST))?$")
 NAME_LENGTH = 80
 
 # Reports how far the sync got: (share done 0-1, what it is doing).

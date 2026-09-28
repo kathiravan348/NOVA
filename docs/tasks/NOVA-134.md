@@ -1,6 +1,6 @@
 # NOVA-134 — Instrument sync keeps hyphenated stocks such as BAJAJ-AUTO (D68, live bug)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-134 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-134 · **Depends on:** —
 
 ## Goal
 The next instrument sync adds BAJAJ-AUTO (and every other NSE stock whose symbol has a hyphen), so NIFTY 100
@@ -20,8 +20,8 @@ Modify:
    `SGBMAR28-GB` (skipped) to the rows and the expected list.
 
 ## Acceptance checks
-- [ ] The test keeps INFY, ABCD-SM, XYZ-BE, BAJAJ-AUTO, NAM-INDIA; skips SG, GS, N1, RE, GB rows.
-- [ ] `docker compose run --rm backend-check` passes.
+- [x] The test keeps INFY, ABCD-SM, XYZ-BE, BAJAJ-AUTO, NAM-INDIA; skips SG, GS, N1, RE, GB rows.
+- [x] `docker compose run --rm backend-check` passes.
 
 ## Out of scope
 - Running the sync or downloading BAJAJ-AUTO prices (Owner, in Relay, after merge).
@@ -31,7 +31,12 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Done (Claude, implementer). `STOCK_SYMBOL` now also keeps hyphen parts of 3+ characters (BAJAJ-AUTO,
+NAM-INDIA); 2-character suffixes other than BE/BZ/SM/ST (SG, GS, N1, RE, GB) stay skipped. Test rows added.
+backend-check: 1196 passed (ruff, format, mypy strict, pytest). Guides: none.
+- Owner DB before the fix: BAJAJ-AUTO missing from `universe`/`instruments` → NIFTY 100 = 99, NIFTY 50 = 49.
+- After merge: rebuild/restart Atlas (`docker compose up -d --build`), run **Sync with Kite** in Relay →
+  Instruments, then download BAJAJ-AUTO 1d and 1m from 2020-01-01 (Stored data → Download missing).
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
