@@ -1,6 +1,6 @@
 # NOVA-139 — Validate download coverage and do not skip small gaps
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-139 · **Depends on:** NOVA-124, NOVA-128
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-139 · **Depends on:** NOVA-124, NOVA-128
 
 ## Goal
 Download missing retries every known missing trading day, and finished requests with remaining internal gaps fail with an honest explanation instead of reporting Completed.
