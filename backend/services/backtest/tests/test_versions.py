@@ -117,6 +117,47 @@ def test_edit_queues_the_next_version_and_the_list_shows_only_it(
     assert entry.summary == "Queued v2 of backtest IT basket 2"
 
 
+def test_versions_validate_and_compute_any_stored_benchmark(
+    seeded: Engine,
+    factory: sessionmaker[Session],
+    client: TestClient,
+    parity: Parity,
+) -> None:
+    with Session(seeded) as db:
+        for i, close in enumerate([100, 105, 110, 115, 120]):
+            db.add(
+                Candle(
+                    exchange="NSE",
+                    symbol="NIFTY 500",
+                    timeframe="1d",
+                    ts=datetime.combine(date(2025, 1, 1) + timedelta(days=i), time(0), tzinfo=IST),
+                    open_paise=close * 100,
+                    high_paise=close * 100,
+                    low_paise=close * 100,
+                    close_paise=close * 100,
+                    volume=0,
+                )
+            )
+        db.commit()
+    first = client.post(BACKTESTS, json=_body(benchmark="NIFTY 500") | {"strategyId": "stg_1"})
+    assert first.status_code == 201, first.text
+    v1 = first.json()["id"]
+    _drain(factory)
+    result = client.get(f"{BACKTESTS}/{v1}/result").json()
+    parity.assert_valid(result, "BacktestResult")
+    assert result["metrics"]["benchmarkReturnPercent"] == pytest.approx(20)
+    assert result["years"][0]["benchmarkPercent"] == pytest.approx(20)
+    assert result["equityCurve"][-1]["benchmarkPaise"] == 12_000_000
+    rejected = client.post(f"{BACKTESTS}/{v1}/versions", json=_body(benchmark="SENSEX"))
+    assert rejected.status_code == 400
+    assert rejected.json()["error"]["code"] == "invalid_request"
+    assert rejected.json()["error"]["message"] == "Unknown benchmark: SENSEX"
+    edited = client.post(f"{BACKTESTS}/{v1}/versions", json=_body(benchmark="NIFTY 500"))
+    assert edited.status_code == 201, edited.text
+    assert edited.json()["benchmark"] == "NIFTY 500"
+    parity.assert_valid(edited.json(), "BacktestRun")
+
+
 def test_a_completed_version_trims_the_older_ones(
     seeded: Engine,
     factory: sessionmaker[Session],

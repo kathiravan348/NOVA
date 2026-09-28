@@ -133,6 +133,7 @@ function CompletedRun({ run }: { run: BacktestRun }) {
             <EquityCurve
               points={result.data.equityCurve}
               initialCapitalPaise={run.initialCapitalPaise}
+              benchmarkLabel={run.benchmark ?? undefined}
               ariaLabel={`Equity curve for ${run.name}`}
             />
           </Card>

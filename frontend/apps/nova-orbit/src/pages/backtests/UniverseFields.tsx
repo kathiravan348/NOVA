@@ -83,7 +83,7 @@ export function UniverseFields({
 }
 
 /** Every known index (with its size), plus the form's current one if the list no longer has it. */
-function indexOptions(known: MarketIndex[] | undefined, current: string) {
+export function indexOptions(known: MarketIndex[] | undefined, current: string) {
   const options = (known ?? []).map((i) => ({
     value: i.name,
     label: `${i.name} (${i.members.toLocaleString("en-IN")})`,

@@ -10,7 +10,6 @@ SIDES = ("buy", "sell")
 STRATEGY_STATUSES = ("draft", "active", "archived")
 BACKTEST_STATUSES = ("queued", "running", "completed", "failed")
 BACKTEST_STAGES = ("loading", "signals", "simulating", "saving", "done")
-BENCHMARKS = ("NIFTY 50",)
 
 BROKERS = ("zerodha",)
 RATE_LIMIT_ENDPOINTS = ("quote", "historical", "orders", "other")

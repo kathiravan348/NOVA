@@ -18,6 +18,8 @@ import { EquityCurveTooltip } from "./EquityCurveTooltip";
 export interface EquityCurveProps {
   points: EquityPoint[];
   initialCapitalPaise?: number;
+  /** Name of the dashed benchmark line (the run's index, D72). Default: NIFTY 50. */
+  benchmarkLabel?: string;
   /** Fixed height in px. Default: 220 below `md`, 280 from `md`. */
   height?: number;
   loading?: boolean;
@@ -46,6 +48,7 @@ function LegendItem({ label, dashed }: { label: string; dashed?: boolean }): Rea
 export function EquityCurve({
   points,
   initialCapitalPaise,
+  benchmarkLabel = "NIFTY 50",
   height,
   loading = false,
   emptyText = "No equity data",
@@ -88,7 +91,7 @@ export function EquityCurve({
     <div className={cn("w-full min-w-0", className)}>
       <div className="mb-2 flex gap-4 text-body-sm text-text-muted">
         <LegendItem label="Strategy" />
-        {hasBenchmark && <LegendItem label="NIFTY 50" dashed />}
+        {hasBenchmark && <LegendItem label={benchmarkLabel} dashed />}
       </div>
       <div role="img" aria-label={ariaLabel} className={cn("w-full", sizeClass)} style={sizeStyle}>
         <p className="sr-only">
@@ -122,6 +125,7 @@ export function EquityCurve({
               content={(props) => (
                 <EquityCurveTooltip
                   point={props.active ? (props.payload?.[0]?.payload as EquityPoint) : undefined}
+                  benchmarkLabel={benchmarkLabel}
                 />
               )}
             />
@@ -136,7 +140,7 @@ export function EquityCurve({
               <Line
                 type="monotone"
                 dataKey="benchmarkPaise"
-                name="NIFTY 50"
+                name={benchmarkLabel}
                 stroke="var(--chart-benchmark)"
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
