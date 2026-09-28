@@ -1,6 +1,6 @@
 # NOVA-144 — Library: 100 equity strategies across candle sizes and testing protocol
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-144 · **Depends on:** NOVA-121, NOVA-122
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-144 · **Depends on:** NOVA-121, NOVA-122
 
 ## Goal
 Add 40 fixed research candidates to the existing 60, covering intraday, overnight swing and daily
