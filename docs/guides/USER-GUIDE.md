@@ -420,17 +420,17 @@ Example: before a 5-year backtest on NIFTY 100, choose **Daily**, group by **Ind
 market filter on NIFTY 50 cannot run without its daily prices, and the benchmark line needs them too.
 
 ### Step 7 — Data jobs
+Background work that fills our price database: **historical downloads** (past candles from Zerodha),
+**tick recording** (live prices during market hours) and **archiving** (moving old live prices to files).
+Each job shows status, symbols, period, progress % and rows written. Open one for details or the error if it
+failed.
+
 After the requests finish, a download checks for missing days inside each share's stored history, within
 the dates you requested. If gaps remain, it shows **Failed** with the shares and missing-day counts.
 Your saved prices stay. **100%** means all requests finished; it does not override **Failed**.
 Open **Stored data** and click the share to see the missing dates. The check uses the trading days known
 to the platform; it cannot find a day missing from that calendar too. It does not invent daily prices
 from minute prices. If Kite has no prices for those dates, they remain visible as **Gaps**.
-
-Background work that fills our price database: **historical downloads** (past candles from Zerodha),
-**tick recording** (live prices during market hours) and **archiving** (moving old live prices to files).
-Each job shows status, symbols, period, progress % and rows written. Open one for details or the error if it
-failed.
 
 **Updates appear by themselves.** In Real mode a small **Live** badge sits at the top right: job lists and job
 pages change the moment the work moves on, with no reload. If it shows **Reconnecting…**, the connection
