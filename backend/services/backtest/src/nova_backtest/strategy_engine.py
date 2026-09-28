@@ -208,8 +208,8 @@ class StrategyEngine:
                     "in the period (download them first)"
                 )
             result = self._simulate(db, run, spec, scratch, start, total, progress)
-            run.skipped_symbols = sorted(missing)
-            save_result(db, run, spec.segment, loaded, result, (start, end), progress)
+            period = (start, end)
+            save_result(db, run, spec.segment, loaded, sorted(missing), result, period, progress)
         finally:
             scratch.close()
 
