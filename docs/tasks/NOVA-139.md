@@ -1,6 +1,6 @@
 # NOVA-139 — Validate download coverage and do not skip small gaps
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-139 · **Depends on:** NOVA-124, NOVA-128
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-139 · **Depends on:** NOVA-124, NOVA-128
 
 ## Goal
 Download missing retries every known missing trading day, and finished requests with remaining internal gaps fail with an honest explanation instead of reporting Completed.
@@ -55,4 +55,14 @@ Implemented and deployed to Atlas API + worker after checking zero active/queued
 - Independent review/merge pending; no self-review or merge performed. The live stack is kept running at Owner's request.
 
 ## Review
-Pending independent lead review.
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** USER-GUIDE Step 7: the download-check paragraph now follows the Data jobs intro.
+**Change requests:** none.
+**Checked:** shared `calendar` moved to `candle_days.py` unchanged in meaning; `missing_download_days` counts only
+between each symbol's stored bounds, clipped to the request (no pre-listing false gaps); `is_covered` rejects a
+chunk with any missing observed trading day. Live: the per-step calendar query takes ~26 ms (900k `candle_days` rows).
+**Note for NOVA-140:** with gap tracking, a routine download must not fail on gaps it skipped as already explained
+(fixed in the NOVA-140 review).
+**Guides checked:** API and USER-GUIDE match the diff. **Rulebook issues found:** none. **Follow-up tasks created:** none.
+**Gates:** backend-check 1,210 passed; no frontend change (frontend gate run with NOVA-140).
