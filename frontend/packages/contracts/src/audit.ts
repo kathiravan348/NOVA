@@ -29,6 +29,12 @@ export const AuditActionSchema = z.enum([
   "instrument.clear_new",
   "settings.update",
   "download_settings.update",
+  "approval.request",
+  "approval.approve",
+  "approval.reject",
+  "agent.create",
+  "agent.password",
+  "agent.access",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 
@@ -40,6 +46,7 @@ export const AuditTargetTypeSchema = z.enum([
   "data_job",
   "settings",
   "instrument",
+  "approval_request",
 ]);
 export type AuditTargetType = z.infer<typeof AuditTargetTypeSchema>;
 

@@ -1,6 +1,6 @@
 """All tables of schema v1 (D37). Import from here so `Base.metadata` is complete."""
 
-from nova_db.models.auth import AuthSession, Role, User, UserRole
+from nova_db.models.auth import ApprovalRequest, AuthSession, Role, User, UserRole
 from nova_db.models.backtest import BacktestResult, BacktestRun, Trade
 from nova_db.models.base import Base
 from nova_db.models.broker import (
@@ -27,6 +27,7 @@ from nova_db.models.data import (
 from nova_db.models.strategy import Strategy, StrategyVersion
 
 __all__ = [
+    "ApprovalRequest",
     "AuditEntry",
     "AuthSession",
     "BacktestResult",

@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 28 Sep 2026 (migrations `0001`–`0019`, NOVA-129). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 28 Sep 2026 (migrations `0001`–`0020`, NOVA-131). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -36,10 +36,11 @@ universe ─ instruments   market_indices   candles (hypertable) ─ candle_days
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **users** | People who can sign in. Phase 1: one super-admin, created with `create-admin`. | `id`, `name`, `email` (unique), `password_hash` (never the password), `created_at`, `last_login_at` |
-| **roles** | Role names. Seeded with `super_admin`; more roles come with family access later. | `id`, `name` |
-| **user_roles** | Which user has which role (many-to-many). Sign-in requires `super_admin`. | `user_id` → users, `role_id` → roles |
+| **users** | People who can sign in: the super-admin and an enabled agent (D67). | `id`, `name`, `email` (unique), `password_hash` (never the password), `created_at`, `last_login_at`, `disabled_at` (nullable; blocks agent access) |
+| **roles** | Role names. Seeded with `super_admin` and `agent` (name `Agent`, migration 0020). | `id`, `name` |
+| **user_roles** | Which user has which role (many-to-many). Sign-in requires `super_admin` or an enabled `agent`. | `user_id` → users, `role_id` → roles |
 | **auth_sessions** | One row per signed-in browser. `id` is the **SHA-256 of the cookie token**, so a database leak does not leak sessions. Deleted on sign-out. | `id`, `user_id`, `created_at`, `expires_at`, `ip`, `user_agent` |
+| **approval_requests** | Agent writes held for approval (D67, migration 0020); never sent upstream when held. Methods: POST/PUT/PATCH/DELETE. Status: pending/done/failed/rejected/expired; index (`status`, `created_at`). Replay and decisions arrive in NOVA-132. | `id` (`apr_…`), `agent_id` → users (cascade), `method`, `path` (relative to `/api/v1`, e.g. `/backtests`), `query` (text, default empty), `body` (nullable JSONB, HTTP limit 64 KB), `status` (default pending), `created_at`, `decided_at` (nullable), `decided_by` → users (set null), `result_status` (nullable int), `result_body` (nullable text) |
 
 ## 2. Zerodha broker
 
@@ -83,7 +84,7 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`). The API dele
 
 | Table | What it keeps | Key columns |
 |---|---|---|
-| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `strategy.delete` (migration 0016), `backtest.run`, `backtest.edit`, `backtest.delete`, `data_job.create`, `data_job.cancel`, `data_job.plan`, `data_job.start`, `data_job.pause`, `data_job.resume`, `data_job.delete`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `instrument.clear_new`, `settings.update`, `download_settings.update`. Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol), `summary`, `ip` |
+| **audit_entries** | Permanent log of important actions, written in the same transaction as the change. Actions: `auth.login`, `auth.logout`, `broker.login`, `broker.session_expired`, `broker.rate_limit_update`, `broker.account_create`, `broker.kite_app_update`, `strategy.create`, `strategy.update`, `strategy.delete` (migration 0016), `backtest.run`, `backtest.edit`, `backtest.delete`, `data_job.create`, `data_job.cancel`, `data_job.plan`, `data_job.start`, `data_job.pause`, `data_job.resume`, `data_job.delete`, `instrument.add`, `instrument.update`, `instrument.remove`, `instrument.sync`, `instrument.clear_new`, `settings.update`, `download_settings.update`, `approval.request`, `approval.approve`, `approval.reject`, `agent.create`, `agent.password`, `agent.access` (migration 0020). Failed sign-ins are logged with no actor id. | `id`, `at`, `actor_id` → users (set null if the user is removed), `actor_name`, `action`, `target_type` + `target_id` (both or neither; types: user, broker_account, strategy, backtest, data_job, settings, instrument — its id is the stock symbol, approval_request), `summary`, `ip` |
 
 ## 6. Outside PostgreSQL
 

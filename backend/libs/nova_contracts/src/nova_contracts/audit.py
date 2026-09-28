@@ -34,9 +34,22 @@ AuditAction = Literal[
     "instrument.clear_new",
     "settings.update",
     "download_settings.update",
+    "approval.request",
+    "approval.approve",
+    "approval.reject",
+    "agent.create",
+    "agent.password",
+    "agent.access",
 ]
 AuditTargetType = Literal[
-    "user", "broker_account", "strategy", "backtest", "data_job", "settings", "instrument"
+    "user",
+    "broker_account",
+    "strategy",
+    "backtest",
+    "data_job",
+    "settings",
+    "instrument",
+    "approval_request",
 ]
 
 

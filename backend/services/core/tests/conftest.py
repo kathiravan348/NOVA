@@ -4,7 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 from nova_core.cli import create_admin
 from nova_core.main import create_app
+from nova_core.passwords import hash_password
 from nova_core.settings import CoreSettings
+from nova_db.models import User, UserRole
 from nova_testing.db import database_url, engine, session
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, text
@@ -15,6 +17,13 @@ __all__ = ["database_url", "engine", "session"]
 INTERNAL_TOKEN = "test-internal-token"
 ADMIN_EMAIL = "admin@example.com"
 ADMIN_PASSWORD = "correct horse battery"
+AGENT_EMAIL = "agent@example.com"
+AGENT_PASSWORD = "agent test password"
+
+
+@pytest.fixture(scope="session")
+def agent_credentials() -> dict[str, str]:
+    return {"email": AGENT_EMAIL, "password": AGENT_PASSWORD}
 
 
 def make_settings(database: str, **overrides: object) -> CoreSettings:
@@ -61,6 +70,23 @@ def signed_in(client: TestClient) -> TestClient:
     )
     assert response.status_code == 200
     return client
+
+
+@pytest.fixture
+def agent(engine: Engine, admin: str) -> str:
+    with Session(engine) as db:
+        db.add(
+            User(
+                id="usr_agent",
+                name="Debug Agent",
+                email=AGENT_EMAIL,
+                password_hash=hash_password(AGENT_PASSWORD),
+            )
+        )
+        db.flush()
+        db.add(UserRole(user_id="usr_agent", role_id="agent"))
+        db.commit()
+    return "usr_agent"
 
 
 @pytest.fixture(scope="session")

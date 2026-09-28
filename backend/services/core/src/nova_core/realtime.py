@@ -21,7 +21,7 @@ from nova_db.models import DataJob
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
-from nova_core.deps import is_super_admin
+from nova_core.deps import user_role
 from nova_core.sessions import COOKIE_NAME, resolve_session
 from nova_core.settings import CoreSettings
 
@@ -70,12 +70,12 @@ def _libpq_url(database_url: str) -> str:
 
 
 def signed_in_user_id(factory: sessionmaker[Session], token: str | None) -> str | None:
-    """The super-admin behind a session cookie, or None (same rule as HTTP routes)."""
+    """An enabled user behind a session cookie, or None (same rule as HTTP routes)."""
     if not token:
         return None
     with factory() as db:
         user = resolve_session(db, token)
-        if user is None or not is_super_admin(db, user.id):
+        if user is None or user_role(db, user.id) is None:
             return None
         return user.id
 

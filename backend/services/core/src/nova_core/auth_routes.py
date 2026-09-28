@@ -10,7 +10,7 @@ from nova_db.audit import record_audit
 from nova_db.models import User
 from sqlalchemy import func, select
 
-from nova_core.deps import AppSettings, Db, SignedIn, client_ip, is_super_admin, to_contract
+from nova_core.deps import AppSettings, Db, SignedIn, client_ip, to_contract, user_role
 from nova_core.passwords import DUMMY_HASH, verify_password
 from nova_core.sessions import COOKIE_NAME, create_session, revoke_session
 
@@ -24,7 +24,8 @@ def login(body: LoginRequest, request: Request, db: Db, settings: AppSettings) -
     ip = client_ip(request)
     user = db.scalar(select(User).where(func.lower(User.email) == body.email.lower()))
     valid = verify_password(body.password, user.password_hash if user else DUMMY_HASH)
-    if user is None or not valid or not is_super_admin(db, user.id):
+    role = user_role(db, user.id) if user else None
+    if user is None or not valid or role is None:
         record_audit(
             db,
             action="auth.login",
@@ -56,7 +57,7 @@ def login(body: LoginRequest, request: Request, db: Db, settings: AppSettings) -
     )
     db.commit()
 
-    response = JSONResponse(to_contract(user).model_dump(mode="json"))
+    response = JSONResponse(to_contract(user, role).model_dump(mode="json"))
     response.set_cookie(
         COOKIE_NAME,
         token,
@@ -91,5 +92,7 @@ def logout(request: Request, user: SignedIn, db: Db) -> Response:
 
 
 @router.get("/me")
-def me(user: SignedIn) -> JSONResponse:
-    return JSONResponse(to_contract(user).model_dump(mode="json"))
+def me(user: SignedIn, db: Db) -> JSONResponse:
+    role = user_role(db, user.id)
+    assert role is not None
+    return JSONResponse(to_contract(user, role).model_dump(mode="json"))

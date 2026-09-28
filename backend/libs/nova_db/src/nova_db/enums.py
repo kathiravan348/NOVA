@@ -50,6 +50,12 @@ AUDIT_ACTIONS = (
     "instrument.clear_new",
     "settings.update",
     "download_settings.update",
+    "approval.request",
+    "approval.approve",
+    "approval.reject",
+    "agent.create",
+    "agent.password",
+    "agent.access",
 )
 AUDIT_TARGET_TYPES = (
     "user",
@@ -59,6 +65,7 @@ AUDIT_TARGET_TYPES = (
     "data_job",
     "settings",
     "instrument",
+    "approval_request",
 )
 
 ROLE_SUPER_ADMIN = "super_admin"
