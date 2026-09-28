@@ -1,6 +1,6 @@
 # NOVA-144 — Library: 100 equity strategies across candle sizes and testing protocol
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-144 · **Depends on:** NOVA-121, NOVA-122
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-144 · **Depends on:** NOVA-121, NOVA-122
 
 ## Goal
 Add 40 fixed research candidates to the existing 60, covering intraday, overnight swing and daily
@@ -58,3 +58,16 @@ Modify:
 - **Dependencies/maps/guides:** no dependencies; STRUCTURE + CONTRACTS; USER-GUIDE + API. Scope correction: added the stale API guide/contract map references.
 - **Gaps:** no measured profitability, historical research runs or automatic ranking; execution/universe limits documented; separate lead review required before merge.
 ## Review
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- Merged main (NOVA-142, 143): CONTRACTS, API, USER-GUIDE and BOARD conflicts resolved, keeping both sides.
+- `docs/DECISIONS.md`: a blank line cut D73 off the decisions table; removed.
+- Guide headers back to the standard "State as of" form (NOVA-144); Library paragraph re-wrapped (two ~160-char
+  lines) and now says the original 60 also fill in ₹10,00,000 and their test period.
+- `test_library_expansion.py`: imports moved from inside the install test to the top of the file.
+**Change requests:** none.
+**Guides checked:** API and USER-GUIDE match the data (100 entries, new defaults, limits); no DB change.
+**Rulebook issues found:** none.
+Gates after the merge: `pnpm review:check` (992 tests) and `backend-check` (1,272 tests) pass.
+**Follow-up tasks created:** none.
