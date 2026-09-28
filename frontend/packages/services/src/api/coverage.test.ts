@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { setupServer } from "msw/node";
 import { handlers } from "@nova/mocks";
-import { getCoverage, getCoverageDetail } from "./marketData";
+import { getCoverage, getCoverageDetail, getUnavailableDays } from "./marketData";
 
 const server = setupServer(...handlers);
 const urls: string[] = [];
@@ -17,6 +17,18 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe("coverage api (D63)", () => {
+  it("filters unavailable history by date, timeframe, state and symbol", async () => {
+    const page = await getUnavailableDays({
+      timeframe: "1d",
+      from: "2022-01-01",
+      to: "2023-01-01",
+      status: "all",
+      symbol: "AWL",
+    });
+    expect(page.items.map((r) => r.symbol)).toEqual(["AWL"]);
+    expect(page.nextCursor).toBeNull();
+    expect(urls[0]).toContain("status=all&symbol=AWL");
+  });
   it("sends the timeframe and only the dates given", async () => {
     const list = await getCoverage({ timeframe: "1d" });
     expect(list.timeframe).toBe("1d");

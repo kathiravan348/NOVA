@@ -18,5 +18,6 @@ export * from "./strategyStats";
 export * from "./library";
 export * from "./universe";
 export * from "./coverage";
+export * from "./unavailable";
 export * from "./recorder";
 export * from "./realtime";

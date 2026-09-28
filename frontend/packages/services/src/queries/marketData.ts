@@ -1,10 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CoverageQuery, Timeframe, UniverseEntryWrite } from "@nova/contracts";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+  CoverageQuery,
+  Timeframe,
+  UnavailableQuery,
+  UniverseEntryWrite,
+} from "@nova/contracts";
 import {
   createUniverseEntry,
   deleteUniverseEntry,
   getCoverage,
   getCoverageDetail,
+  getUnavailableDays,
   listCandles,
   listInstruments,
   listMarketIndices,
@@ -113,6 +119,17 @@ export function useCoverage(query: CoverageQuery) {
     queryKey: queryKeys.marketData.coverage(query),
     queryFn: ({ signal }) => getCoverage(query, { signal }),
     staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useUnavailableDays(query: UnavailableQuery) {
+  return useInfiniteQuery({
+    queryKey: ["market-data", "unavailable", query],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) => getUnavailableDays(query, pageParam, { signal }),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    refetchInterval: 60_000,
   });
 }
 

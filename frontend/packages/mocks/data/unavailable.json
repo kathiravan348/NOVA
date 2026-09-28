@@ -1,0 +1,47 @@
+[
+  {
+    "id": "gap_awl_1",
+    "exchange": "NSE",
+    "symbol": "AWL",
+    "timeframe": "1d",
+    "day": "2022-05-05",
+    "broker": "Zerodha",
+    "reason": "no_usable_candle",
+    "firstCheckedAt": "2026-09-28T10:00:00Z",
+    "lastCheckedAt": "2026-09-28T10:30:00Z",
+    "attempts": 2,
+    "lastJobId": "job_gap_1",
+    "resolvedAt": null,
+    "status": "unavailable"
+  },
+  {
+    "id": "gap_force_1",
+    "exchange": "NSE",
+    "symbol": "FORCEMOT",
+    "timeframe": "1d",
+    "day": "2023-10-26",
+    "broker": "Zerodha",
+    "reason": "no_usable_candle",
+    "firstCheckedAt": "2026-09-28T10:00:00Z",
+    "lastCheckedAt": "2026-09-28T10:30:00Z",
+    "attempts": 2,
+    "lastJobId": "job_gap_1",
+    "resolvedAt": null,
+    "status": "unavailable"
+  },
+  {
+    "id": "gap_recovered_1",
+    "exchange": "NSE",
+    "symbol": "NIFTY 500",
+    "timeframe": "1d",
+    "day": "2020-01-07",
+    "broker": "Zerodha",
+    "reason": "no_usable_candle",
+    "firstCheckedAt": "2026-09-28T10:00:00Z",
+    "lastCheckedAt": "2026-09-28T11:00:00Z",
+    "attempts": 3,
+    "lastJobId": null,
+    "resolvedAt": "2026-09-28T11:00:00Z",
+    "status": "resolved"
+  }
+]

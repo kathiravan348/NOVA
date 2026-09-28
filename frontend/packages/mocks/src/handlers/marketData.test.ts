@@ -9,6 +9,8 @@ import {
   MarketIndexSchema,
   DataJobSchema,
   UniverseEntrySchema,
+  UnavailableDaySchema,
+  pageSchema,
 } from "@nova/contracts";
 import { mockCandles, mockInstruments } from "../data";
 import { marketDataHandlers } from "./marketData";
@@ -24,6 +26,23 @@ const API = "http://localhost/api/v1";
 const get = (path: string) => fetch(`${API}${path}`);
 
 describe("Market data MSW handlers", () => {
+  it("pages unavailable history and filters recovered dates", async () => {
+    const first = pageSchema(UnavailableDaySchema).parse(
+      await (await get("/market-data/unavailable?status=all&limit=1")).json(),
+    );
+    expect(first.items).toHaveLength(1);
+    expect(first.nextCursor).not.toBeNull();
+    const second = pageSchema(UnavailableDaySchema).parse(
+      await (
+        await get(`/market-data/unavailable?status=all&limit=1&cursor=${first.nextCursor}`)
+      ).json(),
+    );
+    expect(second.items[0]?.id).not.toBe(first.items[0]?.id);
+    const recovered = pageSchema(UnavailableDaySchema).parse(
+      await (await get("/market-data/unavailable?status=resolved")).json(),
+    );
+    expect(recovered.items.map((r) => r.status)).toEqual(["resolved"]);
+  });
   it("GET /market-data/instruments returns the instruments", async () => {
     const res = await get("/market-data/instruments");
     expect(res.status).toBe(200);

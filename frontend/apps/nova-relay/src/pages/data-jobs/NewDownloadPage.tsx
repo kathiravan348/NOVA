@@ -52,13 +52,14 @@ function usePrefill() {
   const { state } = useLocation() as { state: unknown };
   const parsed = DataJobPlanRequestSchema.safeParse(state);
   if (!parsed.success || !DOWNLOAD_TIMEFRAMES.includes(parsed.data.timeframe)) return null;
-  const { symbols, timeframe, from, to } = parsed.data;
+  const { symbols, timeframe, from, to, mode } = parsed.data;
   return {
     stocks: symbols.filter((s) => !s.includes(" ")),
     indices: symbols.filter((s) => s.includes(" ")),
     timeframe,
     from,
     to,
+    mode,
   };
 }
 
@@ -111,7 +112,7 @@ export function NewDownloadPage() {
   const checkPlan = () => {
     setTouched(true);
     if (!parsed.success || futureTo) return;
-    void makePlan("skip_existing");
+    void makePlan(prefill?.mode ?? "skip_existing");
   };
 
   const start = async () => {

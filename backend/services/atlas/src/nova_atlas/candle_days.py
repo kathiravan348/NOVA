@@ -8,13 +8,13 @@ from nova_db.models import COVERAGE_TIMEFRAMES
 from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Session
-from sqlalchemy.types import Date
+from sqlalchemy.types import Date, DateTime
 
 IST = ZoneInfo("Asia/Kolkata")
 
 
 def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal["index", "stocks"]]:
-    """Observed NSE trading days: NIFTY 50 daily bars, else at least ten stocks (D63)."""
+    """Observed NSE sessions: union of NIFTY 50 and dates with at least ten daily stocks."""
     period = {"first": first, "last": last}
     index_days = db.scalars(
         text(
@@ -23,16 +23,15 @@ def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal[
         ),
         period,
     ).all()
-    if index_days:
-        return list(index_days), "index"
     stock_days = db.scalars(
         text(
             "SELECT day FROM candle_days WHERE exchange = 'NSE' AND timeframe = '1d'"
+            " AND symbol NOT IN (SELECT name FROM market_indices)"
             " AND day BETWEEN :first AND :last GROUP BY day HAVING count(*) >= 10 ORDER BY day"
         ),
         period,
     ).all()
-    return list(stock_days), "stocks"
+    return sorted(set(index_days) | set(stock_days)), "index" if index_days else "stocks"
 
 
 _MISSING = text(
@@ -42,31 +41,49 @@ _MISSING = text(
         WHERE exchange = :exchange AND timeframe = :timeframe AND symbol IN :symbols
         GROUP BY symbol
     )
-    SELECT b.symbol, count(*) FROM bounds b JOIN cal c ON c.day BETWEEN b.first AND b.last
+    SELECT b.symbol, count(*), count(*) FILTER (WHERE u.day IS NULL)
+    FROM bounds b JOIN cal c ON c.day BETWEEN b.first AND b.last
     LEFT JOIN candle_days d ON d.exchange = :exchange AND d.timeframe = :timeframe
         AND d.symbol = b.symbol AND d.day = c.day
+    LEFT JOIN unavailable_days u ON u.exchange = :exchange AND u.timeframe = :timeframe
+        AND u.symbol = b.symbol AND u.day = c.day AND u.resolved_at IS NULL
+        AND u.first_checked_at < :known_before
     WHERE d.day IS NULL GROUP BY b.symbol ORDER BY b.symbol
     """
-).bindparams(bindparam("days", type_=ARRAY(Date())), bindparam("symbols", expanding=True))
+).bindparams(
+    bindparam("days", type_=ARRAY(Date())),
+    bindparam("symbols", expanding=True),
+    bindparam("known_before", type_=DateTime(timezone=True)),
+)
 
 
 def missing_download_days(
-    db: Session, exchange: str, timeframe: str, symbols: list[str], first: date, last: date
-) -> dict[str, int]:
-    """Check internal gaps without inferring dates before listing or after delisting."""
+    db: Session,
+    exchange: str,
+    timeframe: str,
+    symbols: list[str],
+    first: date,
+    last: date,
+    known_before: datetime | None = None,
+) -> dict[str, tuple[int, int]]:
+    """Internal gaps per symbol as (missing, new): new excludes unresolved broker-unavailable
+    days first recorded before `known_before` (D70). No dates before listing or after delisting."""
     if exchange != "NSE" or not symbols:
         return {}
     days, _source = calendar(db, first, last)
     if not days:
         return {}
-    return dict(
-        db.execute(
-            _MISSING,
-            {"days": days, "exchange": exchange, "timeframe": timeframe, "symbols": symbols},
-        )
-        .tuples()
-        .all()
-    )
+    rows = db.execute(
+        _MISSING,
+        {
+            "days": days,
+            "exchange": exchange,
+            "timeframe": timeframe,
+            "symbols": symbols,
+            "known_before": known_before,
+        },
+    ).tuples()
+    return {symbol: (missing, new) for symbol, missing, new in rows}
 
 
 _DELETE_DAYS = text(

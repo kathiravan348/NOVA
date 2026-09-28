@@ -8,7 +8,7 @@ from nova_contracts.common import Contract, IsoDate
 from nova_contracts.market_data import IndexName
 
 CoverageTimeframe = Literal["1m", "1d"]
-CoverageStatus = Literal["complete", "gaps", "partial", "none"]
+CoverageStatus = Literal["complete", "gaps", "partial", "none", "unavailable"]
 Count = Annotated[int, Field(ge=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
 
@@ -26,6 +26,7 @@ class CoverageRow(Contract):
     days: Count
     missing_days: Count
     status: CoverageStatus
+    unavailable_days: Count = 0
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -35,6 +36,8 @@ class CoverageRow(Contract):
             raise ValueError("firstDay and lastDay are both set or both null")
         if self.status == "complete" and self.missing_days:
             raise ValueError("a complete row has no missing days")
+        if self.unavailable_days > self.missing_days:
+            raise ValueError("unavailable days cannot exceed missing days")
         if self.days and self.first_day is None:
             raise ValueError("a row with days has a stored range")
         return self
@@ -69,9 +72,12 @@ class CoverageDetail(_Period):
     days: Count
     missing_days: Count
     missing: list[MissingRange]
+    unavailable_days: Count = 0
 
     @model_validator(mode="after")
     def _adds_up(self) -> Self:
+        if self.unavailable_days > self.missing_days:
+            raise ValueError("unavailable days cannot exceed missing days")
         if sum(m.days for m in self.missing) != self.missing_days:
             raise ValueError("missing ranges add up to missingDays")
         return self

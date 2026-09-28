@@ -6,6 +6,11 @@ import {
   MarketIndexSchema,
   DataJobSchema,
   UniverseEntrySchema,
+  UnavailableDaySchema,
+  pageSchema,
+  type Page,
+  type UnavailableDay,
+  type UnavailableQuery,
   type Candle,
   type CoverageDetail,
   type CoverageList,
@@ -91,4 +96,20 @@ export function getCoverageDetail(
 ): Promise<CoverageDetail> {
   const path = `/market-data/coverage/${encodeURIComponent(symbol)}?${coverageQuery(query)}`;
   return apiGet(path, CoverageDetailSchema, init);
+}
+
+export function getUnavailableDays(
+  query: UnavailableQuery,
+  cursor?: string,
+  init?: RequestOptions,
+): Promise<Page<UnavailableDay>> {
+  const params = new URLSearchParams(coverageQuery(query));
+  if (query.status) params.set("status", query.status);
+  if (query.symbol) params.set("symbol", query.symbol);
+  if (cursor) params.set("cursor", cursor);
+  return apiGet(
+    `/market-data/unavailable?${params.toString()}`,
+    pageSchema(UnavailableDaySchema),
+    init,
+  );
 }

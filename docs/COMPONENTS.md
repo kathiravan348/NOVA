@@ -44,4 +44,5 @@
 | CandlestickChart | Lightweight Charts OHLC candles + volume, token colours re-read on theme switch, IST times | `Trading/CandlestickChart` |
 | StrategyCard | Strategy card: title/status slots, facts line, run counts and best/worst results from `StrategyStats` (loading, no-results, unavailable) | `Trading/StrategyCard` |
 | StrategyStatsList | The stats block of StrategyCard, also used on the strategy detail page; `renderBestRun` wraps the best P&L in a link | `Trading/StrategyCard` |
+| UnavailableDataTable | Broker response evidence per trading date, IST checks, attempts, state, last-job link and exact-date recheck; mobile cards; loading/empty/error/disabled/resolved states | `Trading/UnavailableDataTable` |
 | useThemeColors (hook) | Resolved theme CSS variables for canvas libraries; updates on `data-theme` change | — |

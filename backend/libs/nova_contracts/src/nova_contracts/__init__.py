@@ -139,6 +139,7 @@ from nova_contracts.strategy import (
 )
 from nova_contracts.strategy_stats import BestNetPnl, StrategyStats, VersionStats
 from nova_contracts.trade import Trade
+from nova_contracts.unavailable import UnavailableDay
 from nova_contracts.universe import UniverseEntry, UniverseEntryWrite, UniverseSector
 from nova_contracts.user import User, UserRole
 
@@ -237,6 +238,7 @@ __all__ = [
     "CoverageRow",
     "CoverageStatus",
     "CoverageTimeframe",
+    "UnavailableDay",
     "Exchange",
     "Id",
     "IsoDate",

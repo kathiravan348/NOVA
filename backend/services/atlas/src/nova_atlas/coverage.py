@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.types import Date
 
 from nova_atlas.candle_days import calendar
+from nova_atlas.unavailable import unavailable_counts
 from nova_atlas.universe import load_universe
 
 router = APIRouter(prefix="/market-data")
@@ -68,6 +69,7 @@ class _Numbers:
     missing_days: int
     status: Literal["complete", "gaps", "partial", "none"]
     window: tuple[date, date] | None  # where missing days are counted
+    partial: bool = False
 
 
 def _series(
@@ -110,7 +112,15 @@ def _numbers(series: _Series | None, first: date, last: date, days: list[date]) 
     status: Literal["complete", "gaps", "partial"] = (
         "gaps" if missing else "partial" if starts_late or ends_early else "complete"
     )
-    return _Numbers(series.first_day, series.last_day, series.days, missing, status, (lo, hi))
+    return _Numbers(
+        series.first_day,
+        series.last_day,
+        series.days,
+        missing,
+        status,
+        (lo, hi),
+        starts_late or ends_early,
+    )
 
 
 def _period(first: date | None, last: date | None) -> tuple[date, date]:
@@ -140,13 +150,24 @@ def list_coverage(
     first, last = _period(from_, to)
     days, source = calendar(db, first, last)
     series = _series(db, timeframe, first, last, days)
+    unavailable = unavailable_counts(db, timeframe, first, last)
     rows: list[CoverageRow] = []
     for entry in load_universe(db):
         n = _numbers(series.get(entry.symbol), first, last, days)
-        rows.append(_row(entry.symbol, entry.name, "stock", entry.sector, list(entry.indices), n))
+        rows.append(
+            _row(
+                entry.symbol,
+                entry.name,
+                "stock",
+                entry.sector,
+                list(entry.indices),
+                n,
+                unavailable.get(entry.symbol, 0),
+            )
+        )
     for name in db.scalars(select(MarketIndex.name).order_by(MarketIndex.name)):
         n = _numbers(series.get(name), first, last, days)
-        rows.append(_row(name, name, "index", "Index", [], n))
+        rows.append(_row(name, name, "index", "Index", [], n, unavailable.get(name, 0)))
     body = CoverageList.model_validate(
         {"timeframe": timeframe, "from": first, "to": last, "calendar": source, "rows": rows}
     )
@@ -154,7 +175,13 @@ def list_coverage(
 
 
 def _row(
-    symbol: str, name: str, kind: str, sector: str, indices: list[str], n: _Numbers
+    symbol: str,
+    name: str,
+    kind: str,
+    sector: str,
+    indices: list[str],
+    n: _Numbers,
+    unavailable_days: int = 0,
 ) -> CoverageRow:
     return CoverageRow.model_validate(
         {
@@ -167,7 +194,10 @@ def _row(
             "last_day": n.last_day,
             "days": n.days,
             "missing_days": n.missing_days,
-            "status": n.status,
+            "status": "unavailable"
+            if n.status == "gaps" and not n.partial and unavailable_days >= n.missing_days
+            else n.status,
+            "unavailable_days": min(unavailable_days, n.missing_days),
         }
     )
 
@@ -235,6 +265,9 @@ def coverage_detail(
             "days": n.days,
             "missing_days": n.missing_days,
             "missing": missing,
+            "unavailable_days": min(
+                unavailable_counts(db, timeframe, first, last).get(symbol, 0), n.missing_days
+            ),
         }
     )
     return JSONResponse(body.model_dump(mode="json"))

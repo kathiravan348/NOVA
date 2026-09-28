@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 28 Sep 2026 (NOVA-139). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 28 Sep 2026 (NOVA-140). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -146,6 +146,11 @@ the same calendar as Stored data. Remaining gaps set the job to `failed`, with a
 count in `error`; saved candles and finished steps remain. `progressPercent` can be 100 on such a failed
 job because all requests finished. The check does not infer unavailable dates before listing or after
 the last stored day, or days missing from the observed calendar itself. It never synthesises daily bars.
+Successful historical responses persist `UnavailableDay` evidence for missing internal sessions. Failed responses do not.
+`skip_existing` treats unresolved recorded dates as explained; `overwrite` rechecks them. Neither adds synthetic candles.
+Valid prices resolve history automatically. A `skip_existing` job does not fail on gaps already recorded (unresolved, first
+checked before the job was created): it ends `completed` with the counts in `summary`. New gaps, and any gap in an
+`overwrite` job, still set `failed`. Recorded gaps never make coverage `complete`.
 
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
@@ -158,8 +163,13 @@ the last stored day, or days missing from the observed calendar itself. It never
 | `DELETE /market-data/universe/{symbol}` | Removes a stock from the list. Its downloaded candles and its `instruments` row stay. Audit: `instrument.remove`. | path | 204; 400 while a planned, queued, running or paused job uses it; 404 |
 | `POST /market-data/universe/{symbol}/clear-new` | Marks a new listing as seen (`newListing` false). Audit: `instrument.clear_new` (only when it was new). | path | `UniverseEntry`; 404 |
 | `GET /market-data/indices` | Every NSE index NOVA knows (`market_indices`), biggest first: name, Kite symbol, members in the stock list, last refresh. | — | `MarketIndex[]` |
-| `GET /market-data/coverage` | Stored history per stock (D63, D65): every stock of the stock list plus every index in `market_indices` (`none` until it has candles). Per row: `firstDay`/`lastDay` (whole stored range) and, inside the period, `days`, `missingDays` (trading days between the first and last stored day, clipped to the period, with no bar) and `status` (`complete`, `gaps`, `partial` = starts after or ends before the period, `none`). A later start is not `partial` when a finished download step for that symbol and timeframe asked Kite for a trading day before the first stored day (listed later, D65). Trading days = NIFTY 50 daily bars in the period, else days on which at least 10 stocks have a daily bar (`calendar` says which). | `timeframe` (`1m` or `1d`, default `1d`), `from`/`to` (default: 2020-01-01, or `to` if earlier, to today IST; D69); 400 if from > to | `CoverageList` |
+| `GET /market-data/coverage` | Stored history per stock (D63, D65): every stock of the stock list plus every index in `market_indices` (`none` until it has candles). Per row: `firstDay`/`lastDay` (whole stored range) and, inside the period, `days`, `missingDays` (trading days between the first and last stored day, clipped to the period, with no bar) and `status` (`complete`, `gaps`, `partial` = starts after or ends before the period, `none`). A later start is not `partial` when a finished download step for that symbol and timeframe asked Kite for a trading day before the first stored day (listed later, D65). Trading days combine daily NIFTY 50 dates and dates on which at least 10 stocks have a daily bar (`calendar=index` means index dates contributed). | `timeframe` (`1m` or `1d`, default `1d`), `from`/`to` (default: 2020-01-01, or `to` if earlier, to today IST; D69); 400 if from > to | `CoverageList` |
 | `GET /market-data/coverage/{symbol}` | The same numbers for one stock or index, plus `missing`: the missing trading days merged into ranges (days next to each other in the calendar are one range). | path + same query | `CoverageDetail`; 404 not in the stock list or indices |
+| `GET /market-data/unavailable` | Persistent successful-check evidence, newest first by first check and id. `id`, `exchange`, `symbol`, `timeframe`, `day`, `broker` (`Zerodha`), `reason` (`no_usable_candle`), `firstCheckedAt`, `lastCheckedAt`, `attempts`, nullable `lastJobId`, nullable `resolvedAt`, `status` (`unavailable` or `resolved`). Job deletion clears the link but keeps history. Read-only; no audit action. | `timeframe` (`1m`/`1d`, default `1d`), `from` (default 2020-01-01), `to` (default today IST), `status` (`unavailable` default / `resolved` / `all`), optional `symbol`, `limit` (1–200, default 50), opaque `cursor`; 400 reversed period or invalid cursor, 422 invalid query, normal authentication applies | `Page<UnavailableDay>` |
+
+Coverage rows and details also include `unavailableDays` (a subset of `missingDays`). Row status `unavailable` means all internal gaps have unresolved broker evidence and no unfinished period edge. It never means complete.
+The calendar combines daily NIFTY 50 sessions with dates having at least ten non-index daily series. `calendar=index` means NIFTY 50 contributed; otherwise `stocks`.
+Unobserved holidays/weekends are excluded, observed special sessions are included. Dates absent from all data are unknown, not verified holidays.
 | `POST /market-data/instruments/sync` | Queues an `instrument_sync` data job (D56). The Atlas worker then adds every NSE stock Kite lists (plain symbols and `-BE`/`-BZ`/`-SM`/`-ST`; bonds and SGBs skipped), reads each index's members from NSE (through the broker), fills sectors of new or *Unclassified* stocks from NSE's industry, and refreshes tokens and F&O lot sizes. Stocks added after an earlier completed sync are new listings. A failed NSE file keeps that index's old members and is named in the job `summary`. The worker also queues one each weekday from 08:45 IST once Kite is logged in (none queued, running or completed today; a failed one is retried after 30 min). Audit: `instrument.sync` ("Queued sync with Kite" / "Queued the daily sync with Kite" by System). | — | 202 `DataJob` (`instrument_sync`, `queued`); 400 a sync is already waiting or running |
 | `GET /data-jobs` | Background jobs, newest first, paged (`type=` keeps one kind, e.g. the latest `instrument_sync` with `limit=1`): type (`historical_download`, `tick_record`, `archive`, `instrument_sync` — no symbols), status, symbols, timeframe, period, progress %, rows written (stocks synced for a sync), error, summary. | `limit`, `cursor`, `type` | `Page<DataJob>`; 400 unknown type |
 | `GET /data-jobs/{id}` | One job. | path | `DataJob`; 404 |

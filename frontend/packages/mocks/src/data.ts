@@ -8,6 +8,7 @@ import {
   CandleSchema,
   CoverageDetailSchema,
   CoverageListSchema,
+  UnavailableDaySchema,
   DataJobSchema,
   InstrumentSchema,
   RateLimitSchema,
@@ -23,6 +24,7 @@ import {
 import auditEntriesJson from "../data/auditEntries.json";
 import candlesJson from "../data/candles.json";
 import coverageJson from "../data/coverage.json";
+import unavailableJson from "../data/unavailable.json";
 import instrumentsJson from "../data/instruments.json";
 import backtestResultsJson from "../data/backtestResults.json";
 import backtestRunsJson from "../data/backtestRuns.json";
@@ -121,3 +123,4 @@ export const mockCandles: Record<string, Candle[]> = Object.fromEntries(
 /** Stored-data lists for `1d` and `1m`, and missing ranges of a few stocks (D63). */
 export const mockCoverageLists = CoverageListSchema.array().parse(coverageJson.lists);
 export const mockCoverageDetails = CoverageDetailSchema.array().parse(coverageJson.details);
+export const mockUnavailableDays = UnavailableDaySchema.array().parse(unavailableJson);

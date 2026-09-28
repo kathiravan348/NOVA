@@ -98,7 +98,9 @@ def test_statuses_from_a_stock_calendar(client: TestClient, clean: Engine, parit
     assert "S0" not in rows  # only the stock list and indices are listed
 
 
-def test_the_index_calendar_wins_and_indices_are_listed(client: TestClient, clean: Engine) -> None:
+def test_index_and_stock_calendar_union_and_indices_are_listed(
+    client: TestClient, clean: Engine
+) -> None:
     _market(clean)
     _store(clean, "NIFTY 50", DAYS[:-1])  # the index has no bar on 25 Sep
     _store(clean, "INFY", DAYS[:-1])
@@ -106,7 +108,7 @@ def test_the_index_calendar_wins_and_indices_are_listed(client: TestClient, clea
     body, rows = _rows(client, PERIOD)
 
     assert body["calendar"] == "index"
-    assert rows["INFY"]["status"] == "complete"  # 25 Sep is not a trading day now
+    assert rows["INFY"]["status"] == "partial"  # other stocks establish the missing index session
     nifty = rows["NIFTY 50"]
     assert (nifty["kind"], nifty["sector"], nifty["indices"]) == ("index", "Index", [])
 

@@ -16,7 +16,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "AXISBANK",
@@ -28,7 +29,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "BAJFINANCE",
@@ -40,7 +42,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "BHARTIARTL",
@@ -52,7 +55,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "DABUR",
@@ -64,7 +68,8 @@
           "lastDay": "2026-09-18",
           "days": 35,
           "missingDays": 0,
-          "status": "partial"
+          "status": "partial",
+          "unavailableDays": 0
         },
         {
           "symbol": "DMART",
@@ -76,7 +81,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "GREENGRID-SM",
@@ -88,7 +94,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "HAVELLS",
@@ -100,7 +107,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "HCLTECH",
@@ -112,7 +120,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "HDFCBANK",
@@ -124,7 +133,8 @@
           "lastDay": "2026-09-18",
           "days": 59,
           "missingDays": 1,
-          "status": "gaps"
+          "status": "gaps",
+          "unavailableDays": 0
         },
         {
           "symbol": "HINDUNILVR",
@@ -136,7 +146,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "ICICIBANK",
@@ -148,7 +159,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "INFY",
@@ -160,7 +172,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "ITC",
@@ -172,7 +185,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "KOTAKBANK",
@@ -184,7 +198,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "LT",
@@ -196,7 +211,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "MARUTI",
@@ -208,7 +224,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "NIFTY 50",
@@ -220,7 +237,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "NOVATECH",
@@ -232,7 +250,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "NTPC",
@@ -244,7 +263,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "PIDILITIND",
@@ -256,7 +276,8 @@
           "lastDay": "2026-09-18",
           "days": 35,
           "missingDays": 0,
-          "status": "partial"
+          "status": "partial",
+          "unavailableDays": 0
         },
         {
           "symbol": "RELIANCE",
@@ -268,7 +289,8 @@
           "lastDay": "2026-09-18",
           "days": 57,
           "missingDays": 3,
-          "status": "gaps"
+          "status": "gaps",
+          "unavailableDays": 0
         },
         {
           "symbol": "SBIN",
@@ -280,7 +302,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "SUNPHARMA",
@@ -292,7 +315,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "TCS",
@@ -304,7 +328,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "TITAN",
@@ -316,7 +341,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "WIPRO",
@@ -328,7 +354,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         }
       ]
     },
@@ -348,7 +375,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "AXISBANK",
@@ -360,7 +388,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "BAJFINANCE",
@@ -372,7 +401,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "BHARTIARTL",
@@ -384,7 +414,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "DABUR",
@@ -396,7 +427,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "DMART",
@@ -408,7 +440,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "GREENGRID-SM",
@@ -420,7 +453,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "HAVELLS",
@@ -432,7 +466,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "HCLTECH",
@@ -444,7 +479,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "HDFCBANK",
@@ -456,7 +492,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "HINDUNILVR",
@@ -468,7 +505,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "ICICIBANK",
@@ -480,7 +518,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "INFY",
@@ -492,7 +531,8 @@
           "lastDay": "2026-09-18",
           "days": 57,
           "missingDays": 3,
-          "status": "gaps"
+          "status": "gaps",
+          "unavailableDays": 0
         },
         {
           "symbol": "ITC",
@@ -504,7 +544,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "KOTAKBANK",
@@ -516,7 +557,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "LT",
@@ -528,7 +570,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "MARUTI",
@@ -540,7 +583,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "NOVATECH",
@@ -552,7 +596,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "NTPC",
@@ -564,7 +609,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "PIDILITIND",
@@ -576,7 +622,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "RELIANCE",
@@ -588,7 +635,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "SBIN",
@@ -600,7 +648,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "SUNPHARMA",
@@ -612,7 +661,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "TCS",
@@ -624,7 +674,8 @@
           "lastDay": "2026-09-18",
           "days": 60,
           "missingDays": 0,
-          "status": "complete"
+          "status": "complete",
+          "unavailableDays": 0
         },
         {
           "symbol": "TITAN",
@@ -636,7 +687,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         },
         {
           "symbol": "WIPRO",
@@ -648,7 +700,8 @@
           "lastDay": null,
           "days": 0,
           "missingDays": 0,
-          "status": "none"
+          "status": "none",
+          "unavailableDays": 0
         }
       ]
     }
@@ -669,7 +722,8 @@
           "to": "2026-08-14",
           "days": 3
         }
-      ]
+      ],
+      "unavailableDays": 0
     },
     {
       "symbol": "HDFCBANK",
@@ -686,7 +740,8 @@
           "to": "2026-09-02",
           "days": 1
         }
-      ]
+      ],
+      "unavailableDays": 0
     },
     {
       "symbol": "INFY",
@@ -708,7 +763,8 @@
           "to": "2026-07-21",
           "days": 2
         }
-      ]
+      ],
+      "unavailableDays": 0
     },
     {
       "symbol": "PIDILITIND",
@@ -719,7 +775,8 @@
       "lastDay": "2026-09-18",
       "days": 35,
       "missingDays": 0,
-      "missing": []
+      "missing": [],
+      "unavailableDays": 0
     }
   ]
 }

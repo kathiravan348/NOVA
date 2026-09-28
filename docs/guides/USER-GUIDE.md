@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-139). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-140). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -408,13 +408,20 @@ how many trading **Days** are saved in the period, how many trading days are **M
   historical prices for those dates. Repeating a download cannot fill prices Kite does not return.
 - **Partial**: the prices start after the period starts or end before it ends (not downloaded yet).
 - **No data**: nothing is saved for this period.
+- **Broker unavailable**: all missing days inside the saved history were checked successfully, but the broker returned no usable prices. The history is still incomplete. **Unavailable days** shows how many missing days have this evidence.
 
-*Trading days* are the days the market was open: NOVA takes them from NIFTY 50's daily prices (download them once),
-or, until then, from the days most stocks traded; the line under the settings says which.
+*Trading days* are observed sessions: daily NIFTY 50 dates combined with dates on which at least ten stocks have daily prices.
+Holidays and weekends without an observed session do not count as gaps. Special sessions count even on a weekend.
+A date absent from every saved instrument is unknown; this is not a verified official holiday calendar.
 **Group by** puts stocks under each index they belong to (a stock in two indices shows twice) or under their sector; each
 group shows how many stocks are complete, have gaps or have no data. **Only with gaps** hides complete stocks. Click a
 symbol to see its missing date ranges. **Download missing** (on a group or in that window) opens **New download** with
 those stocks, the timeframe and the period filled in; check the plan and press **Start** as usual.
+Choose the **Unavailable data** tab for exact dates, timeframe, broker response, first and last checks, number of checks and the last job.
+**Availability** selects **Broker unavailable**, **Resolved** or **All history**. **Load more** fetches more records; search searches loaded records.
+Routine downloads skip recorded unavailable dates. **Check again** opens a download plan for that exact date in overwrite mode.
+When a download supplies valid prices, the record becomes **Resolved** automatically. Deleting the job preserves this history.
+This records the broker response; it does not prove whether a particular absence is a broker fault. Network errors are not evidence of unavailable prices.
 Example: before a 5-year backtest on NIFTY 100, choose **Daily**, group by **Index**, open **NIFTY 100** and press
 **Download missing** if anything is not complete. Also check **NIFTY 50** in the **Indices** group: a strategy with a
 market filter on NIFTY 50 cannot run without its daily prices, and the benchmark line needs them too.
@@ -430,7 +437,9 @@ the dates you requested. If gaps remain, it shows **Failed** with the shares and
 Your saved prices stay. **100%** means all requests finished; it does not override **Failed**.
 Open **Stored data** and click the share to see the missing dates. The check uses the trading days known
 to the platform; it cannot find a day missing from that calendar too. It does not invent daily prices
-from minute prices. If Kite has no prices for those dates, they remain visible as **Gaps**.
+from minute prices. Successfully checked missing dates appear under **Unavailable data**, while the saved history remains incomplete.
+A normal download does not fail again on dates already listed there: it shows **Completed** with a note naming the
+shares and the known missing days. **Check again** still shows **Failed** if the broker still has no prices.
 
 **Updates appear by themselves.** In Real mode a small **Live** badge sits at the top right: job lists and job
 pages change the moment the work moves on, with no reload. If it shows **Reconnecting…**, the connection
@@ -525,6 +534,7 @@ approval**; in Demo mode the demo banner appears instead.
 | **Sent to Admin for approval** | The change is waiting. The Owner opens **Approvals**, checks it and presses **Approve** or **Reject**. Check **History** for the result; if it expired, request the change again. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
 | A backtest says prices are missing, or you are not sure what is downloaded | Open **Stored data** (Step 6b), choose the timeframe and period, group by **Index**, and press **Download missing** on the index you test. |
+| A download reaches 100% but reports missing dates | Open **Stored data → Unavailable data** for the exact dates and successful broker checks. **Check again** retries an exact date; recovered prices resolve the record automatically. |
 | My index run has fewer stocks than the index | Read the **Skipped** note on the run page. Those shares had no prices during your dates. A share listed later has no earlier prices to download. For other missing prices, check **Stored data** and use **Download missing**. |
 | A download *Failed* with *Not synced with Kite* | The stock is not synced with Kite yet. Press **Sync with Kite** on the Instruments page, then queue it again. |
 | A download *Failed* with *Kite is not logged in today* | Do the daily Kite login on the **Broker** page, then queue the download again. |

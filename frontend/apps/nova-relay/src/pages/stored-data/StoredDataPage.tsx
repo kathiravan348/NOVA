@@ -17,6 +17,7 @@ import {
   EmptyState,
   Select,
   StatusBadge,
+  Tabs,
   useToast,
 } from "@nova/ui-core";
 import { useCoverage } from "@nova/services";
@@ -30,6 +31,7 @@ import {
   type GroupBy,
 } from "./coverageGroups";
 import { MissingDaysModal } from "./MissingDaysModal";
+import { UnavailableDataPanel } from "./UnavailableDataPanel";
 
 /** What New download starts with when opened from here (D63 (4)). */
 export interface DownloadMissingState {
@@ -117,6 +119,12 @@ export function StoredDataPage() {
           />
         ),
       },
+      {
+        id: "unavailable",
+        header: "Unavailable days",
+        accessorFn: (r) => r.unavailableDays ?? 0,
+        meta: { numeric: true },
+      },
     ],
     [],
   );
@@ -172,42 +180,59 @@ export function StoredDataPage() {
           {coverage.data && (
             <p className="text-body-sm text-text-muted">
               {coverage.data.calendar === "index"
-                ? "Trading days from NIFTY 50."
-                : "Trading days from stock prices (download NIFTY 50 daily for an exact calendar)."}
+                ? "Observed trading days from NIFTY 50 and dates with at least 10 stocks."
+                : "Observed trading days from dates with at least 10 stocks."}
+              {
+                " Holidays and weekends without observed sessions are excluded; observed special sessions count. Dates absent from all data are unknown, not confirmed holidays."
+              }
             </p>
           )}
         </div>
       </Card>
-      {nothingStored ? (
-        <EmptyState
-          icon={<HardDrive className="h-6 w-6" />}
-          title="No prices stored yet"
-          description="Download prices first, then come back to check them."
-          action={
-            <Button asChild>
-              <Link to="/data-jobs/new">New download</Link>
-            </Button>
-          }
-        />
-      ) : (
-        <DataTable<CoverageRow>
-          caption="Stored data"
-          columns={columns}
-          data={rows}
-          getRowId={(r) => r.symbol}
-          loading={coverage.isPending}
-          error={
-            coverage.isError ? (
-              <QueryError error={coverage.error} onRetry={() => void coverage.refetch()} />
-            ) : undefined
-          }
-          search={{ label: "Search stocks", getText: (r) => `${r.symbol} ${r.name}` }}
-          groups={coverageGroups(groupBy, download)}
-          pageSize={25}
-          initialSort={[{ id: "symbol", desc: false }]}
-          emptyState={onlyGaps ? "Nothing is missing in this period." : "No stocks to show"}
-        />
-      )}
+      <Tabs
+        ariaLabel="Stored data views"
+        items={[
+          {
+            value: "coverage",
+            label: "Coverage",
+            content: nothingStored ? (
+              <EmptyState
+                icon={<HardDrive className="h-6 w-6" />}
+                title="No prices stored yet"
+                description="Download prices first, then come back to check them."
+                action={
+                  <Button asChild>
+                    <Link to="/data-jobs/new">New download</Link>
+                  </Button>
+                }
+              />
+            ) : (
+              <DataTable<CoverageRow>
+                caption="Stored data"
+                columns={columns}
+                data={rows}
+                getRowId={(r) => r.symbol}
+                loading={coverage.isPending}
+                error={
+                  coverage.isError ? (
+                    <QueryError error={coverage.error} onRetry={() => void coverage.refetch()} />
+                  ) : undefined
+                }
+                search={{ label: "Search stocks", getText: (r) => `${r.symbol} ${r.name}` }}
+                groups={coverageGroups(groupBy, download)}
+                pageSize={25}
+                initialSort={[{ id: "symbol", desc: false }]}
+                emptyState={onlyGaps ? "Nothing is missing in this period." : "No stocks to show"}
+              />
+            ),
+          },
+          {
+            value: "unavailable",
+            label: "Unavailable data",
+            content: <UnavailableDataPanel query={query} />,
+          },
+        ]}
+      />
       <MissingDaysModal
         row={open}
         query={query}

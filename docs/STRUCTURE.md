@@ -58,5 +58,6 @@
       ├─ backtest/      queue runs (D44), runs/results/trades API, worker; strategy engine (visual + Python
       │                 sandbox, delivery + intraday, D45–D47)
       └─ atlas/         NOVA Atlas: stock list (`universe` table) + instrument sync, data jobs + worker (Postgres queue, D41);
+                        `unavailable.py`: successful broker-check evidence, automatic recovery and paged unavailable-date history (D70, migration 0022); Relay `stored-data/UnavailableDataPanel.tsx` uses shared `UnavailableDataTable`.
                         Parquet tick archive (D49); `python -m nova_atlas sync-instruments | download | worker | archive-ticks`
 ```

@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from nova_atlas.broker_client import BrokerData, BrokerDataError
 from nova_atlas.candle_days import missing_download_days, recount_days
 from nova_atlas.tokens import kite_tokens
+from nova_atlas.unavailable import record_check
 
 IST = ZoneInfo("Asia/Kolkata")
 KITE_INTERVAL = {
@@ -187,6 +188,11 @@ def _next_step(db: Session, job_id: str) -> DataJobStep | None:
     ).first()
 
 
+def _counts(gaps: dict[str, int]) -> str:
+    text = ", ".join(f"{symbol}: {count}" for symbol, count in list(gaps.items())[:3])
+    return text + (f", {len(gaps) - 3} more symbols" if len(gaps) > 3 else "")
+
+
 def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | None = None) -> None:
     """Runs the pending steps of a claimed download, saving each as it finishes (D57 (4)).
 
@@ -233,6 +239,16 @@ def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | No
             ]
             written = upsert_candles(db, rows)
             recount_days(db, job.exchange, step.symbol, job.timeframe, step.start_at, step.end_at)
+            record_check(
+                db,
+                exchange=job.exchange,
+                symbol=step.symbol,
+                timeframe=job.timeframe,
+                first=step.start_at.astimezone(IST).date(),
+                last=step.end_at.astimezone(IST).date(),
+                check_id=f"{job.id}:{step.seq}",
+                job_id=job.id,
+            )
             step.status, step.rows_written = "done", written
             step.finished_at = datetime.now(UTC)
             job.rows_written += written
@@ -243,17 +259,41 @@ def run_download(db: Session, job_id: str, broker: BrokerData, pacer: Pacer | No
         db.rollback()
         finish_job(db, job, str(exc) or type(exc).__name__)
         return
+    # Later steps may establish series bounds that were not known in earlier checks.
+    for done in db.scalars(
+        select(DataJobStep).where(DataJobStep.job_id == job.id, DataJobStep.status == "done")
+    ):
+        record_check(
+            db,
+            exchange=job.exchange,
+            symbol=done.symbol,
+            timeframe=job.timeframe,
+            first=done.start_at.astimezone(IST).date(),
+            last=done.end_at.astimezone(IST).date(),
+            check_id=f"{job.id}:{done.seq}",
+            job_id=job.id,
+            at=done.finished_at,
+            only_new=True,
+        )
+    # D70: a routine download does not fail on dates already recorded unavailable before it was
+    # planned; an overwrite (Check again) fails while any gap remains.
+    known_before = job.created_at if job.mode == "skip_existing" else None
     gaps = missing_download_days(
-        db, job.exchange, job.timeframe, list(job.symbols), job.date_from, job.date_to
+        db, job.exchange, job.timeframe, list(job.symbols), job.date_from, job.date_to, known_before
     )
+    new = {symbol: n for symbol, (_missing, n) in gaps.items() if n}
+    known = {symbol: missing for symbol, (missing, _n) in gaps.items() if missing}
     error = None
-    if gaps:
-        summary = ", ".join(f"{symbol}: {count}" for symbol, count in list(gaps.items())[:3])
-        if len(gaps) > 3:
-            summary += f", {len(gaps) - 3} more symbols"
+    if new:
         error = (
-            f"Missing trading days remain ({summary}). "
+            f"Missing trading days remain ({_counts(new)}). "
             "The broker returned no usable candles for these dates. Saved prices are kept. "
-            "Check Stored data; repeated downloads may not fill broker history gaps."
+            "See Stored data > Unavailable data. Routine downloads skip recorded dates; "
+            "Check again rechecks the broker."
+        )
+    elif known:
+        job.summary = (
+            f"Known broker-unavailable days remain ({_counts(known)}). "
+            "See Stored data > Unavailable data; Check again rechecks the broker."
         )
     finish_job(db, job, error)
