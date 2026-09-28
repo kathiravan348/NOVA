@@ -1,6 +1,6 @@
 # NOVA-137 — Backtest worker no longer freezes on index runs that skip stocks (D68 (4), live bug)
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-137 · **Depends on:** 135
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-137 · **Depends on:** 135
 
 ## Goal
 An index backtest that skips members (NOVA-135) and has a benchmark completes, instead of freezing the
@@ -34,7 +34,7 @@ Modify:
 - [x] The updated engine test fails on `main` (run failed with a lock timeout) and passes on the branch.
 - [x] Index run with a skipped member and a benchmark: completed, `skipped_symbols` stored, result saved.
 - [x] `docker compose run --rm backend-check` passes.
-- [ ] Real data (after rebuild): the NIFTY 100 index runs that froze complete.
+- [x] Real data (after rebuild): the NIFTY 100 index runs that froze complete.
 
 ## Out of scope
 - Progress writer design (D58), the queue, other engine changes, screens. Guides: none (no API/table change).
@@ -54,4 +54,12 @@ backend-check (ruff, format, mypy, 1,203 tests): pass.
 **Known gaps:** real-data check after the rebuild (acceptance item 4) is done by the reviewer.
 
 ## Review
-_(reviewer writes here)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed; same session, not a fresh one).
+**Fixed directly (review: commits):** none.
+**Checked:** no other write to the run row before the final save on the visual, rotation and Python paths;
+the failure path rolls back before `fail_run`. Real data after rebuilding the backtest services: the 4 frozen
+NIFTY 100 runs (skipping BAJAJ-AUTO, ENRIN, HYUNDAI, TATACAP, TMCV) and a NIFTY 50 intraday run completed in
+2-3 s; totals, charges, bySymbol and every fill vs the bar's low-high checked independently.
+**Change requests (if sent back):** none.
+**Guides checked:** not affected. **Rulebook issues found:** none. **Follow-up tasks created:** none.
