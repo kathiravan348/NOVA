@@ -37,8 +37,8 @@
   },
   {
     "id": "intraday",
-    "name": "G — Intraday, 15-minute (MIS, testing)",
+    "name": "G — Intraday, 1-minute to 1-hour (MIS, testing)",
     "idea": "Same-day moves after the open, squared off from 15:20 (D46).",
-    "watch": "Charges and slippage eat small edges; intraday profit is business income (no tax estimate). Needs 1m candles for the period (15m is built from them, D58)."
+    "watch": "Needs 1m history; 3m–1h are built from it. Charges apply; slippage, spread and impact are not modelled. Coarse bars cannot reproduce exact 15:20 fills. Intraday tax is not estimated."
   }
 ]

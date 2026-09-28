@@ -1,6 +1,6 @@
-# NOVA — Strategy library (D62)
+# NOVA — Strategy library (D62, D73)
 
-> The 60 strategies shipped with NOVA (NOVA-121) and added from Orbit's **Library** page (NOVA-122).
+> The 100 strategies shipped with NOVA (NOVA-121, NOVA-144) and added from Orbit's **Library** page (NOVA-122).
 > Written by Claude; the implementer copies them into data exactly. Settings are textbook values, **not tuned on NSE data**.
 > Goal behind them: ₹10 L → at least ₹2.5 L a year after tax, NIFTY 100 (D62). Backtests are evidence, not promises.
 
@@ -266,8 +266,79 @@ business income (no tax estimate). Needs 1m candles for the period (15m is built
 | G09 | RSI dip in trend | ALL `rsi(14) < 35`, `ema(50) > ema(200)`, `close > prev_day_low()` | ANY `rsi(14) > 60` | SL 1, TP 1.5 |
 | G10 | Squeeze breakout 15m | ALL `bb_upper(20,2)[1] < keltner_upper(20,1.5,10)[1]`, `close > bb_upper(20,2)`, `close > vwap()` | ANY `close < ema(20)` | SL 1, TP 2 |
 
-## 9. How results are judged (D62 (8))
-v1 in-sample → v2 out-of-sample (2024-10-01 → 2026-09-25) → v3 full 5 years, as versions of one backtest (**Edit**).
-Pass: after-tax CAGR ≥ 25%, max drawdown ≤ 25%, no year below −5%, ≥ 40 trades, top 3 stocks < 50% of profit,
+## 9. Original research goals (D62 (8))
+Original schedule (only untouched periods qualify as out-of-sample): v1 in-sample → v2 validation (2024-10-01 → 2026-09-25) → v3 full 5 years, as versions of one backtest (**Edit**).
+Aspirational delivery screen, not a promised result: after-tax CAGR ≥ 25%, max drawdown ≤ 25%, no year below −5%, ≥ 40 trades, top 3 stocks < 50% of profit,
 v2 CAGR ≥ 60% of v1. F01/F02 and the benchmark show what "doing nothing clever" earned. The final pick is 2–3 passing
 strategies from different families; paper trading (Phase 2) comes before real money.
+
+## 10. Multi-timeframe expansion (D73, NOVA-144)
+
+The 40 additions below are fixed research candidates. They are not tuned on project backtest results.
+There are now 100 entries: A16 B22 C20 D6 E4 F2 G30. The original 60 rules and suggested periods stay unchanged.
+Related indicator/horizon variants are related trials, not independent proof of an edge.
+
+New-entry defaults: exchange NSE, universe **NIFTY 50**, benchmark **NIFTY 50**, capital ₹10,00,000,
+period **2023-01-02–2024-12-31**. Visual sizing is percent_equity 10, no averaging or leverage.
+G11–30 use equity_intraday, maximum 5 positions, rank ROC(6) desc. B15–20/C15–20 are overnight
+equity_delivery, maximum 10 positions; B rank ROC(20) desc and C rank RSI(14) asc; no index regime filter.
+B21–22/E03–04 are equity_delivery 1d, maximum 10 positions, rank ROC(126) desc; NIFTY 50
+close > SMA(200) blocks new entries. Rotation entries use equal weight and that same daily index filter
+with exit_all. Every indicator parameter is explicit below and in JSON.
+
+Intraday and intraday-chart swing entries need stored **1m** data; 3m–1h bars are rolled up from it.
+Daily entries need **1d** data, including the index for their filter. Intraday-chart indicators count
+bars, not days. Swing entries hold overnight and can gap past a stop. Signals use completed bars and
+fill at the next open. HOLD is bars; MIS exits take precedence. With coarse bars the engine cannot
+reproduce the exact 15:20 square-off price; the last 1h bucket is short. 1m strategies are especially
+sensitive to unmodelled execution costs. See [the testing protocol](STRATEGY-TESTING.md).
+
+### New visual entries
+
+| ID | Name / candle | Entry | Exit | Risk |
+|---|---|---|---|---|
+| B15 | Swing channel and volume breakout (15m) | **ALL** `close gt donchian_upper(period=40)[1]`; `volume gt 1.5 × volume_sma(period=20)`; `ema(period=50) gt ema(period=200)` | **ANY** `close lt ema(period=50)` | TRAIL 2%, HOLD 130 |
+| B16 | Swing MACD with rising trend (15m) | **ALL** `macd(fast=12, slow=26) crosses_above macd_signal(fast=12, slow=26, signal=9)`; `macd(fast=12, slow=26) gt 0`; `ema(period=100) gt ema(period=100)[1]` | **ANY** `macd_hist(fast=12, slow=26, signal=9) lt 0` | TRAIL 2.5%, HOLD 130 |
+| B17 | Swing Bollinger trend expansion (30m) | **ALL** `close crosses_above bb_upper(period=20, stddev=2)`; `adx(period=14) gt adx(period=14)[1]`; `adx(period=14) gt 20`; `ema(period=50) gt ema(period=200)` | **ANY** `close lt ema(period=20)` | TRAIL 3%, HOLD 65 |
+| B18 | Swing WMA crossover (30m) | **ALL** `wma(period=20) crosses_above wma(period=80)`; `adx(period=14) gt 20` | **ANY** `wma(period=20) lt wma(period=80)` | ATR(14, 3), HOLD 65 |
+| B19 | Swing inside-bar trend breakout (1h) | **ALL** `high[1] lt high[2]`; `low[1] gt low[2]`; `close gt high[1]`; `close gt ema(period=50)`; `ema(period=50) gt ema(period=50)[1]` | **ANY** `close lt ema(period=20)` | TRAIL 4%, HOLD 35 |
+| B20 | Swing directional volume breakout (1h) | **ALL** `close gt donchian_upper(period=35)[1]`; `plus_di(period=14) gt minus_di(period=14)`; `volume gt 1.5 × volume_sma(period=20)` | **ANY** `close lt ema(period=50)` | ATR(14, 3), HOLD 70 |
+| B21 | Daily OBV-confirmed breakout (1d) | **ALL** `close gt donchian_upper(period=63)[1]`; `obv() gt obv()[21]`; `volume gt 1 × volume_sma(period=20)`; `close gt sma(period=200)` | **ANY** `close lt ema(period=50)` | ATR(14, 3), HOLD 126 |
+| B22 | Daily quiet-period breakout (1d) | **ALL** `close gt donchian_upper(period=20)[1]`; `atr(period=14)[1] lt 0.8 × atr(period=14)[21]`; `close gt sma(period=200)` | **ANY** `close lt ema(period=20)` | ATR(14, 3), HOLD 63 |
+| C15 | Swing short-RSI dip (15m) | **ALL** `rsi(period=2) lt 10`; `close gt ema(period=200)` | **ANY** `rsi(period=2) gt 60` | SL 3%, HOLD 52 |
+| C16 | Swing Bollinger re-entry (15m) | **ALL** `close crosses_above bb_lower(period=20, stddev=2)`; `close gt ema(period=200)` | **ANY** `close gt bb_middle(period=20, stddev=2)` | SL 3%, HOLD 52 |
+| C17 | Swing Williams-R recovery (30m) | **ALL** `williams_r(period=14) crosses_above -80`; `sma(period=100) gt sma(period=200)` | **ANY** `williams_r(period=14) gt -20` | SL 4%, HOLD 39 |
+| C18 | Swing Keltner reclaim (30m) | **ALL** `close crosses_above keltner_lower(period=20, multiplier=2, atr_period=10)`; `ema(period=50) gt ema(period=200)` | **ANY** `close gt ema(period=20)` | SL 4%, HOLD 39 |
+| C19 | Swing EMA50 and RSI recovery (1h) | **ALL** `low lte ema(period=50)`; `close gt ema(period=50)`; `rsi(period=14) crosses_above 50` | **ANY** `close lt ema(period=50)` | SL 5%, HOLD 35 |
+| C20 | Swing two-decline volume reversal (1h) | **ALL** `close[1] lt close[2]`; `close[2] lt close[3]`; `close gt high[1]`; `volume gt 1.5 × volume_sma(period=20)`; `ema(period=50) gt ema(period=200)` | **ANY** `rsi(period=14) gt 70` | SL 5%, HOLD 35 |
+| E03 | Defensive slow-trend hold (1d) | **ALL** `close gt sma(period=200)`; `sma(period=200) gt sma(period=200)[63]`; `volatility(period=252) lt 25` | **ANY** `close lt sma(period=150)` | SL 15% |
+| E04 | Long-channel position hold (1d) | **ALL** `close gt donchian_upper(period=126)[1]`; `close gt ema(period=200)` | **ANY** `close lt donchian_lower(period=63)[1]` | TRAIL 15%, HOLD 252 |
+| G11 | Opening-range retest (1m) | **ALL** `close[1] gt or_high(minutes=15)`; `low lte or_high(minutes=15)`; `close gt or_high(minutes=15)`; `close gt vwap()` | **ANY** `close lt or_high(minutes=15)` | SL 0.4%, TP 0.8%, HOLD 30 |
+| G12 | Five-bar breakout with OBV (1m) | **ALL** `close gt donchian_upper(period=5)[1]`; `obv() gt obv()[5]`; `ema(period=20) gt ema(period=50)` | **ANY** `close lt ema(period=20)` | SL 0.4%, TP 0.8%, HOLD 30 |
+| G13 | Bollinger and RSI recovery (3m) | **ALL** `close crosses_above bb_lower(period=20, stddev=2)`; `close gt ema(period=100)`; `rsi(period=14) crosses_above 35` | **ANY** `close gt bb_middle(period=20, stddev=2)` | SL 0.6%, HOLD 15 |
+| G14 | Opening-range ADX acceleration (3m) | **ALL** `close crosses_above or_high(minutes=15)`; `adx(period=14) gt adx(period=14)[1]`; `volume gt 1.5 × volume_sma(period=20)` | **ANY** `close lt vwap()` | SL 0.6%, TP 1.2%, HOLD 20 |
+| G15 | Pivot R1 retest (3m) | **ALL** `close[1] gt pivot_r1()`; `low lte pivot_r1()`; `close gt pivot_r1()`; `close gt vwap()` | **ANY** `close lt pivot_r1()` | SL 0.6%, TP 1.2%, HOLD 20 |
+| G16 | Nested inside-bar breakout (5m) | **ALL** `high[1] lt high[2]`; `low[1] gt low[2]`; `high[2] lt high[3]`; `low[2] gt low[3]`; `close gt high[1]`; `close gt ema(period=50)` | **ANY** `close lt ema(period=20)` | SL 0.8%, TP 1.6%, HOLD 12 |
+| G17 | Failed previous-day-low breakdown (5m) | **ALL** `close[1] lt prev_day_low()`; `close gt prev_day_low()`; `close gt ema(period=20)` | **ANY** `close lt prev_day_low()` | SL 0.8%, TP 1.6%, HOLD 12 |
+| G18 | Range-bound Bollinger reclaim (5m) | **ALL** `close crosses_above bb_lower(period=20, stddev=2)`; `adx(period=14) lt 20` | **ANY** `close gt bb_middle(period=20, stddev=2)` | SL 0.8%, HOLD 12 |
+| G19 | Volume and OBV channel breakout (5m) | **ALL** `close gt donchian_upper(period=20)[1]`; `obv() gt obv()[20]`; `volume gt 1.5 × volume_sma(period=20)` | **ANY** `close lt ema(period=20)` | ATR(14, 2), HOLD 18 |
+| G20 | MACD histogram trend turn (5m) | **ALL** `macd_hist(fast=12, slow=26, signal=9) crosses_above 0`; `ema(period=20) gt ema(period=50)`; `close gt vwap()` | **ANY** `macd_hist(fast=12, slow=26, signal=9) lt 0` | SL 0.8%, TP 1.6%, HOLD 18 |
+| G21 | Strong-trend EMA50 retest (15m) | **ALL** `low lte ema(period=50)`; `close gt ema(period=50)`; `ema(period=20) gt ema(period=50)`; `adx(period=14) gt 25` | **ANY** `close lt ema(period=50)` | ATR(14, 2), HOLD 8 |
+| G22 | One-hour opening-range volume break (15m) | **ALL** `close crosses_above or_high(minutes=60)`; `close gt vwap()`; `volume gt 1.5 × volume_sma(period=20)` | **ANY** `close lt vwap()` | SL 1%, TP 2%, HOLD 8 |
+| G23 | Previous-close reversal after declines (15m) | **ALL** `close[1] lt close[2]`; `close[2] lt close[3]`; `close crosses_above prev_day_close()`; `close gt ema(period=20)`; `volume gt 1.5 × volume_sma(period=20)` | **ANY** `close lt prev_day_close()` | SL 1%, TP 2%, HOLD 8 |
+| G24 | Low-ADX stochastic reversal (15m) | **ALL** `stoch_k(period=14, smooth=3) crosses_above stoch_d(period=14, smooth=3, signal=3)`; `stoch_k(period=14, smooth=3) lt 35`; `adx(period=14) lt 20` | **ANY** `stoch_k(period=14, smooth=3) gt 80` | SL 1%, HOLD 8 |
+| G25 | WMA trend crossover (30m) | **ALL** `wma(period=10) crosses_above wma(period=30)`; `adx(period=14) gt 25` | **ANY** `wma(period=10) lt wma(period=30)` | TRAIL 1.5%, HOLD 5 |
+| G26 | Compressed-ATR channel break (30m) | **ALL** `close gt donchian_upper(period=10)[1]`; `atr(period=14)[1] lt 0.9 × atr(period=14)[10]` | **ANY** `close lt ema(period=20)` | ATR(14, 2), HOLD 5 |
+| G27 | SuperTrend directional acceleration (30m) | **ALL** `close crosses_above supertrend(period=10, multiplier=3)`; `plus_di(period=14) gt minus_di(period=14)`; `adx(period=14) gt adx(period=14)[1]` | **ANY** `close lt supertrend(period=10, multiplier=3)` | SL 1.5%, HOLD 5 |
+| G28 | Pivot S2 recovery (30m) | **ALL** `close crosses_above pivot_s2()`; `ema(period=20) gt ema(period=50)` | **ANY** `close gt pivot()`; `close lt pivot_s2()` | SL 1.5%, HOLD 5 |
+| G29 | Hourly opening-range trend break (1h) | **ALL** `close crosses_above or_high(minutes=60)`; `close gt ema(period=20)`; `adx(period=14) gt 20` | **ANY** `close lt ema(period=20)` | SL 1.5%, HOLD 3 |
+| G30 | Hourly previous-day-low rejection (1h) | **ALL** `low lt prev_day_low()`; `close gt prev_day_low()`; `close gt open`; `close gt ema(period=20)` | **ANY** `close lt prev_day_low()` | SL 1.5%, HOLD 3 |
+
+### New daily rotation entries
+
+| ID | Name | Rebalance / hold / keep | Score terms | Eligibility | Risk |
+|---|---|---|---|---|---|
+| A13 | Fast risk-adjusted rotation (1d) | weekly, 10, 20 | `risk_adj_return(period=63) × 1` | **ALL** `roc(period=126) gt 0`; `close gt sma(period=100)` | SL 10% |
+| A14 | Volatility-ranked trend basket (1d) | quarterly, 15, 25 | `volatility(period=252) × -1` | **ALL** `roc(period=126) gt 0`; `close gt sma(period=200)` | None |
+| A15 | Two-horizon risk-adjusted rotation (1d) | monthly, 10, 20 | `risk_adj_return(period=63) × 1`; `risk_adj_return(period=252) × 1` | **ALL** `roc(period=21) gt 0` | None |
+| A16 | Trend-qualified high leaders (1d) | monthly, 10, 20 | `pct_of_high(period=252) × 1`; `roc(period=126) × 0.1` | **ALL** `ema(period=50) gt ema(period=200)`; `ema(period=200) gt ema(period=200)[63]` | None |

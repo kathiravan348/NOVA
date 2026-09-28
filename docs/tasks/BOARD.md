@@ -149,6 +149,7 @@
 | NOVA-141 | Compact Approvals: bulk decisions, details and tabs | done | Claude | 133 |
 | NOVA-142 | Benchmark: any index, defaulting to the universe's index (D72) | done | Claude | — |
 | NOVA-143 | Strategy card: CAGR range, one value for one run (D72) | done | Claude | — |
+| NOVA-144 | Library: 100 equity strategies across candle sizes + testing protocol (D73) | done | Claude | 121, 122 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

@@ -1797,5 +1797,1029 @@
       "initialCapitalPaise": 100000000,
       "benchmark": "NIFTY 50"
     }
+  },
+  {
+    "id": "B15",
+    "family": "trend",
+    "name": "Swing channel and volume breakout (15m)",
+    "summary": "15m delivery: swing channel and volume breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 130,
+        "trailingStopPercent": 2
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 40
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B16",
+    "family": "trend",
+    "name": "Swing MACD with rising trend (15m)",
+    "summary": "15m delivery: swing macd with rising trend; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 130,
+        "trailingStopPercent": 2.5
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "macd",
+              "params": {
+                "fast": 12,
+                "slow": 26
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "macd_signal",
+              "params": {
+                "fast": 12,
+                "slow": 26,
+                "signal": 9
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "macd",
+              "params": {
+                "fast": 12,
+                "slow": 26
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 0
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 100
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 100
+              },
+              "offset": 1
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "macd_hist",
+              "params": {
+                "fast": 12,
+                "slow": 26,
+                "signal": 9
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 0
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B17",
+    "family": "trend",
+    "name": "Swing Bollinger trend expansion (30m)",
+    "summary": "30m delivery: swing bollinger trend expansion; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 65,
+        "trailingStopPercent": 3
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_upper",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B18",
+    "family": "trend",
+    "name": "Swing WMA crossover (30m)",
+    "summary": "30m delivery: swing wma crossover; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 65,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 3
+        }
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 80
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 80
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B19",
+    "family": "trend",
+    "name": "Swing inside-bar trend breakout (1h)",
+    "summary": "1h delivery: swing inside-bar trend breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1h",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 35,
+        "trailingStopPercent": 4
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "high",
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "high",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low",
+              "offset": 1
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "low",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "high",
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              },
+              "offset": 1
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B20",
+    "family": "trend",
+    "name": "Swing directional volume breakout (1h)",
+    "summary": "1h delivery: swing directional volume breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1h",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 70,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 3
+        }
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 20
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 35
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "plus_di",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "minus_di",
+              "params": {
+                "period": 14
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B21",
+    "family": "trend",
+    "name": "Daily OBV-confirmed breakout (1d)",
+    "summary": "1d delivery: daily obv-confirmed breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 126,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 3
+        }
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 63
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "obv",
+              "params": {}
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "obv",
+              "params": {},
+              "offset": 21
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "B22",
+    "family": "trend",
+    "name": "Daily quiet-period breakout (1d)",
+    "summary": "1d delivery: daily quiet-period breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 63,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 3
+        }
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 126
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 20
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "atr",
+              "params": {
+                "period": 14
+              },
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "atr",
+              "params": {
+                "period": 14
+              },
+              "offset": 21,
+              "multiplier": 0.8
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "no_new_entries"
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
   }
 ]
