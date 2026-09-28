@@ -1,6 +1,6 @@
 # NOVA-134 — Instrument sync keeps hyphenated stocks such as BAJAJ-AUTO (D68, live bug)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-134 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-134 · **Depends on:** —
 
 ## Goal
 The next instrument sync adds BAJAJ-AUTO (and every other NSE stock whose symbol has a hyphen), so NIFTY 100
