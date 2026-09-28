@@ -139,6 +139,14 @@ describe("Orbit MSW handlers", () => {
     expect(parsed.error.message).toContain("unknown_run");
   });
 
+  it("GET /api/v1/backtests/:id reports skipped index members", async () => {
+    const res = await fetch("http://localhost/api/v1/backtests/run_006");
+    expect(BacktestRunSchema.parse(await res.json())).toMatchObject({
+      universe: { type: "index", index: "NIFTY 100" },
+      skippedSymbols: ["HYUNDAI", "TATACAP"],
+    });
+  });
+
   it("GET /api/v1/backtests/:id/result returns result for completed run", async () => {
     const target = mockBacktestResults[0]!;
     const res = await fetch(`http://localhost/api/v1/backtests/${target.runId}/result`);
@@ -270,6 +278,7 @@ describe("Orbit MSW handlers", () => {
     expect(BacktestRunSchema.parse(await res.json())).toMatchObject({
       status: "queued",
       name: "Queued",
+      skippedSymbols: [],
     });
     const bad = await fetch("http://localhost/api/v1/backtests", {
       method: "POST",
@@ -310,6 +319,7 @@ describe("Orbit MSW handlers", () => {
       version: 3,
       strategyId: "stg_001",
       status: "queued",
+      skippedSymbols: [],
     });
     expect((await post("run_003")).status).toBe(400); // run_003 is still running
   });

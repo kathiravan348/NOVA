@@ -138,13 +138,13 @@ class StrategyEngine:
         scratch: RunScratch,
         start: datetime,
         regime: RegimeSeries | None,
-    ) -> int:
+    ) -> tuple[int, list[str], list[str]]:
         """Pass 1 (D61): one stock at a time, its columns and signals go to `scratch`.
 
         Signals are computed right after each stock loads (visual rules on arrays, Python code in
         its own sandbox process, rotation scores), so only one stock's arrays exist at a time.
         Stops as soon as the run passes the bar limit (D59, D61 (6)); 3m–1h are rolled up from
-        1m (D58). Answers the number of bars stored.
+        1m (D58). Answers the bar count, loaded symbols and missing symbols.
         """
         progress.stage("loading", len(symbols))
         calls: Calls = {}
@@ -155,7 +155,8 @@ class StrategyEngine:
             calls = check_code(spec.code)  # once per run, not per stock
             progress.stage("signals", len(symbols))
         missing: list[str] = []
-        first, total = int(start.timestamp()), 0
+        loaded: list[str] = []
+        first, total, stored = int(start.timestamp()), 0, 0
         for done, symbol in enumerate(symbols, start=1):
             columns = load_columns(db, "NSE", symbol, spec.timeframe, *span)
             total += len(columns)
@@ -170,14 +171,11 @@ class StrategyEngine:
                 enter, exit_, rank = _signals(spec, symbol, columns, calls)
                 market = None if regime is None else regime.at(columns.ts)
                 scratch.add(symbol, columns, enter, exit_, rank, _atr(spec.risk, columns), market)
+                loaded.append(symbol)
+                stored += len(columns)
             del columns
             progress.advance(done)
-        if missing:
-            raise EngineError(
-                f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
-                "(download them first)"
-            )
-        return total
+        return stored, loaded, missing
 
     def run(self, db: Session, run_id: str, progress: ProgressSink) -> None:
         run = db.get(BacktestRun, run_id)
@@ -196,9 +194,22 @@ class StrategyEngine:
             regime = load_regime(db, spec.regime, spec.timeframe, span, start)
         scratch = RunScratch(self.scratch_root, run.id)
         try:
-            total = self._load(db, symbols, spec, span, limit, progress, scratch, start, regime)
+            total, loaded, missing = self._load(
+                db, symbols, spec, span, limit, progress, scratch, start, regime
+            )
+            if run.universe["type"] == "symbols" and missing:
+                raise EngineError(
+                    f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
+                    "(download them first)"
+                )
+            if not loaded:
+                raise EngineError(
+                    f"No stock in {run.universe['index']} has {spec.timeframe} prices "
+                    "in the period (download them first)"
+                )
             result = self._simulate(db, run, spec, scratch, start, total, progress)
-            save_result(db, run, spec.segment, symbols, result, (start, end), progress)
+            run.skipped_symbols = sorted(missing)
+            save_result(db, run, spec.segment, loaded, result, (start, end), progress)
         finally:
             scratch.close()
 

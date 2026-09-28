@@ -12,10 +12,12 @@ from sqlalchemy import (
     Integer,
     Numeric,
     SmallInteger,
+    Text,
     UniqueConstraint,
     text,
     true,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.engine.default import DefaultExecutionContext
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -91,6 +93,7 @@ class BacktestRun(Base):
     version: Mapped[int] = mapped_column(Integer, server_default="1")
     # False once a newer version completed: trades, curve and per-symbol rows are gone.
     report_kept: Mapped[bool] = mapped_column(server_default=true())
+    skipped_symbols: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
 
 
 class BacktestResult(Base):
