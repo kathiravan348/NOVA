@@ -19,6 +19,7 @@
 | EmptyState | Centered empty or error placeholder with icon, title, description, and action | `Core/EmptyState` |
 | LoadMore | "Load more" button under a paged list; hidden when nothing is left, disabled while loading | `Core/LoadMore` |
 | Modal | Accessible Radix dialog with title, description, body scroll, and footer actions | `Core/Modal` |
+| TextBlock | Full plain text in a wrapped, scrollable monospace block with keyboard focus; empty and long-content states | `Core/TextBlock` |
 | Tabs | Data-driven horizontal tabs with active indicator and mobile horizontal scroll | `Core/Tabs` |
 | ToastProvider / useToast | Radix toast notification manager with tone icons (success, danger, neutral) | `Core/Toast` |
 | DataTable | Generic TanStack Table with sortable headers, client pagination, desktop table and mobile stacked cards; optional row selection (`selectedIds`, "Select all shown"), optional `groups` (D63: collapsible groups, a row may sit in several, header summary + actions, no pagination, not with selection), search box and toolbar slot | `Core/DataTable` |

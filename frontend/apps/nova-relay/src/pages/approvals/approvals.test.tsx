@@ -22,11 +22,13 @@ afterAll(() => server.close());
 describe("Approvals", () => {
   it.each(["Approve", "Reject"] as const)("confirms %s before calling the API", async (action) => {
     renderApp("/approvals");
-    expect(await screen.findByText("Agent backtest", { exact: false })).toBeInTheDocument();
+    expect((await screen.findAllByText("Agent backtest", { exact: false })).length).toBeGreaterThan(
+      0,
+    );
     expect(await screen.findByRole("link", { name: "Approvals (1)" })).toBeInTheDocument();
-    expect(screen.getByText("HTTP 200 · {}", { exact: false })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: action }));
-    const dialog = await screen.findByRole("dialog", { name: `${action} this request?` });
+    fireEvent.click(screen.getByRole("button", { name: "Select all shown" }));
+    fireEvent.click(screen.getByRole("button", { name: `${action} selected (1)` }));
+    const dialog = await screen.findByRole("dialog", { name: `${action} 1 selected request(s)?` });
     expect(calls).not.toContain(`POST /api/v1/approvals/approval_pending/${action.toLowerCase()}`);
     fireEvent.click(within(dialog).getByRole("button", { name: action }));
     await waitFor(() =>
@@ -45,9 +47,11 @@ describe("Approvals", () => {
       ),
     );
     renderApp("/approvals");
-    fireEvent.click(await screen.findByRole("button", { name: "Approve" }));
+    await screen.findAllByText("Agent backtest");
+    fireEvent.click(screen.getByRole("button", { name: "Select all shown" }));
+    fireEvent.click(screen.getByRole("button", { name: "Approve selected (1)" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Approve" }));
-    expect(await screen.findByText("Request expired")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request expired");
   });
 
   it("loads older history including failed and expired requests", async () => {
@@ -75,9 +79,10 @@ describe("Approvals", () => {
       }),
     );
     renderApp("/approvals");
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "History" }), { button: 0 });
     fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
-    expect(await screen.findByText("HTTP 400 · Invalid strategy")).toBeInTheDocument();
-    expect(screen.getByText("expired")).toBeInTheDocument();
+    expect((await screen.findAllByText("HTTP 400")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("expired").length).toBeGreaterThan(0);
   });
 
   it("keeps the agent view read-only without account calls", async () => {
@@ -86,9 +91,9 @@ describe("Approvals", () => {
       JSON.stringify({ userId: "usr_agent", displayName: "Debug Agent", role: "agent" }),
     );
     renderApp("/approvals", { signedIn: false });
-    await screen.findByText("Agent backtest", { exact: false });
-    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+    await screen.findAllByText("Agent backtest", { exact: false });
+    expect(screen.queryByRole("button", { name: /Approve selected/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Reject selected/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Agent account")).not.toBeInTheDocument();
     expect(calls).not.toContain("GET /api/v1/agent");
     expect(screen.getByRole("note")).toHaveTextContent("Demo data");
@@ -113,6 +118,7 @@ describe("Agent account", () => {
       }),
     );
     renderApp("/approvals");
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Agent account" }), { button: 0 });
     fireEvent.click(await screen.findByRole("button", { name: "Create agent" }));
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Debug Agent" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "agent@example.com" } });
@@ -143,6 +149,7 @@ describe("Agent account", () => {
       ),
     );
     renderApp("/approvals");
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Agent account" }), { button: 0 });
     fireEvent.click(await screen.findByRole("switch", { name: "Agent access" }));
     await waitFor(() => expect(calls).toContain("PATCH /api/v1/agent"));
     fireEvent.click(screen.getByRole("button", { name: "Set new password" }));

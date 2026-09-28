@@ -25,6 +25,7 @@ export { EmptyState, type EmptyStateProps } from "./components/EmptyState/EmptyS
 export { LoadMore, type LoadMoreProps } from "./components/LoadMore/LoadMore";
 export { Modal, type ModalProps } from "./components/Modal/Modal";
 export { Tabs, type TabsProps, type TabItem } from "./components/Tabs/Tabs";
+export { TextBlock, type TextBlockProps } from "./components/TextBlock/TextBlock";
 export { ToastProvider, type ToastProviderProps } from "./components/Toast/ToastProvider";
 export {
   ToastContext,
