@@ -1,5 +1,5 @@
 import type { ApprovalRequest } from "@nova/contracts";
-import { getNow } from "@nova/services";
+import { getNow, isApprovalExpired } from "@nova/services";
 
 export function requestName(request: ApprovalRequest): string {
   const body = request.body;
@@ -11,7 +11,7 @@ export function eligible(request: ApprovalRequest, now: number = getNow().getTim
   return (
     request.status === "pending" &&
     request.decidedAt === null &&
-    now < Date.parse(request.createdAt) + 30 * 60 * 1000
+    !isApprovalExpired(request.createdAt, now)
   );
 }
 

@@ -60,6 +60,13 @@ export function useAgentAccount() {
   });
 }
 
+/** Requests expire 30 minutes after they are created (D67); the server stays authoritative. */
+export const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
+
+export function isApprovalExpired(createdAt: string, now: number = getNow().getTime()): boolean {
+  return now >= Date.parse(createdAt) + APPROVAL_EXPIRY_MS;
+}
+
 export interface ApprovalOutcome {
   id: string;
   decided: boolean;
@@ -83,7 +90,7 @@ export function useDecideRequests() {
       const outcomes: ApprovalOutcome[] = [];
       for (const request of requests) {
         let outcome: ApprovalOutcome;
-        if (getNow().getTime() >= Date.parse(request.createdAt) + 30 * 60 * 1000) {
+        if (isApprovalExpired(request.createdAt)) {
           outcome = { id: request.id, decided: false, error: "Request expired" };
         } else {
           try {

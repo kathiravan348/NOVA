@@ -1,6 +1,6 @@
 # NOVA-141 — Compact Approvals with bulk decisions and request details
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-141 · **Depends on:** NOVA-133
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-141 · **Depends on:** NOVA-133
 
 ## Goal
 Make batches of agent requests easy to inspect and decide without scrolling through full JSON cards.
@@ -55,4 +55,14 @@ None.
 - Independent lead-agent review required; implementation remains on task/NOVA-141.
 
 ## Review
-Independent lead-agent review pending.
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- One 30-minute expiry rule: services export `APPROVAL_EXPIRY_MS` + `isApprovalExpired`; bulk hook and `eligible()` both use it (was duplicated).
+- Owner-approved design moved from DECISIONS "Pending" into a D71 row (Pending is for open items).
+**Checked:** frozen IDs at confirmation, sequential per-request calls with `retry: false`, eligibility recheck
+before and during the batch, decided IDs leave the selection, tabs disabled while busy, agent read-only.
+`pnpm review:check` passed (119 files, 982 tests, lint, typecheck, format, build).
+**Guides checked:** USER-GUIDE Step 9 and troubleshooting match the screen; API/DATABASE not affected.
+**Rulebook issues found:** DECISIONS.md edited outside the Files list (acceptable: lead agent, Owner-approved).
+**Follow-up tasks created:** none.
