@@ -38,6 +38,8 @@ export const StrategyStatsSchema = z
     lastRunAt: UtcDateTimeSchema.nullable(),
     bestReturnPercent: z.number().nullable(),
     worstReturnPercent: z.number().nullable(),
+    bestCagrPercent: z.number().nullable(),
+    worstCagrPercent: z.number().nullable(),
     winRateMinPercent: z.number().min(0).max(100).nullable(),
     winRateMaxPercent: z.number().min(0).max(100).nullable(),
     worstDrawdownPercent: z.number().lte(0).nullable(),
@@ -61,6 +63,8 @@ export const StrategyStatsSchema = z
       const values = [
         s.bestReturnPercent,
         s.worstReturnPercent,
+        s.bestCagrPercent,
+        s.worstCagrPercent,
         s.winRateMinPercent,
         s.winRateMaxPercent,
         s.worstDrawdownPercent,
@@ -81,6 +85,13 @@ export const StrategyStatsSchema = z
       message: "worstReturnPercent must be at most bestReturnPercent",
       path: ["worstReturnPercent"],
     },
+  )
+  .refine(
+    (s) =>
+      s.bestCagrPercent === null ||
+      s.worstCagrPercent === null ||
+      s.worstCagrPercent <= s.bestCagrPercent,
+    { message: "worstCagrPercent must be at most bestCagrPercent", path: ["worstCagrPercent"] },
   )
   .refine(
     (s) =>

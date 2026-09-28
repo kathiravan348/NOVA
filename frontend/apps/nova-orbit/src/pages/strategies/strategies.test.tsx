@@ -1,8 +1,16 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { emptyHandlers, errorHandlers, handlers, mockStrategies } from "@nova/mocks";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  mockStrategies,
+  mockStrategyStats,
+} from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
+import { sortStrategies } from "./StrategiesPage";
 
 const server = setupServer(...handlers);
 
@@ -29,8 +37,8 @@ describe("Strategies list", () => {
     renderApp("/strategies");
     const list = await screen.findByRole("list", { name: "Strategies" });
     const vwap = within(list).getByRole("link", { name: "VWAP Momentum Intraday" }).closest("li")!;
-    await within(vwap).findByText("+0.50%");
-    expect(within(vwap).getByText("+0.21%")).toBeInTheDocument();
+    await within(vwap).findByText("+13.87%");
+    expect(within(vwap).getByText("+4.60%")).toBeInTheDocument();
     expect(within(vwap).getByRole("link", { name: "+₹4,994.74" })).toHaveAttribute(
       "href",
       "/backtests/run_001",
@@ -41,10 +49,11 @@ describe("Strategies list", () => {
     expect(within(draft).getByText("No completed runs yet.")).toBeInTheDocument();
   });
 
-  it("filters by status and sorts by best return", async () => {
+  it("filters by status and sorts by best CAGR", async () => {
     renderApp("/strategies");
     const list = await screen.findByRole("list", { name: "Strategies" });
-    await within(list).findByText("+0.50%");
+    await within(list).findByText("+13.87%");
+    expect(screen.getByRole("option", { name: "Best CAGR" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Sort by"), { target: { value: "best" } });
     const names = () =>
       within(list)
@@ -60,6 +69,47 @@ describe("Strategies list", () => {
         "12-1 momentum rotation",
       ]),
     );
+  });
+
+  it("sorts by CAGR even when total returns rank differently, with empty stats last", () => {
+    const [a, b, c] = mockStrategies;
+    const stats = mockStrategyStats[0]!;
+    const statsById = new Map([
+      [a!.id, { ...stats, bestReturnPercent: 80, bestCagrPercent: 10 }],
+      [b!.id, { ...stats, strategyId: b!.id, bestReturnPercent: 20, bestCagrPercent: 25 }],
+    ]);
+    expect(sortStrategies([c!, a!, b!], statsById, "best").map((s) => s.id)).toEqual([
+      b!.id,
+      a!.id,
+      c!.id,
+    ]);
+  });
+
+  it("shows one Return and CAGR for one completed and one running run", async () => {
+    const stats = mockStrategyStats[0]!;
+    server.use(
+      http.get("*/api/v1/strategies/stats", () =>
+        HttpResponse.json([
+          {
+            ...stats,
+            runsTotal: 2,
+            runsCompleted: 1,
+            runsInProgress: 1,
+            worstReturnPercent: stats.bestReturnPercent,
+            worstCagrPercent: stats.bestCagrPercent,
+          },
+          ...mockStrategyStats.slice(1),
+        ]),
+      ),
+    );
+    renderApp("/strategies");
+    const list = await screen.findByRole("list", { name: "Strategies" });
+    const card = within(list).getByRole("link", { name: "VWAP Momentum Intraday" }).closest("li")!;
+    await within(card).findByText("Return");
+    expect(within(card).getByText("+0.50%")).toBeInTheDocument();
+    expect(within(card).getByText("+13.87%")).toBeInTheDocument();
+    expect(within(card).queryByText("Best CAGR")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Worst CAGR")).not.toBeInTheDocument();
   });
 
   it("opens the detail page from a name", async () => {
@@ -102,7 +152,7 @@ describe("Strategy detail", () => {
   it("shows backtest stats and a Backtests tab with this strategy's runs", async () => {
     renderApp("/strategies/stg_001");
     expect(await screen.findByText("Backtest stats")).toBeInTheDocument();
-    expect(await screen.findByText("+0.50%")).toBeInTheDocument();
+    expect(await screen.findByText("+13.87%")).toBeInTheDocument();
     fireEvent.mouseDown(screen.getByRole("tab", { name: "Backtests" }));
     const panel = await screen.findByRole("tabpanel");
     expect(

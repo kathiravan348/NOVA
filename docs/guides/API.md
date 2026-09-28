@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 28 Sep 2026 (NOVA-142). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 28 Sep 2026 (NOVA-143). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -100,7 +100,7 @@ rate-limiter slot first (up to 20 s, else 503).
 | Method & path | What it does | Input | Output |
 |---|---|---|---|
 | `GET /strategies` | All strategies with every version (oldest first). | — | `Strategy[]` |
-| `GET /strategies/stats` | Per strategy, computed in SQL from its backtests: runs by status, last run, best/worst return, win-rate range, worst drawdown, best net P&L (+ run id). Powers the strategy cards. `byVersion` (D60): for every strategy version, ascending, its completed runs and best return with that run id (null when none); runs of every backtest version count. | — | `StrategyStats[]` |
+| `GET /strategies/stats` | Per strategy, computed in SQL from its backtests: runs by status, last run, best/worst return, `bestCagrPercent`/`worstCagrPercent` (maximum/minimum CAGR across completed results, null when none), win-rate range, worst drawdown, best net P&L (+ run id). Powers the strategy cards. `byVersion` (D60): for every strategy version, ascending, its completed runs and best return with that run id (null when none); runs of every backtest version count. | — | `StrategyStats[]` |
 | `GET /strategies/library` | The strategy library (D62 (7)): 7 families (`id`, `name`, `idea`, `watch`) and 60 fixed entries (`id` A01–G10, `family`, `name`, `summary`, `spec`, `backtest` = the suggested first run: NIFTY 100, ₹10,00,000, NIFTY 50, in-sample dates). Shipped as data with the strategy service, checked at start-up (the service does not start if a file is invalid). | — | `StrategyLibrary` |
 | `POST /strategies/library/install` | Adds the chosen entries as `draft` strategies, in the order given, in one transaction: name = entry name, description = summary, version 1 with note "From the library (A01)". Audit: `strategy.create` per strategy. | `LibraryInstall {ids}` (1–100, each once) | 201 `Strategy[]`; 400 unknown id (named), nothing added |
 | `GET /strategies/{id}` | One strategy with versions. | path | `Strategy`; 404 |
