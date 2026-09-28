@@ -135,6 +135,10 @@
 | NOVA-127 | Five new indicators: catalog, engine, Python ctx (D62) | done | Claude | 111, 114 |
 | NOVA-128 | Stored data: every index listed; later listings count as complete (D65, live bug) | done | Claude | 124, 126 |
 | NOVA-129 | Charge rates from 2020: the 2024 schedule backdated (D66, migration 0019, live bug) | done | Claude | — |
+| NOVA-130 | Agent account contracts, mocks and services (D67) | planned | — | — |
+| NOVA-131 | Core: agent role, deny-by-default gateway, held writes (D67, migration 0020) | planned | — | 130 |
+| NOVA-132 | Core: approve/reject held requests, agent account endpoints (D67) | planned | — | 131 |
+| NOVA-133 | Relay Approvals page, agent view in Relay and Orbit (D67) | planned | — | 130 (merge after 132) |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -157,3 +161,4 @@
   - Stored data: 124 after 112, 113, 123 (113 also edits `download.py`); 126 after 113, 123, 125.
   - Migrations in merge order: 0016 (112) → 0017 (124) → 0018 (116).
   - Screens that save new settings merge only after the engine runs them (118 after 115; 119 and 122 after 117). Until 117, a backtest using a market filter or rotation fails with a clear message (115).
+- Agent account (D67): 130 first; then backend 131 → 132 and frontend 133 in parallel (no shared files); 133 merges after 132.
