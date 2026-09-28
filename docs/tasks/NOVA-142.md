@@ -1,6 +1,6 @@
 # NOVA-142 — Benchmark: any index, defaulting to the universe's index
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-142 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-142 · **Depends on:** —
 
 ## Goal
 A backtest can be compared with any stored index (e.g. NIFTY 500 for a NIFTY 500 universe), not only NIFTY 50
@@ -64,6 +64,7 @@ Modify:
 - First full backend run hit an unrelated WebSocket teardown cancellation; unchanged rerun passed.
 - Visual QA: run form at 360px and 1440px, dark/light; reused existing ui-core Select stories.
 - Guides: API, DATABASE (0023), USER-GUIDE updated; no new dependencies.
+- Maps: none (no new contract fields, endpoints or components).
 - Owner approved the one-line Library test update outside the original Files list (see Questions).
 - Downgrade preserves runs but clears non-NIFTY-50 benchmarks to null for the old constraint.
 - No live migration applied. Reviewer must merge; no self-review performed.
