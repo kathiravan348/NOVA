@@ -41,7 +41,13 @@ export function AppLayout() {
   return (
     <AppShell
       brand={<span className="text-card-title text-text-primary">{product.name}</span>}
-      banner={getDataMode() === "mock" ? <DemoBanner /> : undefined}
+      banner={
+        getDataMode() === "mock" ? (
+          <DemoBanner />
+        ) : session?.role === "agent" ? (
+          <DemoBanner>Agent account: changes wait for Admin approval</DemoBanner>
+        ) : undefined
+      }
       title={<h1 className="text-section-title">{title}</h1>}
       nav={navItems.map((item) => (
         <NavItem

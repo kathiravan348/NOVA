@@ -4,7 +4,7 @@ import { Database } from "lucide-react";
 import type { DataJob } from "@nova/contracts";
 import { Button, DataTable, EmptyState, StatusBadge, LoadMore } from "@nova/ui-core";
 import { formatPercent, formatQuantity } from "@nova/ui-trading";
-import { useDataJobs } from "@nova/services";
+import { useDataJobs, useSession } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { PaceSetting } from "./PaceSetting";
 import { RecorderCard } from "./RecorderCard";
@@ -85,6 +85,7 @@ const columns: ColumnDef<DataJob, unknown>[] = [
 
 export function DataJobsPage() {
   const query = useDataJobs();
+  const agent = useSession()?.role === "agent";
   const newDownload = (
     <Button asChild size="sm">
       <Link to="/data-jobs/new">New download</Link>
@@ -93,7 +94,7 @@ export function DataJobsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <RecorderCard />
+        {!agent && <RecorderCard />}
         <PaceSetting />
       </div>
       <DataTable

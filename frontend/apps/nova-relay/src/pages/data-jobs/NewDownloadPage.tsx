@@ -18,6 +18,7 @@ import {
   useDeleteDataJob,
   usePlanDataJob,
   useUniverse,
+  useSession,
 } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { istDaysAgo, todayIst } from "../../lib/format";
@@ -69,6 +70,7 @@ export function NewDownloadPage() {
   const plan = usePlanDataJob();
   const change = useChangeDataJob();
   const discard = useDeleteDataJob();
+  const agent = useSession()?.role === "agent";
   const prefill = usePrefill();
   const [symbols, setSymbols] = useState<string[]>(prefill?.stocks ?? []);
   const [indices, setIndices] = useState<string[]>(prefill?.indices ?? []);
@@ -102,7 +104,7 @@ export function NewDownloadPage() {
   /** Drafts are thrown away, not left to expire, when the Owner goes back or re-plans. */
   const dropDraft = async () => {
     if (!draft) return;
-    await discard.mutateAsync({ jobId: draft.id }).catch(() => undefined);
+    if (!agent) await discard.mutateAsync({ jobId: draft.id }).catch(() => undefined);
     setDraft(null);
   };
 

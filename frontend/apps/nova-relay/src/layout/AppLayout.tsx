@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, Outlet, useLocation, useMatches, useNavigate } from "react-router";
 import {
   Database,
@@ -8,10 +8,11 @@ import {
   ListOrdered,
   LogOut,
   ScrollText,
+  ShieldCheck,
 } from "lucide-react";
 import { brand } from "@nova/brand";
 import { AppShell, DemoBanner, IconButton, NavItem, StatusBadge, ThemeToggle } from "@nova/ui-core";
-import { getDataMode, signOut, useRealtimeStatus, useSession } from "@nova/services";
+import { getDataMode, signOut, useApprovals, useRealtimeStatus, useSession } from "@nova/services";
 
 const product = brand.products.relay;
 
@@ -22,6 +23,7 @@ const navItems: { to: string; label: string; icon: ReactNode }[] = [
   { to: "/stored-data", label: "Stored data", icon: <HardDrive className="h-4 w-4" /> },
   { to: "/data-jobs", label: "Data jobs", icon: <Database className="h-4 w-4" /> },
   { to: "/audit", label: "Audit log", icon: <ScrollText className="h-4 w-4" /> },
+  { to: "/approvals", label: "Approvals", icon: <ShieldCheck className="h-4 w-4" /> },
 ];
 
 const isActive = (pathname: string, to: string) =>
@@ -58,6 +60,16 @@ function usePageTitle(): string {
 
 export function AppLayout() {
   const session = useSession();
+  const agent = session?.role === "agent";
+  const pending = useApprovals("pending");
+  const { refetch, fetchNextPage, hasNextPage, isFetching } = pending;
+  useEffect(() => {
+    const timer = setInterval(() => void refetch(), 5000);
+    return () => clearInterval(timer);
+  }, [refetch]);
+  useEffect(() => {
+    if (hasNextPage && !isFetching) void fetchNextPage();
+  }, [hasNextPage, isFetching, fetchNextPage]);
   const navigate = useNavigate();
   const title = usePageTitle();
   const { pathname } = useLocation();
@@ -69,13 +81,24 @@ export function AppLayout() {
   return (
     <AppShell
       brand={<span className="text-card-title text-text-primary">{product.name}</span>}
-      banner={getDataMode() === "mock" ? <DemoBanner /> : undefined}
+      banner={
+        getDataMode() === "mock" ? (
+          <DemoBanner />
+        ) : agent ? (
+          <DemoBanner>Agent account: changes wait for Admin approval</DemoBanner>
+        ) : undefined
+      }
       title={<h1 className="text-section-title">{title}</h1>}
-      nav={navItems.map((item) => (
-        <NavItem key={item.to} asChild active={isActive(pathname, item.to)} icon={item.icon}>
-          <Link to={item.to}>{item.label}</Link>
-        </NavItem>
-      ))}
+      nav={navItems
+        .filter((item) => !agent || item.to !== "/broker")
+        .map((item) => (
+          <NavItem key={item.to} asChild active={isActive(pathname, item.to)} icon={item.icon}>
+            <Link to={item.to}>
+              {item.label}
+              {item.to === "/approvals" && pending.data ? ` (${pending.data.length})` : ""}
+            </Link>
+          </NavItem>
+        ))}
       actions={
         <>
           <LiveStatus />

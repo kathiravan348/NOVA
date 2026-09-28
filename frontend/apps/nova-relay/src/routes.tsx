@@ -12,6 +12,12 @@ import { NewDownloadPage } from "./pages/data-jobs/NewDownloadPage";
 import { InstrumentsPage } from "./pages/instruments/InstrumentsPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { StoredDataPage } from "./pages/stored-data/StoredDataPage";
+import { ApprovalsPage } from "./pages/approvals/ApprovalsPage";
+import { useSession } from "@nova/services";
+
+function BrokerOnly({ children }: { children: ReactNode }) {
+  return useSession()?.role === "agent" ? <Navigate to="/" replace /> : children;
+}
 
 const page = (path: string, title: string, element: ReactNode): RouteObject => ({
   path,
@@ -39,8 +45,28 @@ export const routes: RouteObject[] = [
             handle: { title: "Overview" } satisfies RouteHandle,
             element: <OverviewPage />,
           },
-          page("/broker", "Broker", <BrokerPage />),
-          page("/broker/:id", "Broker account", <AccountDetailPage />),
+          page(
+            "/broker",
+            "Broker",
+            <BrokerOnly>
+              <BrokerPage />
+            </BrokerOnly>,
+          ),
+          page(
+            "/broker/:id",
+            "Broker account",
+            <BrokerOnly>
+              <AccountDetailPage />
+            </BrokerOnly>,
+          ),
+          {
+            path: "/broker/*",
+            element: (
+              <BrokerOnly>
+                <Navigate to="/broker" replace />
+              </BrokerOnly>
+            ),
+          },
           { path: "/accounts", element: <Navigate to="/broker" replace /> },
           { path: "/accounts/:id", element: <OldAccountRedirect /> },
           { path: "/rate-limits", element: <Navigate to="/broker" replace /> },
@@ -50,6 +76,7 @@ export const routes: RouteObject[] = [
           page("/data-jobs/new", "New download", <NewDownloadPage />),
           page("/data-jobs/:id", "Data job", <DataJobDetailPage />),
           page("/audit", "Audit log", <AuditPage />),
+          page("/approvals", "Approvals", <ApprovalsPage />),
           { path: "*", element: <Navigate to="/" replace /> },
         ],
       },
