@@ -40,7 +40,7 @@ Modify:
    approve/reject or call `/agent` (403), turning access off ends a live agent session. API.md rows for all.
 
 ## Acceptance checks
-- [ ] Tests above pass; `docker compose run --rm backend-check` passes. Definition of done (`AGENTS.md` §9).
+- [x] Tests above pass; `docker compose run --rm backend-check` passes. Definition of done (`AGENTS.md` §9).
 
 ## Out of scope
 - Screens (133). Push of new approvals over `/ws` (the Approvals page polls). More than one agent account.
@@ -54,19 +54,19 @@ from Modify; please add it for the required map update (AGENTS §4). Implementat
 `api_docs.py`, `test_api_docs.py` and `docs/STRUCTURE.md` added to Modify. Continue.
 
 ## Handoff
-**Progress:** approval and agent endpoints implemented; stopped on scope question above.
-**Files changed:** `approval_routes.py`, `agent_routes.py`, `main.py`, `cli.py`, `sessions.py`;
-`test_approvals.py`, `test_agent_account.py`, `test_cli.py`; `docs/guides/API.md`; task + board.
-**Checks:** Core ruff lint/format pass; Docker Core mypy pass; affected tests 69 passed.
-**Core suite:** initial run 181 passed / 9 failed; eight method-denial failures fixed and verified.
-**Remaining:** Swagger grouping failure requires `api_docs.py`; full backend gate still to run.
-**Frontend:** `fnm exec --using=24 -- pnpm --dir frontend review:check` passed (942 tests + build).
-**UI checks:** not applicable (backend only).
-**New dependencies:** none.
-**Maps:** STRUCTURE update needs scope addition; CONTRACTS/COMPONENTS unchanged.
-**Guides updated:** API. USER-GUIDE/DATABASE unchanged.
-**Environment:** host mypy cannot launch the existing venv Python; used pinned Docker runtime.
-**Status:** in-progress, ChatGPT; no self-review or merge.
+**Done:** approval listing/replay/rejection and single-agent account management, with audits.
+**Files changed:** `approval_routes.py`, `agent_routes.py`, `main.py`, `cli.py`, `sessions.py`, `api_docs.py`;
+`test_approvals.py`, `test_agent_account.py`, `test_cli.py`, `test_api_docs.py`;
+`docs/guides/API.md`, `docs/STRUCTURE.md`, task + board.
+**Backend gate:** `docker compose run --rm backend-check` passed: ruff, format, strict mypy, 1,196 tests.
+**Frontend gate:** `fnm exec --using=24 -- pnpm --dir frontend review:check` passed: 942 tests + build,
+lint, typecheck and format (prior turn; follow-up changes only backend/docs).
+**Checked:** concurrent approve/reject cannot replay twice; stored/truncated results and expiry;
+agent permissions, access/password session revocation; Swagger Agent group after Auth.
+**UI checks:** not applicable (backend only). **New dependencies:** none.
+**Maps updated:** STRUCTURE. **Guides updated:** API; USER-GUIDE/DATABASE unchanged.
+**Deviations:** none; planner answered scope question and added Swagger/map files.
+**Known gaps:** none. Docker stack stopped after checks. No self-review or merge.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

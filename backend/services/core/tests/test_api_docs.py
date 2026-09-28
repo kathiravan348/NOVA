@@ -86,7 +86,11 @@ def test_schema_groups_operations_by_area(dummy_settings: CoreSettings) -> None:
 
     assert schema["paths"]["/api/v1/auth/login"]["post"]["tags"] == ["Auth"]
     assert schema["paths"]["/api/v1/me"]["get"]["tags"] == ["Auth"]
+    assert schema["paths"]["/api/v1/agent"]["get"]["tags"] == ["Agent"]
+    assert schema["paths"]["/api/v1/approvals"]["get"]["tags"] == ["Agent"]
+    assert schema["paths"]["/api/v1/approvals/{approval_id}/approve"]["post"]["tags"] == ["Agent"]
+    assert schema["paths"]["/api/v1/approvals/{approval_id}/reject"]["post"]["tags"] == ["Agent"]
     assert schema["paths"]["/api/v1/strategies"]["get"]["tags"] == ["Strategies"]
     assert schema["paths"]["/api/v1/health"]["get"]["tags"] == ["System"]
     names = [tag["name"] for tag in schema["tags"]]
-    assert names == ["Auth", "Strategies", "Audit", "System"]
+    assert names == ["Auth", "Agent", "Strategies", "Audit", "System"]

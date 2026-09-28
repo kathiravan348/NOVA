@@ -24,6 +24,11 @@ Schema = dict[str, Any]
 # Swagger groups operations by tag, in this order. Key: first path segment after /api/v1/.
 TAGS: list[tuple[str, tuple[str, ...], str]] = [
     ("Auth", ("auth", "me"), "Sign-in, sign-out and the signed-in user."),
+    (
+        "Agent",
+        ("agent", "approvals"),
+        "The agent account and approvals of its held requests (D67).",
+    ),
     ("Broker", ("broker",), "Zerodha accounts, Kite login, profiles and API rate limits."),
     ("Market data", ("market-data",), "Instruments and candles (Atlas)."),
     ("Data jobs", ("data-jobs",), "Instrument sync and historical downloads (Atlas)."),
