@@ -31,12 +31,17 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-Done (Claude, implementer). `STOCK_SYMBOL` now also keeps hyphen parts of 3+ characters (BAJAJ-AUTO,
-NAM-INDIA); 2-character suffixes other than BE/BZ/SM/ST (SG, GS, N1, RE, GB) stay skipped. Test rows added.
-backend-check: 1196 passed (ruff, format, mypy strict, pytest). Guides: none.
-- Owner DB before the fix: BAJAJ-AUTO missing from `universe`/`instruments` → NIFTY 100 = 99, NIFTY 50 = 49.
-- After merge: rebuild/restart Atlas (`docker compose up -d --build`), run **Sync with Kite** in Relay →
-  Instruments, then download BAJAJ-AUTO 1d and 1m from 2020-01-01 (Stored data → Download missing).
+**Done:** Continued by ChatGPT; retained Claude's existing symbol-filter fix and regression cases.
+Hyphenated stock names (BAJAJ-AUTO, NAM-INDIA) are kept; SG/GS/N1/RE/GB suffixes remain skipped.
+The existing 20-character limit is preserved.
+**Files changed:** backend/services/atlas/src/nova_atlas/universe.py;
+backend/services/atlas/tests/test_universe.py; docs/tasks/BOARD.md; docs/tasks/NOVA-134.md.
+**Commands run:** backend-check (ruff, format, mypy, 1,203 tests) and frontend review:check
+(format, lint, typecheck, 957 tests, app + Storybook builds): pass on current main plus this task.
+**Checked:** 360px / desktop / dark / light: N/A (no UI changes).
+**New dependencies:** none. **Maps updated:** none. **Guides:** none.
+**Deviations from task:** none. **Known gaps:** Live sync/downloads not run (out of scope).
+After merge, Owner rebuilds Atlas, runs **Sync with Kite**, then downloads BAJAJ-AUTO prices in Relay.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
