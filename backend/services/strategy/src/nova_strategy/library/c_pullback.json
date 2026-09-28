@@ -1730,5 +1730,647 @@
       "initialCapitalPaise": 100000000,
       "benchmark": "NIFTY 50"
     }
+  },
+  {
+    "id": "C15",
+    "family": "pullback",
+    "name": "Swing short-RSI dip (15m)",
+    "summary": "15m delivery: swing short-rsi dip; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 3,
+        "targetPercent": null,
+        "maxHoldBars": 52
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 2
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 10
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 2
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 60
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C16",
+    "family": "pullback",
+    "name": "Swing Bollinger re-entry (15m)",
+    "summary": "15m delivery: swing bollinger re-entry; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 3,
+        "targetPercent": null,
+        "maxHoldBars": 52
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_lower",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_middle",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C17",
+    "family": "pullback",
+    "name": "Swing Williams-R recovery (30m)",
+    "summary": "30m delivery: swing williams-r recovery; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 4,
+        "targetPercent": null,
+        "maxHoldBars": 39
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "williams_r",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "number",
+              "value": -80
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 100
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "sma",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "williams_r",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": -20
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C18",
+    "family": "pullback",
+    "name": "Swing Keltner reclaim (30m)",
+    "summary": "30m delivery: swing keltner reclaim; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 4,
+        "targetPercent": null,
+        "maxHoldBars": 39
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "keltner_lower",
+              "params": {
+                "period": 20,
+                "multiplier": 2,
+                "atr_period": 10
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C19",
+    "family": "pullback",
+    "name": "Swing EMA50 and RSI recovery (1h)",
+    "summary": "1h delivery: swing ema50 and rsi recovery; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1h",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 5,
+        "targetPercent": null,
+        "maxHoldBars": 35
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "number",
+              "value": 50
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "C20",
+    "family": "pullback",
+    "name": "Swing two-decline volume reversal (1h)",
+    "summary": "1h delivery: swing two-decline volume reversal; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1h",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 5,
+        "targetPercent": null,
+        "maxHoldBars": 35
+      },
+      "portfolio": {
+        "maxPositions": 10,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "rsi",
+            "params": {
+              "period": 14
+            }
+          },
+          "order": "asc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 2
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 3
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "high",
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 200
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 70
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
   }
 ]

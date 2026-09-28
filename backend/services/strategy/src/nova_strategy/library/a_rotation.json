@@ -876,5 +876,394 @@
       "initialCapitalPaise": 100000000,
       "benchmark": "NIFTY 50"
     }
+  },
+  {
+    "id": "A13",
+    "family": "momentum_rotation",
+    "name": "Fast risk-adjusted rotation (1d)",
+    "summary": "1d rotation: fast risk-adjusted rotation; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": 10,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "weekly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 63
+              }
+            },
+            "weight": 1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "roc",
+                "params": {
+                  "period": 126
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "number",
+                "value": 0
+              }
+            },
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 100
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A14",
+    "family": "momentum_rotation",
+    "name": "Volatility-ranked trend basket (1d)",
+    "summary": "1d rotation: volatility-ranked trend basket; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "quarterly",
+        "hold": 15,
+        "keepWithin": 25,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "volatility",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": -1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "roc",
+                "params": {
+                  "period": 126
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "number",
+                "value": 0
+              }
+            },
+            {
+              "left": {
+                "kind": "price",
+                "field": "close"
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "sma",
+                "params": {
+                  "period": 200
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A15",
+    "family": "momentum_rotation",
+    "name": "Two-horizon risk-adjusted rotation (1d)",
+    "summary": "1d rotation: two-horizon risk-adjusted rotation; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 63
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "risk_adj_return",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "roc",
+                "params": {
+                  "period": 21
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "number",
+                "value": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "A16",
+    "family": "momentum_rotation",
+    "name": "Trend-qualified high leaders (1d)",
+    "summary": "1d rotation: trend-qualified high leaders; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "rotation",
+      "segment": "equity_delivery",
+      "exchange": "NSE",
+      "timeframe": "1d",
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null
+      },
+      "regime": {
+        "index": "NIFTY 50",
+        "condition": {
+          "left": {
+            "kind": "price",
+            "field": "close"
+          },
+          "op": "gt",
+          "right": {
+            "kind": "indicator",
+            "name": "sma",
+            "params": {
+              "period": 200
+            }
+          }
+        },
+        "whenOff": "exit_all"
+      },
+      "rotation": {
+        "rebalance": "monthly",
+        "hold": 10,
+        "keepWithin": 20,
+        "score": [
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "pct_of_high",
+              "params": {
+                "period": 252
+              }
+            },
+            "weight": 1
+          },
+          {
+            "operand": {
+              "kind": "indicator",
+              "name": "roc",
+              "params": {
+                "period": 126
+              }
+            },
+            "weight": 0.1
+          }
+        ],
+        "filter": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "ema",
+                "params": {
+                  "period": 50
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "ema",
+                "params": {
+                  "period": 200
+                }
+              }
+            },
+            {
+              "left": {
+                "kind": "indicator",
+                "name": "ema",
+                "params": {
+                  "period": 200
+                }
+              },
+              "op": "gt",
+              "right": {
+                "kind": "indicator",
+                "name": "ema",
+                "params": {
+                  "period": 200
+                },
+                "offset": 63
+              }
+            }
+          ]
+        }
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
   }
 ]

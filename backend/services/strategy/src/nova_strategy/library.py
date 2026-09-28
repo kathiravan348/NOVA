@@ -1,4 +1,4 @@
-"""The strategy library (D62 (7)): 60 fixed strategies shipped as JSON next to this module.
+"""The strategy library (D62, D73): 100 fixed research strategies shipped as JSON.
 
 The files are transcribed from `docs/STRATEGY-LIBRARY.md`. They are loaded and checked once;
 the service refuses to start if any entry is invalid, so a bad edit never reaches the screen.

@@ -1068,5 +1068,2312 @@
       "initialCapitalPaise": 100000000,
       "benchmark": "NIFTY 50"
     }
+  },
+  {
+    "id": "G11",
+    "family": "intraday",
+    "name": "Opening-range retest (1m)",
+    "summary": "1m intraday: opening-range retest; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "1m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.4,
+        "targetPercent": 0.8,
+        "maxHoldBars": 30
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 15
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 15
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 15
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 15
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G12",
+    "family": "intraday",
+    "name": "Five-bar breakout with OBV (1m)",
+    "summary": "1m intraday: five-bar breakout with obv; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "1m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.4,
+        "targetPercent": 0.8,
+        "maxHoldBars": 30
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 5
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "obv",
+              "params": {}
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "obv",
+              "params": {},
+              "offset": 5
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G13",
+    "family": "intraday",
+    "name": "Bollinger and RSI recovery (3m)",
+    "summary": "3m intraday: bollinger and rsi recovery; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "3m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.6,
+        "targetPercent": null,
+        "maxHoldBars": 15
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_lower",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 100
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "rsi",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "number",
+              "value": 35
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_middle",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G14",
+    "family": "intraday",
+    "name": "Opening-range ADX acceleration (3m)",
+    "summary": "3m intraday: opening-range adx acceleration; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "3m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.6,
+        "targetPercent": 1.2,
+        "maxHoldBars": 20
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 15
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G15",
+    "family": "intraday",
+    "name": "Pivot R1 retest (3m)",
+    "summary": "3m intraday: pivot r1 retest; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "3m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.6,
+        "targetPercent": 1.2,
+        "maxHoldBars": 20
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_r1",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_r1",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_r1",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_r1",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G16",
+    "family": "intraday",
+    "name": "Nested inside-bar breakout (5m)",
+    "summary": "5m intraday: nested inside-bar breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "5m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.8,
+        "targetPercent": 1.6,
+        "maxHoldBars": 12
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "high",
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "high",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low",
+              "offset": 1
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "low",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "high",
+              "offset": 2
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "high",
+              "offset": 3
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "low",
+              "offset": 2
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "low",
+              "offset": 3
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "high",
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G17",
+    "family": "intraday",
+    "name": "Failed previous-day-low breakdown (5m)",
+    "summary": "5m intraday: failed previous-day-low breakdown; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "5m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.8,
+        "targetPercent": 1.6,
+        "maxHoldBars": 12
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G18",
+    "family": "intraday",
+    "name": "Range-bound Bollinger reclaim (5m)",
+    "summary": "5m intraday: range-bound bollinger reclaim; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "5m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.8,
+        "targetPercent": null,
+        "maxHoldBars": 12
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_lower",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "bb_middle",
+              "params": {
+                "period": 20,
+                "stddev": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G19",
+    "family": "intraday",
+    "name": "Volume and OBV channel breakout (5m)",
+    "summary": "5m intraday: volume and obv channel breakout; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "5m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 18,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 2
+        }
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 20
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "obv",
+              "params": {}
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "obv",
+              "params": {},
+              "offset": 20
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G20",
+    "family": "intraday",
+    "name": "MACD histogram trend turn (5m)",
+    "summary": "5m intraday: macd histogram trend turn; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "5m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 0.8,
+        "targetPercent": 1.6,
+        "maxHoldBars": 18
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "macd_hist",
+              "params": {
+                "fast": 12,
+                "slow": 26,
+                "signal": 9
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "number",
+              "value": 0
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "macd_hist",
+              "params": {
+                "fast": 12,
+                "slow": 26,
+                "signal": 9
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 0
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G21",
+    "family": "intraday",
+    "name": "Strong-trend EMA50 retest (15m)",
+    "summary": "15m intraday: strong-trend ema50 retest; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 8,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 2
+        }
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lte",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 25
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G22",
+    "family": "intraday",
+    "name": "One-hour opening-range volume break (15m)",
+    "summary": "15m intraday: one-hour opening-range volume break; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2,
+        "maxHoldBars": 8
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 60
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "vwap",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G23",
+    "family": "intraday",
+    "name": "Previous-close reversal after declines (15m)",
+    "summary": "15m intraday: previous-close reversal after declines; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": 2,
+        "maxHoldBars": 8
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 2
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close",
+              "offset": 2
+            },
+            "op": "lt",
+            "right": {
+              "kind": "price",
+              "field": "close",
+              "offset": 3
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_close",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "volume"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "volume_sma",
+              "params": {
+                "period": 20
+              },
+              "multiplier": 1.5
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_close",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G24",
+    "family": "intraday",
+    "name": "Low-ADX stochastic reversal (15m)",
+    "summary": "15m intraday: low-adx stochastic reversal; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "15m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1,
+        "targetPercent": null,
+        "maxHoldBars": 8
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_k",
+              "params": {
+                "period": 14,
+                "smooth": 3
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "stoch_d",
+              "params": {
+                "period": 14,
+                "smooth": 3,
+                "signal": 3
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_k",
+              "params": {
+                "period": 14,
+                "smooth": 3
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 35
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "stoch_k",
+              "params": {
+                "period": 14,
+                "smooth": 3
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 80
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G25",
+    "family": "intraday",
+    "name": "WMA trend crossover (30m)",
+    "summary": "30m intraday: wma trend crossover; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 5,
+        "trailingStopPercent": 1.5
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 10
+              }
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 30
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 25
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 10
+              }
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "wma",
+              "params": {
+                "period": 30
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G26",
+    "family": "intraday",
+    "name": "Compressed-ATR channel break (30m)",
+    "summary": "30m intraday: compressed-atr channel break; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": null,
+        "targetPercent": null,
+        "maxHoldBars": 5,
+        "atrStop": {
+          "period": 14,
+          "multiplier": 2
+        }
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "donchian_upper",
+              "params": {
+                "period": 10
+              },
+              "offset": 1
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "atr",
+              "params": {
+                "period": 14
+              },
+              "offset": 1
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "atr",
+              "params": {
+                "period": 14
+              },
+              "offset": 10,
+              "multiplier": 0.9
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G27",
+    "family": "intraday",
+    "name": "SuperTrend directional acceleration (30m)",
+    "summary": "30m intraday: supertrend directional acceleration; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1.5,
+        "targetPercent": null,
+        "maxHoldBars": 5
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "supertrend",
+              "params": {
+                "period": 10,
+                "multiplier": 3
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "plus_di",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "minus_di",
+              "params": {
+                "period": 14
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              },
+              "offset": 1
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "supertrend",
+              "params": {
+                "period": 10,
+                "multiplier": 3
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G28",
+    "family": "intraday",
+    "name": "Pivot S2 recovery (30m)",
+    "summary": "30m intraday: pivot s2 recovery; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "30m",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1.5,
+        "targetPercent": null,
+        "maxHoldBars": 5
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_s2",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 50
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "pivot_s2",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G29",
+    "family": "intraday",
+    "name": "Hourly opening-range trend break (1h)",
+    "summary": "1h intraday: hourly opening-range trend break; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "1h",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1.5,
+        "targetPercent": null,
+        "maxHoldBars": 3
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "crosses_above",
+            "right": {
+              "kind": "indicator",
+              "name": "or_high",
+              "params": {
+                "minutes": 60
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          },
+          {
+            "left": {
+              "kind": "indicator",
+              "name": "adx",
+              "params": {
+                "period": 14
+              }
+            },
+            "op": "gt",
+            "right": {
+              "kind": "number",
+              "value": 20
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
+  },
+  {
+    "id": "G30",
+    "family": "intraday",
+    "name": "Hourly previous-day-low rejection (1h)",
+    "summary": "1h intraday: hourly previous-day-low rejection; fixed rules for research, not a proven winner.",
+    "spec": {
+      "mode": "visual",
+      "segment": "equity_intraday",
+      "exchange": "NSE",
+      "timeframe": "1h",
+      "sizing": {
+        "type": "percent_equity",
+        "percent": 10
+      },
+      "risk": {
+        "stopLossPercent": 1.5,
+        "targetPercent": null,
+        "maxHoldBars": 3
+      },
+      "portfolio": {
+        "maxPositions": 5,
+        "rank": {
+          "by": {
+            "kind": "indicator",
+            "name": "roc",
+            "params": {
+              "period": 6
+            }
+          },
+          "order": "desc"
+        }
+      },
+      "entry": {
+        "combinator": "all",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "low"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "price",
+              "field": "open"
+            }
+          },
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "gt",
+            "right": {
+              "kind": "indicator",
+              "name": "ema",
+              "params": {
+                "period": 20
+              }
+            }
+          }
+        ]
+      },
+      "exit": {
+        "combinator": "any",
+        "conditions": [
+          {
+            "left": {
+              "kind": "price",
+              "field": "close"
+            },
+            "op": "lt",
+            "right": {
+              "kind": "indicator",
+              "name": "prev_day_low",
+              "params": {}
+            }
+          }
+        ]
+      }
+    },
+    "backtest": {
+      "universe": {
+        "type": "index",
+        "index": "NIFTY 50"
+      },
+      "from": "2023-01-02",
+      "to": "2024-12-31",
+      "initialCapitalPaise": 100000000,
+      "benchmark": "NIFTY 50"
+    }
   }
 ]

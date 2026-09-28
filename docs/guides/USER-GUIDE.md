@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-141). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-141; Library NOVA-144). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -199,8 +199,8 @@ close above SMA(200), **Sell everything**.
 Changing the mode starts the settings of the new mode from scratch (name and description stay). If that
 would throw away settings you entered, NOVA asks first: **Switch** or **Keep editing**.
 
-### Step 4d — Or start from the Library (60 ready-made strategies)
-**Library** in the menu lists 60 strategies NOVA ships with, grouped into seven families. Each family card says
+### Step 4d — Or start from the Library (100 ready-made strategies)
+**Library** in the menu lists 100 strategies NOVA ships with, grouped into seven families. Each family card says
 its **Idea** and what to **Watch out** for:
 - **A Momentum rotation** — hold the stocks that rose most in recent months (rotation strategies, Step 4c).
 - **B Trend and breakout** — buy strong breakouts, sell when the trend breaks.
@@ -208,25 +208,42 @@ its **Idea** and what to **Watch out** for:
 - **D Price patterns** — chart patterns written in Python.
 - **E Low turnover** — hold strong stocks for months.
 - **F Baselines** — simple "do nothing clever" strategies every other one must beat.
-- **G Intraday 15-minute** — same-day trades, for testing only.
+- **G Intraday, 1-minute to 1-hour** — same-day trades, for testing only.
 
 Use the family buttons or **Search** to narrow the list. **Add** copies a strategy into your **Strategies** as a
 draft (then it shows **Added**); **Add all** adds every one you do not have yet, after you confirm. **Backtest**
-adds it if needed and opens **Run backtest** already filled in: NIFTY 100 stocks, ₹10,00,000, NIFTY 50 as the
-benchmark, and the test period below. Library strategies are textbook ideas, not tuned for you: backtests are
+adds it if needed and opens **Run backtest** already filled in. The original 60 use NIFTY 100 stocks and NIFTY 50 as the benchmark. The 40 new
+ideas use NIFTY 50 stocks and the NIFTY 50 benchmark, ₹10,00,000, 2 Jan 2023 – 31 Dec 2024. Library strategies are textbook ideas, not tuned for you: backtests are
 evidence, not promises.
 
 **How to test a Library strategy fairly (three versions of one backtest):**
 1. **v1 in-sample** — the period the Backtest button fills in (1 Oct 2021 – 30 Sep 2024; intraday 2 Jan 2023 –
    31 Dec 2024).
 2. **v2 out-of-sample** — press **Edit** on the finished run and change the dates to 1 Oct 2024 – 25 Sep 2026:
-   prices the idea was never looked at on.
+   call this unseen only if you never used these prices to choose or change the idea.
 3. **v3 full** — **Edit** again for the whole 5 years.
 
 A strategy passes when, in the results (Step 6): **After-tax CAGR** is 25% or more, **Max drawdown** is no worse
 than −25%, no row in **Year by year** is **Below −5%**, there are at least 40 trades, the best 3 stocks bring less
 than half of the profit, and v2's CAGR is at least 60% of v1's. Compare with the F baselines and the benchmark. The
 aim is 2–3 passing strategies from different families; paper trading comes before real money.
+
+The 40 new ideas include 20 same-day strategies, 12 **delivery** strategies that hold overnight,
+and 8 daily position or rotation strategies. A 15-minute delivery strategy can hold for several days.
+Download **1 minute** for the intraday and overnight swing ideas; other intraday candle sizes are made
+from it. Daily ideas need **1 day**, including NIFTY 50 for their market filter.
+
+For the new ideas, first test 2 Jan 2023 – 31 Dec 2024. Freeze the rules, then test 1 Jan 2025 –
+25 Sep 2026. If you already used those dates to choose an idea, this checks history again; it is not
+an unseen test. Compare the same dates, stock list and capital. Review **CAGR**, **Max drawdown**,
+**Profit factor**, **Trades** and **Year by year**, as well as **Win rate**. Winning often can still lose
+money when a few losses are large. No idea passing your requirements is a useful result too.
+
+Charges are included. Slippage (a worse price when buying or selling), the gap between buying and
+selling prices, and your trade moving the market are not simulated. Intraday tax is not estimated.
+Larger intraday candles cannot recreate the exact same-day exit price at 15:20. The stock lists use
+today's index members, so historical results can miss stocks later removed. None of the new entries
+is a proven winner. Futures, options and short selling are not supported by this backtest engine.
 
 ### Step 5 — Run a backtest
 Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).

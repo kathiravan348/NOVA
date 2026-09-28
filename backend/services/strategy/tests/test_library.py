@@ -1,4 +1,4 @@
-"""NOVA-121 (D62 (7)): the 60-strategy library data, `GET /strategies/library` and install."""
+"""NOVA-121 (D62 (7)): the strategy library data, `GET /strategies/library` and install."""
 
 from collections import Counter
 from typing import Any
@@ -127,9 +127,10 @@ def _entries() -> dict[str, dict[str, Any]]:
     return {entry["id"]: entry for entry in wire["entries"]}
 
 
-def test_sixty_entries_in_seven_families() -> None:
+def test_original_sixty_entries_in_seven_families() -> None:
     library = load_library()
-    entries = library.entries
+    limits = {"A": 12, "B": 14, "C": 14, "D": 6, "E": 2, "F": 2, "G": 10}
+    entries = [e for e in library.entries if int(e.id[1:]) <= limits[e.id[0]]]
     assert len(entries) == 60
     assert len({e.id for e in entries}) == 60 and len({e.name for e in entries}) == 60
     counts = Counter(e.id[0] for e in entries)
@@ -161,7 +162,7 @@ def test_spot_checked_entries_equal_the_doc() -> None:
 def test_get_library_matches_the_contract(client: TestClient, parity: Parity) -> None:
     body = client.get(LIBRARY).json()
     parity.assert_valid(body, "StrategyLibrary")
-    assert len(body["entries"]) == 60 and len(body["families"]) == 7
+    assert len(body["entries"]) == 100 and len(body["families"]) == 7
 
 
 def _counts(engine: Engine) -> tuple[int, int]:

@@ -10,7 +10,8 @@
 ├─ brand.config.ts      all brand names
 ├─ docs/
 │  ├─ PLAN.md  ARCHITECTURE.md  STRUCTURE.md  CONTRACTS.md  COMPONENTS.md  DECISIONS.md
-│  ├─ STRATEGY-LIBRARY.md the 60 library strategies, exact rules (D62; source for NOVA-121)
+│  ├─ STRATEGY-LIBRARY.md the 100 library strategies, exact rules (D62, D73; NOVA-121, 144)
+│  ├─ STRATEGY-TESTING.md fair chronological comparisons and known research limits (D73)
 │  ├─ REVIEW-GUIDE.md   Stage A: how to run (`pnpm review`), walkthrough, feedback checklist
 │  ├─ guides/           USER-GUIDE.md (plain-language UI walkthrough), API.md (every endpoint), DATABASE.md (every table)
 │  ├─ tasks/            BOARD.md + one file per task (NOVA-###.md)
