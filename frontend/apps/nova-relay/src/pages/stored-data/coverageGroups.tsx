@@ -9,6 +9,7 @@ export const statusLabel: Record<CoverageStatus, string> = {
   gaps: "Gaps",
   partial: "Partial",
   none: "No data",
+  unavailable: "Broker unavailable",
 };
 
 export const statusTone: Record<CoverageStatus, "success" | "warning" | "info" | "neutral"> = {
@@ -16,11 +17,12 @@ export const statusTone: Record<CoverageStatus, "success" | "warning" | "info" |
   gaps: "warning",
   partial: "info",
   none: "neutral",
+  unavailable: "warning",
 };
 
 /** Stocks that still need prices: anything not complete (D63). */
 export const needsDownload = (rows: CoverageRow[]) =>
-  rows.filter((r) => r.status !== "complete").map((r) => r.symbol);
+  rows.filter((r) => r.status !== "complete" && r.status !== "unavailable").map((r) => r.symbol);
 
 const count = (rows: CoverageRow[], status: CoverageStatus) =>
   rows.filter((r) => r.status === status).length;
@@ -35,7 +37,13 @@ export function groupSummary(rows: CoverageRow[]): string {
     `${count(rows, "gaps")} with gaps`,
     `${count(rows, "partial")} partial`,
     `${count(rows, "none")} no data`,
+    ...(count(rows, "unavailable") ? [`${count(rows, "unavailable")} broker unavailable`] : []),
     `${missing.toLocaleString("en-IN")} missing days`,
+    ...(rows.some((r) => r.unavailableDays)
+      ? [
+          `${rows.reduce((sum, r) => sum + (r.unavailableDays ?? 0), 0).toLocaleString("en-IN")} unavailable days`,
+        ]
+      : []),
   ].join(" · ");
 }
 

@@ -18,6 +18,23 @@ const table = () => screen.getByRole("table", { name: "Stored data" });
 const groupButton = (name: string) => within(table()).getByRole("button", { name });
 
 describe("Stored data (D63)", () => {
+  it("shows broker evidence and opens an overwrite plan for a specific date", async () => {
+    const { router } = renderApp("/stored-data");
+    fireEvent.mouseDown(await screen.findByRole("tab", { name: "Unavailable data" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    const history = within(await screen.findByRole("table", { name: "Unavailable data" }));
+    expect(await history.findByText("5 May 2022")).toBeInTheDocument();
+    fireEvent.click(history.getByRole("button", { name: "Check AWL 2022-05-05 again" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/data-jobs/new"));
+    expect(router.state.location.state).toMatchObject({
+      symbols: ["AWL"],
+      from: "2022-05-05",
+      to: "2022-05-05",
+      mode: "overwrite",
+    });
+  });
   it("opens from the menu and groups stocks by index", async () => {
     renderApp("/");
     fireEvent.click((await screen.findAllByRole("link", { name: "Stored data" }))[0]!);

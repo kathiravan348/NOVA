@@ -10,7 +10,7 @@ export type CoverageTimeframe = z.infer<typeof CoverageTimeframeSchema>;
  * `complete`: covers the period with no missing trading day; `gaps`: some days missing inside;
  * `partial`: starts after or ends before the period (e.g. listed later, not downloaded); `none`: nothing stored.
  */
-export const CoverageStatusSchema = z.enum(["complete", "gaps", "partial", "none"]);
+export const CoverageStatusSchema = z.enum(["complete", "gaps", "partial", "none", "unavailable"]);
 export type CoverageStatus = z.infer<typeof CoverageStatusSchema>;
 
 /** One stock (or index) of `GET /market-data/coverage` (D63 (3)). */
@@ -28,6 +28,11 @@ export const CoverageRowSchema = z
     days: z.number().int().min(0),
     missingDays: z.number().int().min(0),
     status: CoverageStatusSchema,
+    unavailableDays: z.number().int().min(0).optional(),
+  })
+  .refine((r) => (r.unavailableDays ?? 0) <= r.missingDays, {
+    message: "unavailable days cannot exceed missing days",
+    path: ["unavailableDays"],
   })
   .refine((r) => (r.status === "none") === (r.days === 0), {
     message: "status is none exactly when no day is stored in the period",
@@ -82,6 +87,11 @@ export const CoverageDetailSchema = z
     days: z.number().int().min(0),
     missingDays: z.number().int().min(0),
     missing: z.array(MissingRangeSchema),
+    unavailableDays: z.number().int().min(0).optional(),
+  })
+  .refine((r) => (r.unavailableDays ?? 0) <= r.missingDays, {
+    message: "unavailable days cannot exceed missing days",
+    path: ["unavailableDays"],
   })
   .refine((d) => d.missing.reduce((sum, m) => sum + m.days, 0) === d.missingDays, {
     message: "missing ranges add up to missingDays",

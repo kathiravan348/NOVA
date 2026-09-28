@@ -11,7 +11,7 @@ from nova_db.models.broker import (
     RateLimitRule,
     RecorderSetting,
 )
-from nova_db.models.coverage import COVERAGE_TIMEFRAMES, CandleDay
+from nova_db.models.coverage import COVERAGE_TIMEFRAMES, CandleDay, UnavailableDay
 from nova_db.models.data import (
     AuditEntry,
     Candle,
@@ -54,6 +54,7 @@ __all__ = [
     "Tick",
     "Trade",
     "UniverseEntry",
+    "UnavailableDay",
     "User",
     "UserRole",
 ]

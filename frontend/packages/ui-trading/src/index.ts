@@ -32,3 +32,7 @@ export {
   type StrategyStatsListProps,
 } from "./components/StrategyCard/StrategyStatsList";
 export { useThemeColors } from "./lib/useThemeColors";
+export {
+  UnavailableDataTable,
+  type UnavailableDataTableProps,
+} from "./components/UnavailableDataTable/UnavailableDataTable";

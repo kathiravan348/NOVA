@@ -5,8 +5,14 @@ import {
   type MarketIndex,
   type UniverseEntry,
 } from "@nova/contracts";
-import { mockCandles, mockCoverageDetails, mockCoverageLists, mockInstruments } from "../data";
-import { apiPath, badRequest, notFound } from "./api";
+import {
+  mockCandles,
+  mockCoverageDetails,
+  mockCoverageLists,
+  mockInstruments,
+  mockUnavailableDays,
+} from "../data";
+import { apiPath, badRequest, notFound, paginate } from "./api";
 
 /** Two demo IPOs: new listings a sync found (D56). They have no candles yet. */
 const demoNewListings: UniverseEntry[] = [
@@ -77,6 +83,24 @@ const trimmed = (e: Omit<UniverseEntry, "synced" | "newListing">) => ({
 });
 
 export const marketDataHandlers = [
+  http.get(apiPath("/market-data/unavailable"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const timeframe = params.get("timeframe") ?? "1d";
+    const status = params.get("status") ?? "unavailable";
+    if (!["1m", "1d"].includes(timeframe) || !["all", "unavailable", "resolved"].includes(status))
+      return badRequest("Invalid filter");
+    return paginate(
+      mockUnavailableDays.filter(
+        (r) =>
+          r.timeframe === timeframe &&
+          (status === "all" || r.status === status) &&
+          (!params.get("symbol") || r.symbol === params.get("symbol")) &&
+          (!params.get("from") || r.day >= params.get("from")!) &&
+          (!params.get("to") || r.day <= params.get("to")!),
+      ),
+      request.url,
+    );
+  }),
   http.get(apiPath("/market-data/instruments"), () => {
     return HttpResponse.json(mockInstruments);
   }),

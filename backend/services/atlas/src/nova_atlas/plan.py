@@ -22,6 +22,7 @@ from nova_atlas.download import (
     request_gap,
 )
 from nova_atlas.tokens import index_names, kite_tokens
+from nova_atlas.unavailable import tracked_dates
 from nova_atlas.universe import load_universe
 
 # Bars in one NSE session (09:15-15:30, 375 minutes) by timeframe.
@@ -158,11 +159,12 @@ def build_plan(
     rows = 0
     for symbol in symbols:
         days = stored_dates(db, exchange, symbol, timeframe, first, last)
+        explained = tracked_dates(db, exchange, symbol, timeframe, first, last)
         skipped = 0
         for chunk in chunks:
             chunk_first, chunk_last = chunk.start.date(), chunk.end.date()
             covered = mode == "skip_existing" and is_covered(
-                days, chunk_first, chunk_last, trading_days
+                sorted(set(days) | set(explained)), chunk_first, chunk_last, trading_days
             )
             steps.append(PlannedStep(symbol, chunk, covered))
             if covered:

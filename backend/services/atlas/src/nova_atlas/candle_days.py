@@ -14,7 +14,7 @@ IST = ZoneInfo("Asia/Kolkata")
 
 
 def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal["index", "stocks"]]:
-    """Observed NSE trading days: NIFTY 50 daily bars, else at least ten stocks (D63)."""
+    """Observed NSE sessions: union of NIFTY 50 and dates with at least ten daily stocks."""
     period = {"first": first, "last": last}
     index_days = db.scalars(
         text(
@@ -23,16 +23,15 @@ def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal[
         ),
         period,
     ).all()
-    if index_days:
-        return list(index_days), "index"
     stock_days = db.scalars(
         text(
             "SELECT day FROM candle_days WHERE exchange = 'NSE' AND timeframe = '1d'"
+            " AND symbol NOT IN (SELECT name FROM market_indices)"
             " AND day BETWEEN :first AND :last GROUP BY day HAVING count(*) >= 10 ORDER BY day"
         ),
         period,
     ).all()
-    return list(stock_days), "stocks"
+    return sorted(set(index_days) | set(stock_days)), "index" if index_days else "stocks"
 
 
 _MISSING = text(

@@ -29,7 +29,7 @@ export function MissingDaysModal({ row, query, onClose, onDownload }: MissingDay
           <Button type="button" variant="secondary" onClick={onClose}>
             Close
           </Button>
-          {row && row.status !== "complete" && (
+          {row && row.status !== "complete" && row.status !== "unavailable" && (
             <Button type="button" onClick={() => onDownload([row])}>
               Download missing
             </Button>
@@ -37,6 +37,12 @@ export function MissingDaysModal({ row, query, onClose, onDownload }: MissingDay
         </>
       }
     >
+      {!!detail.data?.unavailableDays && (
+        <p className="mb-4 text-body-sm text-text-muted">
+          {detail.data.unavailableDays} missing days were checked successfully but the broker
+          returned no usable candle. See Unavailable data for exact dates and Check again.
+        </p>
+      )}
       {detail.isPending ? (
         <Skeleton className="h-16 w-full" />
       ) : detail.isError ? (

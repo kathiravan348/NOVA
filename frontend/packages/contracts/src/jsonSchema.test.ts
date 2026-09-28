@@ -39,6 +39,7 @@ import {
   DownloadSettingsSchema,
 } from "./dataJob";
 import { CoverageDetailSchema, CoverageListSchema } from "./coverage";
+import { UnavailableDaySchema } from "./unavailable";
 import { INDICATORS } from "./indicators";
 import { CandleSchema, InstrumentSchema, MarketIndexSchema } from "./marketData";
 import { RateLimitSchema, RateLimitUpdateSchema } from "./rateLimit";
@@ -75,6 +76,7 @@ const contracts: Record<string, z.ZodType> = {
   Candle: CandleSchema,
   CoverageDetail: CoverageDetailSchema,
   CoverageList: CoverageListSchema,
+  UnavailableDay: UnavailableDaySchema,
   DataJob: DataJobSchema,
   DataJobCreate: DataJobCreateSchema,
   DataJobDeleteResult: DataJobDeleteResultSchema,
