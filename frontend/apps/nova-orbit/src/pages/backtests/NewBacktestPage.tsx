@@ -17,7 +17,6 @@ import {
   getDataMode,
   useAddBacktestVersion,
   useInstruments,
-  useMarketIndices,
   useQueueBacktest,
   useStrategies,
 } from "@nova/services";
@@ -33,7 +32,10 @@ import {
   toVersionCreate,
   type BacktestForm,
 } from "./backtestForm";
-import { indexOptions, UniverseFields } from "./UniverseFields";
+import { BenchmarkField } from "./BenchmarkField";
+import { UniverseFields } from "./UniverseFields";
+
+/** The new-backtest form; with `editing` it queues the next version of that run (D60). */
 export function BacktestFormView({
   strategies,
   preselected,
@@ -46,13 +48,14 @@ export function BacktestFormView({
   preselected?: Strategy;
   latestData?: string;
   editing?: BacktestRun;
+  /** `?version=` from a strategy version page (D60). */
   preselectedVersion?: number;
+  /** Checked settings from the link (Library's Backtest button, D62). */
   linked?: Partial<BacktestForm>;
 }) {
   const toast = useToast();
   const navigate = useNavigate();
   const instruments = useInstruments();
-  const indices = useMarketIndices();
   const queueRun = useQueueBacktest();
   const addVersion = useAddBacktestVersion();
   const [uncovered, setUncovered] = useState<string[]>([]);
@@ -67,34 +70,24 @@ export function BacktestFormView({
           ...linked,
         },
   });
-  const { register, control, handleSubmit, watch, setValue, resetField, setError, formState } =
-    form;
+  const { register, control, handleSubmit, watch, setValue, setError, formState } = form;
   const { errors } = formState;
   const strategyId = watch("strategyId");
   const strategy = strategies.find((s) => s.id === strategyId);
   // Coverage is checked for the candle size of the chosen version (NOVA-097).
   const version = watch("version");
   const timeframe = strategy?.versions.find((v) => String(v.version) === version)?.spec.timeframe;
-  const universeType = watch("universeType");
-  const index = watch("index");
-  useEffect(() => {
-    if (editing || linked?.benchmark !== undefined || formState.dirtyFields.benchmark) return;
-    if (universeType === "index") resetField("benchmark", { defaultValue: index });
-  }, [
-    editing,
-    linked?.benchmark,
-    formState.dirtyFields.benchmark,
-    universeType,
-    index,
-    resetField,
-  ]);
+
+  // A new strategy starts on its latest version and a matching name.
   useEffect(() => {
     if (!strategy || !formState.dirtyFields.strategyId) return;
     setValue("version", String(strategy.latestVersion));
     setValue("name", `${strategy.name} backtest`);
   }, [strategy, formState.dirtyFields.strategyId, setValue]);
+
   const failed = (err: Error) =>
     toast.show({ title: "Could not queue the backtest", description: err.message, tone: "danger" });
+
   const queue = () => {
     if (editing) {
       const body = toVersionCreate(form.getValues());
@@ -132,6 +125,8 @@ export function BacktestFormView({
       onError: failed,
     });
   };
+
+  // Symbols whose data does not cover the period must be dropped before queueing (R2).
   const onValid = (values: BacktestForm) => {
     if (values.universeType === "symbols") {
       const period = { from: values.from, to: values.to, timeframe };
@@ -146,6 +141,7 @@ export function BacktestFormView({
     }
     queue();
   };
+
   const dropAndQueue = () => {
     const remaining = form.getValues("symbols").filter((s) => !uncovered.includes(s));
     setUncovered([]);
@@ -156,12 +152,15 @@ export function BacktestFormView({
     }
     queue();
   };
+
   const versions = [...(strategy?.versions ?? [])].sort((a, b) => b.version - a.version);
+
   return (
     <form onSubmit={handleSubmit(onValid)} noValidate className="flex max-w-5xl flex-col gap-6">
       <Card title="Strategy">
         <div className="grid gap-4 sm:grid-cols-2">
           {editing ? (
+            // A new version keeps its strategy; only the strategy version may change (D60).
             <Input label="Strategy" value={strategy?.name ?? editing.strategyId} readOnly />
           ) : (
             <Select
@@ -229,15 +228,9 @@ export function BacktestFormView({
             error={errors.capitalRupees?.message}
             {...register("capitalRupees")}
           />
-          <Select
-            label="Benchmark"
-            options={[
-              { value: "", label: "None" },
-              ...indexOptions(indices.data, watch("benchmark")),
-            ]}
-            disabled={indices.isPending}
-            error={indices.isError ? "Could not load the indices" : errors.benchmark?.message}
-            {...register("benchmark")}
+          <BenchmarkField
+            form={form}
+            locked={editing !== undefined || linked?.benchmark !== undefined}
           />
         </div>
       </Card>
@@ -269,6 +262,7 @@ export function BacktestFormView({
     </form>
   );
 }
+
 export function NewBacktestPage() {
   const query = useStrategies();
   const instruments = useInstruments();
@@ -282,6 +276,7 @@ export function NewBacktestPage() {
   const preselectedVersion = preselected?.versions.some((v) => v.version === asked)
     ? asked
     : undefined;
+  // Default end date: the newest data in the preselected strategy's timeframe, else in any.
   const latest = preselected?.versions.find((v) => v.version === preselected.latestVersion);
   const latestData = (instruments.data ?? [])
     .map((i) => dataRange(i, latest?.spec.timeframe)?.to)

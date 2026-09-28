@@ -24,6 +24,17 @@ export const Default: Story = {
   ),
 };
 
+export const OtherIndex: Story = {
+  render: () => (
+    <EquityCurve
+      points={equityWithBenchmark}
+      initialCapitalPaise={INITIAL_CAPITAL_PAISE}
+      benchmarkLabel="NIFTY 500"
+      ariaLabel="Equity curve versus NIFTY 500"
+    />
+  ),
+};
+
 export const WithoutBenchmark: Story = {
   render: () => (
     <EquityCurve

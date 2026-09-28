@@ -280,7 +280,8 @@ Open a run from **Backtests**. You see:
 - **Year by year**: the run cut into 12-month blocks from its start date (the last may be shorter). Each row
   shows that year's return, profit, worst fall and the benchmark's return. A year that lost more than 5%
   gets a red **Below −5%** badge. The profits of all rows add up to the Net P&L.
-- **Equity curve**: a line of your pretend money over time, next to NIFTY 50 if you asked for it.
+- **Equity curve**: a line of your pretend money over time, next to a dashed line for the **Benchmark** index
+  you chose (named after it), if you chose one and its daily prices are downloaded.
 - **Results by symbol**: which shares made or lost money. **Show trades** filters the trade list to that share.
 - **Trades**: every pretend buy and sell, with price, quantity, profit and a **charges breakdown**
   (brokerage, STT, exchange fee, SEBI fee, stamp duty, GST, DP charge) — calculated with Zerodha's real rates.

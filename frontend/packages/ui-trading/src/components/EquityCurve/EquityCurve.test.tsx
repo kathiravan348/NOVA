@@ -48,6 +48,12 @@ describe("EquityCurve", () => {
     expect(screen.getByText("Strategy")).toBeInTheDocument();
   });
 
+  it("names the benchmark line after the run's index (D72)", () => {
+    render(<EquityCurve points={equityWithBenchmark} benchmarkLabel="NIFTY 500" ariaLabel="c" />);
+    expect(screen.getByText("NIFTY 500")).toBeInTheDocument();
+    expect(screen.queryByText("NIFTY 50")).not.toBeInTheDocument();
+  });
+
   it("shows the empty text when there are no points", () => {
     render(<EquityCurve points={[]} ariaLabel="c" />);
     expect(screen.getByText("No equity data")).toBeInTheDocument();
@@ -71,6 +77,17 @@ describe("EquityCurveTooltip", () => {
     expect(screen.getByText("21 Sep 2026")).toBeInTheDocument();
     expect(screen.getByText("₹5,12,345")).toBeInTheDocument();
     expect(screen.getByText("₹5,05,000")).toBeInTheDocument();
+    expect(screen.getByText("NIFTY 50")).toBeInTheDocument();
+  });
+
+  it("uses the given benchmark name", () => {
+    render(
+      <EquityCurveTooltip
+        point={{ date: "2026-09-21", equityPaise: 5_12_345_00, benchmarkPaise: 5_05_000_00 }}
+        benchmarkLabel="NIFTY BANK"
+      />,
+    );
+    expect(screen.getByText("NIFTY BANK")).toBeInTheDocument();
   });
 
   it("omits the benchmark row when null", () => {
