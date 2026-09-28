@@ -1,6 +1,6 @@
 # NOVA-135 — Index backtests skip members with no prices in the period (D68, migration 0021, live bug)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-135 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-135 · **Depends on:** —
 
 ## Goal
 A backtest on a whole index (e.g. NIFTY 100, 2021–2024) runs on the members that have prices and skips the
