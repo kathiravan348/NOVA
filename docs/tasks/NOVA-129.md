@@ -1,6 +1,6 @@
 # NOVA-129 — Charge rates from 2020: the 2024 schedule backdated (D66, migration 0019, live bug)
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-129 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-129 · **Depends on:** —
 
 ## Goal
 Backtests starting between 2020-01-01 and 2024-09-30 get charges instead of failing with
@@ -23,9 +23,9 @@ Modify:
 3. DATABASE guide: the `charge_rates` row and the migrations range.
 
 ## Acceptance checks
-- [ ] `rates_for` answers for 2020-01-01 to 2024-09-30 in both equity segments; 2019-12-31 still raises.
-- [ ] Migration downgrade/upgrade round trip passes (`test_migrations`).
-- [ ] `docker compose run --rm backend-check` passes.
+- [x] `rates_for` answers for 2020-01-01 to 2024-09-30 in both equity segments; 2019-12-31 still raises.
+- [x] Migration downgrade/upgrade round trip passes (`test_migrations`).
+- [x] `docker compose run --rm backend-check` passes.
 
 ## Out of scope
 - Exact older NSE/DP rates (later, as new rows); futures/options rates; engine fallbacks.
@@ -37,4 +37,13 @@ newest row effective on the day). backend-check 1023 passed (ruff, format, mypy 
   backtests. Runs using a NIFTY 50 market filter also need NIFTY 50 1d prices (Stored data → Indices).
 
 ## Review
-_(reviewer — ChatGPT, or Claude if the Owner allows a self-review; ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed, 28 Sep 2026, same session at the Owner's request).
+**Fixed directly (review: commits):** none.
+**Checked:** the copied values equal the live 2024-10-01 rows field by field; ids and the unique (segment,
+effective_from) key cannot clash with 0003; the downgrade removes only its own two ids (round-trip test passes).
+`rates_for` already takes the newest row effective on the day, so no code change is needed; runs from 2024-10-01 on
+are unchanged. backend-check 1023 passed.
+**Guides checked:** DATABASE matches (charge_rates row, migrations 0001–0019); API and USER-GUIDE not affected.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none (exact older rates stay optional, D66).

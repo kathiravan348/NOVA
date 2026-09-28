@@ -134,7 +134,7 @@
 | NOVA-126 | Relay: Stored data page, group by index/sector, Download missing (D63) | done | Claude | 113, 123, 125 (merge after 124) |
 | NOVA-127 | Five new indicators: catalog, engine, Python ctx (D62) | done | Claude | 111, 114 |
 | NOVA-128 | Stored data: every index listed; later listings count as complete (D65, live bug) | done | Claude | 124, 126 |
-| NOVA-129 | Charge rates from 2020: the 2024 schedule backdated (D66, migration 0019, live bug) | ready-for-review | Claude | — |
+| NOVA-129 | Charge rates from 2020: the 2024 schedule backdated (D66, migration 0019, live bug) | done | Claude | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
