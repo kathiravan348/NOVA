@@ -139,6 +139,9 @@
 | NOVA-131 | Core: agent role, deny-by-default gateway, held writes (D67, migration 0020) | done | Claude | 130 |
 | NOVA-132 | Core: approve/reject held requests, agent account endpoints (D67) | done | Claude | 131 |
 | NOVA-133 | Relay Approvals page, agent view in Relay and Orbit (D67) | done | Claude | 130 (merge after 132) |
+| NOVA-134 | Instrument sync keeps hyphenated stocks such as BAJAJ-AUTO (D68, live bug) | planned | — | — |
+| NOVA-135 | Index backtests skip members with no prices in the period (D68, migration 0021, live bug) | planned | — | — |
+| NOVA-136 | Orbit shows the stocks an index backtest skipped (D68) | planned | — | 135 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
