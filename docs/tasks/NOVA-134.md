@@ -1,6 +1,6 @@
 # NOVA-134 — Instrument sync keeps hyphenated stocks such as BAJAJ-AUTO (D68, live bug)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-134 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-134 · **Depends on:** —
 
 ## Goal
 The next instrument sync adds BAJAJ-AUTO (and every other NSE stock whose symbol has a hyphen), so NIFTY 100
@@ -44,4 +44,13 @@ backend/services/atlas/tests/test_universe.py; docs/tasks/BOARD.md; docs/tasks/N
 After merge, Owner rebuilds Atlas, runs **Sync with Kite**, then downloads BAJAJ-AUTO prices in Relay.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude (code, 86ada46), ChatGPT (update from main, checks, handoff).
+**Self-review:** yes (Owner allowed, fresh session).
+**Checked:** diff matches Build 1–2 exactly; `STOCK_SYMBOL` is linear (hyphen splits the parts, no backtracking);
+20-character limit kept; test covers kept (BAJAJ-AUTO, NAM-INDIA) and skipped (-RE, -GB) rows.
+backend-check (1,203 tests) and `pnpm review:check` pass; branch up to date with main.
+**Fixed directly (review: commits):** none.
+**Guides checked:** not affected (sync filter only; no screen, endpoint or table change).
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none. Owner, after merge: rebuild Atlas, run **Sync with Kite**, download BAJAJ-AUTO prices.
