@@ -143,6 +143,7 @@
 | NOVA-135 | Index backtests skip members with no prices in the period (D68, migration 0021, live bug) | done | Claude | — |
 | NOVA-136 | Orbit shows the stocks an index backtest skipped (D68) | done | Claude | 135 |
 | NOVA-137 | Backtest worker no longer freezes on index runs that skip stocks (D68, live bug) | done | Claude | 135 |
+| NOVA-138 | Data screens start at 1 Jan 2020 (D69) | planned | — | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
