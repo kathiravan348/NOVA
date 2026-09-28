@@ -74,13 +74,16 @@ export function ApprovalList({
                   {JSON.stringify(item.body, null, 2)}
                 </pre>
                 <StatusBadge
+                  className="self-start"
                   label={item.status}
                   tone={
                     item.status === "failed"
                       ? "danger"
                       : item.status === "done"
                         ? "success"
-                        : "neutral"
+                        : item.status === "pending"
+                          ? "warning"
+                          : "neutral"
                   }
                 />
                 {!waiting && (
