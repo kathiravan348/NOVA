@@ -18,37 +18,14 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Session
 from sqlalchemy.types import Date
 
+from nova_atlas.candle_days import calendar
 from nova_atlas.universe import load_universe
 
 router = APIRouter(prefix="/market-data")
 
 IST = ZoneInfo("Asia/Kolkata")
 EXCHANGE = "NSE"
-CALENDAR_INDEX = "NIFTY 50"
-MIN_STOCKS_A_DAY = 10
 DEFAULT_FROM = date(2020, 1, 1)  # D69: where stored history starts by default
-
-
-def calendar(db: Session, first: date, last: date) -> tuple[list[date], Literal["index", "stocks"]]:
-    """Trading days: NIFTY 50's daily bars, else days on which at least 10 stocks have one (D63)."""
-    period = {"exchange": EXCHANGE, "first": first, "last": last}
-    index_days = db.scalars(
-        text(
-            "SELECT day FROM candle_days WHERE exchange = :exchange AND symbol = :index"
-            " AND timeframe = '1d' AND day BETWEEN :first AND :last ORDER BY day"
-        ),
-        period | {"index": CALENDAR_INDEX},
-    ).all()
-    if index_days:
-        return list(index_days), "index"
-    stock_days = db.scalars(
-        text(
-            "SELECT day FROM candle_days WHERE exchange = :exchange AND timeframe = '1d'"
-            " AND day BETWEEN :first AND :last GROUP BY day HAVING count(*) >= :enough ORDER BY day"
-        ),
-        period | {"enough": MIN_STOCKS_A_DAY},
-    ).all()
-    return list(stock_days), "stocks"
 
 
 _SERIES = text(
