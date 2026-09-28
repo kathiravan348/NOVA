@@ -103,6 +103,19 @@ describe("Backtest result", () => {
     expect(note).not.toHaveTextContent("STOCK12");
   });
 
+  it("uses the singular for one skipped member", async () => {
+    const run = mockBacktestRuns.find((r) => r.id === "run_006")!;
+    server.use(
+      http.get("*/api/v1/backtests/run_006", () =>
+        HttpResponse.json({ ...run, skippedSymbols: ["HYUNDAI"] }),
+      ),
+    );
+    renderApp("/backtests/run_006");
+    expect(
+      await screen.findByText("Skipped 1 stock with no prices in this period: HYUNDAI"),
+    ).toBeInTheDocument();
+  });
+
   it("shows results by symbol and filters trades by symbol", async () => {
     renderApp("/backtests/run_001");
     const table = await screen.findByRole("table", { name: "Results by symbol" });

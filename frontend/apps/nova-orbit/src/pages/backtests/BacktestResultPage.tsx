@@ -220,6 +220,15 @@ function RunBody({ run, newestId }: { run: BacktestRun; newestId?: string }) {
   return <RunProgress run={run} />;
 }
 
+const SKIPPED_SHOWN = 10;
+
+function skippedNote(symbols: string[]): string {
+  const count = `${symbols.length} ${symbols.length === 1 ? "stock" : "stocks"}`;
+  const rest = symbols.length - SKIPPED_SHOWN;
+  const more = rest > 0 ? ` and ${rest} more` : "";
+  return `Skipped ${count} with no prices in this period: ${symbols.slice(0, SKIPPED_SHOWN).join(", ")}${more}`;
+}
+
 export function BacktestResultPage() {
   const { id = "" } = useParams();
   const query = useBacktest(id);
@@ -230,11 +239,7 @@ export function BacktestResultPage() {
       {(run) => (
         <div className="flex flex-col gap-6">
           <RunHeader run={run} />
-          {run.skippedSymbols.length > 0 && (
-            <Card>
-              {`Skipped ${run.skippedSymbols.length} stocks with no prices in this period: ${run.skippedSymbols.slice(0, 10).join(", ")}${run.skippedSymbols.length > 10 ? ` and ${run.skippedSymbols.length - 10} more` : ""}`}
-            </Card>
-          )}
+          {run.skippedSymbols.length > 0 && <Card>{skippedNote(run.skippedSymbols)}</Card>}
           {history.length > 1 && <VersionsTable versions={history} currentId={run.id} />}
           <RunBody run={run} newestId={history[0]?.runId} />
         </div>

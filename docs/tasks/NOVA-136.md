@@ -1,6 +1,6 @@
 # NOVA-136 — Orbit shows the stocks an index backtest skipped (D68)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-136 · **Depends on:** NOVA-135
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-136 · **Depends on:** NOVA-135
 
 ## Goal
 A run page tells the user which index members were left out because they have no prices in the period, so a
@@ -52,4 +52,13 @@ prices; shares with no prices anywhere in the period are skipped, matching the e
 **Known gaps:** none. Temporary preview stopped and browser viewport restored.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):**
+- One skipped stock read "Skipped 1 stocks"; now "Skipped 1 stock" (test added).
+- Long inline template string moved into a small `skippedNote` helper with a named limit of 10.
+**Change requests:** none.
+**Guides checked:** USER-GUIDE Steps 5–6 and the troubleshooting row match the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
+**Checks:** `pnpm review:check` pass (962 tests, builds).
