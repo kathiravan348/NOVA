@@ -33,4 +33,13 @@ def test_no_rates_before_the_first_row(session: Session) -> None:
     with pytest.raises(LookupError, match="futures"):
         rates_for(session, "futures", date(2026, 1, 1))
     with pytest.raises(LookupError):
-        rates_for(session, "equity_delivery", date(2020, 1, 1))
+        rates_for(session, "equity_delivery", date(2019, 12, 31))
+
+
+@pytest.mark.parametrize("segment", ["equity_delivery", "equity_intraday"])
+def test_the_2024_schedule_also_applies_from_2020(session: Session, segment: str) -> None:
+    """D66: migration 0019 backdates today's schedule, so older backtests have rates."""
+    today = rates_for(session, segment, date(2024, 10, 1))
+
+    assert rates_for(session, segment, date(2020, 1, 1)) == today
+    assert rates_for(session, segment, date(2024, 9, 30)) == today
