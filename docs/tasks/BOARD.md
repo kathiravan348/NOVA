@@ -141,7 +141,7 @@
 | NOVA-133 | Relay Approvals page, agent view in Relay and Orbit (D67) | done | Claude | 130 (merge after 132) |
 | NOVA-134 | Instrument sync keeps hyphenated stocks such as BAJAJ-AUTO (D68, live bug) | done | Claude | — |
 | NOVA-135 | Index backtests skip members with no prices in the period (D68, migration 0021, live bug) | done | Claude | — |
-| NOVA-136 | Orbit shows the stocks an index backtest skipped (D68) | planned | — | 135 |
+| NOVA-136 | Orbit shows the stocks an index backtest skipped (D68) | in-progress | ChatGPT | 135 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

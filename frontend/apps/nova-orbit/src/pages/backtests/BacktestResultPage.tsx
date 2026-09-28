@@ -230,6 +230,11 @@ export function BacktestResultPage() {
       {(run) => (
         <div className="flex flex-col gap-6">
           <RunHeader run={run} />
+          {run.skippedSymbols.length > 0 && (
+            <Card>
+              {`Skipped ${run.skippedSymbols.length} stocks with no prices in this period: ${run.skippedSymbols.slice(0, 10).join(", ")}${run.skippedSymbols.length > 10 ? ` and ${run.skippedSymbols.length - 10} more` : ""}`}
+            </Card>
+          )}
           {history.length > 1 && <VersionsTable versions={history} currentId={run.id} />}
           <RunBody run={run} newestId={history[0]?.runId} />
         </div>
