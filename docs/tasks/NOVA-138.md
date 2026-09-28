@@ -1,6 +1,6 @@
 # NOVA-138 — Data screens start at 1 Jan 2020 (D69)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-138 · **Depends on:** —
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-138 · **Depends on:** —
 
 ## Goal
 Relay's **New download** and **Stored data** open with **From = 2020-01-01** (today: 365 days back and
