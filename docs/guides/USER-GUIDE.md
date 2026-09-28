@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-140). NOVA **never places real orders**: it only
+> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-141). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -496,13 +496,20 @@ summary. Use **Show** to filter by kind of activity and **Load older entries** t
 ### Step 9 — Approvals and the agent account
 
 Open **Approvals** to see changes requested by the agent account, a separate sign-in used by an AI
-assistant to help check the screens. The menu shows how many requests are waiting. **Waiting** refreshes
-every five seconds. Check the time, action, address and request details, then press **Approve** or
-**Reject** and confirm. Approving runs the saved change once; rejecting runs nothing. Requests expire
-after 30 minutes. **History** shows completed, failed, rejected and expired requests, the answer status
-and a short result. Press **Load more** for older entries.
+assistant to help check the screens. The menu shows how many requests are waiting. The page has
+**Waiting**, **History** and **Agent account** tabs. **Waiting** refreshes every five seconds and shows
+short rows, ten per page; phones show compact cards. **Search requests** filters the loaded requests.
+Press **View details** (or the request name) to open the full request and response.
 
-Under **Agent account**, press **Create agent**, enter its name and email, and enter the same password
+Tick the requests you want, or use **Select all shown** to select every loaded search match, including
+matches on other table pages. **Load more** fetches additional requests. **Clear selection** clears your
+choice. **Approve selected** or **Reject selected** opens one confirmation listing your chosen requests.
+Approving runs each saved change once; rejecting runs nothing. Progress and individual problems appear
+afterward. Requests arriving later are not added to your batch. Requests expire after 30 minutes and
+cannot be approved after expiry. Successful decisions leave the selection; failed changes that were
+already sent are not sent again. Check **History** and **View details** for their full responses.
+
+In the **Agent account** tab, press **Create agent**, enter its name and email, and enter the same password
 twice (at least 12 characters). **Set new password** replaces its password. Turn **Agent access** off
 to stop sign-ins and sign out its active sessions.
 
@@ -531,7 +538,7 @@ approval**; in Demo mode the demo banner appears instead.
 | Problem | What to do |
 |---|---|
 | Yellow bar at the top | You are in demo mode: nothing you do is saved. |
-| **Sent to Admin for approval** | The change is waiting. The Owner opens **Approvals**, checks it and presses **Approve** or **Reject**. Check **History** for the result; if it expired, request the change again. |
+| **Sent to Admin for approval** | The change is waiting. The Owner opens **Approvals → Waiting**, checks **View details**, selects requests and presses **Approve selected** or **Reject selected**. Check **History** for the result; if it expired, request the change again. |
 | Backtest says *Log in to Kite in Relay first* or data is missing | Do the daily Kite login in Relay (Step 3), then queue a download in **Data jobs** (Step 7). |
 | A backtest says prices are missing, or you are not sure what is downloaded | Open **Stored data** (Step 6b), choose the timeframe and period, group by **Index**, and press **Download missing** on the index you test. |
 | A download reaches 100% but reports missing dates | Open **Stored data → Unavailable data** for the exact dates and successful broker checks. **Check again** retries an exact date; recovered prices resolve the record automatically. |

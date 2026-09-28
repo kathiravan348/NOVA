@@ -4,6 +4,7 @@ import type {
   AgentAccountCreate,
   AgentPasswordUpdate,
   ApprovalStatus,
+  ApprovalRequest,
 } from "@nova/contracts";
 import {
   approveRequest,
@@ -15,6 +16,7 @@ import {
   updateAgentAccess,
 } from "../api/relay";
 import { ApiRequestError } from "../http";
+import { getNow } from "../clock";
 import { queryKeys } from "./keys";
 import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
 
@@ -55,6 +57,62 @@ export function useAgentAccount() {
         throw error;
       }
     },
+  });
+}
+
+export interface ApprovalOutcome {
+  id: string;
+  decided: boolean;
+  error?: string;
+}
+
+/** One explicit decision per request; never retry a write automatically. */
+export function useDecideRequests() {
+  const client = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async ({
+      requests,
+      action,
+      onProgress,
+    }: {
+      requests: Pick<ApprovalRequest, "id" | "createdAt">[];
+      action: "Approve" | "Reject";
+      onProgress: (outcome: ApprovalOutcome, done: number) => void;
+    }) => {
+      const outcomes: ApprovalOutcome[] = [];
+      for (const request of requests) {
+        let outcome: ApprovalOutcome;
+        if (getNow().getTime() >= Date.parse(request.createdAt) + 30 * 60 * 1000) {
+          outcome = { id: request.id, decided: false, error: "Request expired" };
+        } else {
+          try {
+            const result = await (action === "Approve" ? approveRequest : rejectRequest)(
+              request.id,
+            );
+            outcome = {
+              id: request.id,
+              decided: true,
+              ...(result.status === "failed"
+                ? {
+                    error: `Change failed${result.resultStatus ? ` (HTTP ${result.resultStatus})` : ""}. Open History for the response.`,
+                  }
+                : {}),
+            };
+          } catch (error) {
+            outcome = {
+              id: request.id,
+              decided: false,
+              error: error instanceof Error ? error.message : "Could not decide request",
+            };
+          }
+        }
+        outcomes.push(outcome);
+        onProgress(outcome, outcomes.length);
+      }
+      return outcomes;
+    },
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.approvals.all }),
   });
 }
 

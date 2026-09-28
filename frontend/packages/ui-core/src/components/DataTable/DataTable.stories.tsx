@@ -14,6 +14,8 @@ import {
 } from "./storyData";
 import type { DataTableGroups } from "./DataTableGroups";
 import { Button } from "../Button/Button";
+import { Modal } from "../Modal/Modal";
+import { TextBlock } from "../TextBlock/TextBlock";
 
 const meta: Meta<typeof DataTable<FileItem>> = {
   title: "Core/DataTable",
@@ -156,6 +158,61 @@ export const EmptySearchResult: Story = {
     input.dispatchEvent(new Event("input", { bubbles: true }));
   },
 };
+
+function CompactBatchTable(): React.ReactElement {
+  const [selected, setSelected] = React.useState<string[]>([]);
+  const [details, setDetails] = React.useState<FileItem | null>(null);
+  const data = React.useMemo(
+    () =>
+      Array.from({ length: 50 }, (_, index) => ({
+        ...sampleFiles[index % sampleFiles.length]!,
+        id: `request-${index}`,
+        name: `Document export ${index + 1}`,
+      })),
+    [],
+  );
+  return (
+    <>
+      <DataTable<FileItem>
+        caption="Compact requests"
+        data={data}
+        columns={[
+          { accessorKey: "name", header: "Request", meta: { primary: true } },
+          { accessorKey: "owner", header: "Requested by" },
+          {
+            id: "details",
+            header: "Details",
+            cell: ({ row }) => (
+              <Button size="sm" variant="secondary" onClick={() => setDetails(row.original)}>
+                View details
+              </Button>
+            ),
+          },
+        ]}
+        getRowId={(row) => row.id}
+        selectedIds={selected}
+        onSelectedIdsChange={setSelected}
+        search={{ label: "Search requests", getText: fileSearchText }}
+        toolbar={
+          <Button size="sm" disabled={selected.length === 0}>
+            Approve selected ({selected.length})
+          </Button>
+        }
+      />
+      <Modal
+        open={details !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetails(null);
+        }}
+        title="Request details"
+      >
+        <TextBlock label="Request body" text={JSON.stringify(details, null, 2)} />
+      </Modal>
+    </>
+  );
+}
+
+export const CompactBatchRequests: Story = { render: () => <CompactBatchTable /> };
 
 const byColour = (defaultOpen = false): DataTableGroups<Fruit> => ({
   of: (fruit) => fruit.colours,

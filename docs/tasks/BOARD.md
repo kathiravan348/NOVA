@@ -146,6 +146,7 @@
 | NOVA-138 | Data screens start at 1 Jan 2020 (D69) | done | Claude | — |
 | NOVA-139 | Validate download coverage and do not skip small gaps | done | Claude | 124, 128 |
 | NOVA-140 | Automatic broker-unavailable date history in Stored data | done | Claude | 139 |
+| NOVA-141 | Compact Approvals: bulk decisions, details and tabs | in-progress | ChatGPT | 133 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
