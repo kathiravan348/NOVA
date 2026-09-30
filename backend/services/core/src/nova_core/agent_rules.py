@@ -5,6 +5,7 @@ from typing import Literal
 Rule = Literal["free", "held", "blocked"]
 PREFIX_RULES: dict[str, Rule] = {
     "broker": "blocked",
+    "live": "blocked",
     "strategies": "held",
     "backtests": "held",
     "market-data": "held",

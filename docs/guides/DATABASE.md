@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 30 Sep 2026 (migrations `0001`–`0024`, NOVA-150). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 30 Sep 2026 (migrations `0001`–`0024`, NOVA-151). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -91,7 +91,15 @@ Deleting a run deletes its result and trades (`ON DELETE CASCADE`). The API dele
 
 | Store | What it keeps |
 |---|---|
+| **Redis pub/sub** (`nova:ticks` channel; NOVA-151) | After a tick batch commits, the broker publishes every tick as `LiveTick` JSON (`symbol`, integer-paise `price`, nullable `changePercent`, UTC `at`, `ticksThisSecond: 1`). Core coalesces these messages to one per selected stock per second on `/api/v1/ws`; counts refer to the latest receive-second bucket. Ephemeral fan-out, no persistent key or replay. A Redis outage affects delivery only; ticks remain in PostgreSQL. |
 | **Redis** (`nova:rl:*` keys) | Live rate-limit usage per account × endpoint: rolling logs for second/minute windows, a counter per day period, daily peaks (`nova:rl:peak:*`) and throttle counts. Lost on Redis reset; only today's usage matters. |
 | **Parquet tick archive** (`tick-archive` volume) | Old ticks, one file per day and symbol: `date=YYYY-MM-DD/symbol=XXX/ticks.parquet`. |
 | **alembic_version** (table) | The migration the database is on (currently `0024`). Managed by Alembic only. |
 | **Connections** | Postgres allows 100 connections (`compose.yaml` starts it with `max_connections=100`; the image's own tuning would give 25). Each service process keeps at most 2 idle connections and opens at most 8 (`create_db_engine`). |
+
+Live snapshot/day reads use `ticks.received_at` in IST sessions (weekdays 09:15–15:30) and existing archived
+files; no new table, migration, stored candle or archive layout. A 1-second candle is an occupied receive-second
+bucket, computed on read. A gap is classified as a recorder fault only if another stock has ticks in that second;
+otherwise it is shared silence (`noTradeSeconds`). Reads use projected Parquet batches and bounded sets of session
+seconds. Database tuple-size estimates exclude indexes/pages; archive sizes use actual file bytes. Database data
+takes precedence for a stock/day whose archive file was written before the source rows were deleted.

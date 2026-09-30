@@ -5,6 +5,8 @@ import { getApiBaseUrl, getDataMode } from "./config";
 import { API_PREFIX } from "./http";
 import { queryKeys } from "./queries/keys";
 import { useSession } from "./session";
+import { bindLiveTransport, dispatchLiveTick } from "./liveSubscriptions";
+export { subscribeLiveTicks } from "./liveSubscriptions";
 
 /**
  * One WebSocket to NOVA Core while signed in, real mode only (D57). `off`: no socket (mock mode or
@@ -102,6 +104,7 @@ export function connectRealtime(queryClient: QueryClient): () => void {
   let attempt = 0;
   let wasOpen = false;
   let stopped = false;
+  let unbindLive: (() => void) | undefined;
 
   const refreshJobs = () =>
     void queryClient.invalidateQueries({ queryKey: queryKeys.dataJobs.all });
@@ -117,6 +120,10 @@ export function connectRealtime(queryClient: QueryClient): () => void {
       clearTimeout(hung);
       attempt = 0;
       setStatus("open");
+      unbindLive?.();
+      unbindLive = bindLiveTransport((symbols) => {
+        if (ws.readyState === 1) ws.send(JSON.stringify({ type: "live.subscribe", symbols }));
+      });
       if (wasOpen) refreshJobs();
       wasOpen = true;
     };
@@ -134,11 +141,13 @@ export function connectRealtime(queryClient: QueryClient): () => void {
       else if (message.type === "data_job.updated") applyJobUpdate(queryClient, message.data);
       else if (message.type === "data_job.deleted")
         removeJobFromCache(queryClient, message.data.id);
+      else if (message.type === "live.tick") dispatchLiveTick(message.data);
     };
     ws.onclose = () => {
       clearTimeout(hung);
       if (stopped || socket !== ws) return;
       socket = null;
+      unbindLive?.();
       if (status === "open") refreshJobs(); // polling takes over from the current state
       setStatus("down");
       const delay = Math.min(RECONNECT_MS.max, RECONNECT_MS.first * 2 ** attempt);
@@ -150,6 +159,7 @@ export function connectRealtime(queryClient: QueryClient): () => void {
   open();
   return () => {
     stopped = true;
+    unbindLive?.();
     clearTimeout(timer);
     socket?.close();
     socket = null;

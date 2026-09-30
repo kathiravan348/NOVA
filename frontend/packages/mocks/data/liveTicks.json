@@ -1,0 +1,58 @@
+[
+  {
+    "symbol": "RELIANCE",
+    "price": 298450,
+    "changePercent": 1.2,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 3
+  },
+  {
+    "symbol": "TCS",
+    "price": 425000,
+    "changePercent": -0.4,
+    "at": "2026-09-30T07:59:59Z",
+    "ticksThisSecond": 2
+  },
+  {
+    "symbol": "INFY",
+    "price": 192500,
+    "changePercent": 0.8,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 4
+  },
+  {
+    "symbol": "HDFCBANK",
+    "price": 176300,
+    "changePercent": 0.5,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 2
+  },
+  {
+    "symbol": "ICICIBANK",
+    "price": 132000,
+    "changePercent": -0.2,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 1
+  },
+  {
+    "symbol": "SBIN",
+    "price": 84500,
+    "changePercent": 1.1,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 3
+  },
+  {
+    "symbol": "ITC",
+    "price": 51200,
+    "changePercent": 0.3,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 2
+  },
+  {
+    "symbol": "BHARTIARTL",
+    "price": 165400,
+    "changePercent": -0.1,
+    "at": "2026-09-30T08:00:00Z",
+    "ticksThisSecond": 2
+  }
+]

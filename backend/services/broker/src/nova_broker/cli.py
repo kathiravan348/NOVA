@@ -9,6 +9,7 @@ import signal
 import threading
 
 from nova_db import create_db_engine, create_session_factory
+from redis import Redis
 from sqlalchemy.orm import Session, sessionmaker
 
 from nova_broker.crypto import TokenCipher, new_key
@@ -31,7 +32,10 @@ def run_recorder(settings: BrokerSettings, factory: sessionmaker[Session]) -> No
         logging.getLogger("nova.broker").warning(
             "NOVA_BROKER_TOKEN_KEY is not set: the recorder only waits"
         )
-    RecorderLoop(factory=factory, cipher=cipher, stop=_stop_on_signals()).run()
+    with Redis.from_url(
+        settings.redis_url.get_secret_value(), socket_timeout=1, socket_connect_timeout=1
+    ) as redis:
+        RecorderLoop(factory=factory, cipher=cipher, stop=_stop_on_signals(), redis=redis).run()
 
 
 def main(argv: list[str] | None = None) -> int:

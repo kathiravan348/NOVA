@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 30 Sep 2026 (NOVA-150). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 30 Sep 2026 (NOVA-151). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -16,7 +16,8 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
    ├── /strategies/*    → strategy service
    ├── /backtests/*     → backtest service (+ backtest worker)
    ├── /market-data/*   → Atlas            (+ Atlas worker)
-   └── /data-jobs/*     → Atlas
+   ├── /data-jobs/*     → Atlas
+   └── /live/*          → Atlas
 ```
 
 **Common rules**
@@ -49,7 +50,7 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
 | `PUT /agent/password` | Admin only. Changes password and revokes every agent session. Audit: `agent.password`. | `AgentPasswordUpdate {password}` (at least 12 characters) | `AgentAccount`; 404 if none, 400 for invalid input |
 | `PATCH /agent` | Admin only. Sets/clears `disabled_at`; off revokes every agent session and refuses sign-in. On requires a fresh sign-in. Audit: `agent.access` ("Agent access off" / "Agent access on"). | `AgentAccessUpdate {enabled}` | `AgentAccount`; 404 if none |
 | `GET /openapi.json`, `GET /docs` | Merged OpenAPI schema + Swagger UI of all services. Only when `NOVA_API_DOCS=true`. | — | JSON / HTML |
-| `GET /ws` (WebSocket) | Live updates for signed-in screens (D57). Signed in with the `nova_session` cookie; without a valid one the socket is accepted and closed with code **4401**. Server sends `{type:"hello"}` first, `{type:"ping"}` every 25 s (`NOVA_WS_PING_SECONDS`), `{type:"data_job.updated", data: DataJob}` whenever any data job is created or changed (at most one per job per 250 ms; always the latest state), and `{type:"data_job.deleted", data:{id}}` when one is deleted. The session is re-checked every 60 s (`NOVA_WS_SESSION_CHECK_SECONDS`); a signed-out or expired session is closed with 4401. Client messages are ignored (`{type:"pong"}` expected). | cookie | `RealtimeMessage` stream |
+| `GET /ws` (WebSocket) | Updates for signed-in screens (D57, D74). Uses the `nova_session` cookie; an invalid session is accepted then closed with **4401**. Sends `hello`, `ping` every 25 s (`NOVA_WS_PING_SECONDS`), `data_job.updated` (latest full job, at most one per job per 250 ms), `data_job.deleted {data:{id}}`, and subscribed `live.tick` messages (see Live reads below). Client answers `pong` and can replace its selection with `live.subscribe`. Session re-check every 60 s (`NOVA_WS_SESSION_CHECK_SECONDS`); revoked/expired sessions close with 4401, and live selections are removed when access is no longer allowed. | cookie | `RealtimeMessage` stream |
 
 **Agent gateway rules (D67, NOVA-131):** `User.role` is `super_admin` or `agent`. Disabled agents
 cannot sign in or use existing HTTP/WebSocket sessions. `/me`, `/audit`, sign-out and `/ws` accept both roles.
@@ -190,6 +191,28 @@ and newly added memberships from successfully fetched index files, filtered to s
 in any timeframe. Stocks absent from Kite are excluded. This is a persisted snapshot of that sync; it can be
 empty, and later downloads do not rewrite it. List, detail, and `data_job.updated` WebSocket responses include it.
 No new endpoint or audit action. Relay checks current coverage to remove stocks that now have history.
+
+### Live reads (NOVA-151; screens follow in NOVA-152)
+
+| Endpoint | Does | Input | Output |
+|---|---|---|---|
+| `GET /live/snapshot` | Latest recorded price/time for each selected NSE stock, including an older archived tick if there is no newer tick. `changePercent` compares with the last stored daily close before the tick's IST day; null when unavailable. `secondsWithTick` counts today's distinct market-session receive seconds, `secondsExpected` counts elapsed session seconds including the current second, capped at 22,500. Before open and on weekends it is zero. Stocks without ticks have null `price`, `changePercent`, `at`. | Required comma-separated `symbols`, 1–500 unique stock symbols (same safe symbol syntax as `LiveSubscribe`). | `LiveSnapshotItem[]` in requested order; 400 invalid/duplicate/too many symbols, 422 missing/empty query, 404 unknown NSE stock |
+| `GET /live/days` | Newest-first recorded IST dates across the recorded stock list. Includes a zero-tick day for the requested stock when other stocks were recorded. Reads database ticks and archived Parquet. `tickCount` counts ticks; `candleCount` counts occupied 1-second buckets, computed on read. `missingSeconds` is a recorder fault only when another recorded stock has a tick that second; shared silence is `noTradeSeconds`. These three second counts sum to `secondsExpected`. Past weekday sessions cover 09:15–15:30 IST; today stops at the current second. | Required `symbol` (NSE equity). | `LiveDaySummary[]`; empty if nothing was recorded, 400 invalid symbol, 422 missing/empty query, 404 unknown NSE stock |
+
+Both reads are authenticated through Core and have no audit writes. The `/live` prefix remains denied to agents
+under the existing deny-by-default rule; agents cannot subscribe to live ticks on the socket either.
+All buckets use `received_at`, not `exchange_ts`. After-hours ticks can contribute to `tickCount` and the latest
+price, but never to session candles/gaps. `sizeBytes` is the sum of PostgreSQL tuple sizes (excluding index/page
+overhead) or the actual compressed Parquet file size. If an archive file exists while its source rows still exist,
+database rows take precedence for that stock/day, so counts are not doubled.
+
+WebSocket clients replace their live selection with `{type:"live.subscribe", symbols:["INFY","TCS"]}`;
+at most 500 unique symbols, `[]` unsubscribes. Malformed requests leave the previous selection intact.
+Unsubscribed sockets get no ticks. Server messages are `{type:"live.tick", data:LiveTick}` with `price` in paise,
+`changePercent` (null without a stored previous close), UTC `at`, and `ticksThisSecond` for the latest receive-second
+bucket. Core coalesces to at most one message per stock per second. The recorder publishes each committed tick
+to Redis `nova:ticks`; Redis outages leave stored ticks intact and Core retries the listener. Pub/sub has no replay:
+services restore selections on reconnect, and snapshot/day reads provide current state. No Kite calls in these reads.
 
 ---
 

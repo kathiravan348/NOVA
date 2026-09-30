@@ -1,0 +1,162 @@
+[
+  {
+    "symbol": "RELIANCE",
+    "day": "2026-09-30",
+    "tickCount": 44700,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 4291200
+  },
+  {
+    "symbol": "TCS",
+    "day": "2026-09-30",
+    "tickCount": 29600,
+    "candleCount": 14800,
+    "secondsExpected": 15301,
+    "missingSeconds": 100,
+    "noTradeSeconds": 401,
+    "sizeBytes": 2841600
+  },
+  {
+    "symbol": "INFY",
+    "day": "2026-09-30",
+    "tickCount": 59600,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 5721600
+  },
+  {
+    "symbol": "HDFCBANK",
+    "day": "2026-09-30",
+    "tickCount": 29800,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 2860800
+  },
+  {
+    "symbol": "ICICIBANK",
+    "day": "2026-09-30",
+    "tickCount": 14900,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 1430400
+  },
+  {
+    "symbol": "SBIN",
+    "day": "2026-09-30",
+    "tickCount": 44700,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 4291200
+  },
+  {
+    "symbol": "ITC",
+    "day": "2026-09-30",
+    "tickCount": 29800,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 2860800
+  },
+  {
+    "symbol": "BHARTIARTL",
+    "day": "2026-09-30",
+    "tickCount": 29800,
+    "candleCount": 14900,
+    "secondsExpected": 15301,
+    "missingSeconds": 0,
+    "noTradeSeconds": 401,
+    "sizeBytes": 2860800
+  },
+  {
+    "symbol": "RELIANCE",
+    "day": "2026-09-29",
+    "tickCount": 67200,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 1210000
+  },
+  {
+    "symbol": "TCS",
+    "day": "2026-09-29",
+    "tickCount": 44000,
+    "candleCount": 22000,
+    "secondsExpected": 22500,
+    "missingSeconds": 400,
+    "noTradeSeconds": 100,
+    "sizeBytes": 792000
+  },
+  {
+    "symbol": "INFY",
+    "day": "2026-09-29",
+    "tickCount": 89600,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 1610000
+  },
+  {
+    "symbol": "HDFCBANK",
+    "day": "2026-09-29",
+    "tickCount": 44800,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 806400
+  },
+  {
+    "symbol": "ICICIBANK",
+    "day": "2026-09-29",
+    "tickCount": 22400,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 403200
+  },
+  {
+    "symbol": "SBIN",
+    "day": "2026-09-29",
+    "tickCount": 67200,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 1210000
+  },
+  {
+    "symbol": "ITC",
+    "day": "2026-09-29",
+    "tickCount": 44800,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 806400
+  },
+  {
+    "symbol": "BHARTIARTL",
+    "day": "2026-09-29",
+    "tickCount": 44800,
+    "candleCount": 22400,
+    "secondsExpected": 22500,
+    "missingSeconds": 0,
+    "noTradeSeconds": 100,
+    "sizeBytes": 806400
+  }
+]

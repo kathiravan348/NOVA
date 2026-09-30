@@ -12,6 +12,9 @@
 
 | Contract | Endpoint (Stage B) | Mock file | Used by |
 |---|---|---|---|
+| LiveTick / LiveSubscribe (D74) | `/api/v1/ws`: send `{type:"live.subscribe", symbols}` (unique NSE equity symbols, max 500; `[]` clears the selection); receive `{type:"live.tick", data:{symbol, price, changePercent, at, ticksThisSecond}}`, at most one per stock per second. Prices are integer paise; change is null without a stored previous daily close. Pydantic mirrors in `live.py`; envelope is part of `RealtimeMessage`. | `data/liveTicks.json` | Core, broker, services |
+| LiveSnapshotItem (D74) | `GET /api/v1/live/snapshot?symbols=INFY,TCS` → `LiveSnapshotItem[]` in requested order: nullable price/change/time, `secondsWithTick`, `secondsExpected` today. No ticks means null price/time. | `data/liveSnapshot.json` | Atlas, services |
+| LiveDaySummary (D74) | `GET /api/v1/live/days?symbol=INFY` → newest-first `LiveDaySummary[]`: `day`, `tickCount`, `candleCount`, `secondsExpected`, `missingSeconds` (other-stock activity), `noTradeSeconds` (shared silence), `sizeBytes`. Received-time buckets; computed on read. Both read contracts have Pydantic mirrors. | `data/liveDays.json` | Atlas, services |
 | User | `GET /api/v1/me`; response of `POST /api/v1/auth/login` | `data/user.json` | Core, Orbit, Relay |
 | UserRole (D67) | `super_admin` or `agent`; session hints preserve the sign-in role (legacy hints default to `super_admin`) | `data/user.json`; agent mock sign-in | Core, Orbit, Relay |
 | ApprovalRequest / ApprovalStatus (D67; contracts + mocks only until NOVA-132) | `GET /api/v1/approvals?status=&limit=&cursor=` → `Page<ApprovalRequest>`; `POST /api/v1/approvals/{id}/approve\|reject` → `ApprovalRequest`; statuses `pending`, `done`, `failed`, `rejected`, `expired` | `src/data.ts` | Core, Relay |
@@ -51,7 +54,7 @@
 | DataJobDeleteResult | `DELETE /api/v1/data-jobs/{id}?candles=` → `{id, candlesDeleted}` (NOVA-095) | — | Relay |
 | DownloadSettings | Pace during market hours (`slow`/`full`, D57). `GET`/`PATCH /api/v1/data-jobs/settings` | — | Relay |
 | UniverseSector | `GET /api/v1/market-data/universe/sectors` → `UniverseSector[]` (D57 bulk pick) | — | Relay |
-| RealtimeMessage | WebSocket `/api/v1/ws`: `hello` · `ping` · `data_job.updated {data: DataJob}` · `data_job.deleted {data: {id}}` (D57) | — (no mock socket) | Relay (NOVA-091) |
+| RealtimeMessage | WebSocket `/api/v1/ws`: `hello` · `ping` · `data_job.updated {data: DataJob}` · `data_job.deleted {data: {id}}` · `live.tick {data: LiveTick}` (D57, D74) | — (no mock socket) | services, Relay |
 | AuditEntry | `GET /api/v1/audit?limit=&cursor=` → `Page<AuditEntry>` | `data/auditEntries.json` | Relay |
 | Instrument | `GET /api/v1/market-data/instruments` | `data/instruments.json` | Orbit (symbol, sector, indices, lastClose, 52w range, volume, lotSize, data range, coverage per timeframe — NOVA-097) |
 | UniverseEntry | `GET /api/v1/market-data/universe` → `UniverseEntry[]`; `POST` → 201, `PUT /{symbol}` → 200, `DELETE /{symbol}` → 204 (400 duplicate, symbol change or used by a waiting job; 404) | — | Relay |

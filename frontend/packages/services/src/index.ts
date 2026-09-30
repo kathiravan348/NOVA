@@ -17,3 +17,5 @@ export * from "./realtime";
 export * from "./api/marketData";
 export * from "./queries/marketData";
 export * from "./clock";
+export * from "./api/live";
+export * from "./queries/live";

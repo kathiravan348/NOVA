@@ -40,13 +40,19 @@ def create_app(
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         listener = asyncio.create_task(hub.listen_forever())
+        live_listener = asyncio.create_task(
+            hub.live.listen_forever(settings.redis_url.get_secret_value())
+        )
         # Serve after the first LISTEN attempt; a down database only delays live updates.
         with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(hub.ready.wait(), timeout=5)
         yield
         listener.cancel()
+        live_listener.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await listener
+        with contextlib.suppress(asyncio.CancelledError):
+            await live_listener
         await http.aclose()
         engine.dispose()
 

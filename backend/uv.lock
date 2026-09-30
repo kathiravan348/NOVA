@@ -569,6 +569,7 @@ dependencies = [
     { name = "nova-common" },
     { name = "nova-contracts" },
     { name = "nova-db" },
+    { name = "redis" },
     { name = "uvicorn" },
     { name = "websockets" },
 ]
@@ -580,6 +581,7 @@ requires-dist = [
     { name = "nova-common", editable = "libs/nova_common" },
     { name = "nova-contracts", editable = "libs/nova_contracts" },
     { name = "nova-db", editable = "libs/nova_db" },
+    { name = "redis", specifier = "==8.1.0" },
     { name = "uvicorn", specifier = "==0.53.0" },
     { name = "websockets", specifier = "==17.1" },
 ]
