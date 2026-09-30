@@ -1,6 +1,6 @@
 # NOVA-149 — Stored data: Sync to today
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-149 · **Depends on:** NOVA-145
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-149 · **Depends on:** NOVA-145
 
 ## Goal
 One **Sync to today** button on Stored data brings history up to date: for each stock it downloads from the last
