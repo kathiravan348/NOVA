@@ -106,7 +106,19 @@ export async function prepareSync(
       plans.push(...batches.flat());
     }
   }
-  return plans;
+  return mergeSameWindow(plans);
+}
+
+/** One plan per timeframe and date window: stocks that need the same days are reviewed together. */
+function mergeSameWindow(plans: DataJobPlanRequest[]): DataJobPlanRequest[] {
+  const merged = new Map<string, DataJobPlanRequest>();
+  for (const plan of plans) {
+    const key = `${plan.timeframe}|${plan.from}|${plan.to}`;
+    const found = merged.get(key);
+    if (found) found.symbols = [...new Set([...found.symbols, ...plan.symbols])];
+    else merged.set(key, { ...plan, symbols: [...plan.symbols] });
+  }
+  return [...merged.values()];
 }
 
 /** Calendar date windows, not an estimate of trading sessions or broker requests. */

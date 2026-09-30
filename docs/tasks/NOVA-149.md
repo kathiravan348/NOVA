@@ -1,6 +1,6 @@
 # NOVA-149 — Stored data: Sync to today
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-149 · **Depends on:** NOVA-145
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-149 · **Depends on:** NOVA-145
 
 ## Goal
 One **Sync to today** button on Stored data brings history up to date: for each stock it downloads from the last
@@ -56,4 +56,12 @@ Implemented by ChatGPT on `task/NOVA-149`, rebased onto merged NOVA-147/148.
 - No new dependencies; no real broker calls. No open questions. Independent lead review remains.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** `prepareSync` made one plan per stock per gap (hundreds of manual plan reviews on All stocks); stocks with the same timeframe and date window now share one plan. Test added.
+**Change requests (if sent back):** none.
+**Checked:** unavailable dates are excluded and paged; nothing starts before Start; single-timeframe New download unchanged (its tests kept); agent Back keeps behaviour; `pnpm review:check` run before merge.
+**Watch:** Stored data's own search box was replaced by an external search + **Show group** select (needed for the This group scope); behaviour equivalent.
+**Guides checked:** USER-GUIDE matches the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

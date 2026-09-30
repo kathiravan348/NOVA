@@ -105,6 +105,23 @@ describe("Sync to today", () => {
     ]);
   });
 
+  it("puts stocks with the same date window in one plan", async () => {
+    const plans = await prepareSync(
+      [
+        {
+          timeframe: "1d",
+          rows: [
+            { ...row, lastDay: "2026-09-29" },
+            { ...row, symbol: "TCS", lastDay: "2026-09-29" },
+          ],
+        },
+      ],
+      "2026-09-30",
+    );
+    expect(plans).toHaveLength(1);
+    expect(plans[0]!.symbols).toEqual(["INFY", "TCS"]);
+  });
+
   it("reads every unavailable page before excluding dates from catch-up windows", async () => {
     const offsets: (string | null)[] = [];
     server.use(
