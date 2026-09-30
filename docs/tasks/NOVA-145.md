@@ -1,6 +1,6 @@
 # NOVA-145 — Stored data: Non-index stocks group
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-145 · **Depends on:** —
+**Status:** done · **Owner:** ChatGPT · **Branch:** task/NOVA-145 · **Depends on:** —
 
 ## Goal
 Grouped by **Index**, Stored data also shows stocks that belong to no index, under **Non-index stocks**, so every
@@ -51,4 +51,11 @@ _(implementer writes here if blocked)_
 **Known gaps:** none; independent review pending.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none.
+**Change requests:** none.
+**Guides checked:** match the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks:** none.
+**Commands run:** stored-data tests (10 passed); full pnpm review:check passed on main after merge.
