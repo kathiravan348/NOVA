@@ -23,6 +23,7 @@ export { ThemeToggle, type ThemeToggleProps } from "./components/ThemeToggle/The
 export { DemoBanner, type DemoBannerProps } from "./components/DemoBanner/DemoBanner";
 export { EmptyState, type EmptyStateProps } from "./components/EmptyState/EmptyState";
 export { LoadMore, type LoadMoreProps } from "./components/LoadMore/LoadMore";
+export { Pager, type PagerProps } from "./components/Pager/Pager";
 export { Modal, type ModalProps } from "./components/Modal/Modal";
 export { Tabs, type TabsProps, type TabItem } from "./components/Tabs/Tabs";
 export { TextBlock, type TextBlockProps } from "./components/TextBlock/TextBlock";

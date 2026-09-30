@@ -79,7 +79,7 @@ describe("DataTable", () => {
       />,
     );
 
-    expect(screen.getByText("Showing 1–10 of 25")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 1–10 of 25 entries");
 
     const nextButton = screen.getByRole("button", { name: "Next page" });
     const prevButton = screen.getByRole("button", { name: "Previous page" });
@@ -89,12 +89,36 @@ describe("DataTable", () => {
 
     fireEvent.click(nextButton);
 
-    expect(screen.getByText("Showing 11–20 of 25")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 11–20 of 25 entries");
     expect(prevButton).not.toBeDisabled();
     expect(screen.getAllByText(sampleFiles[10]!.name)[0]).toBeInTheDocument();
 
     fireEvent.click(prevButton);
-    expect(screen.getByText("Showing 1–10 of 25")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 1–10 of 25 entries");
+    fireEvent.click(nextButton);
+    fireEvent.change(screen.getByRole("combobox", { name: "Rows per page" }), {
+      target: { value: "25" },
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 1–25 of 25 entries");
+    expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
+    expect(screen.getAllByText(sampleFiles[24]!.name)[0]).toBeInTheDocument();
+    expect(nextButton).toBeDisabled();
+    expect(screen.getByRole("option", { name: "10" })).toBeInTheDocument();
+  });
+
+  it("shows the Pager for one page and all rows without controls when pageSize is unset", () => {
+    const { rerender } = render(
+      <DataTable
+        caption="Files"
+        columns={fileColumns}
+        data={sampleFiles.slice(0, 4)}
+        pageSize={10}
+      />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 1–4 of 4 entries");
+    rerender(<DataTable caption="Files" columns={fileColumns} data={sampleFiles} />);
+    expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
+    expect(screen.getAllByText(sampleFiles[24]!.name)[0]).toBeInTheDocument();
   });
 
   it("renders loading, error, and empty states while keeping headers visible", () => {

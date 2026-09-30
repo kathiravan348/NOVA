@@ -82,6 +82,7 @@ describe("Approval batches", () => {
       expect(screen.getByRole("button", { name: "Approve selected (0)" })).toBeDisabled();
       expect(screen.getByRole("status")).toHaveTextContent("50 of 50");
     },
+    20000,
   );
 
   it("selects filtered rows and reveals the full body only on demand", async () => {

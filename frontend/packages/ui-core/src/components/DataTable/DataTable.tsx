@@ -68,7 +68,7 @@ export function DataTable<TData, TValue = unknown>({
   data,
   caption,
   getRowId,
-  pageSize = 10,
+  pageSize,
   initialSort,
   loading = false,
   error,
@@ -83,7 +83,7 @@ export function DataTable<TData, TValue = unknown>({
 }: DataTableProps<TData, TValue>): React.ReactElement {
   const open = useOpenGroups(groups?.defaultOpen);
   const [sorting, setSorting] = React.useState<SortingState>(initialSort ?? []);
-  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: pageSize ?? 10 });
   const [query, setQuery] = React.useState("");
   const selecting = selectedIds !== undefined && onSelectedIdsChange !== undefined;
 
@@ -113,19 +113,16 @@ export function DataTable<TData, TValue = unknown>({
     state: {
       sorting,
       globalFilter: query,
-      pagination: { pageIndex, pageSize },
+      pagination,
     },
     onSortingChange: (updater) => {
       setSorting(updater);
-      setPageIndex(0);
+      setPagination((current) => ({ ...current, pageIndex: 0 }));
     },
-    onPaginationChange: (updater) => {
-      const next = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
-      setPageIndex(next.pageIndex);
-    },
+    onPaginationChange: setPagination,
     onGlobalFilterChange: (value: string) => {
       setQuery(value);
-      setPageIndex(0);
+      setPagination((current) => ({ ...current, pageIndex: 0 }));
     },
     getColumnCanGlobalFilter: () => true,
     globalFilterFn: (row, _columnId, value: string) =>
@@ -135,13 +132,17 @@ export function DataTable<TData, TValue = unknown>({
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: pageSize === undefined,
     getRowId,
     autoResetPageIndex: false,
   });
 
   React.useEffect(() => {
-    setPageIndex(0);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
   }, [data, pageSize]);
+  React.useEffect(() => {
+    setPagination((current) => ({ ...current, pageSize: pageSize ?? 10 }));
+  }, [pageSize]);
 
   const noMatch =
     query.trim() !== "" && data.length > 0 ? `No rows match "${query.trim()}"` : undefined;
@@ -240,7 +241,9 @@ export function DataTable<TData, TValue = unknown>({
         </div>
 
         {/* Pagination: not while grouped (every group shows all its rows) */}
-        {!loading && !error && !groups && <DataTablePagination table={table} />}
+        {!loading && !error && !groups && pageSize !== undefined && (
+          <DataTablePagination table={table} pageSizes={[pageSize, 25, 50, 100, 200]} />
+        )}
       </div>
     </SelectionContext.Provider>
   );
