@@ -1,6 +1,6 @@
 # NOVA-153 — Relay Live: Config page; recorder card leaves Data jobs
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-153 · **Depends on:** NOVA-152
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-153 · **Depends on:** NOVA-152
 
 ## Goal
 **Live → Config** holds the recorder switch and the list of stocks to record. The recorder card and its stock
