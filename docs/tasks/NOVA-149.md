@@ -31,9 +31,9 @@ Modify:
    tests and add new ones. No backend or download-execution change.
 
 ## Acceptance checks
-- [ ] Mock: button shows last stored day and missing count; Review plan lists the right stocks and ranges.
-- [ ] Up-to-date state disables it; unavailable days are not requested.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Mock: button shows last stored day and missing count; Review plan lists the right stocks and ranges.
+- [x] Up-to-date state disables it; unavailable days are not requested.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Scheduled automatic sync; the instrument-sync warning (NOVA-150); new timeframes.
@@ -42,7 +42,18 @@ Modify:
 Answered by the Owner (2026-09-30): yes, `NewDownloadPage.tsx` and its tests may change, under Build 5. Rebase on `main` first (NOVA-147, 148 merged), then continue.
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+Implemented by ChatGPT on `task/NOVA-149`, rebased onto merged NOVA-147/148.
+- Added Sync to today header, two-timeframe confirmation, Show group/search scope and Up to date state.
+- Prepared per-stock missing/tail ranges; paged unavailable dates are split out before planning.
+- New download reviews one draft at a time; each Start is manual; empty plans can be skipped.
+- Existing single-download flow and agent Back behavior preserved; no backend/execution changes.
+- Tests cover scoped/all stocks, missing ranges, no history, unavailable paging, failures and batch navigation.
+- `pnpm review:check` passed: 122 files / 1,023 tests; lint, types, format, Orbit/Relay/Storybook builds.
+- Mock browser QA: header, confirm, review at 360px and 1440px, dark/light; no horizontal overflow.
+- UI uses existing shared primitives and stories; no new shared component or public contract.
+- Guide: USER-GUIDE Stored data updated; existing directory/component/contract maps remain applicable.
+- Confirmation counts calendar date days across windows; the review shows actual requests, size and time.
+- No new dependencies; no real broker calls. No open questions. Independent lead review remains.
 
 ## Review
 _(reviewer — see `docs/templates/REVIEW.md`)_

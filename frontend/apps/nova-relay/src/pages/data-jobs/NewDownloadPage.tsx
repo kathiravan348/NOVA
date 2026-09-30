@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -6,6 +6,7 @@ import {
   SegmentSchema,
   type DataJob,
   type DataJobPlan,
+  type DataJobPlanRequest,
   type DownloadMode,
   type Segment,
   type Timeframe,
@@ -26,6 +27,7 @@ import { segmentLabel, timeframeLabel } from "../../lib/labels";
 import { BulkStockPicker } from "./BulkStockPicker";
 import { IndexPicker } from "./IndexPicker";
 import { PlanReview } from "./PlanReview";
+import { downloadPrefill, syncBatch } from "../stored-data/syncToToday";
 
 const columns: ColumnDef<UniverseEntry, unknown>[] = [
   { id: "symbol", header: "Symbol", accessorKey: "symbol", meta: { primary: true } },
@@ -44,35 +46,21 @@ type Draft = DataJob & { plan: DataJobPlan };
 const DOWNLOAD_TIMEFRAMES: Timeframe[] = ["1m", "1d"];
 const message = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 
-/**
- * Starting values sent by Stored data's **Download missing** (D63); anything invalid is ignored.
- * Index names contain spaces (NIFTY 50); stock symbols never do.
- */
-function usePrefill() {
-  const { state } = useLocation() as { state: unknown };
-  const parsed = DataJobPlanRequestSchema.safeParse(state);
-  if (!parsed.success || !DOWNLOAD_TIMEFRAMES.includes(parsed.data.timeframe)) return null;
-  const { symbols, timeframe, from, to, mode } = parsed.data;
-  return {
-    stocks: symbols.filter((s) => !s.includes(" ")),
-    indices: symbols.filter((s) => s.includes(" ")),
-    timeframe,
-    from,
-    to,
-    mode,
-  };
-}
-
 /** Plan a historical download, check what it costs, then **Start** it (D54, D57). */
 export function NewDownloadPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const universe = useUniverse();
   const plan = usePlanDataJob();
+  const createPlan = plan.mutate;
   const change = useChangeDataJob();
   const discard = useDeleteDataJob();
   const agent = useSession()?.role === "agent";
-  const prefill = usePrefill();
+  const { state } = useLocation() as { state: unknown };
+  const prefill = downloadPrefill(state);
+  const [batch] = useState(() => syncBatch(state));
+  const [position, setPosition] = useState(0);
+  const firstPlan = useRef(false);
   const [symbols, setSymbols] = useState<string[]>(prefill?.stocks ?? []);
   const [indices, setIndices] = useState<string[]>(prefill?.indices ?? []);
   const [timeframe, setTimeframe] = useState<Timeframe>(prefill?.timeframe ?? "1d");
@@ -92,10 +80,29 @@ export function NewDownloadPage() {
     touched ? (field === "to" ? (futureTo ?? issue("to")) : issue(field)) : undefined;
   const busy = plan.isPending || change.isPending || discard.isPending;
 
-  const makePlan = async (mode: DownloadMode) => {
+  useEffect(() => {
+    if (firstPlan.current || !batch[0]) return;
+    firstPlan.current = true;
+    if (batch.some((p) => p.to > todayIst())) {
+      setFailed("To can't be in the future");
+      return;
+    }
+    createPlan(batch[0], {
+      onSuccess: (job) => {
+        if (job.plan) setDraft({ ...job, plan: job.plan });
+      },
+      onError: (err) => setFailed(message(err, "Could not plan the download")),
+    });
+  }, [batch, createPlan]);
+
+  const makePlan = async (
+    mode: DownloadMode,
+    active: DataJobPlanRequest = batch[position] ?? request,
+  ) => {
     setFailed(null);
     try {
-      const job = await plan.mutateAsync({ ...request, mode });
+      if (active.to > todayIst()) throw new Error("To can't be in the future");
+      const job = await plan.mutateAsync({ ...active, mode });
       if (job.plan) setDraft({ ...job, plan: job.plan });
     } catch (err) {
       setFailed(message(err, "Could not plan the download"));
@@ -115,6 +122,14 @@ export function NewDownloadPage() {
     void makePlan(prefill?.mode ?? "skip_existing");
   };
 
+  const nextPlan = async () => {
+    setDraft(null);
+    setPosition(position + 1);
+    const next = batch[position + 1];
+    if (next) await makePlan(next.mode ?? "skip_existing", next);
+    else void navigate("/data-jobs");
+  };
+
   const start = async () => {
     if (!draft) return;
     setFailed(null);
@@ -125,10 +140,11 @@ export function NewDownloadPage() {
         title: demo ? "Download started (demo)" : "Download started",
         description: demo
           ? "Mock mode downloads nothing."
-          : `${timeframeLabel[timeframe]} candles for ${draft.symbols.length} stock(s) or index(es).`,
+          : `${timeframeLabel[draft.timeframe ?? timeframe]} candles for ${draft.symbols.length} stock(s) or index(es).`,
         tone: "success",
       });
-      void navigate(demo ? "/data-jobs" : `/data-jobs/${draft.id}`);
+      if (batch.length) await nextPlan();
+      else void navigate(demo ? "/data-jobs" : `/data-jobs/${draft.id}`);
     } catch (err) {
       setFailed(message(err, "Could not start the download"));
     }
@@ -137,13 +153,27 @@ export function NewDownloadPage() {
   if (draft) {
     return (
       <div className="flex flex-col gap-4">
+        {batch.length > 0 && (
+          <p role="status">
+            Plan {position + 1} of {batch.length} · {draft.symbols.join(", ")}
+          </p>
+        )}
         <PlanReview
           job={draft}
           busy={busy}
           onModeChange={(mode) => void dropDraft().then(() => makePlan(mode))}
           onStart={() => void start()}
-          onBack={() => void dropDraft()}
+          onBack={() =>
+            void dropDraft().then(() => {
+              if (batch.length) void navigate("/stored-data");
+            })
+          }
         />
+        {batch.length > 0 && draft.plan.requests === 0 && (
+          <Button disabled={busy} onClick={() => void dropDraft().then(nextPlan)}>
+            Next plan
+          </Button>
+        )}
         {failed && (
           <p role="alert" className="text-body-sm text-loss">
             {failed}
@@ -152,6 +182,23 @@ export function NewDownloadPage() {
       </div>
     );
   }
+
+  if (batch.length)
+    return (
+      <Card title={`Plan ${position + 1} of ${batch.length}`}>
+        <p role={failed ? "alert" : "status"}>{failed ?? "Preparing the download plan…"}</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {failed && (
+            <Button disabled={busy} onClick={() => void makePlan("skip_existing")}>
+              Retry plan
+            </Button>
+          )}
+          <Button variant="secondary" disabled={busy} onClick={() => void navigate("/stored-data")}>
+            Back
+          </Button>
+        </div>
+      </Card>
+    );
 
   return (
     <form

@@ -1,7 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { setupServer } from "msw/node";
-import { handlers } from "@nova/mocks";
+import { handlers, mockDataJobs } from "@nova/mocks";
+import { http, HttpResponse } from "msw";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -145,6 +146,83 @@ describe("Stored data (D63)", () => {
 });
 
 describe("New download prefill (D63)", () => {
+  it("skips empty batch plans and retries a failed start without advancing", async () => {
+    let planned = 0;
+    let started = 0;
+    const job = mockDataJobs[0]!;
+    server.use(
+      http.post("*/api/v1/data-jobs/plan", async ({ request }) => {
+        const body = (await request.json()) as {
+          symbols: string[];
+          timeframe: "1m" | "1d";
+          from: string;
+          to: string;
+        };
+        planned += 1;
+        return HttpResponse.json({
+          ...job,
+          ...body,
+          id: `draft_${planned}`,
+          status: "draft",
+          mode: "skip_existing",
+          startedAt: null,
+          finishedAt: null,
+          expiresAt: "2026-10-01T06:00:00Z",
+          plan: {
+            steps: 1,
+            skippedSteps: planned === 1 ? 1 : 0,
+            requests: planned === 1 ? 0 : 1,
+            estimatedRows: 1,
+            estimatedBytes: 80,
+            estimatedSeconds: 1,
+            estimatedStartAt: "2026-09-30T06:00:00Z",
+            jobsAhead: 0,
+            warnings: [],
+            perSymbol: [
+              {
+                symbol: "INFY",
+                existingFrom: null,
+                existingTo: null,
+                steps: 1,
+                skippedSteps: planned === 1 ? 1 : 0,
+              },
+            ],
+          },
+        });
+      }),
+      http.post("*/api/v1/data-jobs/:id/start", () => {
+        started += 1;
+        return started === 1
+          ? HttpResponse.json(
+              { error: { code: "invalid_request", message: "Try Start again" } },
+              { status: 400 },
+            )
+          : HttpResponse.json({ ...job, status: "queued", startedAt: null, finishedAt: null });
+      }),
+    );
+    const { router } = renderApp({
+      pathname: "/data-jobs/new",
+      state: {
+        syncPlans: ["1d", "1m"].map((timeframe) => ({
+          symbols: ["INFY"],
+          timeframe,
+          from: "2026-09-25",
+          to: "2026-09-28",
+        })),
+      },
+    });
+    await screen.findByText("Plan 1 of 2 · INFY");
+    expect(screen.queryByRole("button", { name: "Start" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next plan" }));
+    await screen.findByText("Plan 2 of 2 · INFY");
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(await screen.findByText("Try Start again")).toBeInTheDocument();
+    expect(screen.getByText("Plan 2 of 2 · INFY")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/data-jobs"));
+    expect(planned).toBe(2);
+    expect(started).toBe(2);
+  });
   it("ignores state that is not a valid download", async () => {
     renderApp({ pathname: "/data-jobs/new", state: { symbols: [], timeframe: "5m" } });
     expect(await screen.findByText("Stocks (0 chosen)")).toBeInTheDocument();
