@@ -1,6 +1,6 @@
 # NOVA-151 — Live feed: `live.tick` message + snapshot and per-day summary endpoints
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-151 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-151 · **Depends on:** —
 
 ## Goal
 The backend and contracts behind the Live module (D74 (1)–(2)): a `live.tick` WebSocket message, a latest-price
