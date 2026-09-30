@@ -1,6 +1,6 @@
 # NOVA-152 — Relay Live: Monitor cards + Recorded data pages
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-152 · **Depends on:** NOVA-151
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-152 · **Depends on:** NOVA-151
 
 ## Goal
 A new **Live** sidebar group in Relay with **Monitor** (a card per stock, updating each second) and **Recorded data**
@@ -30,10 +30,10 @@ Modify:
 5. Sidebar shows the group with the two items; Config item is added by NOVA-153.
 
 ## Acceptance checks
-- [ ] Mock mode: cards update; stale card turns amber; unsubscribing on leave verified in a test.
-- [ ] Stock page lists day cards with the two kinds of missing seconds.
-- [ ] 360px: one card per row; no horizontal scroll. Dark and light both fine.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Mock mode: cards update; stale card turns amber; unsubscribing on leave verified in a test.
+- [x] Stock page lists day cards with the two kinds of missing seconds.
+- [x] 360px: one card per row; no horizontal scroll. Dark and light both fine.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Choosing which stocks to record (NOVA-153); charts of ticks; backend.
@@ -42,7 +42,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** **Live** sidebar group (Monitor, Recorded data) in Relay; Monitor cards update from `live.tick`, amber after 10 s without a tick in market hours; stock page with day cards (recorder faults vs no trade).
+**Files changed:** relay `pages/live/*`, `lib/live.ts`, `routes.tsx`, `layout/AppLayout.tsx`; ui-trading `LiveStockCard` (+ story, test); mock live handler; COMPONENTS, STRUCTURE, USER-GUIDE.
+**Commands run:** focused tests; `pnpm review:check` before ready-for-review.
+**Checked:** desktop and 375px in the demo build (no horizontal scroll), dark theme; Storybook story added.
+**New dependencies:** none. **Guides updated:** USER-GUIDE (Step 7b).
+**Deviations from task:** the Recorded data list shows symbol, name and sector only (no days/size per stock: the API has no per-stock list, only `/live/days?symbol=`); Monitor offers "Recorded stocks" and indices (saved lists come with Config, NOVA-153); the recording-off empty state links to Data jobs until NOVA-153 adds Config. The mock snapshot now returns an empty item for any stock in the mock stock list.
+**Known gaps:** none.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed: the other agents are offline; fresh read of the diff, checks re-run).
+**Fixed directly (review: commits):** none needed beyond the build.
+**Change requests (if sent back):** none.
+**Checked:** agent account cannot open or see Live; the card lives in ui-trading with a story and test (apps hold no one-off UI); Monitor subscribes only to the visible page and the snapshot request is capped by page size; no horizontal scroll at 375px; `review:check` passed (1,056 tests).
+**Watch:** stock list on Recorded data has no per-stock recorded totals (no API for it); add a list endpoint if wanted.
+**Guides checked:** USER-GUIDE Step 7b matches; API unchanged.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

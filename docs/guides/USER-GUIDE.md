@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-150). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-152). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -527,6 +527,23 @@ records all of them. Cancelling a running recording job also turns the switch of
 
 **Archive old ticks** moves live prices older than a date (default: 30 days ago) out of the database into
 files, to keep the database small. Nothing is lost. It runs as a data job.
+
+### Step 7b — Live: Monitor and Recorded data
+The **Live** group in the menu has two pages (the Owner account only; the agent account does not see them).
+
+**Monitor** shows one card per stock. Choose **Recorded stocks** (the stocks chosen for recording, or all
+stocks when none are chosen) or an index such as **NIFTY 50**. Each card shows the last price, the change
+against the previous close, the time of the last price (IST), and **Seconds with a tick**: the seconds since
+09:15 in which the stock had at least one price, out of the seconds so far. Prices update about once a second.
+A card turns amber with **No recent tick** when the market is open (weekdays 09:15–15:30) and the last price is
+older than 10 seconds. Long lists use the page controls under the cards.
+
+**Recorded data** lists the stocks; open one to see a card for each recorded day: **Ticks**,
+**1-second candles**, **Missing seconds (recorder)** and **No trade seconds**, and the day's **Size**. A second
+counts as missed by the recorder only when other stocks had prices in that second; if none did, it is a second
+with no trade. The 1-second candles are worked out from the saved prices, not stored separately.
+
+If recording is off, Monitor says so; switch it on under **Data jobs**.
 
 ### Step 8 — Audit log
 A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, broker

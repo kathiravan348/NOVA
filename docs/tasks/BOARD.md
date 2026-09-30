@@ -157,7 +157,7 @@
 | NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | done | Claude | 145 |
 | NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | done | Claude | 149 |
 | NOVA-151 | Live feed: `live.tick` WebSocket message + snapshot and per-day summary endpoints (D74) | done | Claude | — |
-| NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | in-progress | Claude | 151 |
+| NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | done | Claude | 151 |
 | NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | planned | — | 152 |
 
 ## Parallel lanes (tasks that can run at the same time)

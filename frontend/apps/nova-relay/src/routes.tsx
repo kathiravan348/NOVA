@@ -10,6 +10,9 @@ import { DataJobDetailPage } from "./pages/data-jobs/DataJobDetailPage";
 import { DataJobsPage } from "./pages/data-jobs/DataJobsPage";
 import { NewDownloadPage } from "./pages/data-jobs/NewDownloadPage";
 import { InstrumentsPage } from "./pages/instruments/InstrumentsPage";
+import { MonitorPage } from "./pages/live/MonitorPage";
+import { RecordedDataPage } from "./pages/live/RecordedDataPage";
+import { RecordedStockPage } from "./pages/live/RecordedStockPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { StoredDataPage } from "./pages/stored-data/StoredDataPage";
 import { ApprovalsPage } from "./pages/approvals/ApprovalsPage";
@@ -75,6 +78,28 @@ export const routes: RouteObject[] = [
           page("/data-jobs", "Data jobs", <DataJobsPage />),
           page("/data-jobs/new", "New download", <NewDownloadPage />),
           page("/data-jobs/:id", "Data job", <DataJobDetailPage />),
+          page(
+            "/live/monitor",
+            "Live monitor",
+            <BrokerOnly>
+              <MonitorPage />
+            </BrokerOnly>,
+          ),
+          page(
+            "/live/recorded",
+            "Recorded data",
+            <BrokerOnly>
+              <RecordedDataPage />
+            </BrokerOnly>,
+          ),
+          page(
+            "/live/recorded/:symbol",
+            "Recorded data",
+            <BrokerOnly>
+              <RecordedStockPage />
+            </BrokerOnly>,
+          ),
+          { path: "/live", element: <Navigate to="/live/monitor" replace /> },
           page("/audit", "Audit log", <AuditPage />),
           page("/approvals", "Approvals", <ApprovalsPage />),
           { path: "*", element: <Navigate to="/" replace /> },

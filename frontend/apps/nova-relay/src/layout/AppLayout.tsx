@@ -1,8 +1,10 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, Outlet, useLocation, useMatches, useNavigate } from "react-router";
 import {
+  Activity,
   Database,
   HardDrive,
+  Radio,
   Landmark,
   LayoutDashboard,
   ListOrdered,
@@ -16,12 +18,19 @@ import { getDataMode, signOut, useApprovals, useRealtimeStatus, useSession } fro
 
 const product = brand.products.relay;
 
-const navItems: { to: string; label: string; icon: ReactNode }[] = [
+const navItems: { to: string; label: string; icon: ReactNode; group?: string }[] = [
   { to: "/", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" /> },
   { to: "/broker", label: "Broker", icon: <Landmark className="h-4 w-4" /> },
   { to: "/instruments", label: "Instruments", icon: <ListOrdered className="h-4 w-4" /> },
   { to: "/stored-data", label: "Stored data", icon: <HardDrive className="h-4 w-4" /> },
   { to: "/data-jobs", label: "Data jobs", icon: <Database className="h-4 w-4" /> },
+  { to: "/live/monitor", label: "Monitor", icon: <Activity className="h-4 w-4" />, group: "Live" },
+  {
+    to: "/live/recorded",
+    label: "Recorded data",
+    icon: <Radio className="h-4 w-4" />,
+    group: "Live",
+  },
   { to: "/audit", label: "Audit log", icon: <ScrollText className="h-4 w-4" /> },
   { to: "/approvals", label: "Approvals", icon: <ShieldCheck className="h-4 w-4" /> },
 ];
@@ -90,14 +99,19 @@ export function AppLayout() {
       }
       title={<h1 className="text-section-title">{title}</h1>}
       nav={navItems
-        .filter((item) => !agent || item.to !== "/broker")
-        .map((item) => (
-          <NavItem key={item.to} asChild active={isActive(pathname, item.to)} icon={item.icon}>
-            <Link to={item.to}>
-              {item.label}
-              {item.to === "/approvals" && pending.data ? ` (${pending.data.length})` : ""}
-            </Link>
-          </NavItem>
+        .filter((item) => !agent || (item.to !== "/broker" && !item.group))
+        .map((item, i, items) => (
+          <div key={item.to} className="contents">
+            {item.group && items[i - 1]?.group !== item.group && (
+              <p className="px-3 pt-4 pb-1 text-body-sm text-text-muted">{item.group}</p>
+            )}
+            <NavItem asChild active={isActive(pathname, item.to)} icon={item.icon}>
+              <Link to={item.to}>
+                {item.label}
+                {item.to === "/approvals" && pending.data ? ` (${pending.data.length})` : ""}
+              </Link>
+            </NavItem>
+          </div>
         ))}
       actions={
         <>
