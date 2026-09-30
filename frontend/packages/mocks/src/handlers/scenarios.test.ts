@@ -54,6 +54,7 @@ describe("Scenario MSW handlers", () => {
         expect(await res.json(), `empty page for ${endpoint}`).toEqual({
           items: [],
           nextCursor: null,
+          total: 0,
         });
       }
     });

@@ -131,8 +131,14 @@ export const marketDataHandlers = [
     const params = new URL(request.url).searchParams;
     const list = mockCoverageLists.find((l) => l.timeframe === (params.get("timeframe") ?? "1d"));
     if (!list) return badRequest("Timeframe must be 1m or 1d");
+    const pageResponse = paginate(list.rows, request.url);
+    if (pageResponse.status !== 200) return pageResponse;
+    const offset = Number(params.get("offset") ?? 0);
+    const limit = Number(params.get("limit") ?? 50);
     return HttpResponse.json({
       ...list,
+      rows: list.rows.slice(offset, offset + limit),
+      total: list.rows.length,
       from: params.get("from") ?? list.from,
       to: params.get("to") ?? list.to,
     });

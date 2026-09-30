@@ -146,6 +146,10 @@ def test_pages_and_filters(signed_in: TestClient, agent: str, engine: Engine) ->
     ).json()
     assert [r["id"] for r in last["items"]] == ["apr_2"]
     assert last["nextCursor"] is None
+    offset = signed_in.get("/api/v1/approvals?limit=2&status=pending&offset=2").json()
+    assert offset == last
+    assert page["total"] == last["total"] == 3
+    assert signed_in.get("/api/v1/approvals?status=done&offset=0").json()["total"] == 0
     for query in ("status=invalid", "limit=0", "cursor=invalid"):
         assert signed_in.get("/api/v1/approvals?" + query).status_code == 400
 

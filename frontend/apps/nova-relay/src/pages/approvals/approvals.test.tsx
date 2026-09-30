@@ -59,7 +59,7 @@ describe("Approvals", () => {
       http.get("*/api/v1/approvals", ({ request }) => {
         const url = new URL(request.url);
         if (url.searchParams.get("status"))
-          return HttpResponse.json({ items: [mockApprovals[0]], nextCursor: null });
+          return HttpResponse.json({ items: [mockApprovals[0]], nextCursor: null, total: 1 });
         const older = url.searchParams.has("cursor");
         return HttpResponse.json({
           items: older
@@ -75,6 +75,7 @@ describe("Approvals", () => {
               ]
             : [mockApprovals[1]],
           nextCursor: older ? null : "older",
+          total: 3,
         });
       }),
     );

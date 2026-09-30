@@ -80,12 +80,37 @@ export function clearNewListing(symbol: string, init?: RequestOptions): Promise<
   return apiPost(path, undefined, UniverseEntrySchema, init);
 }
 
-const coverageQuery = ({ timeframe, from, to }: CoverageQuery) =>
-  new URLSearchParams({ timeframe, ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString();
+const coverageQuery = ({ timeframe, from, to, offset, limit }: CoverageQuery) =>
+  new URLSearchParams({
+    timeframe,
+    ...(from ? { from } : {}),
+    ...(to ? { to } : {}),
+    ...(offset !== undefined ? { offset: String(offset) } : {}),
+    ...(limit !== undefined ? { limit: String(limit) } : {}),
+  }).toString();
 
 /** Stored days per stock and index for one timeframe in a period (D63). */
-export function getCoverage(query: CoverageQuery, init?: RequestOptions): Promise<CoverageList> {
-  return apiGet(`/market-data/coverage?${coverageQuery(query)}`, CoverageListSchema, init);
+export async function getCoverage(
+  query: CoverageQuery,
+  init?: RequestOptions,
+): Promise<CoverageList> {
+  const list = await apiGet(
+    `/market-data/coverage?${coverageQuery(query)}`,
+    CoverageListSchema,
+    init,
+  );
+  // Existing coverage screens group the whole list locally. Explicit paging gets one page.
+  if (query.offset !== undefined || query.limit !== undefined) return list;
+  while (list.rows.length < list.total) {
+    const next = await apiGet(
+      `/market-data/coverage?${coverageQuery({ ...query, offset: list.rows.length })}`,
+      CoverageListSchema,
+      init,
+    );
+    if (next.rows.length === 0) break;
+    list.rows.push(...next.rows);
+  }
+  return list;
 }
 
 /** One stock's stored range and its missing date ranges (D63). */
@@ -107,6 +132,7 @@ export function getUnavailableDays(
   if (query.status) params.set("status", query.status);
   if (query.symbol) params.set("symbol", query.symbol);
   if (cursor) params.set("cursor", cursor);
+  if (query.cursor) params.set("cursor", query.cursor);
   return apiGet(
     `/market-data/unavailable?${params.toString()}`,
     pageSchema(UnavailableDaySchema),

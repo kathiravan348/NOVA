@@ -1,6 +1,6 @@
 # NOVA-147 — Lists get `total` + `offset`
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-147 · **Depends on:** NOVA-146
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-147 · **Depends on:** NOVA-146
 
 ## Goal
 Every paged list answers "how many in all" and can start at any row, so screens can show page numbers (D74 (5)).
@@ -30,9 +30,9 @@ Modify:
 5. Existing Load more screens keep working (they ignore `total`).
 
 ## Acceptance checks
-- [ ] `?offset=50&limit=50` returns rows 51–100 and the right `total` on each list; cursor paging still passes its tests.
-- [ ] Zod schema and Pydantic model agree (parity tests); mocks validate.
-- [ ] Definition of done in `AGENTS.md` §9 (`pnpm review:check` and `backend-check`).
+- [x] `?offset=50&limit=50` returns rows 51–100 and the right `total` on each list; cursor paging still passes its tests.
+- [x] Zod schema and Pydantic model agree (parity tests); mocks validate.
+- [x] Definition of done in `AGENTS.md` §9 (`pnpm review:check` and `backend-check`).
 
 ## Out of scope
 - Screen changes (NOVA-148); new sort orders; removing cursors.
@@ -41,7 +41,15 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Added filtered totals and offset paging; retained cursor paging and existing screens.
+**Files changed:** backend paging/contracts/list routes/tests; frontend contracts/schema/mocks/services/tests; API.md; CONTRACTS.md.
+**Commands run:** pnpm review:check passed (1,014 tests + builds); docker compose run --rm backend-check passed (1,276 tests).
+**Checked:** UI unchanged; viewport/theme checks not applicable.
+**New dependencies:** none.
+**Maps updated:** CONTRACTS.
+**Guides updated:** API.
+**Deviations from task:** Updated existing realtime/approval Page fixtures for the required total; coverage client collects pages for existing local grouping.
+**Known gaps:** Independent lead review and merge pending._
 
 ## Review
 _(reviewer — see `docs/templates/REVIEW.md`)_

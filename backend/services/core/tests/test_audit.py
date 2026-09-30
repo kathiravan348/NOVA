@@ -59,6 +59,15 @@ def test_default_page_holds_everything(signed_in: TestClient, entries: list[str]
 
     assert len(page["items"]) == 7
     assert page["nextCursor"] is None
+    assert page["total"] == 7
+    offset = signed_in.get(AUDIT, params={"offset": 2, "limit": 2}).json()
+    assert [r["id"] for r in offset["items"]] == entries[1:3]
+    assert offset["total"] == 7 and offset["nextCursor"] is not None
+    assert signed_in.get(AUDIT, params={"offset": 100}).json() == {
+        "items": [],
+        "nextCursor": None,
+        "total": 7,
+    }
 
 
 @pytest.mark.parametrize("params", [{"limit": 0}, {"limit": 201}, {"cursor": "bm9wZQ"}])

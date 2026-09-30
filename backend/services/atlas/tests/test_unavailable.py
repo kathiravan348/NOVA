@@ -220,6 +220,13 @@ def test_endpoint_keyset_pages_do_not_repeat_dates(
     second = client.get(path, params=params | {"cursor": first["nextCursor"]}).json()
     assert first["nextCursor"] and second["nextCursor"] is None
     assert first["items"][0]["id"] != second["items"][0]["id"]
+    offset = client.get(path, params=params | {"offset": "1"}).json()
+    assert offset == second
+    assert first["total"] == second["total"] == 2
+    assert (
+        client.get(path, params=params | {"offset": "0", "cursor": first["nextCursor"]}).status_code
+        == 422
+    )
 
 
 def test_calendar_unions_stock_sessions_with_index_and_observes_sunday(clean: Engine) -> None:

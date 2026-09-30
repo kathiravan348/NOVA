@@ -36,6 +36,7 @@ function mount(data: ApprovalRequest[]) {
       return HttpResponse.json({
         items: status ? rows.filter((row) => row.status === status) : rows,
         nextCursor: null,
+        total: status ? rows.filter((row) => row.status === status).length : rows.length,
       });
     }),
     http.post("*/api/v1/approvals/:id/:action", ({ params }) => {

@@ -84,6 +84,7 @@ describe("Orbit MSW handlers", () => {
     const data = await res.json();
     expect(pageSchema(BacktestRunSchema).parse(data)).toEqual({
       items: listed,
+      total: listed.length,
       nextCursor: null,
     });
   });
@@ -188,7 +189,7 @@ describe("Orbit MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/backtests/run_003/trades");
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(pageSchema(TradeSchema).parse(data)).toEqual({ items: [], nextCursor: null });
+    expect(pageSchema(TradeSchema).parse(data)).toEqual({ items: [], nextCursor: null, total: 0 });
   });
 
   it("GET /api/v1/backtests/:id/trades returns 404 ApiError for unknown run id", async () => {

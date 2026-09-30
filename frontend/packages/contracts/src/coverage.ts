@@ -61,6 +61,7 @@ export const CoverageListSchema = z
     /** Where the trading days came from: NIFTY 50's daily prices, else days most stocks traded. */
     calendar: z.enum(["index", "stocks"]),
     rows: z.array(CoverageRowSchema),
+    total: z.number().int().min(0),
   })
   .refine((l) => l.from <= l.to, { message: "from must be on or before to", path: ["from"] });
 export type CoverageList = z.infer<typeof CoverageListSchema>;
@@ -104,4 +105,6 @@ export interface CoverageQuery {
   timeframe: CoverageTimeframe;
   from?: string;
   to?: string;
+  offset?: number;
+  limit?: number;
 }

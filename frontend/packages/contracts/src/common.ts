@@ -37,15 +37,21 @@ export const CursorSchema = z.string().min(1);
 
 /** One page of a growing list (D32): `nextCursor` is `null` on the last page. */
 export function pageSchema<T extends z.ZodType>(item: T) {
-  return z.strictObject({ items: z.array(item), nextCursor: CursorSchema.nullable() });
+  return z.strictObject({
+    items: z.array(item),
+    nextCursor: CursorSchema.nullable(),
+    total: z.number().int().min(0),
+  });
 }
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;
+  total: number;
 }
 
 /** Query parameters of every paginated list. */
 export interface PageQuery {
   limit?: number;
   cursor?: string;
+  offset?: number;
 }

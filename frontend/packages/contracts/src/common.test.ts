@@ -63,12 +63,14 @@ describe("common schemas", () => {
 
   it("validates pageSchema and PageLimitSchema", () => {
     const page = pageSchema(IdSchema);
-    expect(page.safeParse({ items: ["a"], nextCursor: "b2Zmc2V0OjE" }).success).toBe(true);
-    expect(page.safeParse({ items: [], nextCursor: null }).success).toBe(true);
+    expect(page.safeParse({ items: ["a"], nextCursor: "b2Zmc2V0OjE", total: 2 }).success).toBe(
+      true,
+    );
+    expect(page.safeParse({ items: [], nextCursor: null, total: 0 }).success).toBe(true);
     expect(page.safeParse(["a"]).success).toBe(false);
-    expect(page.safeParse({ items: [""], nextCursor: null }).success).toBe(false);
-    expect(page.safeParse({ items: [], nextCursor: "" }).success).toBe(false);
-    expect(page.safeParse({ items: [], nextCursor: null, total: 0 }).success).toBe(false);
+    expect(page.safeParse({ items: [""], nextCursor: null, total: 0 }).success).toBe(false);
+    expect(page.safeParse({ items: [], nextCursor: "", total: 0 }).success).toBe(false);
+    expect(page.safeParse({ items: [], nextCursor: null, total: -1 }).success).toBe(false);
     expect(PageLimitSchema.safeParse(1).success).toBe(true);
     expect(PageLimitSchema.safeParse(PAGE_LIMIT_MAX).success).toBe(true);
     expect(PageLimitSchema.safeParse(0).success).toBe(false);
