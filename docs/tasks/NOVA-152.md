@@ -1,6 +1,6 @@
 # NOVA-152 — Relay Live: Monitor cards + Recorded data pages
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-152 · **Depends on:** NOVA-151
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-152 · **Depends on:** NOVA-151
 
 ## Goal
 A new **Live** sidebar group in Relay with **Monitor** (a card per stock, updating each second) and **Recorded data**
