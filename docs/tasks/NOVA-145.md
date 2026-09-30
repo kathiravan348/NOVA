@@ -1,6 +1,6 @@
 # NOVA-145 — Stored data: Non-index stocks group
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-145 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-145 · **Depends on:** —
 
 ## Goal
 Grouped by **Index**, Stored data also shows stocks that belong to no index, under **Non-index stocks**, so every
