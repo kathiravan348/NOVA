@@ -1,6 +1,6 @@
 # NOVA-145 — Stored data: Non-index stocks group
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-145 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-145 · **Depends on:** —
 
 ## Goal
 Grouped by **Index**, Stored data also shows stocks that belong to no index, under **Non-index stocks**, so every
@@ -29,9 +29,9 @@ Modify:
 6. USER-GUIDE: one paragraph on the two new groups.
 
 ## Acceptance checks
-- [ ] Group by **Index** shows **Non-index stocks** (last) with its stock count and missing days.
-- [ ] Group by **Sector** shows **Unclassified** last; **None** still lists every stock once.
-- [ ] Definition of done in `AGENTS.md` §9 (`pnpm review:check`).
+- [x] Group by **Index** shows **Non-index stocks** (last) with its stock count and missing days.
+- [x] Group by **Sector** shows **Unclassified** last; **None** still lists every stock once.
+- [x] Definition of done in `AGENTS.md` §9 (`pnpm review:check`).
 
 ## Out of scope
 - Backend or contract changes, changing how the sector is filled (`UNCLASSIFIED`), the Sync button (NOVA-146).
@@ -40,7 +40,15 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Non-index stocks stay visible; index/sector groups have the required order and download action.
+**Files changed:** coverageGroups.tsx, storedData.test.tsx, USER-GUIDE.md, BOARD.md, NOVA-145.md.
+**Commands run:** focused Stored data tests (10 passed); pnpm review:check (format, lint, typecheck, tests, build) passed.
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (local Edge screenshots; no horizontal overflow).
+**New dependencies:** none.
+**Maps updated:** none (no new files, contracts or components).
+**Guides updated:** USER-GUIDE (Stored data).
+**Deviations from task:** no fixture additions needed; existing GREENGRID-SM/NOVATECH cover both groups. StoredDataPage already delegates grouping.
+**Known gaps:** none; independent review pending.
 
 ## Review
 _(reviewer — see `docs/templates/REVIEW.md`)_

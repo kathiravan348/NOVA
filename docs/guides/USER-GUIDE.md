@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-144). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-145). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -440,6 +440,9 @@ A date absent from every saved instrument is unknown; this is not a verified off
 group shows how many stocks are complete, have gaps or have no data. **Only with gaps** hides complete stocks. Click a
 symbol to see its missing date ranges. **Download missing** (on a group or in that window) opens **New download** with
 those stocks, the timeframe and the period filled in; check the plan and press **Start** as usual.
+With **Index**, **Indices** comes first and **Non-index stocks** comes last, listing stocks that belong to no index.
+With **Sector**, **Unclassified** comes last, listing stocks whose sector is unknown. Both groups show stock counts
+and missing days, and offer **Download missing** when prices are needed. **None** lists each stock once.
 Choose the **Unavailable data** tab for exact dates, timeframe, broker response, first and last checks, number of checks and the last job.
 **Availability** selects **Broker unavailable**, **Resolved** or **All history**. **Load more** fetches more records; search searches loaded records.
 Routine downloads skip recorded unavailable dates. **Check again** opens a download plan for that exact date in overwrite mode.

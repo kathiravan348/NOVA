@@ -55,7 +55,26 @@ export function coverageGroups(
   if (by === "none") return undefined;
   return {
     of: (row) =>
-      by === "sector" ? [row.sector] : row.kind === "index" ? ["Indices"] : row.indices,
+      by === "sector"
+        ? [row.sector]
+        : row.kind === "index"
+          ? ["Indices"]
+          : row.indices.length > 0
+            ? row.indices
+            : ["Non-index stocks"],
+    order: (a, b) => {
+      const rank = (key: string) =>
+        by === "index"
+          ? key === "Indices"
+            ? -1
+            : key === "Non-index stocks"
+              ? 1
+              : 0
+          : key === "Unclassified"
+            ? 1
+            : 0;
+      return rank(a) - rank(b) || a.localeCompare(b);
+    },
     summary: (_, rows) => groupSummary(rows),
     actions: (key, rows) =>
       needsDownload(rows).length > 0 ? (

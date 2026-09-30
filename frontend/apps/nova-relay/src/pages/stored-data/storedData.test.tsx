@@ -18,6 +18,52 @@ const table = () => screen.getByRole("table", { name: "Stored data" });
 const groupButton = (name: string) => within(table()).getByRole("button", { name });
 
 describe("Stored data (D63)", () => {
+  it("puts non-index stocks last with a summary and downloads their missing prices", async () => {
+    const { router } = renderApp("/stored-data");
+    await within(table()).findByRole("button", { name: "Non-index stocks" });
+    const groups = within(table()).getAllByRole("button", { expanded: false });
+    expect(groups.map((button) => button.textContent)).toEqual([
+      "Indices",
+      "NIFTY 50",
+      "NIFTY BANK",
+      "NIFTY NEXT 50",
+      "Non-index stocks",
+    ]);
+    const header = groupButton("Non-index stocks").closest("tr")!;
+    expect(within(header).getByText(/2 stocks .* 2 no data .* 0 missing days/)).toBeInTheDocument();
+    fireEvent.click(groupButton("Non-index stocks"));
+    expect(within(table()).getByRole("button", { name: "GREENGRID-SM" })).toBeInTheDocument();
+    expect(within(table()).getByRole("button", { name: "NOVATECH" })).toBeInTheDocument();
+    fireEvent.click(
+      within(header).getByRole("button", { name: /Download missing for Non-index stocks/ }),
+    );
+    await waitFor(() => expect(router.state.location.pathname).toBe("/data-jobs/new"));
+    expect(router.state.location.state).toMatchObject({
+      symbols: ["GREENGRID-SM", "NOVATECH"],
+      timeframe: "1d",
+    });
+  });
+
+  it("puts Unclassified last by sector and shows each stock once without grouping", async () => {
+    renderApp("/stored-data");
+    await within(table()).findByRole("button", { name: "Non-index stocks" });
+    fireEvent.change(screen.getByLabelText("Group by"), { target: { value: "sector" } });
+    const labels = within(table())
+      .getAllByRole("button", { expanded: false })
+      .map((b) => b.textContent);
+    expect(labels.at(-1)).toBe("Unclassified");
+    expect(labels.slice(0, -1)).toEqual(labels.slice(0, -1).sort((a, b) => a!.localeCompare(b!)));
+    fireEvent.click(groupButton("Unclassified"));
+    expect(within(table()).getByRole("button", { name: "GREENGRID-SM" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Group by"), { target: { value: "none" } });
+    const symbols = within(table())
+      .getAllByRole("button")
+      .filter((b) => !b.hasAttribute("aria-sort"));
+    expect(within(table()).getAllByRole("button", { name: "HDFCBANK" })).toHaveLength(1);
+    expect(within(table()).getAllByRole("button", { name: "NOVATECH" })).toHaveLength(1);
+    expect(new Set(symbols.map((b) => b.textContent)).size).toBe(symbols.length);
+  });
+
   it("shows broker evidence and opens an overwrite plan for a specific date", async () => {
     const { router } = renderApp("/stored-data");
     fireEvent.mouseDown(await screen.findByRole("tab", { name: "Unavailable data" }), {
