@@ -15,6 +15,7 @@ Create:
 - `frontend/apps/nova-relay/src/pages/stored-data/{SyncToTodayButton.tsx,syncToToday.ts,syncToToday.test.tsx}`
 Modify:
 - `frontend/apps/nova-relay/src/pages/stored-data/{StoredDataPage.tsx,storedData.test.tsx}`
+- `frontend/apps/nova-relay/src/pages/data-jobs/{NewDownloadPage.tsx,downloads.test.tsx}` (Owner approved 2026-09-30, see Build 5)
 - `docs/guides/USER-GUIDE.md` (Stored data), `docs/tasks/{BOARD.md,NOVA-149.md}`
 - Only if the plan call cannot take per-stock date ranges: `backend/services/atlas/src/nova_atlas/plan.py` (+ test), `docs/guides/API.md`
 
@@ -25,6 +26,9 @@ Modify:
    plan review with symbols and ranges prefilled (same path as **Download missing**); nothing starts until **Start**.
 3. With a group or search active it offers "This group" / "All stocks".
 4. Nothing to sync → button disabled with "Up to date".
+5. `NewDownloadPage` gains a batch/prefilled path: several draft plans (`1m` and `1d`, per-stock ranges) made with the existing
+   APIs and reviewed one after another. The current single-timeframe **New download** form behaves exactly as today; keep its
+   tests and add new ones. No backend or download-execution change.
 
 ## Acceptance checks
 - [ ] Mock: button shows last stored day and missing count; Review plan lists the right stocks and ranges.
@@ -35,10 +39,7 @@ Modify:
 - Scheduled automatic sync; the instrument-sync warning (NOVA-150); new timeframes.
 
 ## Questions
-Owner scope decision required: may this task also modify `frontend/apps/nova-relay/src/pages/data-jobs/NewDownloadPage.tsx` and its download/prefill tests?
-The requested flow reviews both 1m and 1d plans with per-stock ranges. The existing page keeps one timeframe, one From/To pair and one draft.
-Its file is Read first but absent from Files → Modify. A batch of draft plans can use existing APIs without changing download execution.
-AGENTS.md §2 requires the implementer to stop and record this question rather than change task scope. NOVA-149 code has not been changed.
+Answered by the Owner (2026-09-30): yes, `NewDownloadPage.tsx` and its tests may change, under Build 5. Rebase on `main` first (NOVA-147, 148 merged), then continue.
 
 ## Handoff
 _(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
