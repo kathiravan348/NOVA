@@ -1,6 +1,6 @@
 # NOVA-148 — Screens use Pager instead of Load more
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-148 · **Depends on:** NOVA-146, NOVA-147
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-148 · **Depends on:** NOVA-146, NOVA-147
 
 ## Goal
 Long lists show "Showing 1–50 of 1,240", page numbers and **Rows per page** (D74 (5)); the **Load more** button leaves the screens.
@@ -47,4 +47,12 @@ No open questions. The unavailable-data panel uses ui-core DataTable for the ser
 **Known gaps:** Independent lead review/merge pending; real endpoint behavior verified by NOVA-147 backend tests, no real broker calls made._
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none.
+**Change requests (if sent back):** none.
+**Checked:** every listed screen uses `Pager` with offset paging, `keepPreviousData`, reset to page 1 on filter/size change; realtime job updates refetch the visible page; `pnpm review:check` passed.
+**Watch:** Audit log's group filter still filters only the rows of the current page (it did the same over loaded rows before); a server-side filter would be a later task.
+**Guides checked:** USER-GUIDE matches the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

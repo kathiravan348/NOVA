@@ -1,6 +1,6 @@
 # NOVA-147 — Lists get `total` + `offset`
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-147 · **Depends on:** NOVA-146
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-147 · **Depends on:** NOVA-146
 
 ## Goal
 Every paged list answers "how many in all" and can start at any row, so screens can show page numbers (D74 (5)).
@@ -52,4 +52,12 @@ _(implementer writes here if blocked)_
 **Known gaps:** Independent lead review and merge pending._
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none.
+**Change requests (if sent back):** none.
+**Checked:** offset and cursor paths share one ordering; both together → 422; `total` counted over the same `where`. `pnpm review:check` passed; `backend-check` 1,275 passed, 1 failed (`test_realtime.py::test_signed_in_gets_hello_then_job_updates`, timing under load — ran alongside the frontend build); the file passes alone twice (5/5).
+**Watch:** `/market-data/coverage` now returns at most 50 rows by default (max 200); `getCoverage` fetches every page when no paging is asked for, so the ~2,500-stock table costs ~13 requests. A follow-up could raise the coverage limit if this feels slow.
+**Guides checked:** API.md and CONTRACTS.md match the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
