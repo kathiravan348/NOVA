@@ -1,6 +1,6 @@
 # NOVA-146 — ui-core Pager: total, page numbers, rows per page
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-146 · **Depends on:** —
+**Status:** done · **Owner:** ChatGPT · **Branch:** task/NOVA-146 · **Depends on:** —
 
 ## Goal
 A shared **Pager** shows "Showing 1–50 of 1,240", page numbers, first/previous/next/last, jump to page and a
@@ -54,4 +54,11 @@ _(implementer writes here if blocked)_
 **Known gaps:** none; independent review pending. NOVA-145 is on its separate branch; keep both board statuses when merging.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** `approvalBatch.test.tsx` — the 50-request test gets a 20 s timeout (its own `waitFor` already allowed 10 s, above the 5 s default); it failed twice in the full suite under load, passes alone in ~1.5 s on both branches.
+**Change requests:** none.
+**Guides checked:** match the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks:** none. Note for NOVA-148: a `DataTable` with no `pageSize` now shows every loaded row with no pager (was 10 per page): Strategy detail tables, Accounts and Data jobs. That matches the task text.
+**Commands run:** pnpm review:check passed (1004 tests, build).
