@@ -152,13 +152,13 @@
 | NOVA-144 | Library: 100 equity strategies across candle sizes + testing protocol (D73) | done | Claude | 121, 122 |
 | NOVA-145 | Stored data: Non-index stocks group (D74) | done | Claude | — |
 | NOVA-146 | ui-core Pager: total, page numbers, rows per page (D74) | done | Claude | — |
-| NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | draft | — | 146 |
-| NOVA-148 | Screens use Pager instead of Load more (D74) | draft | — | 146, 147 |
-| NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | draft | — | 145 |
-| NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | draft | — | 149 |
-| NOVA-151 | Live feed: `live.tick` WebSocket message + snapshot and per-day summary endpoints (D74) | draft | — | — |
-| NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | draft | — | 151 |
-| NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | draft | — | 152 |
+| NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | planned | — | 146 |
+| NOVA-148 | Screens use Pager instead of Load more (D74) | planned | — | 146, 147 |
+| NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | planned | — | 145 |
+| NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | planned | — | 149 |
+| NOVA-151 | Live feed: `live.tick` WebSocket message + snapshot and per-day summary endpoints (D74) | planned | — | — |
+| NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | planned | — | 151 |
+| NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | planned | — | 152 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
