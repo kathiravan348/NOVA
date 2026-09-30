@@ -26,6 +26,7 @@ export {
   type CandlestickChartProps,
 } from "./components/CandlestickChart/CandlestickChart";
 export type { Candle } from "./components/CandlestickChart/types";
+export { LiveStockCard, type LiveStockCardProps } from "./components/LiveStockCard/LiveStockCard";
 export { StrategyCard, type StrategyCardProps } from "./components/StrategyCard/StrategyCard";
 export {
   StrategyStatsList,
