@@ -34,6 +34,14 @@ async function pickInfy() {
 }
 
 describe("New download", () => {
+  it("ignores an invalid sync batch without creating a draft", async () => {
+    renderApp({
+      pathname: "/data-jobs/new",
+      state: { syncPlans: [{ symbols: ["INFY"], timeframe: "5m" }] },
+    });
+    expect(await screen.findByText("Stocks (0 chosen)")).toBeInTheDocument();
+    expect(calls.filter((c) => c.endsWith("/data-jobs/plan"))).toHaveLength(0);
+  });
   it("keeps the draft when the agent goes Back", async () => {
     sessionStorage.setItem(
       "nova-session",

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-148). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-149). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -442,6 +442,15 @@ A date absent from every saved instrument is unknown; this is not a verified off
 group shows how many stocks are complete, have gaps or have no data. **Only with gaps** hides complete stocks. Click a
 symbol to see its missing date ranges. **Download missing** (on a group or in that window) opens **New download** with
 those stocks, the timeframe and the period filled in; check the plan and press **Start** as usual.
+**Sync to today** checks both **1 minute (1m)** and **1 day (1d)** prices, regardless of the displayed period.
+It shows the latest **Last stored day** among the shown stocks and how many stocks have unexplained missing days.
+Use **Show group** or **Search stocks** to narrow the list. The confirmation then offers **This group** or **All stocks**.
+It fills known gaps and checks from each stock's last stored day to today. Stocks with no history start at 1 Jan 2020.
+Known broker-unavailable dates are excluded. The confirmation counts date days across stocks and timeframes; these
+windows may include holidays or saved dates. **Review plan** shows the actual requests, size and time for each draft.
+Press **Start** for each plan in turn. Nothing else starts automatically. A plan with nothing to download offers
+**Next plan**. **Back** discards the current draft and returns to **Stored data**; downloads already started continue.
+When both timeframes reach today with no unexplained gaps, the button says **Up to date** and is disabled.
 With **Index**, **Indices** comes first and **Non-index stocks** comes last, listing stocks that belong to no index.
 With **Sector**, **Unclassified** comes last, listing stocks whose sector is unknown. Both groups show stock counts
 and missing days, and offer **Download missing** when prices are needed. **None** lists each stock once.

@@ -15,6 +15,7 @@ import {
   DataTable,
   DateTimePicker,
   EmptyState,
+  Input,
   Select,
   StatusBadge,
   Tabs,
@@ -32,6 +33,7 @@ import {
 } from "./coverageGroups";
 import { MissingDaysModal } from "./MissingDaysModal";
 import { UnavailableDataPanel } from "./UnavailableDataPanel";
+import { SyncToTodayButton } from "./SyncToTodayButton";
 
 /** What New download starts with when opened from here (D63 (4)). */
 export interface DownloadMissingState {
@@ -53,6 +55,8 @@ export function StoredDataPage() {
   const [to, setTo] = useState(today);
   const [groupBy, setGroupBy] = useState<GroupBy>("index");
   const [onlyGaps, setOnlyGaps] = useState(false);
+  const [search, setSearch] = useState("");
+  const [group, setGroup] = useState("");
   const [open, setOpen] = useState<CoverageRow | null>(null);
   const query: CoverageQuery = { timeframe, from, to };
   const coverage = useCoverage(query);
@@ -129,11 +133,21 @@ export function StoredDataPage() {
     [],
   );
 
-  const rows = (coverage.data?.rows ?? []).filter((r) => !onlyGaps || r.status !== "complete");
+  const groups = coverageGroups(groupBy, download);
+  const groupNames = [
+    ...new Set((coverage.data?.rows ?? []).flatMap((r) => groups?.of(r) ?? [])),
+  ].sort();
+  const rows = (coverage.data?.rows ?? []).filter(
+    (r) =>
+      (!onlyGaps || r.status !== "complete") &&
+      (!group || groups?.of(r).includes(group)) &&
+      `${r.symbol} ${r.name}`.toLowerCase().includes(search.trim().toLowerCase()),
+  );
   const nothingStored = coverage.isSuccess && coverage.data.rows.every((r) => r.firstDay === null);
 
   return (
     <div className="flex flex-col gap-6">
+      <SyncToTodayButton shown={rows} filtered={Boolean(group || search.trim() || onlyGaps)} />
       <Card title="What to check">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Select
@@ -168,7 +182,10 @@ export function StoredDataPage() {
               { value: "sector", label: "Sector" },
             ]}
             value={groupBy}
-            onChange={(e) => setGroupBy(e.target.value as GroupBy)}
+            onChange={(e) => {
+              setGroupBy(e.target.value as GroupBy);
+              setGroup("");
+            }}
           />
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -218,8 +235,28 @@ export function StoredDataPage() {
                     <QueryError error={coverage.error} onRetry={() => void coverage.refetch()} />
                   ) : undefined
                 }
-                search={{ label: "Search stocks", getText: (r) => `${r.symbol} ${r.name}` }}
-                groups={coverageGroups(groupBy, download)}
+                toolbar={
+                  <>
+                    <Input
+                      type="search"
+                      label="Search stocks"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                    {groups && (
+                      <Select
+                        label="Show group"
+                        value={group}
+                        onChange={(e) => setGroup(e.target.value)}
+                        options={[
+                          { value: "", label: "All groups" },
+                          ...groupNames.map((value) => ({ value, label: value })),
+                        ]}
+                      />
+                    )}
+                  </>
+                }
+                groups={groups}
                 pageSize={25}
                 initialSort={[{ id: "symbol", desc: false }]}
                 emptyState={onlyGaps ? "Nothing is missing in this period." : "No stocks to show"}
