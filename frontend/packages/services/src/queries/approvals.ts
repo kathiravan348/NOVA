@@ -18,16 +18,30 @@ import {
 import { ApiRequestError } from "../http";
 import { getNow } from "../clock";
 import { queryKeys } from "./keys";
-import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
+import {
+  cursorQuery,
+  pageResult,
+  pagedListOptions,
+  pageQuery,
+  keepPageOptions,
+  type PageSelection,
+} from "./paging";
 
-export function useApprovals(status?: ApprovalStatus) {
-  return useInfiniteQuery({
-    queryKey: queryKeys.approvals.list(status),
+export function useApprovals(status?: ApprovalStatus, selection?: PageSelection) {
+  const query = useInfiniteQuery({
+    queryKey: selection
+      ? [...queryKeys.approvals.list(status), selection]
+      : queryKeys.approvals.list(status),
     queryFn: ({ signal, pageParam }) =>
-      listApprovals({ ...cursorQuery(pageParam), status }, { signal }),
+      listApprovals(
+        { ...(pageParam ? cursorQuery(pageParam) : pageQuery(selection)), status },
+        { signal },
+      ),
     ...pagedListOptions,
-    select: flattenPages,
+    select: pageResult,
+    ...keepPageOptions,
   });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
 }
 
 export function useApproveRequest() {

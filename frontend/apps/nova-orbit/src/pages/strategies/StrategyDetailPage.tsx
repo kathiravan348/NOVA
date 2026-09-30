@@ -1,3 +1,4 @@
+import { usePageState } from "@nova/services";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -11,7 +12,7 @@ import {
   Skeleton,
   StatusBadge,
   Tabs,
-  LoadMore,
+  Pager,
 } from "@nova/ui-core";
 import { StrategyStatsList } from "@nova/ui-trading";
 import { useBacktests, useStrategy, useStrategyStats } from "@nova/services";
@@ -132,7 +133,8 @@ function StatsCard({ strategyId }: { strategyId: string }) {
 }
 
 function StrategyRuns({ strategyId }: { strategyId: string }) {
-  const query = useBacktests({ strategyId });
+  const paging = usePageState(strategyId);
+  const query = useBacktests({ strategyId }, paging);
   const columns = useRunColumns({ withStrategy: false });
   return (
     <div className="flex flex-col gap-4">
@@ -156,10 +158,13 @@ function StrategyRuns({ strategyId }: { strategyId: string }) {
           />
         }
       />
-      <LoadMore
-        hasMore={query.hasNextPage}
-        loading={query.isFetchingNextPage}
-        onLoadMore={() => void query.fetchNextPage()}
+      <Pager
+        page={paging.page}
+        pageSize={paging.pageSize}
+        total={query.total}
+        onPageChange={paging.setPage}
+        onPageSizeChange={paging.setPageSize}
+        loading={query.isFetching}
       />
     </div>
   );

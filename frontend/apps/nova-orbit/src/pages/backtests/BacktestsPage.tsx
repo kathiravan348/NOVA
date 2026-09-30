@@ -1,14 +1,16 @@
+import { usePageState } from "@nova/services";
 import { useState } from "react";
 import { Link } from "react-router";
 import { BarChart3, Play } from "lucide-react";
-import { Button, DataTable, EmptyState, LoadMore } from "@nova/ui-core";
+import { Button, DataTable, EmptyState, Pager } from "@nova/ui-core";
 import { useBacktests } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { DeleteSelectedButton } from "./DeleteBacktestButton";
 import { useRunColumns } from "./runColumns";
 
 export function BacktestsPage() {
-  const query = useBacktests();
+  const paging = usePageState();
+  const query = useBacktests({}, paging);
   const columns = useRunColumns();
   const [selected, setSelected] = useState<string[]>([]);
   return (
@@ -45,10 +47,13 @@ export function BacktestsPage() {
           />
         }
       />
-      <LoadMore
-        hasMore={query.hasNextPage}
-        loading={query.isFetchingNextPage}
-        onLoadMore={() => void query.fetchNextPage()}
+      <Pager
+        page={paging.page}
+        pageSize={paging.pageSize}
+        total={query.total}
+        onPageChange={paging.setPage}
+        onPageSizeChange={paging.setPageSize}
+        loading={query.isFetching}
       />
     </div>
   );

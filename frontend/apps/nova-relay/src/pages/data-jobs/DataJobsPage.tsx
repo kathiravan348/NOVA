@@ -1,8 +1,9 @@
+import { usePageState } from "@nova/services";
 import { Link } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Database } from "lucide-react";
 import type { DataJob } from "@nova/contracts";
-import { Button, DataTable, EmptyState, StatusBadge, LoadMore } from "@nova/ui-core";
+import { Button, DataTable, EmptyState, StatusBadge, Pager } from "@nova/ui-core";
 import { formatPercent, formatQuantity } from "@nova/ui-trading";
 import { useDataJobs, useSession } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
@@ -84,7 +85,8 @@ const columns: ColumnDef<DataJob, unknown>[] = [
 ];
 
 export function DataJobsPage() {
-  const query = useDataJobs();
+  const paging = usePageState();
+  const query = useDataJobs(paging);
   const agent = useSession()?.role === "agent";
   const newDownload = (
     <Button asChild size="sm">
@@ -119,10 +121,13 @@ export function DataJobsPage() {
           />
         }
       />
-      <LoadMore
-        hasMore={query.hasNextPage}
-        loading={query.isFetchingNextPage}
-        onLoadMore={() => void query.fetchNextPage()}
+      <Pager
+        page={paging.page}
+        pageSize={paging.pageSize}
+        total={query.total}
+        onPageChange={paging.setPage}
+        onPageSizeChange={paging.setPageSize}
+        loading={query.isFetching}
       />
     </div>
   );

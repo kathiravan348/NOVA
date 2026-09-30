@@ -21,33 +21,34 @@ const bodyRows = () =>
     .slice(1);
 
 describe("Audit log", () => {
-  it("loads older entries with Load more when the server pages the list", async () => {
-    server.use(
-      http.get("*/api/v1/audit", ({ request }) => {
-        const url = new URL(request.url);
-        url.searchParams.set("limit", "4");
-        return paginate(mockAuditEntries, url.toString());
-      }),
+  it("pages server rows, shows total and resets when the size changes", async () => {
+    const rows = Array.from({ length: 75 }, (_, i) => ({
+      ...mockAuditEntries[0]!,
+      id: "audit-" + i,
+      summary: "Paged audit " + i,
+    }));
+    server.use(http.get("*/api/v1/audit", ({ request }) => paginate(rows, request.url)));
+    renderApp("/audit");
+    await screen.findByText("Showing 1–50 of 75");
+    expect(bodyRows()).toHaveLength(50);
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    await screen.findByText("Showing 51–75 of 75");
+    await waitFor(() => expect(bodyRows()).toHaveLength(25));
+    expect(within(bodyRows()[0]!).getByText("Paged audit 50")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Rows per page"), { target: { value: "25" } });
+    await screen.findByText("Showing 1–25 of 75");
+    await waitFor(() =>
+      expect(within(bodyRows()[0]!).getByText("Paged audit 0")).toBeInTheDocument(),
     );
-    renderApp("/audit");
-    const more = await screen.findByRole("button", { name: "Load older entries" });
-    await waitFor(() => expect(bodyRows()).toHaveLength(4));
-    fireEvent.click(more);
-    await waitFor(() => expect(bodyRows()).toHaveLength(8));
-  });
-
-  it("shows no Load more button when every entry fits in one page", async () => {
-    renderApp("/audit");
-    await screen.findAllByText("Queued backtest VWAP September Dry Run");
     expect(screen.queryByRole("button", { name: "Load older entries" })).not.toBeInTheDocument();
   });
 
-  it("shows the first page of entries, newest first", async () => {
+  it("shows the whole first server page, newest first", async () => {
     renderApp("/audit");
     await screen.findAllByText("Queued backtest VWAP September Dry Run");
-    expect(mockAuditEntries.length).toBeGreaterThan(10);
-    expect(bodyRows()).toHaveLength(10);
+    expect(bodyRows()).toHaveLength(mockAuditEntries.length);
     expect(within(bodyRows()[0]!).getByText("Queued backtest VWAP September Dry Run"));
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
   it("filters by group and keeps it in the URL", async () => {

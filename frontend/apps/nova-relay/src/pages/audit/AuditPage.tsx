@@ -1,8 +1,9 @@
+import { usePageState } from "@nova/services";
 import { useSearchParams } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ScrollText } from "lucide-react";
 import type { AuditEntry } from "@nova/contracts";
-import { DataTable, EmptyState, Select, LoadMore } from "@nova/ui-core";
+import { DataTable, EmptyState, Select, Pager } from "@nova/ui-core";
 import { useAuditEntries } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
@@ -44,10 +45,11 @@ const isGroup = (v: string | null): v is AuditGroup =>
   v !== null && (AUDIT_GROUPS as readonly string[]).includes(v);
 
 export function AuditPage() {
-  const query = useAuditEntries();
   const [params, setParams] = useSearchParams();
   const raw = params.get("group");
   const group = isGroup(raw) ? raw : null;
+  const paging = usePageState(group ?? "");
+  const query = useAuditEntries(paging);
   const rows = (query.data ?? []).filter((e) => !group || auditGroup(e.action) === group);
 
   return (
@@ -71,7 +73,6 @@ export function AuditPage() {
         data={rows}
         getRowId={(e) => e.id}
         initialSort={[{ id: "at", desc: true }]}
-        pageSize={10}
         loading={query.isPending}
         error={
           query.isError ? (
@@ -86,11 +87,13 @@ export function AuditPage() {
           />
         }
       />
-      <LoadMore
-        hasMore={query.hasNextPage}
-        loading={query.isFetchingNextPage}
-        onLoadMore={() => void query.fetchNextPage()}
-        label="Load older entries"
+      <Pager
+        page={paging.page}
+        pageSize={paging.pageSize}
+        total={query.total}
+        onPageChange={paging.setPage}
+        onPageSizeChange={paging.setPageSize}
+        loading={query.isFetching}
       />
     </div>
   );

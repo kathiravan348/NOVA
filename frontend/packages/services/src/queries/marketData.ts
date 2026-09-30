@@ -20,6 +20,7 @@ import {
   updateUniverseEntry,
 } from "../api/marketData";
 import { queryKeys } from "./keys";
+import { keepPageOptions, pageQuery, type PageSelection } from "./paging";
 
 export function useInstruments() {
   return useQuery({
@@ -123,13 +124,17 @@ export function useCoverage(query: CoverageQuery) {
   });
 }
 
-export function useUnavailableDays(query: UnavailableQuery) {
+export function useUnavailableDays(query: UnavailableQuery, selection?: PageSelection) {
   return useInfiniteQuery({
-    queryKey: ["market-data", "unavailable", query],
+    queryKey: ["market-data", "unavailable", query, selection],
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam, signal }) => getUnavailableDays(query, pageParam, { signal }),
+    queryFn: ({ pageParam, signal }) =>
+      getUnavailableDays({ ...query, ...(pageParam ? {} : pageQuery(selection)) }, pageParam, {
+        signal,
+      }),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     refetchInterval: 60_000,
+    ...keepPageOptions,
   });
 }
 

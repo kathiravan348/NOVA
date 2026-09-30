@@ -1,3 +1,4 @@
+import { usePageState } from "@nova/services";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { AlertTriangle, GitCompare, Pencil } from "lucide-react";
@@ -9,7 +10,7 @@ import {
   EmptyState,
   Skeleton,
   StatusBadge,
-  LoadMore,
+  Pager,
 } from "@nova/ui-core";
 import { EquityCurve, formatInr } from "@nova/ui-trading";
 import {
@@ -113,8 +114,9 @@ function useRunSegment(run: BacktestRun): Segment | undefined {
 function CompletedRun({ run }: { run: BacktestRun }) {
   const result = useBacktestResult(run.id);
   const segment = useRunSegment(run);
-  const trades = useBacktestTrades(run.id);
   const [symbol, setSymbol] = useState("");
+  const paging = usePageState(symbol);
+  const trades = useBacktestTrades(run.id, paging);
   const showTrades = (s: string) => {
     setSymbol(s);
     document.getElementById("trades")?.scrollIntoView?.({ behavior: "smooth" });
@@ -156,11 +158,13 @@ function CompletedRun({ run }: { run: BacktestRun }) {
             ) : undefined
           }
         />
-        <LoadMore
-          hasMore={trades.hasNextPage}
-          loading={trades.isFetchingNextPage}
-          onLoadMore={() => void trades.fetchNextPage()}
-          label="Load more trades"
+        <Pager
+          page={paging.page}
+          pageSize={paging.pageSize}
+          total={trades.total}
+          onPageChange={paging.setPage}
+          onPageSizeChange={paging.setPageSize}
+          loading={trades.isFetching}
         />
       </section>
     </>

@@ -1,8 +1,9 @@
+import { usePageState } from "@nova/services";
 import { useEffect, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ApprovalRequest } from "@nova/contracts";
 import { getNow, useApprovals, useDecideRequests, type ApprovalOutcome } from "@nova/services";
-import { Button, Card, DataTable, Input, LoadMore, StatusBadge, TextBlock } from "@nova/ui-core";
+import { Button, Card, DataTable, Input, Pager, StatusBadge, TextBlock } from "@nova/ui-core";
 import { QueryError } from "../../components/QueryState";
 import { formatIstShort } from "../../lib/format";
 import { ApprovalDetails } from "./ApprovalDetails";
@@ -18,10 +19,12 @@ export function ApprovalList({
   readOnly?: boolean;
   onBusyChange?: (busy: boolean) => void;
 }) {
-  const query = useApprovals(waiting ? "pending" : undefined);
   const batch = useDecideRequests();
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const paging = usePageState(`${waiting}:${search}`);
+  const query = useApprovals(waiting ? "pending" : undefined, paging);
+  useEffect(() => setSelected([]), [paging.page, paging.pageSize, waiting]);
   const [details, setDetails] = useState<ApprovalRequest | null>(null);
   const [decision, setDecision] = useState<ApprovalDecisionValue | null>(null);
   const [resolved, setResolved] = useState<string[]>([]);
@@ -168,7 +171,6 @@ export function ApprovalList({
           data={filtered}
           columns={columns}
           getRowId={(item) => item.id}
-          pageSize={10}
           loading={query.isPending}
           error={
             query.isError ? (
@@ -252,10 +254,13 @@ export function ApprovalList({
             />
           </div>
         )}
-        <LoadMore
-          hasMore={query.hasNextPage}
-          loading={query.isFetchingNextPage}
-          onLoadMore={() => void query.fetchNextPage()}
+        <Pager
+          page={paging.page}
+          pageSize={paging.pageSize}
+          total={query.total}
+          onPageChange={paging.setPage}
+          onPageSizeChange={paging.setPageSize}
+          loading={query.isFetching}
         />
       </div>
       <ApprovalDetails request={details} onClose={() => setDetails(null)} />

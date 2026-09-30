@@ -35,7 +35,15 @@ import {
 } from "../api/relay";
 import { isPollingNeeded } from "../realtime";
 import { queryKeys } from "./keys";
-import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
+import {
+  useJobPageRefresh,
+  cursorQuery,
+  pageResult,
+  pagedListOptions,
+  pageQuery,
+  keepPageOptions,
+  type PageSelection,
+} from "./paging";
 
 export function useBrokerAccounts() {
   return useQuery({
@@ -165,17 +173,21 @@ function isActive(job: Pick<DataJob, "status">): boolean {
 }
 
 /** Data jobs, one page at a time; `fetchNextPage` loads more. Refreshes while any job is active. */
-export function useDataJobs() {
-  return useInfiniteQuery({
-    queryKey: queryKeys.dataJobs.list,
-    queryFn: ({ signal, pageParam }) => listDataJobs(cursorQuery(pageParam), { signal }),
+export function useDataJobs(selection?: PageSelection) {
+  useJobPageRefresh(selection);
+  const query = useInfiniteQuery({
+    queryKey: selection ? [...queryKeys.dataJobs.list, selection] : queryKeys.dataJobs.list,
+    queryFn: ({ signal, pageParam }) =>
+      listDataJobs(pageParam ? cursorQuery(pageParam) : pageQuery(selection), { signal }),
     ...pagedListOptions,
-    select: flattenPages,
+    select: pageResult,
+    ...keepPageOptions,
     refetchInterval: (query) =>
       isPollingNeeded() && query.state.data?.pages.some((page) => page.items.some(isActive))
         ? JOB_POLL_MS.list
         : false,
   });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
 }
 
 /** One job; refreshes while it is queued or running, and refreshes the list when its status changes. */
@@ -221,13 +233,16 @@ export function useCancelDataJob() {
 }
 
 /** Audit entries, one page at a time; `fetchNextPage` loads more. */
-export function useAuditEntries() {
-  return useInfiniteQuery({
-    queryKey: queryKeys.auditEntries.list,
-    queryFn: ({ signal, pageParam }) => listAuditEntries(cursorQuery(pageParam), { signal }),
+export function useAuditEntries(selection?: PageSelection) {
+  const query = useInfiniteQuery({
+    queryKey: selection ? [...queryKeys.auditEntries.list, selection] : queryKeys.auditEntries.list,
+    queryFn: ({ signal, pageParam }) =>
+      listAuditEntries(pageParam ? cursorQuery(pageParam) : pageQuery(selection), { signal }),
     ...pagedListOptions,
-    select: flattenPages,
+    select: pageResult,
+    ...keepPageOptions,
   });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
 }
 
 /** Queues an archive of old ticks; refreshes the data-jobs list (D54). */
