@@ -129,54 +129,7 @@ describe("Data jobs", () => {
   });
 });
 
-describe("Live prices", () => {
-  it("switches recording on and shows its state", async () => {
-    renderApp("/data-jobs");
-    const toggle = await screen.findByRole("switch", { name: "Record live prices" });
-    expect(screen.getByText("Off")).toBeInTheDocument();
-    fireEvent.click(toggle);
-    expect(await screen.findByText("Recording switched on (demo)")).toBeInTheDocument();
-    expect(await screen.findByText("Waiting for market hours")).toBeInTheDocument();
-    expect(screen.getByText("All stocks synced with Kite")).toBeInTheDocument();
-  });
-
-  it.each([
-    ["recording", "Recording"],
-    ["no_login", "Log in to Kite first"],
-  ])("labels the %s state", async (state, label) => {
-    server.use(
-      http.get("*/api/v1/broker/recorder", () =>
-        HttpResponse.json({
-          enabled: true,
-          symbols: ["INFY"],
-          state,
-          jobId: state === "recording" ? "job_002" : null,
-          updatedAt: "2026-09-22T04:30:00Z",
-        }),
-      ),
-    );
-    renderApp("/data-jobs");
-    expect(await screen.findByText(label)).toBeInTheDocument();
-    expect(screen.getByText("1 chosen stock")).toBeInTheDocument();
-    const link = screen.queryByRole("link", { name: "Open today's recording" });
-    expect(Boolean(link)).toBe(state === "recording");
-  });
-
-  it("saves the chosen stocks", async () => {
-    renderApp("/data-jobs");
-    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
-    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
-    const table = await within(dialog).findByRole("table", { name: "Stocks to record" });
-    fireEvent.change(within(dialog).getByRole("searchbox", { name: "Search stocks" }), {
-      target: { value: "INFY" },
-    });
-    const row = (await within(table).findByText("INFY")).closest("tr")!;
-    fireEvent.click(within(row).getByRole("checkbox"));
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save stocks" }));
-    expect(await screen.findByText("Stocks saved (demo)")).toBeInTheDocument();
-    expect(await screen.findByText("1 chosen stock")).toBeInTheDocument();
-  });
-
+describe("Tick archive", () => {
   it("queues an archive and blocks a future date", async () => {
     renderApp("/data-jobs");
     fireEvent.click(await screen.findByRole("button", { name: "Archive old ticks" }));

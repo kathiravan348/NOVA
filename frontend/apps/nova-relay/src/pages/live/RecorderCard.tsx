@@ -4,16 +4,14 @@ import { Button, Card, Skeleton, StatusBadge, Switch, useToast } from "@nova/ui-
 import { getDataMode, useRecorder, useUpdateRecorder } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { recorderStateLabel, recorderStateTone } from "../../lib/labels";
-import { ArchiveModal } from "./ArchiveModal";
 import { RecorderSymbolsModal } from "./RecorderSymbolsModal";
 
-/** Live prices (D54): the recording switch, its stocks and state, and archiving old ticks. */
+/** Recording (D54, D74): the switch, its state and the stocks to record. */
 export function RecorderCard() {
   const toast = useToast();
   const recorder = useRecorder();
   const update = useUpdateRecorder();
   const [choosing, setChoosing] = useState(false);
-  const [archiving, setArchiving] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
   if (recorder.isPending) return <Skeleton className="h-40 w-full" />;
@@ -42,7 +40,7 @@ export function RecorderCard() {
     : "All stocks synced with Kite";
 
   return (
-    <Card title="Live prices">
+    <Card title="Live recording">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <Switch
@@ -77,9 +75,6 @@ export function RecorderCard() {
           <Button size="sm" variant="secondary" onClick={() => setChoosing(true)}>
             Choose stocks
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => setArchiving(true)}>
-            Archive old ticks
-          </Button>
         </div>
       </div>
       <RecorderSymbolsModal
@@ -87,7 +82,6 @@ export function RecorderCard() {
         settings={settings}
         onClose={() => setChoosing(false)}
       />
-      <ArchiveModal open={archiving} onClose={() => setArchiving(false)} />
     </Card>
   );
 }

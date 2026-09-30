@@ -4,7 +4,7 @@ import { MAX_RECORDER_SYMBOLS, type RecorderSettings, type UniverseEntry } from 
 import { Button, Modal, useToast } from "@nova/ui-core";
 import { getDataMode, useUniverse, useUpdateRecorder } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
-import { BulkStockPicker } from "./BulkStockPicker";
+import { BulkStockPicker } from "../data-jobs/BulkStockPicker";
 
 const columns: ColumnDef<UniverseEntry, unknown>[] = [
   { id: "symbol", header: "Symbol", accessorKey: "symbol", meta: { primary: true } },

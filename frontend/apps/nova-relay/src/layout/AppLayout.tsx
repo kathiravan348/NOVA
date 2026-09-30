@@ -5,6 +5,7 @@ import {
   Database,
   HardDrive,
   Radio,
+  Settings,
   Landmark,
   LayoutDashboard,
   ListOrdered,
@@ -31,6 +32,7 @@ const navItems: { to: string; label: string; icon: ReactNode; group?: string }[]
     icon: <Radio className="h-4 w-4" />,
     group: "Live",
   },
+  { to: "/live/config", label: "Config", icon: <Settings className="h-4 w-4" />, group: "Live" },
   { to: "/audit", label: "Audit log", icon: <ScrollText className="h-4 w-4" /> },
   { to: "/approvals", label: "Approvals", icon: <ShieldCheck className="h-4 w-4" /> },
 ];

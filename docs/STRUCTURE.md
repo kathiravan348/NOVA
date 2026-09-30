@@ -42,7 +42,7 @@
 │  │     └─ src/browser.ts MSW browser worker (apps' main.tsx, mock mode)
 │  └─ apps/             each: public/mockServiceWorker.js, src/routes.tsx, layout/, pages/
 │     ├─ nova-orbit/    strategy builder + backtesting (port 3000)
-│     └─ nova-relay/    API config + limits (port 3001); pages/approvals/ = approval decisions, history and agent account (D67); pages/live/ = Live monitor and Recorded data (D74)
+│     └─ nova-relay/    API config + limits (port 3001); pages/approvals/ = approval decisions, history and agent account (D67); pages/live/ = Live monitor, Recorded data and Config, where recording is set up (D74)
 │                       Approvals uses compact selectable rows, bulk decisions and full-detail dialogs (NOVA-141); shared ui-core TextBlock renders request/response text.
 ├─ compose.yaml         db, redis, migrate, broker, strategy, backtest(+worker), atlas(+worker), core, backend-check
 ├─ .env.example         every variable with dummy values (copy to .env)

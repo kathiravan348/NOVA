@@ -10,6 +10,7 @@ import { DataJobDetailPage } from "./pages/data-jobs/DataJobDetailPage";
 import { DataJobsPage } from "./pages/data-jobs/DataJobsPage";
 import { NewDownloadPage } from "./pages/data-jobs/NewDownloadPage";
 import { InstrumentsPage } from "./pages/instruments/InstrumentsPage";
+import { ConfigPage } from "./pages/live/ConfigPage";
 import { MonitorPage } from "./pages/live/MonitorPage";
 import { RecordedDataPage } from "./pages/live/RecordedDataPage";
 import { RecordedStockPage } from "./pages/live/RecordedStockPage";
@@ -97,6 +98,13 @@ export const routes: RouteObject[] = [
             "Recorded data",
             <BrokerOnly>
               <RecordedStockPage />
+            </BrokerOnly>,
+          ),
+          page(
+            "/live/config",
+            "Live config",
+            <BrokerOnly>
+              <ConfigPage />
             </BrokerOnly>,
           ),
           { path: "/live", element: <Navigate to="/live/monitor" replace /> },
