@@ -23,8 +23,13 @@ export function SyncCard() {
   const refreshAfterSync = useRefreshAfterSync();
   const [failed, setFailed] = useState<string | null>(null);
   const job = latest.data ?? null;
-  const daily = useCoverage({ timeframe: "1d", from: DATA_START_DAY, to: todayIst() });
-  const minute = useCoverage({ timeframe: "1m", from: DATA_START_DAY, to: todayIst() });
+  // Stored history is only read when the latest sync found stocks that may need it.
+  const listed = job?.status === "completed" && job.syncResult;
+  const check = Boolean(
+    listed && (listed.newSymbols.length > 0 || listed.newIndexMembers.length > 0),
+  );
+  const daily = useCoverage({ timeframe: "1d", from: DATA_START_DAY, to: todayIst() }, check);
+  const minute = useCoverage({ timeframe: "1m", from: DATA_START_DAY, to: todayIst() }, check);
   const history = new Set(
     [...(daily.data?.rows ?? []), ...(minute.data?.rows ?? [])]
       .filter((r) => r.firstDay !== null)
@@ -157,7 +162,7 @@ export function SyncCard() {
               )}
               <Button
                 variant="secondary"
-                disabled={daily.isPending || minute.isPending || daily.isError || minute.isError}
+                disabled={!daily.data || !minute.data || daily.isError || minute.isError}
                 onClick={download}
               >
                 Download required data

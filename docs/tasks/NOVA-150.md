@@ -1,6 +1,6 @@
 # NOVA-150 — Instrument sync: warning + Download required data
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-150 · **Depends on:** NOVA-149
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-150 · **Depends on:** NOVA-149
 
 ## Goal
 After a Sync with Kite, Relay warns about stocks newly added to an index or newly listed that have no stored history,
@@ -50,4 +50,11 @@ None.
 **Test note:** first backend gate hit cancellation in existing agent WebSocket teardown; isolated test and complete rerun passed.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** Instruments read 1d and 1m coverage (about 26 requests) on every load; now only when the latest sync listed stocks (`useCoverage` takes `enabled`; button waits for both results).
+**Change requests (if sent back):** none.
+**Checked:** migration 0024 follows 0023, with a check tying `sync_result` to a completed sync; history check uses a candle key lookup; Atlas HTTP and Core WebSocket both carry `syncResult`; nothing starts before Start; plans split by `MAX_DOWNLOAD_SYMBOLS`; `review:check` and `backend-check` run before merge.
+**Guides checked:** API, DATABASE (0024), USER-GUIDE match the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
