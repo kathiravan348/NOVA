@@ -1,6 +1,6 @@
 # NOVA-150 — Instrument sync: warning + Download required data
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-150 · **Depends on:** NOVA-149
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-150 · **Depends on:** NOVA-149
 
 ## Goal
 After a Sync with Kite, Relay warns about stocks newly added to an index or newly listed that have no stored history,
