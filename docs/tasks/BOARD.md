@@ -151,7 +151,7 @@
 | NOVA-143 | Strategy card: CAGR range, one value for one run (D72) | done | Claude | — |
 | NOVA-144 | Library: 100 equity strategies across candle sizes + testing protocol (D73) | done | Claude | 121, 122 |
 | NOVA-145 | Stored data: Non-index stocks group (D74) | ready-for-review | ChatGPT | — |
-| NOVA-146 | ui-core Pager: total, page numbers, rows per page (D74) | ready-for-review | ChatGPT | — |
+| NOVA-146 | ui-core Pager: total, page numbers, rows per page (D74) | in-review | Claude | — |
 | NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | draft | — | 146 |
 | NOVA-148 | Screens use Pager instead of Load more (D74) | draft | — | 146, 147 |
 | NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | draft | — | 145 |
