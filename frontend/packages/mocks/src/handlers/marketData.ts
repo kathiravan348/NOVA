@@ -219,6 +219,7 @@ export const marketDataHandlers = [
   http.post(apiPath("/market-data/instruments/sync"), () => {
     const job: DataJob = {
       id: "job_sync_demo",
+      syncResult: null,
       type: "instrument_sync",
       status: "queued",
       exchange: "NSE",

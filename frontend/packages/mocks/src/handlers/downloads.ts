@@ -9,7 +9,7 @@ import {
 } from "@nova/contracts";
 import { mockDataJobs, mockInstruments } from "../data";
 import { apiPath, badRequest, notFound } from "./api";
-import { mockMarketIndices } from "./marketData";
+import { mockMarketIndices, mockUniverse } from "./marketData";
 
 /** Demo time for everything these handlers answer. */
 export const DEMO_NOW = "2026-09-22T04:30:00Z";
@@ -64,7 +64,7 @@ export const downloadHandlers = [
     if (!parsed.success) return badRequest(parsed.error.issues[0]?.message ?? "Invalid download");
     const body = parsed.data;
     const known = (s: string) =>
-      mockInstruments.some((i) => i.symbol === s) || mockMarketIndices.some((i) => i.name === s);
+      mockUniverse.some((i) => i.symbol === s) || mockMarketIndices.some((i) => i.name === s);
     const unknown = body.symbols.filter((s) => !known(s));
     if (unknown.length > 0) {
       return badRequest(`Not in the stock list or the indices: ${unknown.join(", ")}`);

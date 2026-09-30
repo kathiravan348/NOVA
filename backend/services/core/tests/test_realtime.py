@@ -1,5 +1,6 @@
 import time
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -68,6 +69,32 @@ def test_signed_in_gets_hello_then_job_updates(
     assert created["data"]["id"] == job_id
     assert changed["data"]["rowsWritten"] == 42
     parity.assert_valid(changed, "RealtimeMessage")
+
+
+def test_completed_sync_result_arrives_on_the_socket(
+    signed_in: TestClient, engine: Engine, parity: Parity
+) -> None:
+    result = {"newSymbols": ["NEWCO"], "newIndexMembers": [{"symbol": "INFY", "index": "NIFTY IT"}]}
+    with signed_in.websocket_connect(WS) as ws:
+        ws.receive_json()
+        with Session(engine) as db:
+            db.add(
+                DataJob(
+                    id=new_id("job"),
+                    type="instrument_sync",
+                    status="completed",
+                    exchange="NSE",
+                    segment="equity_delivery",
+                    symbols=[],
+                    progress_percent=100,
+                    finished_at=datetime.now(UTC),
+                    sync_result=result,
+                )
+            )
+            db.commit()
+        message = _next_job_message(ws)
+    assert message["data"]["syncResult"] == result
+    parity.assert_valid(message, "RealtimeMessage")
 
 
 def test_quick_updates_of_one_job_are_coalesced(signed_in: TestClient, engine: Engine) -> None:

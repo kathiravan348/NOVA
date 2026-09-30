@@ -1,6 +1,6 @@
 # NOVA-150 — Instrument sync: warning + Download required data
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-150 · **Depends on:** NOVA-149
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-150 · **Depends on:** NOVA-149
 
 ## Goal
 After a Sync with Kite, Relay warns about stocks newly added to an index or newly listed that have no stored history,
@@ -27,18 +27,34 @@ Modify:
 4. The warning goes away once every listed stock has history; no manual dismiss.
 
 ## Acceptance checks
-- [ ] A sync that adds two stocks shows the warning; the button opens a plan with exactly those stocks.
-- [ ] A sync with nothing new shows no warning; backend tests cover both cases.
-- [ ] Definition of done in `AGENTS.md` §9 (`review:check` and `backend-check`).
+- [x] A sync that adds two stocks shows the warning; the button opens a plan with exactly those stocks.
+- [x] A sync with nothing new shows no warning; backend tests cover both cases.
+- [x] Definition of done in `AGENTS.md` §9 (`review:check` and `backend-check`).
 
 ## Out of scope
 - Downloading without the Owner pressing Start; removed or delisted stocks.
 
 ## Questions
-_(implementer writes here if blocked)_
+None.
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** completed syncs persist new stocks/index members without candles; Relay warns and opens daily/minute plans, clearing the warning as history appears.
+**Files changed:** `backend/libs/{nova_contracts,nova_db}/`, `backend/services/{atlas,core}/`, `frontend/apps/nova-relay/src/pages/instruments/`, `frontend/packages/{contracts,mocks}/`, `docs/CONTRACTS.md`, `docs/guides/{API,DATABASE,USER-GUIDE}.md`, `docs/tasks/{BOARD,NOVA-150}.md`.
+**Commands run:** `schema:update`, targeted frontend/backend tests, `pnpm review:check`, `docker compose run --rm backend-check` — pass; backend 1,282 tests.
+**Checked:** 360px ✓ · desktop (1440px) ✓ · dark ✓ · light ✓; two-stock plan review verified without Start.
+**New dependencies:** none.
+**Maps updated:** CONTRACTS; existing module/component maps still apply.
+**Guides updated:** USER-GUIDE / API / DATABASE.
+**Deviations from task:** migration 0024 adds nullable `sync_result` because existing summary/plan fields cannot store the typed result; Atlas HTTP and Core WebSocket serializers carry it consistently.
+**Known gaps:** none; independent review pending. Migration tested on throwaway databases, not applied to the running application database.
+**Test note:** first backend gate hit cancellation in existing agent WebSocket teardown; isolated test and complete rerun passed.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** Instruments read 1d and 1m coverage (about 26 requests) on every load; now only when the latest sync listed stocks (`useCoverage` takes `enabled`; button waits for both results).
+**Change requests (if sent back):** none.
+**Checked:** migration 0024 follows 0023, with a check tying `sync_result` to a completed sync; history check uses a candle key lookup; Atlas HTTP and Core WebSocket both carry `syncResult`; nothing starts before Start; plans split by `MAX_DOWNLOAD_SYMBOLS`; `review:check` and `backend-check` run before merge.
+**Guides checked:** API, DATABASE (0024), USER-GUIDE match the diff.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

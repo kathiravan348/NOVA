@@ -39,6 +39,18 @@ class DataJobPlan(Contract):
     warnings: list[Annotated[str, Field(min_length=1)]]
 
 
+class NewIndexMember(Contract):
+    symbol: Annotated[str, Field(min_length=1)]
+    index: Annotated[str, Field(min_length=1)]
+
+
+class InstrumentSyncResult(Contract):
+    """New listings and new memberships without candles at the end of a sync (D74)."""
+
+    new_symbols: list[Annotated[str, Field(min_length=1)]]
+    new_index_members: list[NewIndexMember]
+
+
 class DataJob(Contract):
     id: Id
     type: DataJobType
@@ -58,6 +70,7 @@ class DataJob(Contract):
     finished_at: UtcDateTime | None
     error: str | None
     summary: Annotated[str, Field(max_length=500)] | None
+    sync_result: InstrumentSyncResult | None = None
     # Planned downloads (D57); null / 0 for other jobs and downloads queued before plans.
     mode: DownloadMode | None
     plan: DataJobPlan | None
@@ -67,6 +80,10 @@ class DataJob(Contract):
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
+        if self.sync_result is not None and (
+            self.type != "instrument_sync" or self.status != "completed"
+        ):
+            raise ValueError("syncResult belongs to a completed instrument_sync")
         if self.type == "historical_download" and (
             self.timeframe is None or self.from_ is None or self.to is None
         ):

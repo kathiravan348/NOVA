@@ -6,6 +6,21 @@ from nova_testing.parity import Parity
 from pydantic import ValidationError
 
 
+def test_sync_result_matches_schema_and_rejects_invalid_jobs(parity: Parity) -> None:
+    raw = parity.mock("dataJobs")[-1]
+    result = raw["syncResult"]
+    parity.assert_valid(result, "InstrumentSyncResult")
+    assert result["newSymbols"] == ["GREENGRID-SM", "NOVATECH"]
+    for change in (
+        {"status": "running"},
+        {"type": "archive", "symbols": ["INFY"]},
+        {"syncResult": {"newSymbols": [], "newIndexMembers": [{"symbol": "INFY", "index": ""}]}},
+        {"syncResult": {"newSymbols": [], "newIndexMembers": [], "extra": True}},
+    ):
+        with pytest.raises(ValidationError):
+            DataJob.model_validate_json(json.dumps(raw | change))
+
+
 def test_every_mock_job_round_trips_and_matches_schema(parity: Parity) -> None:
     for raw in parity.mock("dataJobs"):
         dumped = DataJob.model_validate_json(json.dumps(raw)).model_dump(mode="json")

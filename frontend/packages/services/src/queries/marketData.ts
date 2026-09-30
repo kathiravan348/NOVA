@@ -115,8 +115,9 @@ export function useRefreshAfterSync() {
 }
 
 /** Stored history per stock (D63); refreshed at most once a minute and after a job is deleted. */
-export function useCoverage(query: CoverageQuery) {
+export function useCoverage(query: CoverageQuery, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: queryKeys.marketData.coverage(query),
     queryFn: ({ signal }) => getCoverage(query, { signal }),
     staleTime: 60_000,

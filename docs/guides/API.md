@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 30 Sep 2026 (NOVA-147). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 30 Sep 2026 (NOVA-150). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -183,6 +183,13 @@ Unobserved holidays/weekends are excluded, observed special sessions are include
 | `POST /data-jobs/{id}/cancel` | Cancels a `draft`, `queued` or `paused` job at once, or a `running` one: the worker stops before its next step (rows already saved stay). Cancelling a running `tick_record` job stops the recording and turns the recorder switch off. Audit: `data_job.cancel` ("Cancelled 1d download of 2 symbol(s)"). | path | `DataJob` (`cancelled`); 400 "Job is already …" (completed, failed or cancelled); 404 |
 | `DELETE /data-jobs/{id}` | Deletes a `draft`, `completed`, `failed` or `cancelled` job and its steps. With `candles=true` (downloads only) it also deletes the `candles` of the job's stocks and timeframe from `from` to `to` (IST days) — including rows other jobs stored there. Open screens get `data_job.deleted`. Audit: `data_job.delete` ("Deleted 1m download of 1 symbol(s) and 91,723 candles"). | path, `candles` (default false) | `DataJobDeleteResult {id, candlesDeleted}`; 400 "Cancel or finish the job first" (queued, running, paused), 400 candles on a non-download; 404 |
 | `POST /data-jobs/archive` | Queues an `archive` job for the Atlas worker: every tick received before `before` (IST) moves to Parquet files, a day at a time (files first, then the rows are deleted; an existing file is never overwritten, the job fails instead). The job lists the symbols and the IST dates (`from` = first day, `to` = `before` − 1); progress moves per day, `rowsWritten` = ticks moved; a cancel stops between days. Audit: `data_job.create` ("Queued archive of ticks before 2026-09-01"). | `ArchiveJobCreate {before}` | 201 `DataJob` (`archive`, `queued`); 400 future date or no ticks before it |
+
+`DataJob.syncResult` (NOVA-150) is null on other jobs and older syncs. A completed `instrument_sync` has
+`{newSymbols: string[], newIndexMembers: {symbol, index}[]}`: stocks added after an earlier completed sync,
+and newly added memberships from successfully fetched index files, filtered to stocks with no NSE candles
+in any timeframe. Stocks absent from Kite are excluded. This is a persisted snapshot of that sync; it can be
+empty, and later downloads do not rewrite it. List, detail, and `data_job.updated` WebSocket responses include it.
+No new endpoint or audit action. Relay checks current coverage to remove stocks that now have history.
 
 ---
 

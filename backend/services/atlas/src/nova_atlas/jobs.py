@@ -17,7 +17,7 @@ from nova_contracts import (
     Page,
 )
 from nova_contracts import DataJob as DataJobContract
-from nova_contracts.data_job import DataJobType
+from nova_contracts.data_job import DataJobType, InstrumentSyncResult
 from nova_db import new_id
 from nova_db.audit import record_audit
 from nova_db.models import DataJob
@@ -150,6 +150,9 @@ def to_contract(job: DataJob) -> DataJobContract:
             "finished_at": job.finished_at,
             "error": job.error,
             "summary": job.summary,
+            "sync_result": InstrumentSyncResult.model_validate(job.sync_result)
+            if job.sync_result is not None
+            else None,
             "mode": job.mode,
             # Stored as the contract's JSON (camelCase), so it is read back the same way.
             "plan": DataJobPlan.model_validate_json(json.dumps(job.plan)) if job.plan else None,

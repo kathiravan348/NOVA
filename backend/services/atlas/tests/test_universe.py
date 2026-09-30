@@ -1,9 +1,9 @@
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pytest
 from nova_atlas.broker_client import BrokerData, BrokerDataError
 from nova_atlas.universe import kite_stocks, load_universe, sync_instruments
-from nova_db.models import Instrument, MarketIndex, UniverseEntry
+from nova_db.models import Candle, Instrument, MarketIndex, UniverseEntry
 from nova_testing.broker import FakeBroker
 from sqlalchemy import Engine, delete, select
 from sqlalchemy.orm import Session
@@ -123,6 +123,35 @@ def test_a_failed_nse_file_keeps_the_old_members(
 
     assert "NIFTY IT" in result.failed_indices and "NIFTY IT" in result.summary()
     assert infy.indices == ["NIFTY 50", "NIFTY IT"]
+    assert all(index != "NIFTY IT" for _, index in result.new_index_members)
+
+
+def test_new_members_without_history_are_detected_once(clean: Engine, broker: BrokerData) -> None:
+    with Session(clean) as db:
+        sync_instruments(db, broker)
+        for symbol in ("INFY", "TCS"):
+            entry = db.get(UniverseEntry, ("NSE", symbol))
+            assert entry is not None
+            entry.indices = ["NIFTY 50"]
+        db.add(
+            Candle(
+                exchange="NSE",
+                symbol="INFY",
+                timeframe="1d",
+                ts=datetime(2020, 1, 1, tzinfo=UTC),
+                open_paise=100,
+                high_paise=100,
+                low_paise=100,
+                close_paise=100,
+                volume=1,
+            )
+        )
+        db.commit()
+        result = sync_instruments(db, broker, mark_new=True)
+        assert result.new_symbols == []
+        assert result.new_index_members == [("TCS", "NIFTY IT")]
+        again = sync_instruments(db, broker, mark_new=True)
+        assert again.new_symbols == [] and again.new_index_members == []
 
 
 def test_a_hand_set_sector_is_kept(clean: Engine, broker: BrokerData) -> None:

@@ -4,11 +4,13 @@ import threading
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from fastapi.testclient import TestClient
 from nova_atlas.broker_client import NOT_LOGGED_IN, BrokerData
 from nova_atlas.sync_job import maybe_queue_daily_sync, queue_instrument_sync, run_instrument_sync
 from nova_atlas.worker import run_worker
-from nova_db.models import AuditEntry, DataJob, UniverseEntry
+from nova_db.models import AuditEntry, Candle, DataJob, UniverseEntry
 from nova_testing.broker import FakeBroker
+from nova_testing.parity import Parity
 from sqlalchemy import Engine, delete, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -58,6 +60,53 @@ def test_the_second_sync_marks_new_listings(clean: Engine, broker: BrokerData) -
 
     assert tcs is not None and tcs.new_listing
     assert "new listing(s): TCS" in (_job(clean, second).summary or "")
+
+
+@pytest.mark.parametrize("with_history", [False, True])
+def test_finished_sync_exposes_new_stocks_without_any_candles(
+    clean: Engine, broker: BrokerData, client: TestClient, parity: Parity, with_history: bool
+) -> None:
+    first = _queue(clean)
+    with Session(clean) as db:
+        run_instrument_sync(db, first, broker)
+        db.execute(delete(UniverseEntry).where(UniverseEntry.symbol.in_(["INFY", "TCS"])))
+        if with_history:
+            db.add(
+                Candle(
+                    exchange="NSE",
+                    symbol="TCS",
+                    timeframe="1m",
+                    ts=AFTER,
+                    open_paise=100,
+                    high_paise=100,
+                    low_paise=100,
+                    close_paise=100,
+                    volume=1,
+                )
+            )
+        db.commit()
+    second = _queue(clean)
+    with Session(clean) as db:
+        run_instrument_sync(db, second, broker)
+    expected = ["INFY"] if with_history else ["INFY", "TCS"]
+    result = {
+        "newSymbols": expected,
+        "newIndexMembers": [
+            {"symbol": symbol, "index": index}
+            for symbol in expected
+            for index in ("NIFTY 50", "NIFTY IT")
+        ],
+    }
+    assert _job(clean, second).sync_result == result
+    response = client.get(f"/api/v1/data-jobs/{second}")
+    assert response.status_code == 200 and response.json()["syncResult"] == result
+    parity.assert_valid(response.json(), "DataJob")
+    latest = client.get("/api/v1/data-jobs", params={"type": "instrument_sync", "limit": 1})
+    assert latest.json()["items"][0]["syncResult"] == result
+    third = _queue(clean)
+    with Session(clean) as db:
+        run_instrument_sync(db, third, broker)
+    assert _job(clean, third).sync_result == {"newSymbols": [], "newIndexMembers": []}
 
 
 def test_kite_not_logged_in_fails_with_a_clear_reason(

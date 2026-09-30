@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "newSymbols": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "newIndexMembers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "index": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "symbol",
+          "index"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "newSymbols",
+    "newIndexMembers"
+  ],
+  "additionalProperties": false
+}

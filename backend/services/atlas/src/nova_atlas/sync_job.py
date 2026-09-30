@@ -4,6 +4,7 @@ from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+from nova_contracts.data_job import InstrumentSyncResult, NewIndexMember
 from nova_db import new_id
 from nova_db.audit import record_audit
 from nova_db.models import DataJob
@@ -96,6 +97,12 @@ def run_instrument_sync(db: Session, job_id: str, broker: BrokerData) -> None:
         return
     job.rows_written = len(result.synced)
     job.summary = result.summary()
+    job.sync_result = InstrumentSyncResult(
+        new_symbols=result.new_symbols,
+        new_index_members=[
+            NewIndexMember(symbol=symbol, index=index) for symbol, index in result.new_index_members
+        ],
+    ).model_dump(mode="json")
     finish_job(db, job, None)
 
 

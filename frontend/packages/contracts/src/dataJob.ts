@@ -57,6 +57,17 @@ export const DataJobPlanSchema = z.strictObject({
 });
 export type DataJobPlan = z.infer<typeof DataJobPlanSchema>;
 
+/** Newly added membership with no candles in any timeframe (D74). */
+export const NewIndexMemberSchema = z.strictObject({
+  symbol: z.string().min(1),
+  index: z.string().min(1),
+});
+export const InstrumentSyncResultSchema = z.strictObject({
+  newSymbols: z.array(z.string().min(1)),
+  newIndexMembers: z.array(NewIndexMemberSchema),
+});
+export type InstrumentSyncResult = z.infer<typeof InstrumentSyncResultSchema>;
+
 export const DataJobSchema = z
   .strictObject({
     id: IdSchema,
@@ -76,6 +87,8 @@ export const DataJobSchema = z
     finishedAt: UtcDateTimeSchema.nullable(),
     error: z.string().nullable(),
     summary: z.string().max(500).nullable(),
+    /** Absent/null for older jobs; only completed instrument syncs have a result. */
+    syncResult: InstrumentSyncResultSchema.nullable().optional(),
     // Planned downloads (D57); null / 0 for other jobs and downloads queued before plans.
     mode: DownloadModeSchema.nullable(),
     plan: DataJobPlanSchema.nullable(),
@@ -83,6 +96,13 @@ export const DataJobSchema = z
     stepsTotal: z.number().int().min(0),
     expiresAt: UtcDateTimeSchema.nullable(),
   })
+  .refine(
+    (data) => !data.syncResult || (data.type === "instrument_sync" && data.status === "completed"),
+    {
+      message: "syncResult belongs to a completed instrument_sync",
+      path: ["syncResult"],
+    },
+  )
   .refine(
     (data) => {
       if (data.type === "historical_download") {
