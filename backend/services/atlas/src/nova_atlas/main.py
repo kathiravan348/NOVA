@@ -7,7 +7,7 @@ from fastapi import APIRouter, FastAPI
 from nova_common import install_error_handlers, openapi_url
 from nova_db import create_db_engine, create_session_factory
 
-from nova_atlas import coverage, job_control, jobs, market_data, unavailable, universe_api
+from nova_atlas import coverage, job_control, jobs, live, market_data, unavailable, universe_api
 from nova_atlas.settings import AtlasSettings, get_atlas_settings
 
 API_PREFIX = "/api/v1"
@@ -48,6 +48,7 @@ def create_app(
     router.include_router(coverage.router)
     router.include_router(unavailable.router)
     router.include_router(universe_api.router)
+    router.include_router(live.router)
     app.include_router(router)
     return app
 

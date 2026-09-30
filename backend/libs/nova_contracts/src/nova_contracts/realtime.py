@@ -6,6 +6,7 @@ from pydantic import Field
 
 from nova_contracts.common import Contract, Id
 from nova_contracts.data_job import DataJob
+from nova_contracts.live import LiveTick
 
 
 class RealtimeHello(Contract):
@@ -38,6 +39,12 @@ class DataJobDeleted(Contract):
     data: DeletedJobRef
 
 
+class LiveTickMessage(Contract):
+    type: Literal["live.tick"]
+    data: LiveTick
+
+
 RealtimeMessage = Annotated[
-    RealtimeHello | RealtimePing | DataJobUpdated | DataJobDeleted, Field(discriminator="type")
+    RealtimeHello | RealtimePing | DataJobUpdated | DataJobDeleted | LiveTickMessage,
+    Field(discriminator="type"),
 ]

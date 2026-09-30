@@ -19,6 +19,7 @@ from nova_common import ApiException
 from nova_contracts import MAX_RECORDER_SYMBOLS
 from nova_db import new_id
 from nova_db.models import DataJob, Instrument, RecorderSetting, Tick
+from redis import Redis
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, sessionmaker
@@ -26,6 +27,7 @@ from websockets.asyncio.client import connect
 
 from nova_broker.crypto import TokenCipher
 from nova_broker.internal import active_session
+from nova_broker.live_publish import previous_closes, publish_ticks
 from nova_broker.recorder import Recorder, Sink, kite_url
 
 logger = logging.getLogger("nova.broker.recorder_loop")
@@ -111,6 +113,7 @@ class RecorderLoop:
     now: Callable[[], datetime] = field(default=lambda: datetime.now(UTC))
     poll_seconds: float = 30.0
     retry_at: datetime | None = None
+    redis: Redis | None = None
 
     def run(self) -> None:
         self.recover()
@@ -166,6 +169,8 @@ class RecorderLoop:
     def _record(self, job_id: str, url: str, tokens: dict[int, str]) -> None:
         last_check = self.now()
         wanted = True
+        with self.factory() as db:
+            closes = previous_closes(db, list(tokens.values()), self.now())
 
         # Any: rows are `ticks` column values for a bulk insert.
         def sink(rows: list[dict[str, Any]]) -> None:
@@ -177,6 +182,8 @@ class RecorderLoop:
                     .values(rows_written=DataJob.rows_written + len(rows))
                 )
                 db.commit()
+            if self.redis is not None:
+                publish_ticks(self.redis, rows, closes)
 
         def should_stop() -> bool:
             nonlocal last_check, wanted

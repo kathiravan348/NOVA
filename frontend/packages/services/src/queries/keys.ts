@@ -1,4 +1,9 @@
 export const queryKeys = {
+  live: {
+    all: ["live"] as const,
+    snapshot: (symbols: string[]) => ["live", "snapshot", symbols] as const,
+    days: (symbol: string) => ["live", "days", symbol] as const,
+  },
   approvals: {
     all: ["approvals"] as const,
     list: (status?: string) => ["approvals", "list", status] as const,

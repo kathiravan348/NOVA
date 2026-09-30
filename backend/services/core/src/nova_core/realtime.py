@@ -23,13 +23,15 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from nova_core.deps import user_role
+from nova_core.live_realtime import LiveFeed
 from nova_core.sessions import COOKIE_NAME, resolve_session
 from nova_core.settings import CoreSettings
 
 CHANNEL = "nova_events"
 COALESCE_SECONDS = 0.25
 CLOSE_UNAUTHORIZED = 4401
-QUEUE_SIZE = 256
+# A complete 500-stock tick flush must fit alongside queued job events.
+QUEUE_SIZE = 1024
 MAX_BACKOFF_SECONDS = 30.0
 
 log = logging.getLogger(__name__)
@@ -84,6 +86,13 @@ def signed_in_user_id(factory: sessionmaker[Session], token: str | None) -> str 
         return user.id
 
 
+def live_allowed(factory: sessionmaker[Session], token: str | None) -> bool:
+    """New /live routes are denied to agents by default; the socket keeps that boundary."""
+    with factory() as db:
+        user = resolve_session(db, token) if token else None
+        return user is not None and user_role(db, user.id) == "super_admin"
+
+
 @dataclass
 class Hub:
     """Open sockets and the NOTIFY listener of one Core process."""
@@ -96,6 +105,7 @@ class Hub:
     _last_sent: dict[str, float] = field(default_factory=dict)
     _pending: set[str] = field(default_factory=set)
     _tasks: set["asyncio.Task[None]"] = field(default_factory=set)
+    live: LiveFeed = field(default_factory=LiveFeed)
 
     def subscribe(self) -> "asyncio.Queue[str]":
         queue: asyncio.Queue[str] = asyncio.Queue(QUEUE_SIZE)
@@ -104,6 +114,7 @@ class Hub:
 
     def unsubscribe(self, queue: "asyncio.Queue[str]") -> None:
         self.clients.discard(queue)
+        self.live.unsubscribe(queue)
 
     def broadcast(self, text: str) -> None:
         for queue in list(self.clients):
@@ -198,8 +209,8 @@ async def realtime_socket(websocket: WebSocket) -> None:
     tasks = [
         asyncio.create_task(_writer(websocket, queue)),
         asyncio.create_task(_pinger(hub, queue)),
-        asyncio.create_task(_session_guard(hub, websocket, token)),
-        asyncio.create_task(_reader(websocket)),
+        asyncio.create_task(_session_guard(hub, websocket, token, queue)),
+        asyncio.create_task(_reader(websocket, hub, queue, token)),
     ]
     try:
         # The first task to end (client left, send failed, session revoked) ends the others.
@@ -223,16 +234,26 @@ async def _pinger(hub: Hub, queue: "asyncio.Queue[str]") -> None:
             queue.put_nowait('{"type":"ping"}')
 
 
-async def _session_guard(hub: Hub, websocket: WebSocket, token: str | None) -> None:
+async def _session_guard(
+    hub: Hub, websocket: WebSocket, token: str | None, queue: "asyncio.Queue[str]"
+) -> None:
     while True:
         await asyncio.sleep(hub.settings.ws_session_check_seconds)
         if await asyncio.to_thread(signed_in_user_id, hub.factory, token) is None:
             await websocket.close(code=CLOSE_UNAUTHORIZED)
             return
+        if queue in hub.live.subscriptions and not await asyncio.to_thread(
+            live_allowed, hub.factory, token
+        ):
+            hub.live.unsubscribe(queue)
 
 
-async def _reader(websocket: WebSocket) -> None:
-    """Client messages are ignored (only `pong` is expected); returns when the client leaves."""
+async def _reader(
+    websocket: WebSocket, hub: Hub, queue: "asyncio.Queue[str]", token: str | None
+) -> None:
+    """Accept a replacement live stock selection; [] unsubscribes from all ticks."""
     with contextlib.suppress(WebSocketDisconnect):
         while True:
-            await websocket.receive_text()
+            message = await websocket.receive_text()
+            if await asyncio.to_thread(live_allowed, hub.factory, token):
+                hub.live.subscribe(queue, message)

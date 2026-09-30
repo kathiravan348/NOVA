@@ -1,6 +1,6 @@
 # NOVA-151 — Live feed: `live.tick` message + snapshot and per-day summary endpoints
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-151 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-151 · **Depends on:** —
 
 ## Goal
 The backend and contracts behind the Live module (D74 (1)–(2)): a `live.tick` WebSocket message, a latest-price
@@ -32,18 +32,26 @@ Modify:
 5. Mocks: 8 stocks with plausible numbers, one with gaps.
 
 ## Acceptance checks
-- [ ] Backend tests: gap classification (fault vs no trade), throttle to 1/s, unsubscribed socket gets nothing.
-- [ ] Parity tests pass; mocks validate; endpoints in `API.md`.
-- [ ] Definition of done in `AGENTS.md` §9 (`review:check` and `backend-check`).
+- [x] Backend tests: gap classification (fault vs no trade), throttle to 1/s, unsubscribed socket gets nothing.
+- [x] Parity tests pass; mocks validate; endpoints in `API.md`.
+- [x] Definition of done in `AGENTS.md` §9 (`review:check` and `backend-check`).
 
 ## Out of scope
 - Screens (NOVA-152/153); building stored 1-second candles (computed on read); orders; option or index ticks.
 
 ## Questions
-_(implementer writes here if blocked)_
+None.
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** committed ticks publish to Redis; selected stocks stream at most once a second; Atlas serves snapshots and computed daily tick/candle/fault/no-trade/size summaries.
+**Files changed:** `backend/libs/nova_contracts/`, `backend/services/{atlas,broker,core}/`, `backend/uv.lock`, `frontend/packages/{contracts,mocks,services}/`, `docs/{CONTRACTS,STRUCTURE}.md`, `docs/guides/{API,DATABASE}.md`, `docs/tasks/{BOARD,NOVA-151}.md`.
+**Commands run:** `schema:update`, targeted frontend/backend tests, `pnpm review:check` (1,046 tests + builds pass), `docker compose run --rm backend-check` (1,315 tests, ruff/format/mypy pass).
+**Checked:** 500-stock socket burst and snapshot; subscription filtering/cleanup/reconnect; Redis outage storage; database/Parquet gaps and snapshots; ampersand/hyphenated symbols. Screens/stories: not applicable.
+**New dependencies:** no new library; Core directly declares existing `redis==8.1.0`, locked with `uv add`.
+**Maps updated:** CONTRACTS / STRUCTURE; COMPONENTS unchanged.
+**Guides updated:** API / DATABASE; USER-GUIDE unchanged (no screens).
+**Deviations from task:** supporting helper modules, broker CLI wiring, Core lifecycle/gateway registration and explicit blocked agent rule are required to connect the recorder and public endpoints; no new migration or stored second candles.
+**Known limits:** archived gap classification reads timestamp columns from all recorded stocks per day in bounded batches; `changePercent` uses the last stored daily close before the tick's IST date, or null if unavailable.
 
 ## Review
 _(reviewer — see `docs/templates/REVIEW.md`)_

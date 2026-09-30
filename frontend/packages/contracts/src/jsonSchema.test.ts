@@ -56,6 +56,12 @@ import { TradeSchema } from "./trade";
 import { UniverseEntrySchema, UniverseEntryWriteSchema, UniverseSectorSchema } from "./universe";
 import { UserSchema } from "./user";
 import { RealtimeMessageSchema } from "./realtime";
+import {
+  LiveTickSchema,
+  LiveSnapshotItemSchema,
+  LiveDaySummarySchema,
+  LiveSubscribeSchema,
+} from "./live";
 import { pageSchema } from "./common";
 
 // Wire contracts (request/response bodies) exported as JSON Schema for backend parity tests (D34).
@@ -115,6 +121,10 @@ const contracts: Record<string, z.ZodType> = {
   UniverseSector: UniverseSectorSchema,
   User: UserSchema,
   RealtimeMessage: RealtimeMessageSchema,
+  LiveTick: LiveTickSchema,
+  LiveSnapshotItem: LiveSnapshotItemSchema,
+  LiveDaySummary: LiveDaySummarySchema,
+  LiveSubscribe: LiveSubscribeSchema,
 };
 
 describe("JSON Schema export", () => {

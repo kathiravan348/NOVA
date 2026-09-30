@@ -26,6 +26,7 @@ ROUTES: dict[str, str] = {
     "broker": "broker_url",
     "data-jobs": "atlas_url",
     "market-data": "atlas_url",
+    "live": "atlas_url",
     "strategies": "strategy_url",
     "backtests": "backtest_url",
 }

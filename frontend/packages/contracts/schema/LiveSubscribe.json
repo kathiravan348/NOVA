@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "live.subscribe"
+    },
+    "symbols": {
+      "maxItems": 500,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[A-Z0-9&]+(?:-[A-Z0-9&]+)*$"
+      }
+    }
+  },
+  "required": [
+    "type",
+    "symbols"
+  ],
+  "additionalProperties": false
+}
