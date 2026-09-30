@@ -71,8 +71,15 @@ def test_list_is_paged_newest_first_and_filters_by_strategy(
 
     assert [r["id"] for r in first["items"] + rest["items"]] == list(reversed(ids))
     assert rest["nextCursor"] is None
+    offset = client.get(BACKTESTS, params={"limit": 2, "offset": 2}).json()
+    assert offset == rest
+    assert first["total"] == rest["total"] == 3
+    assert (
+        client.get(BACKTESTS, params={"offset": 0, "cursor": first["nextCursor"]}).status_code
+        == 422
+    )
     other = client.get(BACKTESTS, params={"strategyId": "stg_other"}).json()
-    assert other == {"items": [], "nextCursor": None}
+    assert other == {"items": [], "nextCursor": None, "total": 0}
 
 
 def test_result_and_trades(
@@ -157,6 +164,10 @@ def test_result_and_trades(
     for trade in first["items"]:
         parity.assert_valid(trade, "Trade")
     assert [t["id"] for t in first["items"] + rest["items"]] == ["trd_0", "trd_1", "trd_2"]
+    assert (
+        client.get(f"{BACKTESTS}/{run_id}/trades", params={"offset": 2, "limit": 2}).json() == rest
+    )
+    assert first["total"] == rest["total"] == 3
 
 
 def test_unknown_run_is_not_found(client: TestClient) -> None:

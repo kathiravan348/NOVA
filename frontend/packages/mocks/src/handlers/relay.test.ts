@@ -72,6 +72,7 @@ describe("Relay MSW handlers", () => {
     const data = await res.json();
     expect(pageSchema(DataJobSchema).parse(data)).toEqual({
       items: mockDataJobs,
+      total: mockDataJobs.length,
       nextCursor: null,
     });
   });
@@ -87,7 +88,11 @@ describe("Relay MSW handlers", () => {
         await fetch(`http://localhost/api/v1/data-jobs?limit=200&cursor=${first.nextCursor!}`)
       ).json(),
     );
-    expect(rest).toEqual({ items: mockDataJobs.slice(2), nextCursor: null });
+    expect(rest).toEqual({
+      items: mockDataJobs.slice(2),
+      total: mockDataJobs.length,
+      nextCursor: null,
+    });
   });
 
   it("GET /api/v1/data-jobs/:id returns single data job for valid id", async () => {
@@ -248,6 +253,7 @@ describe("Relay MSW handlers", () => {
     const data = await res.json();
     expect(pageSchema(AuditEntrySchema).parse(data)).toEqual({
       items: mockAuditEntries,
+      total: mockAuditEntries.length,
       nextCursor: null,
     });
   });

@@ -73,11 +73,16 @@ describe("Orbit api", () => {
     await expect(listStrategies()).resolves.toEqual(mockStrategies);
     await expect(listStrategyStats()).resolves.toEqual(mockStrategyStats);
     await expect(getStrategy(strategy.id)).resolves.toEqual(strategy);
-    await expect(listBacktests()).resolves.toEqual({ items: listedRuns, nextCursor: null });
+    await expect(listBacktests()).resolves.toEqual({
+      items: listedRuns,
+      total: listedRuns.length,
+      nextCursor: null,
+    });
     await expect(getBacktest(run.id)).resolves.toEqual(run);
     await expect(getBacktestResult(result.runId)).resolves.toEqual(result);
     await expect(listBacktestTrades(result.runId)).resolves.toEqual({
       items: mockTrades.filter((t) => t.runId === result.runId),
+      total: mockTrades.filter((t) => t.runId === result.runId).length,
       nextCursor: null,
     });
   });
@@ -100,6 +105,22 @@ describe("Orbit api", () => {
   it("rejects a bare array where a page is expected", async () => {
     server.use(http.get("*/api/v1/audit", () => HttpResponse.json(mockAuditEntries)));
     await expect(listAuditEntries()).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("passes offset to filtered lists and preserves total", async () => {
+    const filtered = listedRuns.filter((r) => r.strategyId === run.strategyId);
+    expect(await listBacktests({ strategyId: run.strategyId, offset: 1, limit: 1 })).toMatchObject({
+      items: filtered.slice(1, 2),
+      total: filtered.length,
+    });
+    expect(await listAuditEntries({ offset: 2, limit: 2 })).toMatchObject({
+      items: mockAuditEntries.slice(2, 4),
+      total: mockAuditEntries.length,
+    });
+    expect(await listDataJobs({ offset: 1, limit: 1 })).toMatchObject({
+      items: mockDataJobs.slice(1, 2),
+      total: mockDataJobs.length,
+    });
   });
 
   it("maps an unknown id to a 404 not_found error", async () => {
@@ -138,10 +159,15 @@ describe("Relay api", () => {
     await expect(listBrokerAccounts()).resolves.toEqual(mockBrokerAccounts);
     await expect(getBrokerAccount(account.id)).resolves.toEqual(account);
     await expect(listRateLimits()).resolves.toEqual(mockRateLimits);
-    await expect(listDataJobs()).resolves.toEqual({ items: mockDataJobs, nextCursor: null });
+    await expect(listDataJobs()).resolves.toEqual({
+      items: mockDataJobs,
+      total: mockDataJobs.length,
+      nextCursor: null,
+    });
     await expect(getDataJob(job.id)).resolves.toEqual(job);
     await expect(listAuditEntries()).resolves.toEqual({
       items: mockAuditEntries,
+      total: mockAuditEntries.length,
       nextCursor: null,
     });
   });

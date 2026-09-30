@@ -55,6 +55,7 @@ import { TradeSchema } from "./trade";
 import { UniverseEntrySchema, UniverseEntryWriteSchema, UniverseSectorSchema } from "./universe";
 import { UserSchema } from "./user";
 import { RealtimeMessageSchema } from "./realtime";
+import { pageSchema } from "./common";
 
 // Wire contracts (request/response bodies) exported as JSON Schema for backend parity tests (D34).
 // Regenerate with `pnpm --filter @nova/contracts schema:update`. Refinements are not part of JSON Schema.
@@ -67,6 +68,7 @@ const contracts: Record<string, z.ZodType> = {
   ApiError: ApiErrorSchema,
   ArchiveJobCreate: ArchiveJobCreateSchema,
   AuditEntry: AuditEntrySchema,
+  AuditPage: pageSchema(AuditEntrySchema),
   BacktestResult: BacktestResultSchema,
   BacktestRun: BacktestRunSchema,
   BacktestRunCreate: BacktestRunCreateSchema,

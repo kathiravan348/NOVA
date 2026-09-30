@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "actorId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actorName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "auth.login",
+              "auth.logout",
+              "broker.login",
+              "broker.session_expired",
+              "broker.rate_limit_update",
+              "broker.account_create",
+              "broker.kite_app_update",
+              "strategy.create",
+              "strategy.update",
+              "strategy.delete",
+              "backtest.run",
+              "backtest.edit",
+              "backtest.delete",
+              "data_job.create",
+              "data_job.cancel",
+              "data_job.plan",
+              "data_job.start",
+              "data_job.pause",
+              "data_job.resume",
+              "data_job.delete",
+              "instrument.add",
+              "instrument.update",
+              "instrument.remove",
+              "instrument.sync",
+              "instrument.clear_new",
+              "settings.update",
+              "download_settings.update",
+              "approval.request",
+              "approval.approve",
+              "approval.reject",
+              "agent.create",
+              "agent.password",
+              "agent.access"
+            ]
+          },
+          "targetType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "broker_account",
+                  "strategy",
+                  "backtest",
+                  "data_job",
+                  "settings",
+                  "instrument",
+                  "approval_request"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actorId",
+          "actorName",
+          "action",
+          "targetType",
+          "targetId",
+          "summary",
+          "ip"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "nextCursor": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "items",
+    "nextCursor",
+    "total"
+  ],
+  "additionalProperties": false
+}

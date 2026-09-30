@@ -207,6 +207,7 @@ def list_unavailable(
     symbol: str | None = None,
     limit: Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)] = PAGE_LIMIT_DEFAULT,
     cursor: Annotated[str | None, Query(min_length=1)] = None,
+    offset: Annotated[int | None, Query(ge=0)] = None,
 ) -> JSONResponse:
     last = to or datetime.now(IST).date()
     if from_ > last:
@@ -224,18 +225,20 @@ def list_unavailable(
             if status == "unavailable"
             else UnavailableDay.resolved_at.is_not(None)
         )
-    rows, next_cursor = newest_first(
+    rows, next_cursor, total = newest_first(
         db,
         UnavailableDay,
         UnavailableDay.first_checked_at,
         UnavailableDay.id,
         limit=limit,
         cursor=cursor,
+        offset=offset,
         where=where,
     )
     return JSONResponse(
         Page[DayContract](
             items=[day_contract(row) for row in rows],
             next_cursor=next_cursor,
+            total=total,
         ).model_dump(mode="json")
     )

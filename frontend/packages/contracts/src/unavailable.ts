@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IdSchema, IsoDateSchema, UtcDateTimeSchema } from "./common";
+import { IdSchema, IsoDateSchema, UtcDateTimeSchema, type PageQuery } from "./common";
 import { CoverageTimeframeSchema, type CoverageQuery } from "./coverage";
 
 /** A successful broker check that could not supply a usable candle on a known trading date. */
@@ -29,7 +29,7 @@ export const UnavailableDaySchema = z
   });
 
 export type UnavailableDay = z.infer<typeof UnavailableDaySchema>;
-export interface UnavailableQuery extends CoverageQuery {
+export interface UnavailableQuery extends CoverageQuery, PageQuery {
   status?: "unavailable" | "resolved" | "all";
   symbol?: string;
 }

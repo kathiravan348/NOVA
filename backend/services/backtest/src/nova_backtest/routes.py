@@ -54,6 +54,7 @@ def list_runs(
     strategy_id: Annotated[str | None, Query(alias="strategyId", min_length=1)] = None,
     limit: Limit = PAGE_LIMIT_DEFAULT,
     cursor: Cursor = None,
+    offset: Annotated[int | None, Query(ge=0)] = None,
 ) -> JSONResponse:
     # Only the newest version of each backtest (D60).
     newer = aliased(BacktestRun)
@@ -62,16 +63,19 @@ def list_runs(
     ]
     if strategy_id:
         where.append(BacktestRun.strategy_id == strategy_id)
-    rows, next_cursor = newest_first(
+    rows, next_cursor, total = newest_first(
         db,
         BacktestRun,
         BacktestRun.created_at,
         BacktestRun.id,
         limit=limit,
         cursor=cursor,
+        offset=offset,
         where=where,
     )
-    page = Page[RunContract](items=[run_contract(r) for r in rows], next_cursor=next_cursor)
+    page = Page[RunContract](
+        items=[run_contract(r) for r in rows], next_cursor=next_cursor, total=total
+    )
     return JSONResponse(page.model_dump(mode="json"))
 
 
@@ -91,19 +95,27 @@ def get_result(run_id: str, _: CallerDep, db: Db) -> JSONResponse:
 
 @router.get("/{run_id}/trades")
 def list_trades(
-    run_id: str, _: CallerDep, db: Db, limit: Limit = PAGE_LIMIT_DEFAULT, cursor: Cursor = None
+    run_id: str,
+    _: CallerDep,
+    db: Db,
+    limit: Limit = PAGE_LIMIT_DEFAULT,
+    cursor: Cursor = None,
+    offset: Annotated[int | None, Query(ge=0)] = None,
 ) -> JSONResponse:
     _run(db, run_id)
-    rows, next_cursor = oldest_first(
+    rows, next_cursor, total = oldest_first(
         db,
         Trade,
         Trade.entry_at,
         Trade.id,
         limit=limit,
         cursor=cursor,
+        offset=offset,
         where=[Trade.run_id == run_id],
     )
-    page = Page[TradeContract](items=[trade_contract(r) for r in rows], next_cursor=next_cursor)
+    page = Page[TradeContract](
+        items=[trade_contract(r) for r in rows], next_cursor=next_cursor, total=total
+    )
     return JSONResponse(page.model_dump(mode="json"))
 
 

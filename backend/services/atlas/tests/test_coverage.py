@@ -96,6 +96,10 @@ def test_statuses_from_a_stock_calendar(client: TestClient, clean: Engine, parit
     assert rows["RELIANCE"]["status"] == "complete"
     assert rows["HDFCBANK"] == rows["HDFCBANK"] | {"status": "none", "days": 0, "firstDay": None}
     assert "S0" not in rows  # only the stock list and indices are listed
+    page = client.get(COVERAGE, params=PERIOD | {"offset": "2", "limit": "2"}).json()
+    assert page["rows"] == body["rows"][2:4]
+    assert page["total"] == body["total"] == len(body["rows"])
+    assert client.get(COVERAGE, params=PERIOD | {"offset": "-1"}).status_code == 400
 
 
 def test_index_and_stock_calendar_union_and_indices_are_listed(

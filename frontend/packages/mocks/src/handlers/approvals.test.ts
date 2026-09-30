@@ -21,7 +21,7 @@ describe("approval endpoints", () => {
     const page = pageSchema(ApprovalRequestSchema).parse(
       await (await fetch(`${base}/approvals`)).json(),
     );
-    expect(page).toEqual({ items: mockApprovals, nextCursor: null });
+    expect(page).toEqual({ items: mockApprovals, total: mockApprovals.length, nextCursor: null });
     expect(AgentAccountSchema.parse(await (await fetch(`${base}/agent`)).json())).toEqual(
       mockAgentAccount,
     );

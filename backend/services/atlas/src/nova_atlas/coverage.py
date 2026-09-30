@@ -10,7 +10,14 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import CallerDep
-from nova_contracts import CoverageDetail, CoverageList, CoverageRow, MissingRange
+from nova_contracts import (
+    PAGE_LIMIT_DEFAULT,
+    PAGE_LIMIT_MAX,
+    CoverageDetail,
+    CoverageList,
+    CoverageRow,
+    MissingRange,
+)
 from nova_db.models import MarketIndex
 from nova_db.web import Db
 from sqlalchemy import bindparam, select, text
@@ -142,6 +149,8 @@ def list_coverage(
     timeframe: TimeframeQuery = "1d",
     from_: Annotated[date | None, Query(alias="from")] = None,
     to: date | None = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)] = PAGE_LIMIT_DEFAULT,
 ) -> JSONResponse:
     """Every stock of the list and every index: stored range, missing days, status.
 
@@ -169,7 +178,14 @@ def list_coverage(
         n = _numbers(series.get(name), first, last, days)
         rows.append(_row(name, name, "index", "Index", [], n, unavailable.get(name, 0)))
     body = CoverageList.model_validate(
-        {"timeframe": timeframe, "from": first, "to": last, "calendar": source, "rows": rows}
+        {
+            "timeframe": timeframe,
+            "from": first,
+            "to": last,
+            "calendar": source,
+            "rows": rows[offset : offset + limit],
+            "total": len(rows),
+        }
     )
     return JSONResponse(body.model_dump(mode="json"))
 

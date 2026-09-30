@@ -357,7 +357,8 @@
           "status": "complete",
           "unavailableDays": 0
         }
-      ]
+      ],
+      "total": 27
     },
     {
       "timeframe": "1m",
@@ -703,7 +704,8 @@
           "status": "none",
           "unavailableDays": 0
         }
-      ]
+      ],
+      "total": 26
     }
   ],
   "details": [

@@ -110,7 +110,7 @@ describe("realtime client", () => {
 
   it("puts a new job at the top of the first page", () => {
     const client = createQueryClient();
-    const page: Page<DataJob> = { items: [running], nextCursor: null };
+    const page: Page<DataJob> = { items: [running], nextCursor: null, total: 1 };
     client.setQueryData<InfiniteData<Page<DataJob>>>(queryKeys.dataJobs.list, {
       pages: [page],
       pageParams: [undefined],
@@ -173,7 +173,7 @@ describe("realtime client", () => {
 
   it("removes a deleted job from the list and its page", () => {
     const client = createQueryClient();
-    const page: Page<DataJob> = { items: [running], nextCursor: null };
+    const page: Page<DataJob> = { items: [running], nextCursor: null, total: 1 };
     client.setQueryData<InfiniteData<Page<DataJob>>>(queryKeys.dataJobs.list, {
       pages: [page],
       pageParams: [undefined],

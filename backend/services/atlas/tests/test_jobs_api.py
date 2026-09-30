@@ -55,6 +55,11 @@ def test_pages_walk_every_job_newest_first(
             break
 
     assert seen == expected
+    offset = client.get(JOBS, params={"limit": 2, "offset": 2}).json()
+    assert [r["id"] for r in offset["items"]] == expected[2:4]
+    assert offset["total"] == 5
+    assert client.get(JOBS, params={"limit": 2, "offset": -1}).status_code == 400
+    assert client.get(JOBS, params={"offset": 0, "cursor": offset["nextCursor"]}).status_code == 422
 
 
 def test_the_list_can_keep_one_job_type(client: TestClient, clean: Engine) -> None:

@@ -58,6 +58,7 @@ class CoverageList(_Period):
     timeframe: CoverageTimeframe
     calendar: Literal["index", "stocks"]
     rows: list[CoverageRow]
+    total: Count
 
 
 class MissingRange(_Period):

@@ -40,6 +40,7 @@ describe("coverage (D63)", () => {
       to: "2026-09-18",
       calendar: "index",
       rows: [row],
+      total: 1,
     };
     expect(CoverageListSchema.safeParse(list).success).toBe(true);
     expect(CoverageListSchema.safeParse({ ...list, from: "2027-01-01" }).success).toBe(false);

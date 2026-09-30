@@ -36,9 +36,12 @@ def list_audit(
     db: Db,
     limit: Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)] = PAGE_LIMIT_DEFAULT,
     cursor: Annotated[str | None, Query(min_length=1)] = None,
+    offset: Annotated[int | None, Query(ge=0)] = None,
 ) -> JSONResponse:
-    rows, next_cursor = newest_first(
-        db, AuditEntry, AuditEntry.at, AuditEntry.id, limit=limit, cursor=cursor
+    rows, next_cursor, total = newest_first(
+        db, AuditEntry, AuditEntry.at, AuditEntry.id, limit=limit, cursor=cursor, offset=offset
     )
-    page = Page[AuditEntryContract](items=[to_contract(r) for r in rows], next_cursor=next_cursor)
+    page = Page[AuditEntryContract](
+        items=[to_contract(r) for r in rows], next_cursor=next_cursor, total=total
+    )
     return JSONResponse(page.model_dump(mode="json"))

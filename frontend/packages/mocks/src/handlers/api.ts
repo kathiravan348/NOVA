@@ -77,6 +77,20 @@ export function paginate<T>(items: readonly T[], requestUrl: string): Response {
 
   let offset = 0;
   const cursor = params.get("cursor");
+  const rawOffset = params.get("offset");
+  if (rawOffset !== null && cursor !== null) {
+    return HttpResponse.json<ApiError>(
+      { error: { code: "invalid_request", message: "Use either offset or cursor, not both" } },
+      { status: 422 },
+    );
+  }
+  if (rawOffset !== null) {
+    const value = Number(rawOffset);
+    if (!/^\d+$/.test(rawOffset) || !Number.isSafeInteger(value)) {
+      return badRequest("offset must be a non-negative whole number");
+    }
+    offset = value;
+  }
   if (cursor !== null) {
     const decoded = decodeCursor(cursor);
     if (decoded === null || decoded < 1 || decoded >= items.length) {
@@ -87,6 +101,7 @@ export function paginate<T>(items: readonly T[], requestUrl: string): Response {
 
   const end = offset + limit;
   const body: Page<T> = {
+    total: items.length,
     items: items.slice(offset, end),
     nextCursor: end < items.length ? encodeCursor(end) : null,
   };
@@ -95,6 +110,6 @@ export function paginate<T>(items: readonly T[], requestUrl: string): Response {
 
 /** The empty-scenario body for paginated lists. */
 export function emptyPage(): Response {
-  const body: Page<never> = { items: [], nextCursor: null };
+  const body: Page<never> = { items: [], nextCursor: null, total: 0 };
   return HttpResponse.json(body);
 }

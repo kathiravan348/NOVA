@@ -152,7 +152,7 @@
 | NOVA-144 | Library: 100 equity strategies across candle sizes + testing protocol (D73) | done | Claude | 121, 122 |
 | NOVA-145 | Stored data: Non-index stocks group (D74) | done | Claude | — |
 | NOVA-146 | ui-core Pager: total, page numbers, rows per page (D74) | done | Claude | — |
-| NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | planned | — | 146 |
+| NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | in-progress | ChatGPT | 146 |
 | NOVA-148 | Screens use Pager instead of Load more (D74) | planned | — | 146, 147 |
 | NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | planned | — | 145 |
 | NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | planned | — | 149 |

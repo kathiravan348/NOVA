@@ -61,6 +61,7 @@ def list_approvals(
     status: ApprovalStatus | None = None,
     limit: Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)] = PAGE_LIMIT_DEFAULT,
     cursor: Annotated[str | None, Query(min_length=1)] = None,
+    offset: Annotated[int | None, Query(ge=0)] = None,
 ) -> Page[ApprovalContract]:
     expire(db)
     filters: list[ColumnElement[bool]] = []
@@ -68,17 +69,18 @@ def list_approvals(
         filters.append(ApprovalRequest.agent_id == user.id)
     if status is not None:
         filters.append(ApprovalRequest.status == status)
-    rows, next_cursor = newest_first(
+    rows, next_cursor, total = newest_first(
         db,
         ApprovalRequest,
         ApprovalRequest.created_at,
         ApprovalRequest.id,
         limit=limit,
         cursor=cursor,
+        offset=offset,
         where=filters,
     )
     return Page[ApprovalContract](
-        items=[to_contract(db, row) for row in rows], next_cursor=next_cursor
+        items=[to_contract(db, row) for row in rows], next_cursor=next_cursor, total=total
     )
 
 

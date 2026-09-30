@@ -13,3 +13,4 @@ PAGE_LIMIT_MAX = 200
 class Page[T](Contract):
     items: list[T]
     next_cursor: Annotated[str, Field(min_length=1)] | None
+    total: Annotated[int, Field(ge=0)]
