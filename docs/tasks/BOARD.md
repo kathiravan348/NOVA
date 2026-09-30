@@ -150,6 +150,15 @@
 | NOVA-142 | Benchmark: any index, defaulting to the universe's index (D72) | done | Claude | — |
 | NOVA-143 | Strategy card: CAGR range, one value for one run (D72) | done | Claude | — |
 | NOVA-144 | Library: 100 equity strategies across candle sizes + testing protocol (D73) | done | Claude | 121, 122 |
+| NOVA-145 | Stored data: Non-index stocks group (D74) | planned | — | — |
+| NOVA-146 | ui-core Pager: total, page numbers, rows per page (D74) | planned | — | — |
+| NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | draft | — | 146 |
+| NOVA-148 | Screens use Pager instead of Load more (D74) | draft | — | 146, 147 |
+| NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | draft | — | 145 |
+| NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | draft | — | 149 |
+| NOVA-151 | Live feed: `live.tick` WebSocket message + snapshot and per-day summary endpoints (D74) | draft | — | — |
+| NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | draft | — | 151 |
+| NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | draft | — | 152 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -174,3 +183,4 @@
   - Screens that save new settings merge only after the engine runs them (118 after 115; 119 and 122 after 117). Until 117, a backtest using a market filter or rotation fails with a clear message (115).
 - Agent account (D67): 130 first; then backend 131 → 132 and frontend 133 in parallel (no shared files); 133 merges after 132.
 - Fair comparisons (D72): 142 and 143 in parallel (no shared files except generated schema and guides).
+- Live module + history polish (D74): 145 and 146 start now in parallel (no shared files). 146 → 147 (backend) → 148; 145 → 149 → 150; then live 151 → 152 → 153 (Live backend can start any time; it shares no files with 145–150).
