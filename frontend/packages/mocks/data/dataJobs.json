@@ -20,7 +20,8 @@
     "plan": null,
     "stepsDone": 0,
     "stepsTotal": 0,
-    "expiresAt": null
+    "expiresAt": null,
+    "syncResult": null
   },
   {
     "id": "job_002",
@@ -43,7 +44,8 @@
     "plan": null,
     "stepsDone": 0,
     "stepsTotal": 0,
-    "expiresAt": null
+    "expiresAt": null,
+    "syncResult": null
   },
   {
     "id": "job_003",
@@ -66,7 +68,8 @@
     "plan": null,
     "stepsDone": 0,
     "stepsTotal": 0,
-    "expiresAt": null
+    "expiresAt": null,
+    "syncResult": null
   },
   {
     "id": "job_004",
@@ -89,7 +92,8 @@
     "plan": null,
     "stepsDone": 0,
     "stepsTotal": 0,
-    "expiresAt": null
+    "expiresAt": null,
+    "syncResult": null
   },
   {
     "id": "job_005",
@@ -112,7 +116,8 @@
     "plan": null,
     "stepsDone": 0,
     "stepsTotal": 0,
-    "expiresAt": null
+    "expiresAt": null,
+    "syncResult": null
   },
   {
     "id": "job_006",
@@ -135,6 +140,7 @@
     "plan": null,
     "stepsDone": 0,
     "stepsTotal": 0,
-    "expiresAt": null
+    "expiresAt": null,
+    "syncResult": { "newSymbols": ["GREENGRID-SM", "NOVATECH"], "newIndexMembers": [] }
   }
 ]

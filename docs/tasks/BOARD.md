@@ -155,7 +155,7 @@
 | NOVA-147 | Lists get `total` + `offset` (backtests, trades, data jobs, audit, coverage) (D74) | done | Claude | 146 |
 | NOVA-148 | Screens use Pager instead of Load more (D74) | done | Claude | 146, 147 |
 | NOVA-149 | Stored data: Sync to today button (last stored day / missing days) (D74) | done | Claude | 145 |
-| NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | planned | — | 149 |
+| NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | in-progress | ChatGPT | 149 |
 | NOVA-151 | Live feed: `live.tick` WebSocket message + snapshot and per-day summary endpoints (D74) | planned | — | — |
 | NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | planned | — | 151 |
 | NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | planned | — | 152 |

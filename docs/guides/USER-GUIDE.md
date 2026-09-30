@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-149). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-150). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -410,6 +410,11 @@ belongs to, and **Kite**: **Synced** means Zerodha knows the stock and its price
   which index (NIFTY 50, NIFTY IT, NIFTY MIDCAP 100 and 16 more). The card shows the progress while it
   runs and, afterwards, **Last synced** with one line such as "3,860 stocks synced; 2 new listing(s):
   ABC, XYZ". **View job** opens it in Data jobs. Do the daily Kite login first.
+- **Price history needed** appears after a completed sync when newly listed stocks or new index members have no saved prices.
+  It lists the first five symbols and the remaining count. **Download required data** opens plans for exactly the stocks
+  still without history, for daily and 1-minute prices from 1 Jan 2020 to today. Check each plan and press **Start**.
+  Prices already saved are skipped. The warning clears by itself as history arrives; it refreshes within a minute.
+  **Retry history check** appears if saved history could not be refreshed. There is no dismiss button.
 - NOVA also syncs **by itself every weekday from 08:45**, as soon as the Kite login of the day is done.
 - **Index**: show only the stocks of one index. The number after each index is how many stocks it has.
 - **Search stocks**: find a stock by symbol, name or sector.

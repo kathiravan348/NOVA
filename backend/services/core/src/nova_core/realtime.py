@@ -16,6 +16,7 @@ import psycopg
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from nova_contracts import DataJob as DataJobContract
 from nova_contracts import DataJobDeleted, DataJobPlan, DataJobUpdated
+from nova_contracts.data_job import InstrumentSyncResult
 from nova_contracts.realtime import DeletedJobRef
 from nova_db.models import DataJob
 from sqlalchemy.engine import make_url
@@ -54,6 +55,9 @@ def job_contract(job: DataJob) -> DataJobContract:
             "finished_at": job.finished_at,
             "error": job.error,
             "summary": job.summary,
+            "sync_result": InstrumentSyncResult.model_validate(job.sync_result)
+            if job.sync_result is not None
+            else None,
             "mode": job.mode,
             # Stored as the contract's JSON (camelCase), so it is read back the same way.
             "plan": DataJobPlan.model_validate_json(json.dumps(job.plan)) if job.plan else None,

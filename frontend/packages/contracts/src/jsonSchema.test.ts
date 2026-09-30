@@ -36,6 +36,7 @@ import {
   DataJobPlanRequestSchema,
   DataJobPlanSchema,
   DataJobSchema,
+  InstrumentSyncResultSchema,
   DownloadSettingsSchema,
 } from "./dataJob";
 import { CoverageDetailSchema, CoverageListSchema } from "./coverage";
@@ -80,6 +81,7 @@ const contracts: Record<string, z.ZodType> = {
   CoverageList: CoverageListSchema,
   UnavailableDay: UnavailableDaySchema,
   DataJob: DataJobSchema,
+  InstrumentSyncResult: InstrumentSyncResultSchema,
   DataJobCreate: DataJobCreateSchema,
   DataJobDeleteResult: DataJobDeleteResultSchema,
   DataJobPlan: DataJobPlanSchema,

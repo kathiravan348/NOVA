@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 
-from nova_db.models import Instrument, MarketIndex, UniverseEntry
+from nova_db.models import Candle, Instrument, MarketIndex, UniverseEntry
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -39,6 +39,8 @@ class SyncResult:
     added: list[str] = field(default_factory=list)
     new_listings: list[str] = field(default_factory=list)
     failed_indices: list[str] = field(default_factory=list)
+    new_symbols: list[str] = field(default_factory=list)
+    new_index_members: list[tuple[str, str]] = field(default_factory=list)
 
     def summary(self) -> str:
         """One line for the job page (≤ 500 chars)."""
@@ -177,6 +179,10 @@ def sync_instruments(
         kept = [i for i in row.indices if i in known_indices and i not in fetched]
         now_in = [name for name, symbols in fetched.items() if symbol in symbols]
         indices = sorted(set(kept) | set(now_in))
+        if symbol in stocks:
+            result.new_index_members.extend(
+                (symbol, index) for index in indices if index not in row.indices
+            )
         sector = row.sector
         if sector == UNCLASSIFIED and symbol in members.industry:
             sector = members.industry[symbol]
@@ -196,6 +202,30 @@ def sync_instruments(
         instrument.updated_at = now
         db.add(instrument)
         result.synced.append(symbol)
+    candidates = set(result.new_listings) | {symbol for symbol, _ in result.new_index_members}
+    # Correlated EXISTS uses the candle primary-key prefix, not a scan of years of prices.
+    history = (
+        set(
+            db.scalars(
+                select(UniverseEntry.symbol).where(
+                    UniverseEntry.exchange == EXCHANGE,
+                    UniverseEntry.symbol.in_(candidates),
+                    select(Candle.ts)
+                    .where(
+                        Candle.exchange == EXCHANGE,
+                        Candle.symbol == UniverseEntry.symbol,
+                    )
+                    .exists(),
+                )
+            )
+        )
+        if candidates
+        else set()
+    )
+    result.new_symbols = sorted(set(result.new_listings) - history)
+    result.new_index_members = [
+        (symbol, index) for symbol, index in result.new_index_members if symbol not in history
+    ]
     report(0.95, "Saved the stock list")
     db.commit()
     return result

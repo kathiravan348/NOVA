@@ -77,7 +77,9 @@ from nova_contracts.data_job import (
     DownloadMode,
     DownloadSettings,
     DownloadSettingsUpdate,
+    InstrumentSyncResult,
     MarketHoursMode,
+    NewIndexMember,
 )
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.indicators import INDICATORS, Indicator, IndicatorName, check_params
@@ -195,6 +197,8 @@ __all__ = [
     "DataJobPlan",
     "DataJobPlanRequest",
     "DataJobPlanSymbol",
+    "InstrumentSyncResult",
+    "NewIndexMember",
     "DownloadMode",
     "DownloadSettings",
     "DownloadSettingsUpdate",

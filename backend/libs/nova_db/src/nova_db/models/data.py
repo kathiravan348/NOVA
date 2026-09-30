@@ -45,6 +45,10 @@ class DataJob(Base):
         CheckConstraint("type = 'instrument_sync' OR cardinality(symbols) >= 1", name="symbols"),
         CheckConstraint("summary IS NULL OR char_length(summary) <= 500", name="summary"),
         CheckConstraint(
+            "sync_result IS NULL OR (type = 'instrument_sync' AND status = 'completed')",
+            name="sync_result",
+        ),
+        CheckConstraint(
             "type <> 'historical_download' OR"
             " (timeframe IS NOT NULL AND date_from IS NOT NULL AND date_to IS NOT NULL)",
             name="download_needs_period",
@@ -99,6 +103,7 @@ class DataJob(Base):
     error: Mapped[str | None]
     # One line about the result, e.g. an instrument sync's counts (D56).
     summary: Mapped[str | None]
+    sync_result: Mapped[Json | None] = mapped_column(JSONB(none_as_null=True))
     # Planned downloads (D57): `skip_existing` or `overwrite`; the `DataJobPlan` shown before Start;
     # drafts not started by `expires_at` are removed.
     mode: Mapped[str | None]
