@@ -1,6 +1,6 @@
 # NOVA-147 — Lists get `total` + `offset`
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-147 · **Depends on:** NOVA-146
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-147 · **Depends on:** NOVA-146
 
 ## Goal
 Every paged list answers "how many in all" and can start at any row, so screens can show page numbers (D74 (5)).
