@@ -95,6 +95,10 @@ export const FewRows: Story = {
   ),
 };
 
+export const WithoutPagination: Story = {
+  render: () => <DataTable caption="All files" columns={fileColumns} data={sampleFiles} />,
+};
+
 function SelectableTable(props: {
   withSearch?: boolean;
   unselectable?: boolean;

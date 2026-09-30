@@ -1,6 +1,6 @@
 # NOVA-146 — ui-core Pager: total, page numbers, rows per page
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-146 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-146 · **Depends on:** —
 
 ## Goal
 A shared **Pager** shows "Showing 1–50 of 1,240", page numbers, first/previous/next/last, jump to page and a
@@ -33,10 +33,10 @@ Modify:
 5. Stories: middle page, first page, one page, empty, loading. Tests: numbers, jump, clamp, size change resets page.
 
 ## Acceptance checks
-- [ ] Pager renders the correct range and page count for 1,240 entries at sizes 25/50/100/200.
-- [ ] Existing DataTable tests pass; a table can change rows per page.
-- [ ] Stories checked at 360px and desktop, dark and light; a11y addon clean.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Pager renders the correct range and page count for 1,240 entries at sizes 25/50/100/200.
+- [x] Existing DataTable tests pass; a table can change rows per page.
+- [x] Stories checked at 360px and desktop, dark and light; a11y addon clean.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Server `total`/`offset` in contracts and endpoints (NOVA-147), switching screens from Load more (NOVA-148).
@@ -45,7 +45,13 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Controlled Pager and DataTable integration; size changes reset page 1, unset pageSize shows all rows without controls.
+**Files changed:** ui-core/src/components/Pager/{Pager.tsx,Pager.test.tsx,Pager.stories.tsx}, DataTable/{DataTable.tsx,DataTablePagination.tsx,DataTable.test.tsx,DataTable.stories.tsx}, ui-core/src/index.ts; COMPONENTS.md, STRUCTURE.md, USER-GUIDE.md, BOARD.md, NOVA-146.md.
+**Commands run:** focused Pager/table/Approvals tests (39 passed); pnpm review:check passed (format, lint, typecheck, tests, build).
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓; all five Pager stories have zero a11y addon violations and ≥40px controls; table stories and browser jump/size reset verified.
+**New dependencies:** none. **Maps updated:** COMPONENTS, STRUCTURE. **Guides updated:** USER-GUIDE (table controls).
+**Deviations from task:** required maps/guide added to Files before implementation; existing range text preserved for caller compatibility.
+**Known gaps:** none; independent review pending. NOVA-145 is on its separate branch; keep both board statuses when merging.
 
 ## Review
 _(reviewer — see `docs/templates/REVIEW.md`)_

@@ -20,7 +20,7 @@
 │  ├─ packages/
 │  │  ├─ ui-core/       generic components + theme tokens
 │  │  │  ├─ scripts/    build-tokens generator
-│  │  │  ├─ src/components/ Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton, Field, Input, Select, Checkbox, Switch, DateTimePicker
+│  │  │  ├─ src/components/ Button, IconButton, Badge, StatusBadge, Card, StatCard, Skeleton, Field, Input, Select, Checkbox, Switch, DateTimePicker, Pager (range, total, page/size controls)
 │  │  │  ├─ src/lib/    cn utility, zonedTime UTC/IST conversion
 │  │  │  └─ src/theme/  tokens.json, tokens.css, tailwind-theme.css, styles.css
 │  │  ├─ ui-trading/    trading components built on ui-core

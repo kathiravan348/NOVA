@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **28 Sep 2026** (Stage B, tasks up to NOVA-144). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, last task NOVA-146). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -57,6 +57,9 @@ Whoever set up the computer starts it. For reference (run inside the `frontend` 
 - **Sign out button** (top right) — ends your session. If you are idle too long, NOVA signs you out and
   shows the sign-in page again.
 - **Load more** buttons at the bottom of long lists — show the next batch of rows.
+- Tables with page controls show **Showing … of … entries** and **Page … of …** for the loaded rows.
+  Use **First page**, **Previous page**, **Next page** or **Last page**, or type in **Jump to page** and press Enter.
+  **Rows per page** changes how many rows you see and returns to page 1. Lists with **Load more** still fetch the next batch.
 - Every page works on a phone. Wide tables turn into stacked "cards" on small screens.
 
 ---
