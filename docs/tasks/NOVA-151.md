@@ -1,6 +1,6 @@
 # NOVA-151 — Live feed: `live.tick` message + snapshot and per-day summary endpoints
 
-**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-151 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-151 · **Depends on:** —
 
 ## Goal
 The backend and contracts behind the Live module (D74 (1)–(2)): a `live.tick` WebSocket message, a latest-price
@@ -54,4 +54,12 @@ None.
 **Known limits:** archived gap classification reads timestamp columns from all recorded stocks per day in bounded batches; `changePercent` uses the last stored daily close before the tick's IST date, or null if unavailable.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none.
+**Change requests (if sent back):** none.
+**Checked:** Redis publish is best-effort after the tick commit (an outage never stops recording); Core coalesces to one `live.tick` per stock per second and sends only to sockets that subscribed; agents are blocked at the gateway and on the socket; unknown symbols give 404; `/live/*` reads only the database and Parquet, no Kite call. `review:check` (1,046+ tests, builds) and `backend-check` (1,315 passed) run before merge.
+**Watch:** `GET /live/days` reads every recorded day's archive to classify missing seconds; fine while the archive is small, but revisit (cache or precompute per day) once months of ticks exist. The recorder's ticks count as 1 each until Core sums them per second.
+**Guides checked:** API and DATABASE match the diff; USER-GUIDE correctly unchanged.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.
