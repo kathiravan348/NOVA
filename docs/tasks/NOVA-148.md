@@ -1,6 +1,6 @@
 # NOVA-148 — Screens use Pager instead of Load more
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-148 · **Depends on:** NOVA-146, NOVA-147
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-148 · **Depends on:** NOVA-146, NOVA-147
 
 ## Goal
 Long lists show "Showing 1–50 of 1,240", page numbers and **Rows per page** (D74 (5)); the **Load more** button leaves the screens.
@@ -25,18 +25,26 @@ Modify:
 5. Tests: page 2 shows the next rows; size change resets to page 1; the total is shown.
 
 ## Acceptance checks
-- [ ] Each screen listed shows total, page numbers and Rows per page in mock and real mode; no **Load more** left on them.
-- [ ] 360px: pager wraps to two rows; no horizontal scroll.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Each screen listed shows total, page numbers and Rows per page in mock and real mode; no **Load more** left on them.
+- [x] 360px: pager wraps to two rows; no horizontal scroll.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Backend changes; Stored data coverage table (client-side already); server-side sorting.
 
 ## Questions
-_(implementer writes here if blocked)_
+No open questions. The unavailable-data panel uses ui-core DataTable for the server page within the listed files.
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Server Pager on all listed lists; size/filter resets; previous-page placeholders; per-page approval selection; realtime refresh.
+**Files changed:** listed Orbit/Relay screens/tests; services queries/paging/tests; USER-GUIDE.md.
+**Commands run:** pnpm review:check passed (121 files, 1,015 tests; lint, types, formatting, apps + Storybook builds).
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (headless mock preview, screenshot inspection; no horizontal overflow).
+**New dependencies:** none.
+**Maps updated:** none (no new files or contracts).
+**Guides updated:** USER-GUIDE.
+**Deviations from task:** UnavailableDataPanel uses ui-core DataTable directly to avoid nested local paging; selected compare runs load independently of picker pages.
+**Known gaps:** Independent lead review/merge pending; real endpoint behavior verified by NOVA-147 backend tests, no real broker calls made._
 
 ## Review
 _(reviewer — see `docs/templates/REVIEW.md`)_

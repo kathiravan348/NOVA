@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-146). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-148). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -56,10 +56,9 @@ Whoever set up the computer starts it. For reference (run inside the `frontend` 
 - **Sun / moon button** (top right) — switches between dark and light colours.
 - **Sign out button** (top right) — ends your session. If you are idle too long, NOVA signs you out and
   shows the sign-in page again.
-- **Load more** buttons at the bottom of long lists — show the next batch of rows.
-- Tables with page controls show **Showing … of … entries** and **Page … of …** for the loaded rows.
+- Tables with page controls show **Showing … of … entries** and **Page … of …** for all matching server rows.
   Use **First page**, **Previous page**, **Next page** or **Last page**, or type in **Jump to page** and press Enter.
-  **Rows per page** changes how many rows you see and returns to page 1. Lists with **Load more** still fetch the next batch.
+  **Rows per page** changes how many rows you see and returns to page 1.
 - Every page works on a phone. Wide tables turn into stacked "cards" on small screens.
 
 ---
@@ -447,7 +446,7 @@ With **Index**, **Indices** comes first and **Non-index stocks** comes last, lis
 With **Sector**, **Unclassified** comes last, listing stocks whose sector is unknown. Both groups show stock counts
 and missing days, and offer **Download missing** when prices are needed. **None** lists each stock once.
 Choose the **Unavailable data** tab for exact dates, timeframe, broker response, first and last checks, number of checks and the last job.
-**Availability** selects **Broker unavailable**, **Resolved** or **All history**. **Load more** fetches more records; search searches loaded records.
+**Availability** selects **Broker unavailable**, **Resolved** or **All history**. Use the page controls to fetch another page; search searches the visible page.
 Routine downloads skip recorded unavailable dates. **Check again** opens a download plan for that exact date in overwrite mode.
 When a download supplies valid prices, the record becomes **Resolved** automatically. Deleting the job preserves this history.
 This records the broker response; it does not prove whether a particular absence is a broker fault. Network errors are not evidence of unavailable prices.
@@ -531,7 +530,7 @@ short rows, ten per page; phones show compact cards. **Search requests** filters
 Press **View details** (or the request name) to open the full request and response.
 
 Tick the requests you want, or use **Select all shown** to select every loaded search match, including
-matches on other table pages. **Load more** fetches additional requests. **Clear selection** clears your
+matches on other table pages. The page controls fetch additional requests; changing page clears the selection. **Clear selection** clears your
 choice. **Approve selected** or **Reject selected** opens one confirmation listing your chosen requests.
 Approving runs each saved change once; rejecting runs nothing. Progress and individual problems appear
 afterward. Requests arriving later are not added to your batch. Requests expire after 30 minutes and

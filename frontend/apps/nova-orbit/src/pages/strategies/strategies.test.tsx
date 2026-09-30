@@ -170,7 +170,7 @@ describe("Strategy detail", () => {
     renderApp("/strategies/stg_001");
     fireEvent.mouseDown(await screen.findByRole("tab", { name: "Backtests" }));
     await screen.findAllByRole("link", { name: "VWAP Intraday v1 Backtest" });
-    expect(searches).toContain("?strategyId=stg_001");
+    expect(searches).toContain("?strategyId=stg_001&offset=0&limit=50");
     server.events.removeAllListeners();
   });
 

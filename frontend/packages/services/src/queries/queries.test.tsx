@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -21,6 +21,7 @@ import {
 } from "@nova/mocks";
 import { ApiRequestError } from "../http";
 import { queryKeys } from "./keys";
+import { applyJobUpdate } from "../realtime";
 import {
   RUN_POLL_MS,
   useAddBacktestVersion,
@@ -136,6 +137,37 @@ describe("query hooks", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(listedRuns.filter((r) => r.strategyId === strategyId));
     expect(result.current.hasNextPage).toBe(false);
+  });
+
+  it("offset hooks expose totals, retain previous rows and use distinct page keys", async () => {
+    const rows = mockBacktestRuns;
+    server.use(http.get("*/api/v1/backtests", ({ request }) => paginate(rows, request.url)));
+    const { result, rerender } = renderHook(({ page }) => useBacktests({}, { page, pageSize: 2 }), {
+      wrapper,
+      initialProps: { page: 1 },
+    });
+    await waitFor(() => expect(result.current.data).toEqual(rows.slice(0, 2)));
+    expect(result.current.total).toBe(rows.length);
+    rerender({ page: 2 });
+    expect(result.current.data).toEqual(rows.slice(0, 2));
+    expect(result.current.isPlaceholderData).toBe(true);
+    await waitFor(() => expect(result.current.data).toEqual(rows.slice(2, 4)));
+  });
+
+  it("realtime job events refresh the visible offset page", async () => {
+    const { result } = renderHook(
+      () => ({ jobs: useDataJobs({ page: 2, pageSize: 2 }), client: useQueryClient() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.jobs.isSuccess).toBe(true));
+    const before = requests.filter((path) => path === "/api/v1/data-jobs").length;
+    applyJobUpdate(result.current.client, mockDataJobs[0]!);
+    await waitFor(() =>
+      expect(requests.filter((path) => path === "/api/v1/data-jobs").length).toBeGreaterThan(
+        before,
+      ),
+    );
+    expect(result.current.jobs.data).toEqual(mockDataJobs.slice(2, 4));
   });
 
   it("useBacktestResults resolves one result per id", async () => {

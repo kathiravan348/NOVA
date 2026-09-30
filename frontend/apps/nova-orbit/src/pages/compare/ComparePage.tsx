@@ -1,8 +1,9 @@
+import { usePageState } from "@nova/services";
 import { useSearchParams } from "react-router";
 import { GitCompare } from "lucide-react";
-import { Card, EmptyState, LoadMore, Skeleton } from "@nova/ui-core";
+import { Card, EmptyState, Pager, Skeleton } from "@nova/ui-core";
 import { EquityCurve } from "@nova/ui-trading";
-import { useBacktestResults, useBacktests } from "@nova/services";
+import { useBacktestResults, useBacktestRuns, useBacktests } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { summarizeUniverse } from "../../lib/strategyText";
 import { parseRunIds, toSearch } from "./compareMetrics";
@@ -11,12 +12,24 @@ import { RunPicker } from "./RunPicker";
 
 export function ComparePage() {
   const [params, setParams] = useSearchParams();
-  const runsQuery = useBacktests();
+  const paging = usePageState();
+  const runsQuery = useBacktests({}, paging);
   const requested = parseRunIds(params.get("runs"));
-
-  const completed = (runsQuery.data ?? []).filter((r) => r.status === "completed");
+  const requestedRuns = useBacktestRuns(requested);
+  const completed = [
+    ...new Map(
+      [
+        ...(runsQuery.data ?? []),
+        ...requestedRuns.flatMap((query) => (query.data ? [query.data] : [])),
+      ]
+        .filter((r) => r.status === "completed")
+        .map((r) => [r.id, r]),
+    ).values(),
+  ];
   const selected = requested.filter((id) => completed.some((r) => r.id === id));
-  const ignored = runsQuery.isSuccess ? requested.filter((id) => !selected.includes(id)) : [];
+  const ignored = requestedRuns.every((query) => !query.isPending)
+    ? requested.filter((id) => !selected.includes(id))
+    : [];
   const results = useBacktestResults(selected);
 
   const setSelected = (ids: string[]) =>
@@ -38,11 +51,13 @@ export function ComparePage() {
   return (
     <div className="flex flex-col gap-6">
       <RunPicker runs={completed} selected={selected} onChange={setSelected} />
-      <LoadMore
-        hasMore={runsQuery.hasNextPage}
-        loading={runsQuery.isFetchingNextPage}
-        onLoadMore={() => void runsQuery.fetchNextPage()}
-        label="Load more runs"
+      <Pager
+        page={paging.page}
+        pageSize={paging.pageSize}
+        total={runsQuery.total}
+        onPageChange={paging.setPage}
+        onPageSizeChange={paging.setPageSize}
+        loading={runsQuery.isFetching}
       />
       {ignored.length > 0 && (
         <p className="text-body-sm text-text-muted">

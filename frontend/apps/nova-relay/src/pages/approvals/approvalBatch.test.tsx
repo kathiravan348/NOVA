@@ -81,7 +81,7 @@ describe("Approval batches", () => {
       expect(writes).toHaveLength(50);
       expect(new Set(writes).size).toBe(50);
       expect(screen.getByRole("button", { name: "Approve selected (0)" })).toBeDisabled();
-      expect(screen.getByRole("status")).toHaveTextContent("50 of 50");
+      expect(screen.getByText(/Finished: 50 of 50/)).toHaveTextContent("50 of 50");
     },
     20000,
   );
@@ -89,7 +89,7 @@ describe("Approval batches", () => {
   it("selects filtered rows and reveals the full body only on demand", async () => {
     mount(pending(12));
     await screen.findAllByText("Batch request 0");
-    expect(screen.getByText("Showing 1–10 of 12")).toBeInTheDocument();
+    expect(screen.getByText("Showing 1–12 of 12")).toBeInTheDocument();
     expect(screen.queryByText("expanded only")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Search requests"), { target: { value: "request 11" } });
     fireEvent.click(screen.getByRole("button", { name: "Select all shown" }));

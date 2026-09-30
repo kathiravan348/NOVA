@@ -36,7 +36,14 @@ import {
   type BacktestFilter,
 } from "../api/orbit";
 import { queryKeys } from "./keys";
-import { cursorQuery, flattenPages, pagedListOptions } from "./paging";
+import {
+  cursorQuery,
+  pageResult,
+  pagedListOptions,
+  pageQuery,
+  keepPageOptions,
+  type PageSelection,
+} from "./paging";
 
 export function useMe() {
   return useQuery({ queryKey: queryKeys.me, queryFn: ({ signal }) => getMe({ signal }) });
@@ -91,18 +98,25 @@ function isRunActive(run: Pick<BacktestRun, "status">): boolean {
   return run.status === "queued" || run.status === "running";
 }
 
-export function useBacktests(filter: BacktestFilter = {}) {
-  return useInfiniteQuery({
-    queryKey: queryKeys.backtests.list(filter),
+export function useBacktests(filter: BacktestFilter = {}, selection?: PageSelection) {
+  const query = useInfiniteQuery({
+    queryKey: selection
+      ? [...queryKeys.backtests.list(filter), selection]
+      : queryKeys.backtests.list(filter),
     queryFn: ({ signal, pageParam }) =>
-      listBacktests({ ...filter, ...cursorQuery(pageParam) }, { signal }),
+      listBacktests(
+        { ...filter, ...(pageParam ? cursorQuery(pageParam) : pageQuery(selection)) },
+        { signal },
+      ),
     ...pagedListOptions,
-    select: flattenPages,
+    select: pageResult,
+    ...keepPageOptions,
     refetchInterval: (query) =>
       query.state.data?.pages.some((page) => page.items.some(isRunActive))
         ? RUN_POLL_MS.list
         : false,
   });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
 }
 
 /** One run; refreshes while it is queued or running. When it finishes, run lists and stats refresh. */
@@ -135,14 +149,19 @@ export function useBacktestResult(id: string) {
 }
 
 /** A run's trades, one page at a time; `fetchNextPage` loads more. */
-export function useBacktestTrades(id: string) {
-  return useInfiniteQuery({
-    queryKey: queryKeys.backtests.trades(id),
-    queryFn: ({ signal, pageParam }) => listBacktestTrades(id, cursorQuery(pageParam), { signal }),
+export function useBacktestTrades(id: string, selection?: PageSelection) {
+  const query = useInfiniteQuery({
+    queryKey: selection
+      ? [...queryKeys.backtests.trades(id), selection]
+      : queryKeys.backtests.trades(id),
+    queryFn: ({ signal, pageParam }) =>
+      listBacktestTrades(id, pageParam ? cursorQuery(pageParam) : pageQuery(selection), { signal }),
     ...pagedListOptions,
-    select: flattenPages,
+    select: pageResult,
+    ...keepPageOptions,
     enabled: Boolean(id),
   });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
 }
 
 /** One result query per run id (same cache entries as useBacktestResult). */

@@ -60,7 +60,7 @@ describe("Approvals", () => {
         const url = new URL(request.url);
         if (url.searchParams.get("status"))
           return HttpResponse.json({ items: [mockApprovals[0]], nextCursor: null, total: 1 });
-        const older = url.searchParams.has("cursor");
+        const older = Number(url.searchParams.get("offset") ?? 0) > 0;
         return HttpResponse.json({
           items: older
             ? [
@@ -75,13 +75,14 @@ describe("Approvals", () => {
               ]
             : [mockApprovals[1]],
           nextCursor: older ? null : "older",
-          total: 3,
+          total: 51,
         });
       }),
     );
     renderApp("/approvals");
     fireEvent.mouseDown(screen.getByRole("tab", { name: "History" }), { button: 0 });
-    fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Next page" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect((await screen.findAllByText("HTTP 400")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("expired").length).toBeGreaterThan(0);
   });
