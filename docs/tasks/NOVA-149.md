@@ -1,6 +1,6 @@
 # NOVA-149 — Stored data: Sync to today
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-149 · **Depends on:** NOVA-145
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-149 · **Depends on:** NOVA-145
 
 ## Goal
 One **Sync to today** button on Stored data brings history up to date: for each stock it downloads from the last
@@ -35,7 +35,10 @@ Modify:
 - Scheduled automatic sync; the instrument-sync warning (NOVA-150); new timeframes.
 
 ## Questions
-_(implementer writes here if blocked)_
+Owner scope decision required: may this task also modify `frontend/apps/nova-relay/src/pages/data-jobs/NewDownloadPage.tsx` and its download/prefill tests?
+The requested flow reviews both 1m and 1d plans with per-stock ranges. The existing page keeps one timeframe, one From/To pair and one draft.
+Its file is Read first but absent from Files → Modify. A batch of draft plans can use existing APIs without changing download execution.
+AGENTS.md §2 requires the implementer to stop and record this question rather than change task scope. NOVA-149 code has not been changed.
 
 ## Handoff
 _(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
