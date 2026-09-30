@@ -1,6 +1,6 @@
 # NOVA-148 — Screens use Pager instead of Load more
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-148 · **Depends on:** NOVA-146, NOVA-147
+**Status:** in-review · **Owner:** Claude · **Branch:** task/NOVA-148 · **Depends on:** NOVA-146, NOVA-147
 
 ## Goal
 Long lists show "Showing 1–50 of 1,240", page numbers and **Rows per page** (D74 (5)); the **Load more** button leaves the screens.
