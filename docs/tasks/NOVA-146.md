@@ -1,6 +1,6 @@
 # NOVA-146 — ui-core Pager: total, page numbers, rows per page
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-146 · **Depends on:** —
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-146 · **Depends on:** —
 
 ## Goal
 A shared **Pager** shows "Showing 1–50 of 1,240", page numbers, first/previous/next/last, jump to page and a
