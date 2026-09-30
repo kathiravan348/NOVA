@@ -17,6 +17,7 @@ Create:
 Modify:
 - `frontend/packages/ui-core/src/index.ts` (export)
 - `frontend/packages/ui-core/src/components/DataTable/{DataTablePagination.tsx,DataTable.tsx,DataTable.test.tsx,DataTable.stories.tsx}`
+- `docs/{COMPONENTS.md,STRUCTURE.md}` (Pager entries), `docs/guides/USER-GUIDE.md` (table controls)
 - `docs/tasks/{BOARD.md,NOVA-146.md}`
 
 ## Build
