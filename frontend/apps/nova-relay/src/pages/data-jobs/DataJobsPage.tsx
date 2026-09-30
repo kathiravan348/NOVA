@@ -8,7 +8,7 @@ import { formatPercent, formatQuantity } from "@nova/ui-trading";
 import { useDataJobs, useSession } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { PaceSetting } from "./PaceSetting";
-import { RecorderCard } from "./RecorderCard";
+import { ArchiveCard } from "./ArchiveCard";
 import { formatIstShort, formatPeriod } from "../../lib/format";
 import { jobStatusLabel, jobStatusTone, jobTypeLabel } from "../../lib/labels";
 
@@ -96,7 +96,7 @@ export function DataJobsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        {!agent && <RecorderCard />}
+        {!agent && <ArchiveCard />}
         <PaceSetting />
       </div>
       <DataTable

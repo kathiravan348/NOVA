@@ -27,7 +27,7 @@ export function RecordedStockPage() {
           icon={<Database className="h-6 w-6" />}
           title="Nothing recorded for this stock yet"
           description="Prices are recorded on weekdays from 09:15 to 15:30 when recording is on."
-          action={<Link to="/data-jobs">Open Data jobs</Link>}
+          action={<Link to="/live/config">Open Live config</Link>}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

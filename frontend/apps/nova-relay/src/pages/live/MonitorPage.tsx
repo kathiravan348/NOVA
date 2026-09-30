@@ -75,7 +75,7 @@ export function MonitorPage() {
           icon={<Activity className="h-6 w-6" />}
           title="Recording is off"
           description="Switch on live price recording to see prices here."
-          action={<Link to="/data-jobs">Open Data jobs</Link>}
+          action={<Link to="/live/config">Open Live config</Link>}
         />
       );
     if (stocks.length === 0)

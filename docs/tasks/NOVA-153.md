@@ -1,6 +1,6 @@
 # NOVA-153 — Relay Live: Config page; recorder card leaves Data jobs
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-153 · **Depends on:** NOVA-152
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-153 · **Depends on:** NOVA-152
 
 ## Goal
 **Live → Config** holds the recorder switch and the list of stocks to record. The recorder card and its stock
@@ -28,10 +28,10 @@ Modify:
 4. Behaviour of the setting is unchanged: no backend change.
 
 ## Acceptance checks
-- [ ] Switch and stock list work in mock mode and against the real endpoints (settings unchanged).
-- [ ] Data jobs page has no recorder card; tests updated, none deleted without a moved equivalent.
-- [ ] Sidebar Live group: Monitor, Recorded data, Config.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Switch and stock list work in mock mode and against the real endpoints (settings unchanged).
+- [x] Data jobs page has no recorder card; tests updated, none deleted without a moved equivalent.
+- [x] Sidebar Live group: Monitor, Recorded data, Config.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - New recorder settings; changing the recorder; the tick archive job (stays on Data jobs).
@@ -40,7 +40,19 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** **Live → Config** page (recording switch card + table of chosen stocks with search and Remove); recorder card and stock modal moved to `pages/live/`; Data jobs gets a **Tick archive** card (Archive old ticks stays there) with a link to Config; Overview and Live empty states link to Config.
+**Files changed:** relay `pages/live/{ConfigPage,RecordedStocksTable,RecorderCard,RecorderSymbolsModal,config.test}`, `pages/data-jobs/{ArchiveCard,DataJobsPage,dataJobs.test}`, `pages/overview/RecorderWaiting.tsx`, routes, layout; STRUCTURE, USER-GUIDE.
+**Commands run:** focused Relay tests (148 pass); `pnpm review:check` before ready-for-review.
+**New dependencies:** none. **Guides updated:** USER-GUIDE (Step 7, 7b, table). API/DATABASE unchanged.
+**Deviations from task:** the stock table lists only the chosen stocks (adding stays in the existing **Choose stocks** dialog with index/sector bulk add, not a second picker); no `/data-jobs#recorder` redirect (nothing linked to it); the card title is **Live recording** (was **Live prices**); the recorder tests moved with the card, none deleted.
+**Known gaps:** none.
 
 ## Review
-_(reviewer — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed: the other agents are offline; diff re-read, checks re-run).
+**Fixed directly (review: commits):** none.
+**Change requests (if sent back):** none.
+**Checked:** switch and Choose stocks behave as before (same hooks and endpoints, no backend change); recorder tests moved with the card and none deleted; Archive old ticks still works from Data jobs; the last stock cannot be removed (an empty list would record every stock); agent account cannot open Config; desktop view checked; `review:check` passed (1,058 tests).
+**Guides checked:** USER-GUIDE matches (Steps 7, 7b, "what do I do if" table); API and DATABASE not affected.
+**Rulebook issues found:** none.
+**Follow-up tasks created:** none.

@@ -13,8 +13,8 @@ export function RecorderWaiting() {
         <TriangleAlert className="h-5 w-5 shrink-0 text-warning-text" aria-hidden="true" />
         <span>
           Live price recording is waiting for today&apos;s Kite login.{" "}
-          <Link to="/data-jobs" className="text-action-text hover:underline">
-            Open data jobs
+          <Link to="/live/config" className="text-action-text hover:underline">
+            Open Live config
           </Link>
         </span>
       </p>

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-152). NOVA **never places real orders**: it only
+> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-153). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -518,18 +518,14 @@ log keeps a line about every delete.
 **Download pace** (the card at the top): during market hours (weekdays 09:15–15:30) downloads **Slow down**
 to one request a second, so live prices keep flowing. Choose **Full pace** to download at full speed all day.
 
-**Live prices** (the card at the top): turn on **Record live prices** and NOVA records every price change
-(*ticks*) of the chosen stocks every weekday from 09:15 to 15:30, by itself, until you turn it off. Past
-prices can't be recorded later, so leave it on. The badge says what it is doing: **Off**, **Waiting for
-market hours**, **Recording** (with a link to today's recording job) or **Log in to Kite first** (do the
-daily Kite login, Step 3). **Choose stocks** picks which synced stocks to record; with none ticked it
-records all of them. Cancelling a running recording job also turns the switch off.
+**Recording** is set up under **Live → Config** (Step 7b), not here. **Data jobs** still lists each day's
+recording job.
 
-**Archive old ticks** moves live prices older than a date (default: 30 days ago) out of the database into
+**Archive old ticks** (the **Tick archive** card at the top) moves live prices older than a date (default: 30 days ago) out of the database into
 files, to keep the database small. Nothing is lost. It runs as a data job.
 
-### Step 7b — Live: Monitor and Recorded data
-The **Live** group in the menu has two pages (the Owner account only; the agent account does not see them).
+### Step 7b — Live: Monitor, Recorded data and Config
+The **Live** group in the menu has three pages (the Owner account only; the agent account does not see them).
 
 **Monitor** shows one card per stock. Choose **Recorded stocks** (the stocks chosen for recording, or all
 stocks when none are chosen) or an index such as **NIFTY 50**. Each card shows the last price, the change
@@ -543,7 +539,16 @@ older than 10 seconds. Long lists use the page controls under the cards.
 counts as missed by the recorder only when other stocks had prices in that second; if none did, it is a second
 with no trade. The 1-second candles are worked out from the saved prices, not stored separately.
 
-If recording is off, Monitor says so; switch it on under **Data jobs**.
+**Config** is where recording is set up. On the **Live recording** card, turn on **Record live prices** and NOVA
+records every price change (*ticks*) of the chosen stocks every weekday from 09:15 to 15:30, by itself, until you
+turn it off. Past prices can't be recorded later, so leave it on. The badge says what it is doing: **Off**,
+**Waiting for market hours**, **Recording** (with a link to today's recording job) or **Log in to Kite first**
+(do the daily Kite login, Step 3). **Choose stocks** picks which synced stocks to record; with none ticked it
+records all of them. Below the card, the table lists the chosen stocks; **Remove** takes one out (the last one
+cannot be removed, because an empty list means every stock). Cancelling a running recording job also turns the
+switch off.
+
+If recording is off, Monitor says so and links to **Config**.
 
 ### Step 8 — Audit log
 A permanent diary of important actions: sign-ins (also failed ones), Kite logins, session expiries, broker
@@ -624,4 +629,4 @@ approval**; in Demo mode the demo banner appears instead.
 | Rate-limit warning above 80% | Press the account's name in the warning to see which limit. Wait for the reset time shown, or lower how much you download at once. |
 | Forgot the Kite passphrase | Open the account, press **Set key and secret** and enter the API key and secret again (from the Kite developer console) with a new passphrase. |
 | **Kite login failed** after entering the passphrase | Too many wrong tries or more than 2 minutes passed. Press **Log in to Kite** again. |
-| **Live prices** says **Log in to Kite first** | Recording is on but today's Kite login is missing. Do the daily login (Step 3); recording starts within a minute. |
+| **Live → Config** says **Log in to Kite first** | Recording is on but today's Kite login is missing. Do the daily login (Step 3); recording starts within a minute. |

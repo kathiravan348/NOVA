@@ -158,7 +158,7 @@
 | NOVA-150 | Instrument sync: warning + Download required data for new stocks without history (D74) | done | Claude | 149 |
 | NOVA-151 | Live feed: `live.tick` WebSocket message + snapshot and per-day summary endpoints (D74) | done | Claude | — |
 | NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | done | Claude | 151 |
-| NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | in-progress | Claude | 152 |
+| NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | done | Claude | 152 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
