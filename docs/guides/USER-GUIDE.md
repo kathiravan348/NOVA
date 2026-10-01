@@ -532,7 +532,10 @@ stocks when none are chosen) or an index such as **NIFTY 50**. Each card shows t
 against the previous close, the time of the last price (IST), and **Seconds with a tick**: the seconds since
 09:15 in which the stock had at least one price, out of the seconds so far. Prices update about once a second.
 A card turns amber with **No recent tick** when the market is open (weekdays 09:15–15:30) and the last price is
-older than 10 seconds. Long lists use the page controls under the cards.
+older than 10 seconds. Long lists use the page controls under the cards. **Search stocks** narrows the cards to
+stocks whose symbol or name contains what you type. **Pick stocks** opens **My list**: search, tick stocks (or
+**Add index…** / **Add sector…**), then **Save list**; the Stocks list then shows **My list (N)** with only those
+stocks. My list is kept in this browser only (another browser or computer has its own).
 
 **Recorded data** lists the stocks; open one to see a card for each recorded day: **Ticks**,
 **1-second candles**, **Missing seconds (recorder)** and **No trade seconds**, and the day's **Size**. A second
