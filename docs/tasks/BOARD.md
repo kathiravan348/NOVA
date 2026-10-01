@@ -165,7 +165,7 @@
 | NOVA-157 | Live Recorded data: stock cards instead of the table (D78) | done | Claude | — |
 | NOVA-158 | Recorder: fast restart after an interruption (D79) | planned | — | 155 |
 | NOVA-160 | Recorded data history: daily tick summaries + `GET /live/stocks` (D80) | in-progress | Claude | 155 |
-| NOVA-161 | Recorded data cards show history (D80) | in-progress | Claude | 160 |
+| NOVA-161 | Recorded data cards show history (D80) | ready-for-review | Claude | 160 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

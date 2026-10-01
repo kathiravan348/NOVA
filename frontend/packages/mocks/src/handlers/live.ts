@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { LiveSymbolSchema, LiveSymbolsSchema } from "@nova/contracts";
-import { mockLiveDays, mockLiveSnapshot } from "../data";
+import { mockLiveDays, mockLiveSnapshot, mockLiveStocks } from "../data";
 import { mockUniverse } from "./marketData";
 import { apiPath, badRequest, notFound } from "./api";
 
@@ -33,5 +33,29 @@ export const liveHandlers = [
     if (!mockUniverse.some((row) => row.symbol === parsed.data))
       return notFound("Unknown NSE stock");
     return HttpResponse.json(mockLiveDays.filter((row) => row.symbol === parsed.data));
+  }),
+
+  http.get(apiPath("/live/stocks"), ({ request }) => {
+    const raw = new URL(request.url).searchParams.get("symbols");
+    const parsed = LiveSymbolsSchema.safeParse(raw?.split(","));
+    if (!parsed.success || !parsed.data.length)
+      return badRequest("Choose 1–500 unique NSE stock symbols");
+    if (parsed.data.some((symbol) => !mockUniverse.some((row) => row.symbol === symbol)))
+      return notFound("Unknown NSE stocks");
+    // A stock with no mock history has never been stored.
+    return HttpResponse.json(
+      parsed.data.map(
+        (symbol) =>
+          mockLiveStocks.find((row) => row.symbol === symbol) ?? {
+            symbol,
+            daysStored: 0,
+            firstDay: null,
+            lastDay: null,
+            gapDays: 0,
+            tickCount: 0,
+            sizeBytes: 0,
+          },
+      ),
+    );
   }),
 ];
