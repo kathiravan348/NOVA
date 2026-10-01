@@ -55,3 +55,6 @@ Self-review by Claude, allowed by the Owner on 1 Oct 2026 ("other agents are dow
 - Real 28 Sep ticks compressed by the new policy: 35 MB → 2.6 MB. Random data: 570 → 202 B/row.
 - Follow-up to consider: Kite values are 32-bit; `integer` columns would cut raw size. Decide after real days.
 - Verdict: done (merged and deployed before the 1 Oct open).
+- Second check (Claude, same day): `backend-check` 1,320 passed. Follow-up **NOVA-159**: `archive._archive_day` loads
+  a whole day into memory; a 3,000-stock full-field day cannot fit `atlas-worker` (384 MB). Do not archive such a
+  day until 159 ships (ticks stay compressed in the database).
