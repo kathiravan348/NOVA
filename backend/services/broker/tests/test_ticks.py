@@ -39,6 +39,64 @@ def test_ltp_quote_and_full_packets() -> None:
     assert ticks[2].exchange_ts == datetime.fromtimestamp(1_790_000_000, UTC)
 
 
+def full_packet() -> bytes:
+    """A full packet with every field set to a distinct value (D77)."""
+    head = struct.pack(
+        ">16i",
+        7,  # token
+        20_050,  # last price
+        15,  # last quantity
+        20_010,  # average price
+        123_456,  # volume
+        4_000,  # total buy quantity
+        5_000,  # total sell quantity
+        19_900,  # open
+        20_200,  # high
+        19_800,  # low
+        19_950,  # close (previous day)
+        1_790_000_100,  # last trade time
+        0,  # open interest
+        11,  # OI day high
+        3,  # OI day low
+        1_790_000_105,  # exchange time
+    )
+    bids = [struct.pack(">iihxx", 100 + i, 20_045 - 5 * i, 1 + i) for i in range(5)]
+    asks = [struct.pack(">iihxx", 200 + i, 20_055 + 5 * i, 10 + i) for i in range(5)]
+    return head + b"".join(bids + asks)
+
+
+def test_full_packet_keeps_every_field() -> None:
+    (tick,) = parse_ticks(frame(full_packet()))
+    assert (tick.token, tick.last_price_paise, tick.last_qty) == (7, 20_050, 15)
+    assert tick.volume == 123_456
+    assert (tick.avg_price_paise, tick.buy_qty, tick.sell_qty) == (20_010, 4_000, 5_000)
+    assert (tick.open_paise, tick.high_paise, tick.low_paise) == (19_900, 20_200, 19_800)
+    assert tick.close_paise == 19_950
+    assert (tick.oi, tick.oi_day_high, tick.oi_day_low) == (0, 11, 3)
+    assert tick.last_trade_ts == datetime.fromtimestamp(1_790_000_100, UTC)
+    assert tick.exchange_ts == datetime.fromtimestamp(1_790_000_105, UTC)
+    assert tick.bid_price_paise == [20_045, 20_040, 20_035, 20_030, 20_025]
+    assert tick.bid_qty == [100, 101, 102, 103, 104]
+    assert tick.bid_orders == [1, 2, 3, 4, 5]
+    assert tick.ask_price_paise == [20_055, 20_060, 20_065, 20_070, 20_075]
+    assert tick.ask_qty == [200, 201, 202, 203, 204]
+    assert tick.ask_orders == [10, 11, 12, 13, 14]
+
+
+def test_quote_packet_keeps_quantities_and_ohlc_but_no_depth() -> None:
+    values = (2, 99_900, 10, 99_800, 5_000, 70, 80, 99_000, 99_950, 98_000, 99_100)
+    packet = struct.pack(">11i", *values)
+    (tick,) = parse_ticks(frame(packet))
+    assert (tick.avg_price_paise, tick.buy_qty, tick.sell_qty) == (99_800, 70, 80)
+    assert (tick.open_paise, tick.high_paise, tick.low_paise, tick.close_paise) == (
+        99_000,
+        99_950,
+        98_000,
+        99_100,
+    )
+    assert tick.last_trade_ts is None and tick.bid_price_paise is None
+
+
 def test_heartbeat_and_empty_give_nothing() -> None:
     assert parse_ticks(b"\x00") == []
     assert parse_ticks(b"") == []

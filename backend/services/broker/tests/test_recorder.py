@@ -9,12 +9,20 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from nova_broker.recorder import BATCH_SIZE, Recorder, Socket
+from nova_db.models import Tick
 
 START = datetime(2026, 9, 25, 4, 0, tzinfo=UTC)
 
 
 def ltp_frame(token: int, price: int) -> bytes:
     return struct.pack(">hh2i", 1, 8, token, price)
+
+
+def full_frame(token: int, price: int, close: int) -> bytes:
+    """One full packet; depth level n (bids 0–4, asks 5–9) has n orders."""
+    head = struct.pack(">16i", token, price, 1, price, 10, 0, 0, 0, 0, 0, close, 0, 0, 0, 0, 0)
+    depth = b"".join(struct.pack(">iihxx", 1, price, n) for n in range(10))
+    return struct.pack(">hh", 1, 184) + head + depth
 
 
 class Clock:
@@ -92,6 +100,17 @@ def test_subscribes_in_full_mode_and_batches_by_time() -> None:
     assert [len(b) for b in harness.batches] == [4, 1]
     row = harness.batches[0][0]
     assert (row["exchange"], row["symbol"], row["last_price_paise"]) == ("NSE", "INFY", 100)
+
+
+def test_rows_carry_every_tick_column() -> None:
+    """LTP and full ticks give rows with the same keys: every `ticks` column (D77)."""
+    harness = Harness([[ltp_frame(7, 100), full_frame(7, 101, 99)]], timedelta(0))
+    run(harness, {7: "INFY"})
+    ltp_row, full_row = harness.batches[0]
+    assert set(ltp_row) == set(full_row) == set(Tick.__table__.columns.keys())
+    assert ltp_row["bid_qty"] is None and ltp_row["close_paise"] is None
+    assert full_row["close_paise"] == 99
+    assert full_row["ask_orders"] == [5, 6, 7, 8, 9]
 
 
 def test_batches_by_size_and_unique_receive_times() -> None:

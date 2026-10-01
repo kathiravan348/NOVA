@@ -2,6 +2,7 @@
 
 Each day's files are written first, then that day's rows are deleted and committed. A file that
 already exists is never overwritten: the run stops with an error and leaves the rows in place.
+Files carry every Kite tick field (D77).
 """
 
 from collections import defaultdict
@@ -31,6 +32,23 @@ SCHEMA = pa.schema(
         ("last_qty", pa.int64()),
         ("volume", pa.int64()),
         ("oi", pa.int64()),
+        # Every Kite field (D77); null on ticks recorded before NOVA-155.
+        ("avg_price_paise", pa.int64()),
+        ("buy_qty", pa.int64()),
+        ("sell_qty", pa.int64()),
+        ("open_paise", pa.int64()),
+        ("high_paise", pa.int64()),
+        ("low_paise", pa.int64()),
+        ("close_paise", pa.int64()),
+        ("last_trade_ts", pa.timestamp("us", tz="UTC")),
+        ("oi_day_high", pa.int64()),
+        ("oi_day_low", pa.int64()),
+        ("bid_price_paise", pa.list_(pa.int64())),
+        ("bid_qty", pa.list_(pa.int64())),
+        ("bid_orders", pa.list_(pa.int32())),
+        ("ask_price_paise", pa.list_(pa.int64())),
+        ("ask_qty", pa.list_(pa.int64())),
+        ("ask_orders", pa.list_(pa.int32())),
     ]
 )
 COLUMNS = tuple(SCHEMA.names)
