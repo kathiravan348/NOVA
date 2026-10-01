@@ -3,6 +3,7 @@ export const queryKeys = {
     all: ["live"] as const,
     snapshot: (symbols: string[]) => ["live", "snapshot", symbols] as const,
     days: (symbol: string) => ["live", "days", symbol] as const,
+    stocks: (symbols: string[]) => ["live", "stocks", symbols] as const,
   },
   approvals: {
     all: ["approvals"] as const,

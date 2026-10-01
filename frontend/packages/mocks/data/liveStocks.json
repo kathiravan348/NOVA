@@ -1,0 +1,38 @@
+[
+  {
+    "symbol": "RELIANCE",
+    "daysStored": 12,
+    "firstDay": "2026-09-14",
+    "lastDay": "2026-09-29",
+    "gapDays": 0,
+    "tickCount": 3184000,
+    "sizeBytes": 412000000
+  },
+  {
+    "symbol": "TCS",
+    "daysStored": 10,
+    "firstDay": "2026-09-14",
+    "lastDay": "2026-09-29",
+    "gapDays": 2,
+    "tickCount": 2650000,
+    "sizeBytes": 351000000
+  },
+  {
+    "symbol": "INFY",
+    "daysStored": 12,
+    "firstDay": "2026-09-14",
+    "lastDay": "2026-09-29",
+    "gapDays": 0,
+    "tickCount": 2980000,
+    "sizeBytes": 389000000
+  },
+  {
+    "symbol": "HDFCBANK",
+    "daysStored": 1,
+    "firstDay": "2026-09-29",
+    "lastDay": "2026-09-29",
+    "gapDays": 0,
+    "tickCount": 21000,
+    "sizeBytes": 2700000
+  }
+]

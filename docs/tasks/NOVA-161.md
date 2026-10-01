@@ -1,6 +1,6 @@
 # NOVA-161 — Recorded data cards show history (days, gaps, ticks, size)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-161 · **Depends on:** NOVA-160
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-161 · **Depends on:** NOVA-160
 
 ## Goal
 Each Recorded data card shows the stock's stored history instead of Monitor's live numbers (D80).
@@ -31,10 +31,10 @@ Modify:
 5. Loading skeleton, `QueryError` with retry, empty and no-match states stay as they are.
 
 ## Acceptance checks
-- [ ] Cards show days, range, gap badge and ticks/size from the mock; a never-stored stock shows "None yet".
-- [ ] Gap stock shows **Yes (N)**; clicking a card opens the day cards; search and pages still work.
-- [ ] 360px and desktop, dark and light.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Cards show days, range, gap badge and ticks/size from the mock; a never-stored stock shows "None yet".
+- [x] Gap stock shows **Yes (N)**; clicking a card opens the day cards; search and pages still work.
+- [x] 360px and desktop, dark and light.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Backend (NOVA-160); Monitor; the detail page.
@@ -44,7 +44,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- `getLiveStocks` / `useLiveStocks` (no polling) + key; mock handler + `liveStocks.json` (gap stock TCS,
+  one-day HDFCBANK; others never stored).
+- Card: **Days stored** "10 days · 14 Sep – 29 Sep 2026" or **None yet**; badge **Gap days: No / Yes (N)**;
+  **Ticks** in Indian short form (lakh/crore, e.g. 26.5L); **Size**. Price, Last tick, Today and live badges removed;
+  the page no longer calls `/live/snapshot`. Note under search: "Updated after each market close."
+- Tests: Recorded data block in `live.test.tsx` (history card, None yet, recorder list + search, history error,
+  card opens day cards). lint/typecheck/test (1,074)/build/format pass.
+- **Merge only after NOVA-160 is deployed** (after 15:45 IST); before that the real page would get a 404.
+- Guides: `USER-GUIDE.md` Step 7b.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Self-review by Claude, allowed by the Owner on 1 Oct 2026: matches the task; the detail page is unchanged.
+Verdict: done; merged right after the NOVA-160 deploy (1 Oct 2026, 08:45 IST).

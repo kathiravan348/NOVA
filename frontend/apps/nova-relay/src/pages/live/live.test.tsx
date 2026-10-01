@@ -5,7 +5,6 @@ import { setupServer } from "msw/node";
 import { handlers } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 import { isMarketOpen, isStale } from "../../lib/live";
-import { recordingStatus } from "./RecordedStockCard";
 
 const server = setupServer(...handlers);
 
@@ -64,12 +63,27 @@ describe("Live monitor", () => {
 });
 
 describe("Recorded data", () => {
-  it("shows a card per stock (no table) with price, last tick and today's seconds", async () => {
+  it("shows a card per stock (no table) with days stored, gap days, ticks and size", async () => {
     renderApp("/live/recorded");
     const card = await screen.findByRole("link", { name: "Open TCS" });
-    expect(await within(card).findByText("14,800 / 15,301 (97%)")).toBeInTheDocument();
-    expect(within(card).getByText("Last tick")).toBeInTheDocument();
+    expect(await within(card).findByText("10 days · 14 Sep – 29 Sep 2026")).toBeInTheDocument();
+    expect(within(card).getByText("Gap days: Yes (2)")).toBeInTheDocument();
+    expect(within(card).getByText("26.5L")).toBeInTheDocument();
+    expect(within(card).getByText("~351.0 MB")).toBeInTheDocument();
+    const reliance = screen.getByRole("link", { name: "Open RELIANCE" });
+    expect(await within(reliance).findByText("Gap days: No")).toBeInTheDocument();
+    expect(screen.getByText("Updated after each market close.")).toBeInTheDocument();
     expect(screen.queryByRole("table")).toBeNull();
+  });
+
+  it("says None yet for a stock never stored", async () => {
+    renderApp("/live/recorded");
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Search stocks" }), {
+      target: { value: "DMART" },
+    });
+    const card = await screen.findByRole("link", { name: "Open DMART" });
+    expect(await within(card).findByText("None yet")).toBeInTheDocument();
+    expect(within(card).queryByText(/Gap days/)).toBeNull();
   });
 
   it("shows only the recorder's stocks, and search narrows them", async () => {
@@ -98,22 +112,14 @@ describe("Recorded data", () => {
     expect(await screen.findByText("No stock matches “zzzz”")).toBeInTheDocument();
   });
 
-  it("shows an error with retry when the snapshot fails", async () => {
+  it("shows an error with retry when the history fails", async () => {
     server.use(
-      http.get("*/api/v1/live/snapshot", () =>
+      http.get("*/api/v1/live/stocks", () =>
         HttpResponse.json({ error: { code: "invalid_request", message: "Down" } }, { status: 400 }),
       ),
     );
     renderApp("/live/recorded");
     expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
-  });
-
-  it("badges today's state only while the market is open", () => {
-    const open = new Date("2026-09-30T04:00:30Z"); // 09:30:30 IST Wednesday
-    expect(recordingStatus("2026-09-30T04:00:25Z", 900, open)).toBe("recording");
-    expect(recordingStatus("2026-09-30T04:00:10Z", 900, open)).toBe("stale");
-    expect(recordingStatus(null, 0, open)).toBe("none");
-    expect(recordingStatus(null, 0, new Date("2026-09-30T12:00:00Z"))).toBeNull();
   });
 
   it("opens day cards with both kinds of missing seconds from a card", async () => {

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { LiveTick } from "@nova/contracts";
-import { getLiveDays, getLiveSnapshot } from "../api/live";
+import { getLiveDays, getLiveSnapshot, getLiveStocks } from "../api/live";
 import { subscribeLiveTicks, useRealtimeStatus } from "../realtime";
 import { queryKeys } from "./keys";
 
@@ -13,6 +13,16 @@ export function useLiveSnapshot(symbols: string[]) {
     queryFn: ({ signal }) => getLiveSnapshot(selected, { signal }),
     enabled: selected.length > 0,
     refetchInterval: status === "open" ? 30_000 : 5_000,
+  });
+}
+
+/** Summarized history (D80): changes once a day, so no polling. */
+export function useLiveStocks(symbols: string[]) {
+  const selected = [...new Set(symbols)].sort();
+  return useQuery({
+    queryKey: queryKeys.live.stocks(selected),
+    queryFn: ({ signal }) => getLiveStocks(selected, { signal }),
+    enabled: selected.length > 0,
   });
 }
 
