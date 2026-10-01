@@ -1,8 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { handlers, resetMockRecorder } from "@nova/mocks";
+import { handlers, mockInstruments, resetMockRecorder } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 
 const server = setupServer(...handlers);
@@ -62,6 +62,53 @@ describe("Live config", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Save stocks" }));
     expect(await screen.findByText("Stocks saved (demo)")).toBeInTheDocument();
     expect(await screen.findByText("1 chosen stock")).toBeInTheDocument();
+  });
+
+  it("picks the top 3000 of 3,899 synced stocks by traded value and saves them", async () => {
+    const symbols = Array.from({ length: 3899 }, (_, i) => `S${String(i + 1).padStart(4, "0")}`);
+    const base = mockInstruments[0]!;
+    // S3899 trades the most; S3898 next; every other stock has no history and ranks by symbol.
+    const instruments = [
+      { ...base, symbol: "S3899", avgDailyVolume: 1_000_000 },
+      { ...base, symbol: "S3898", avgDailyVolume: 500_000 },
+    ];
+    let saved: string[] = [];
+    server.use(
+      http.get("*/api/v1/market-data/universe", () =>
+        HttpResponse.json(
+          symbols.map((symbol) => ({
+            symbol,
+            name: `Stock ${symbol}`,
+            sector: "Banking",
+            indices: [],
+            synced: true,
+            newListing: false,
+          })),
+        ),
+      ),
+      http.get("*/api/v1/market-data/instruments", () => HttpResponse.json(instruments)),
+      http.put("*/api/v1/broker/recorder", async ({ request }) => {
+        saved = ((await request.json()) as { symbols: string[] }).symbols;
+        return HttpResponse.json({
+          enabled: false,
+          symbols: saved,
+          state: "off",
+          jobId: null,
+          updatedAt: "2026-09-22T04:30:00Z",
+        });
+      }),
+    );
+    renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
+    const pick = within(dialog).getByRole("button", { name: "Pick top 3000 by traded value" });
+    await waitFor(() => expect(pick).toBeEnabled());
+    fireEvent.click(pick);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save stocks" }));
+    expect(await screen.findByText("Stocks saved (demo)")).toBeInTheDocument();
+    expect(saved).toHaveLength(3000);
+    expect(saved.slice(0, 3)).toEqual(["S3899", "S3898", "S0001"]);
+    expect(saved.at(-1)).toBe("S2998");
   });
 
   it("removes a stock from the recorded list, but not the last one", async () => {

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **30 Sep 2026** (Stage B, tasks up to NOVA-153). NOVA **never places real orders**: it only
+> State as of **1 Oct 2026** (Stage B, tasks up to NOVA-154). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -544,7 +544,10 @@ records every price change (*ticks*) of the chosen stocks every weekday from 09:
 turn it off. Past prices can't be recorded later, so leave it on. The badge says what it is doing: **Off**,
 **Waiting for market hours**, **Recording** (with a link to today's recording job) or **Log in to Kite first**
 (do the daily Kite login, Step 3). **Choose stocks** picks which synced stocks to record; with none ticked it
-records all of them. Below the card, the table lists the chosen stocks; **Remove** takes one out (the last one
+records all of them. Kite sends live prices for at most 3,000 stocks, so with more synced stocks than that, press
+**Pick top 3000 by traded value**: it ticks the 3,000 stocks that trade the most money per day (average daily
+volume over the last 20 days × last close; stocks with no price history come last). Then press **Save stocks**; the
+list stays the same until you change it. Below the card, the table lists the chosen stocks; **Remove** takes one out (the last one
 cannot be removed, because an empty list means every stock). Cancelling a running recording job also turns the
 switch off.
 
@@ -630,3 +633,4 @@ approval**; in Demo mode the demo banner appears instead.
 | Forgot the Kite passphrase | Open the account, press **Set key and secret** and enter the API key and secret again (from the Kite developer console) with a new passphrase. |
 | **Kite login failed** after entering the passphrase | Too many wrong tries or more than 2 minutes passed. Press **Log in to Kite** again. |
 | **Live → Config** says **Log in to Kite first** | Recording is on but today's Kite login is missing. Do the daily login (Step 3); recording starts within a minute. |
+| **Choose stocks** says *Kite streams at most 3000 stocks* | Too many stocks are ticked. Press **Pick top 3000 by traded value**, then **Save stocks**. |
