@@ -1,6 +1,6 @@
 # NOVA-157 — Live Recorded data: stock cards instead of the table
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-157 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-157 · **Depends on:** —
 
 ## Goal
 **Live → Recorded data** shows one card per recorded stock with today's status; a card opens the same detail page (D78).
@@ -33,11 +33,11 @@ Modify:
 5. Remove the `DataTable` code from the page. Detail page `RecordedStockPage` is unchanged.
 
 ## Acceptance checks
-- [ ] Recorded data shows cards (not a table) with price, last tick and "Today" for mock stocks; only recorder stocks.
-- [ ] Clicking the TCS card opens the day cards (existing test adapted); DMART "Nothing recorded" test unchanged.
-- [ ] Search "tc" narrows to TCS; snapshot error shows **Try again**.
-- [ ] 360px and desktop, dark and light; cards are keyboard-focusable links.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Recorded data shows cards (not a table) with price, last tick and "Today" for mock stocks; only recorder stocks.
+- [x] Clicking the TCS card opens the day cards (existing test adapted); DMART "Nothing recorded" test unchanged.
+- [x] Search "tc" narrows to TCS; snapshot error shows **Try again**.
+- [x] 360px and desktop, dark and light; cards are keyboard-focusable links.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - History totals per stock (days, total ticks, size) — would need a new endpoint (D78 option not chosen).
@@ -47,7 +47,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- `RecordedStockCard`: whole card is one link ("Open <SYMBOL>", focus ring `ring-action`, hover border);
+  shows name, price, Last tick, Today "a / b (n%)", badge from `recordingStatus()` (exported, unit-tested).
+- `RecordedDataPage`: recorder's stocks (all when the list is empty), sorted; search before paging; snapshot per
+  page; skeleton / errors with retry / "No stocks yet" / "No stock matches". DataTable code removed.
+- Tests: `live.test.tsx` Recorded data block — cards not table, recorder list + search, snapshot error, badge rule,
+  card opens day cards; DMART test unchanged. `pnpm lint/typecheck/test/build/format:check` pass (1,073 tests).
+- Browser check not possible (in-app browser blocks the MSW worker; Live is Owner-only in real mode).
+- Guides: `USER-GUIDE.md` Step 7b (Recorded data paragraph).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Self-review by Claude, allowed by the Owner on 1 Oct 2026 ("other agents are down, complete all works").
+- Matches the task; detail page untouched; no backend change; ≤ 200 symbols per snapshot call.
+- Verdict: done, merged.

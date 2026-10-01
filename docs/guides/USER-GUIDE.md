@@ -537,7 +537,12 @@ stocks whose symbol or name contains what you type. **Pick stocks** opens **My l
 **Add index…** / **Add sector…**), then **Save list**; the Stocks list then shows **My list (N)** with only those
 stocks. My list is kept in this browser only (another browser or computer has its own).
 
-**Recorded data** lists the stocks; open one to see a card for each recorded day: **Ticks**,
+**Recorded data** shows a card for each recorded stock (the stocks chosen in Config, or all of them when none are
+chosen), with **Search stocks** and page controls. A card shows the last price, the time of the last price (IST)
+and **Today**: seconds with a tick out of the seconds so far, with the percentage. While the market is open a
+badge says **Recording**, **No recent tick** (nothing for 10 seconds) or **No ticks today**. The cards refresh
+about every 30 seconds (Monitor is the page for second-by-second prices). Click a card to see a card for each
+recorded day: **Ticks**,
 **1-second candles**, **Missing seconds (recorder)** and **No trade seconds**, and the day's **Size**. A second
 counts as missed by the recorder only when other stocks had prices in that second; if none did, it is a second
 with no trade. The 1-second candles are worked out from the saved prices, not stored separately.

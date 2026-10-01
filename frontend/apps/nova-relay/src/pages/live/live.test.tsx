@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import { handlers } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
 import { isMarketOpen, isStale } from "../../lib/live";
+import { recordingStatus } from "./RecordedStockCard";
 
 const server = setupServer(...handlers);
 
@@ -63,9 +64,61 @@ describe("Live monitor", () => {
 });
 
 describe("Recorded data", () => {
-  it("lists stocks and opens day cards with both kinds of missing seconds", async () => {
+  it("shows a card per stock (no table) with price, last tick and today's seconds", async () => {
     renderApp("/live/recorded");
-    fireEvent.click((await screen.findAllByRole("link", { name: "TCS" }))[0]!);
+    const card = await screen.findByRole("link", { name: "Open TCS" });
+    expect(await within(card).findByText("14,800 / 15,301 (97%)")).toBeInTheDocument();
+    expect(within(card).getByText("Last tick")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).toBeNull();
+  });
+
+  it("shows only the recorder's stocks, and search narrows them", async () => {
+    server.use(
+      http.get("*/api/v1/broker/recorder", () =>
+        HttpResponse.json({
+          enabled: true,
+          symbols: ["TCS", "INFY", "RELIANCE"],
+          state: "waiting",
+          jobId: null,
+          updatedAt: "2026-09-22T04:30:00Z",
+        }),
+      ),
+    );
+    renderApp("/live/recorded");
+    await screen.findByRole("link", { name: "Open TCS" });
+    const names = () => screen.getAllByRole("link", { name: /^Open / }).map((l) => l.ariaLabel);
+    expect(names()).toEqual(["Open INFY", "Open RELIANCE", "Open TCS"]);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search stocks" }), {
+      target: { value: "tc" },
+    });
+    await waitFor(() => expect(names()).toEqual(["Open TCS"]));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search stocks" }), {
+      target: { value: "zzzz" },
+    });
+    expect(await screen.findByText("No stock matches “zzzz”")).toBeInTheDocument();
+  });
+
+  it("shows an error with retry when the snapshot fails", async () => {
+    server.use(
+      http.get("*/api/v1/live/snapshot", () =>
+        HttpResponse.json({ error: { code: "invalid_request", message: "Down" } }, { status: 400 }),
+      ),
+    );
+    renderApp("/live/recorded");
+    expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("badges today's state only while the market is open", () => {
+    const open = new Date("2026-09-30T04:00:30Z"); // 09:30:30 IST Wednesday
+    expect(recordingStatus("2026-09-30T04:00:25Z", 900, open)).toBe("recording");
+    expect(recordingStatus("2026-09-30T04:00:10Z", 900, open)).toBe("stale");
+    expect(recordingStatus(null, 0, open)).toBe("none");
+    expect(recordingStatus(null, 0, new Date("2026-09-30T12:00:00Z"))).toBeNull();
+  });
+
+  it("opens day cards with both kinds of missing seconds from a card", async () => {
+    renderApp("/live/recorded");
+    fireEvent.click(await screen.findByRole("link", { name: "Open TCS" }));
     await waitFor(() =>
       expect(screen.getAllByText("Missing seconds (recorder)").length).toBeGreaterThan(1),
     );
