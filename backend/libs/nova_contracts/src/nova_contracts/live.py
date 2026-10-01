@@ -71,3 +71,25 @@ class LiveDaySummary(Contract):
         if self.candle_count > self.tick_count:
             raise ValueError("candles exceed ticks")
         return self
+
+
+class LiveStockHistory(Contract):
+    """A stock's summarized recording history (D80): completed days only."""
+
+    symbol: LiveSymbol
+    days_stored: Count
+    first_day: IsoDate | None
+    last_day: IsoDate | None
+    gap_days: Count
+    tick_count: Count
+    size_bytes: Count
+
+    @model_validator(mode="after")
+    def _rules(self) -> Self:
+        if (self.days_stored == 0) != (self.first_day is None) or (self.first_day is None) != (
+            self.last_day is None
+        ):
+            raise ValueError("days and first/last day must agree")
+        if self.first_day and self.last_day and self.first_day > self.last_day:
+            raise ValueError("first day is after last day")
+        return self

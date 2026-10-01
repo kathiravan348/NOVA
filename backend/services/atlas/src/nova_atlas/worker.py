@@ -54,11 +54,12 @@ def run_worker(
     archive_dir: Path = Path("archive"),
     schedule: Schedule | None = None,
     clock: Callable[[], float] = time.monotonic,
+    summarize: Callable[[Session], object] | None = None,
 ) -> None:
     """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there).
 
-    Once a minute while idle it cancels expired plans (D57) and runs `schedule`, which queues
-    timed jobs (the daily sync, D56).
+    Once a minute while idle it cancels expired plans (D57), runs `schedule`, which queues
+    timed jobs (the daily sync, D56), and `summarize`, which stores one day's tick summary (D80).
     """
     with session_factory() as db:
         requeued = requeue_running(db, DataJob, OWNED)
@@ -94,6 +95,12 @@ def run_worker(
                         continue
                 except Exception:
                     logger.exception("Daily sync check failed")
+                    db.rollback()
+            if due and summarize is not None:
+                try:
+                    summarize(db)
+                except Exception:
+                    logger.exception("Tick summary failed; retried in a minute")
                     db.rollback()
         if on_idle is not None:
             on_idle()
