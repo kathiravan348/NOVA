@@ -1,6 +1,6 @@
 # NOVA-157 — Live Recorded data: stock cards instead of the table
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-157 · **Depends on:** —
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-157 · **Depends on:** —
 
 ## Goal
 **Live → Recorded data** shows one card per recorded stock with today's status; a card opens the same detail page (D78).

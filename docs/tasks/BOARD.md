@@ -162,7 +162,7 @@
 | NOVA-154 | Recorder: Pick top 3000 by traded value (D75) | done | Claude | 153 |
 | NOVA-155 | Recorder: store every Kite tick field + compress ticks (D77) | ready-for-review | Claude | — |
 | NOVA-156 | Live Monitor: search + My list (D78) | done | Claude | — |
-| NOVA-157 | Live Recorded data: stock cards instead of the table (D78) | planned | — | — |
+| NOVA-157 | Live Recorded data: stock cards instead of the table (D78) | in-progress | Claude | — |
 | NOVA-158 | Recorder: fast restart after an interruption (D79) | planned | — | 155 |
 
 ## Parallel lanes (tasks that can run at the same time)
