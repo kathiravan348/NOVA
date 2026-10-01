@@ -222,6 +222,6 @@ services restore selections on reconnect, and snapshot/day reads provide current
 |---|---|
 | `python -m nova_core create-admin` | Creates the super-admin user (asks for the password). |
 | `python -m nova_broker new-token-key` | Makes the key used to encrypt Kite tokens. |
-| `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session. |
+| `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session. Restarts by itself (D79): a dropped socket reconnects after 1, 2, 4 … 30 s (back to 1 s once a connection got ticks), no stock tick for 60 s forces a reconnect, a failed save keeps up to 50,000 ticks for the next batch, and a failed job retries after 10 s, 30 s, then every 60 s. |
 | `python -m nova_atlas worker` | The data-job worker (Compose service `atlas-worker`): downloads, archives. Syncing, downloads and archives are started from Relay (D55). |
 | `python -m nova_db upgrade \| check` | Runs migrations / checks models match the database. |

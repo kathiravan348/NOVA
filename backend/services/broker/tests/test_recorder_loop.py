@@ -179,7 +179,7 @@ def test_cancelling_the_job_ends_it_and_switches_off(
     assert setting is not None and setting.enabled is False
 
 
-def test_a_failure_fails_the_job_and_waits_before_retrying(
+def test_a_failure_fails_the_job_and_retries_after_10_30_60_seconds(
     synced: Engine, kite_session: str, settings: BrokerSettings
 ) -> None:
     switch(synced, True)
@@ -194,10 +194,80 @@ def test_a_failure_fails_the_job_and_waits_before_retrying(
     assert job_id is not None
     failed = job(synced, job_id)
     assert failed.status == "failed" and failed.error == "socket refused"
-    clock.at += timedelta(minutes=1)
-    assert loop.step() is None
-    clock.at += timedelta(minutes=5)
-    assert loop.step() is not None
+    for wait in (10, 30, 60, 60):
+        clock.at += timedelta(seconds=wait - 1)
+        assert loop.step() is None
+        clock.at += timedelta(seconds=1)
+        assert loop.step() is not None
+
+
+def test_a_recording_that_ran_5_minutes_retries_after_10_seconds(
+    synced: Engine, kite_session: str, settings: BrokerSettings
+) -> None:
+    switch(synced, True)
+
+    def script(sink: Sink, should_stop: Callable[[], bool], clock: Clock) -> None:
+        clock.at += timedelta(minutes=5)
+        raise RuntimeError("socket refused")
+
+    clock = Clock(FRIDAY_10_IST)
+    loop = make_loop(synced, settings, clock, script)
+    for _ in range(3):
+        assert loop.step() is not None
+        clock.at += timedelta(seconds=10)
+
+
+class Waits(threading.Event):
+    """Records each wait of the loop, moves the clock by it, and stops after three."""
+
+    def __init__(self, clock: Clock) -> None:
+        super().__init__()
+        self.clock, self.waits = clock, list[float]()
+
+    def wait(self, timeout: float | None = None) -> bool:
+        assert timeout is not None
+        self.waits.append(timeout)
+        self.clock.at += timedelta(seconds=timeout)
+        if len(self.waits) == 3:
+            self.set()
+        return self.is_set()
+
+
+def test_run_waits_for_a_retry_due_before_the_next_poll(
+    synced: Engine, kite_session: str, settings: BrokerSettings
+) -> None:
+    switch(synced, True)
+
+    def script(sink: Sink, should_stop: Callable[[], bool], clock: Clock) -> None:
+        raise RuntimeError("socket refused")
+
+    clock = Clock(FRIDAY_10_IST)
+    loop = make_loop(synced, settings, clock, script)
+    loop.stop = Waits(clock)
+    loop.run()
+
+    assert loop.stop.waits == [10, 30, 30]  # the third failure's 60 s retry is past one poll
+    with Session(synced) as db:
+        assert db.scalar(select(func.count()).select_from(DataJob)) == 3
+
+
+class BrokenRedis:
+    def pipeline(self, transaction: bool = True) -> None:
+        raise ValueError("not a Redis error")
+
+
+def test_a_failed_live_publish_keeps_recording(
+    synced: Engine, kite_session: str, settings: BrokerSettings
+) -> None:
+    switch(synced, True)
+    loop = make_loop(synced, settings, Clock(FRIDAY_10_IST), until_close)
+    loop.redis = BrokenRedis()  # type: ignore[assignment]
+
+    job_id = loop.step()
+
+    assert job_id is not None
+    done = job(synced, job_id)
+    assert done.status == "completed" and done.rows_written == 3
 
 
 def test_a_restart_fails_the_recording_it_left_running(

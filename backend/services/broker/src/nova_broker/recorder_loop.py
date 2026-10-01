@@ -3,6 +3,7 @@
 Every `poll_seconds` it reads `recorder_settings`. On a weekday between 09:15 and 15:30 IST,
 with the switch on and a live Kite session, it opens a `tick_record` data job and records until
 15:30, until the switch goes off or the job is cancelled in Relay (a cancel also turns it off).
+A failed recording is retried after 10 s, 30 s, then every 60 s (D79).
 """
 
 import asyncio
@@ -36,7 +37,9 @@ IST = ZoneInfo("Asia/Kolkata")
 MARKET_OPEN = time(9, 15)
 MARKET_CLOSE = time(15, 30)
 CHECK_SECONDS = 5.0
-RETRY_AFTER = timedelta(minutes=5)
+# Waits after consecutive failed recordings; a recording that ran RESET_AFTER starts again at 10 s.
+RETRY_STEPS = (timedelta(seconds=10), timedelta(seconds=30), timedelta(seconds=60))
+RESET_AFTER = timedelta(minutes=5)
 ERROR_LENGTH = 500
 
 # (url, instrument token → symbol, sink, should_stop): records until should_stop() is true.
@@ -113,13 +116,21 @@ class RecorderLoop:
     now: Callable[[], datetime] = field(default=lambda: datetime.now(UTC))
     poll_seconds: float = 30.0
     retry_at: datetime | None = None
+    failures: int = 0
     redis: Redis | None = None
 
     def run(self) -> None:
         self.recover()
         while not self.stop.is_set():
             self.step()
-            self.stop.wait(self.poll_seconds)
+            self.stop.wait(self._wait_seconds())
+
+    def _wait_seconds(self) -> float:
+        """The poll interval, or less when a retry is due sooner."""
+        if self.retry_at is None:
+            return self.poll_seconds
+        left = (self.retry_at - self.now()).total_seconds()
+        return min(self.poll_seconds, max(left, 0.0))
 
     def recover(self) -> None:
         """Fails recordings a stopped recorder left `running`; the next step starts a new one."""
@@ -135,8 +146,10 @@ class RecorderLoop:
         now = self.now()
         if self.cipher is None:
             return None
-        if self.retry_at is not None and now < self.retry_at:
-            return None
+        if self.retry_at is not None:
+            if now < self.retry_at:
+                return None
+            self.retry_at = None
         with self.factory() as db:
             setting = load_setting(db)
             db.commit()
@@ -167,7 +180,7 @@ class RecorderLoop:
         return job_id
 
     def _record(self, job_id: str, url: str, tokens: dict[int, str]) -> None:
-        last_check = self.now()
+        started = last_check = self.now()
         wanted = True
         with self.factory() as db:
             closes = previous_closes(db, list(tokens.values()), self.now())
@@ -183,7 +196,10 @@ class RecorderLoop:
                 )
                 db.commit()
             if self.redis is not None:
-                publish_ticks(self.redis, rows, closes)
+                try:
+                    publish_ticks(self.redis, rows, closes)
+                except Exception:  # live view only: the rows are saved, never retry the save
+                    logger.warning("Live tick publish failed; ticks remain stored", exc_info=True)
 
         def should_stop() -> bool:
             nonlocal last_check, wanted
@@ -203,7 +219,7 @@ class RecorderLoop:
             error = str(exc) or type(exc).__name__
         if error is None and self.stop.is_set():
             error = "Recorder stopped before the session ended; it resumes on restart"
-        self._finish(job_id, error)
+        self._finish(job_id, error, started)
 
     def _still_wanted(self, job_id: str, now: datetime) -> bool:
         """Also moves the job's progress along the trading session."""
@@ -216,7 +232,7 @@ class RecorderLoop:
             db.commit()
             return enabled
 
-    def _finish(self, job_id: str, error: str | None) -> None:
+    def _finish(self, job_id: str, error: str | None, started: datetime) -> None:
         with self.factory() as db:
             job = db.get(DataJob, job_id)
             if job is None:
@@ -230,8 +246,11 @@ class RecorderLoop:
             else:
                 self._end(job, error)
             db.commit()
+        if error is None or self.now() - started >= RESET_AFTER:
+            self.failures = 0
         if error is not None:
-            self.retry_at = self.now() + RETRY_AFTER
+            self.retry_at = self.now() + RETRY_STEPS[min(self.failures, len(RETRY_STEPS) - 1)]
+            self.failures += 1
 
     def _end(self, job: DataJob, error: str | None) -> None:
         job.status = "failed" if error else "completed"
