@@ -22,6 +22,8 @@ from nova_db.models.data import (
     Instrument,
     MarketIndex,
     Tick,
+    TickDay,
+    TickSession,
     UniverseEntry,
 )
 from nova_db.models.strategy import Strategy, StrategyVersion
@@ -52,6 +54,8 @@ __all__ = [
     "Strategy",
     "StrategyVersion",
     "Tick",
+    "TickDay",
+    "TickSession",
     "Trade",
     "UniverseEntry",
     "UnavailableDay",

@@ -7,10 +7,12 @@ import argparse
 import logging
 import signal
 import threading
+from datetime import UTC, datetime
 
 from nova_db import create_db_engine, create_session_factory
 
 from nova_atlas.broker_client import BrokerData
+from nova_atlas.live_summary import summarize_next
 from nova_atlas.settings import get_atlas_settings
 from nova_atlas.sync_job import maybe_queue_daily_sync
 from nova_atlas.worker import run_worker
@@ -36,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
             settings.worker_poll_seconds,
             archive_dir=settings.archive_dir,
             schedule=maybe_queue_daily_sync,
+            summarize=lambda db: summarize_next(db, settings.archive_dir, datetime.now(UTC)),
         )
     finally:
         engine.dispose()

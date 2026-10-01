@@ -58,3 +58,26 @@ export const LiveDaySummarySchema = z
   )
   .refine((row) => row.candleCount <= row.tickCount, "candles exceed ticks");
 export type LiveDaySummary = z.infer<typeof LiveDaySummarySchema>;
+
+/** A stock's summarized recording history (D80): completed days only; gapDays per D80. */
+export const LiveStockHistorySchema = z
+  .strictObject({
+    symbol: LiveSymbolSchema,
+    daysStored: z.number().int().nonnegative(),
+    firstDay: IsoDateSchema.nullable(),
+    lastDay: IsoDateSchema.nullable(),
+    gapDays: z.number().int().nonnegative(),
+    tickCount: z.number().int().nonnegative(),
+    sizeBytes: z.number().int().nonnegative(),
+  })
+  .refine(
+    (row) =>
+      (row.daysStored === 0) === (row.firstDay === null) &&
+      (row.firstDay === null) === (row.lastDay === null),
+    "days and first/last day must agree",
+  )
+  .refine(
+    (row) => row.firstDay === null || row.lastDay === null || row.firstDay <= row.lastDay,
+    "first day is after last day",
+  );
+export type LiveStockHistory = z.infer<typeof LiveStockHistorySchema>;

@@ -94,6 +94,7 @@ from nova_contracts.live import (
     MAX_LIVE_SYMBOLS,
     LiveDaySummary,
     LiveSnapshotItem,
+    LiveStockHistory,
     LiveSubscribe,
     LiveTick,
 )
@@ -157,6 +158,7 @@ __all__ = [
     "MAX_LIVE_SYMBOLS",
     "LiveDaySummary",
     "LiveSnapshotItem",
+    "LiveStockHistory",
     "LiveSubscribe",
     "LiveTick",
     "LiveTickMessage",

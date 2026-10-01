@@ -279,6 +279,41 @@ class Tick(Base):
     ask_orders: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
 
 
+class TickSession(Base):
+    """One summarized recording day (D80): written by the Atlas worker after the session."""
+
+    __tablename__ = "tick_sessions"
+    __table_args__ = (
+        CheckConstraint("stocks >= 0 AND ticks >= 0", name="counts"),
+        CheckConstraint("feed_gap_seconds BETWEEN 0 AND 22500", name="feed_gap_seconds"),
+    )
+
+    day: Mapped[date] = mapped_column(primary_key=True)
+    stocks: Mapped[int] = mapped_column(Integer)
+    ticks: Mapped[int] = mapped_column(BigInteger)
+    # Session seconds (09:15–15:30 IST) in which no stock had a tick: the feed was down.
+    feed_gap_seconds: Mapped[int] = mapped_column(Integer)
+    summarized_at: Mapped[datetime]
+
+
+class TickDay(Base):
+    """One stock's ticks on a summarized day (D80); only stocks with ticks get a row."""
+
+    __tablename__ = "tick_days"
+    __table_args__ = (
+        check_in("exchange", "exchange", EXCHANGES),
+        CheckConstraint("ticks > 0 AND size_bytes >= 0", name="counts"),
+        CheckConstraint("seconds_with_tick BETWEEN 0 AND 22500", name="seconds_with_tick"),
+    )
+
+    exchange: Mapped[str] = mapped_column(primary_key=True)
+    symbol: Mapped[str] = mapped_column(primary_key=True)
+    day: Mapped[date] = mapped_column(primary_key=True)
+    ticks: Mapped[int] = mapped_column(BigInteger)
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
+    seconds_with_tick: Mapped[int] = mapped_column(Integer)
+
+
 class UniverseEntry(Base):
     """The stock list the Owner edits in Relay (D54); `sync` adds Kite tokens to `instruments`."""
 

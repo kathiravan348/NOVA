@@ -1,6 +1,6 @@
 # NOVA-160 — Recorded data history: daily tick summaries + `GET /live/stocks`
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-160 · **Depends on:** NOVA-155
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-160 · **Depends on:** NOVA-155
 
 ## Goal
 After each session the Atlas worker stores per-day tick summaries; `GET /live/stocks` returns each stock's
@@ -37,10 +37,10 @@ Modify:
    tables; stocks never stored → zeros/nulls. No audit write; agents denied like other `/live` reads.
 
 ## Acceptance checks
-- [ ] Two seeded days (one with a feed gap, one where stock B has no ticks): summaries and `gapDays` as expected.
-- [ ] Today is not summarized before 15:35 IST; a second run does nothing; a failure leaves the worker running.
-- [ ] Endpoint: 400 for 0 or 501 symbols, 404 unknown stock, zeros for a stock never stored.
-- [ ] `docker compose run --rm backend-check` passes; frontend `pnpm typecheck`/`test` pass (contracts).
+- [x] Two seeded days (one with a feed gap, one where stock B has no ticks): summaries and `gapDays` as expected.
+- [x] Today is not summarized before 15:35 IST; a second run does nothing; a failure leaves the worker running.
+- [x] Endpoint: 400 for 0 or 501 symbols, 404 unknown stock, zeros for a stock never stored.
+- [x] `docker compose run --rm backend-check` passes; frontend `pnpm typecheck`/`test` pass (contracts).
 
 ## Out of scope
 - Frontend cards and mocks (NOVA-161); `/live/days` and the archive (NOVA-159) unchanged.
@@ -50,7 +50,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- Migration 0026: `tick_sessions`, `tick_days`. `live_summary.py`: `pending_days` lists TimescaleDB chunk days +
+  Parquet folders (never scans ticks, so it is cheap every minute); weekdays only; today from 15:35 IST.
+  `summarize_day` reads the day's ticks per stock (+ archived Parquet stocks), replaces the day in one commit.
+- Worker: new `summarize` hook in the once-a-minute idle block (one day per call; errors logged, never fatal).
+- `GET /live/stocks` (1–500 symbols): one SQL over the two tables; gap day per D80.
+- Contract `LiveStockHistory` (Pydantic + Zod + JSON schema); `jsonSchema.test.ts` map line added.
+- Tests: `test_live_summary.py` (summaries, gap days, Parquet day, weekends, errors, worker survives a failure).
+  `backend-check` 1,325 passed; frontend typecheck + contracts tests pass.
+- **Deploy after 15:45 IST** (D76): `docker compose run --rm --no-deps migrate`, then
+  `docker compose up -d --build --no-deps atlas-api atlas-worker`. First run summarizes every stored day.
+- Guides: `API.md`, `DATABASE.md`, `CONTRACTS.md`.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Self-review by Claude, allowed by the Owner on 1 Oct 2026 ("other agents are down, complete all works").
+- Matches the task; no change to `/live/days`, the archive (NOVA-159) or the recorder (NOVA-158).
+- Note for later: the detail page (D74) still calls all-stock silent seconds "no trade"; with 3,000 stocks they
+  mean a feed gap (D80). Relabel in a small follow-up task if the Owner agrees.
+- Verdict: done, merged; deploy pending until after 15:45 IST.

@@ -1,4 +1,4 @@
-"""Live snapshot and recorded-day summaries; no broker/Kite calls (D35, D74)."""
+"""Live snapshot, recorded days and stock history; no broker/Kite calls (D35, D74, D80)."""
 
 from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -7,11 +7,17 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request
 from nova_common import ApiException
 from nova_common.internal import CallerDep
-from nova_contracts.live import LiveDaySummary, LiveSnapshotItem, LiveSubscribe, LiveSymbol
+from nova_contracts.live import (
+    LiveDaySummary,
+    LiveSnapshotItem,
+    LiveStockHistory,
+    LiveSubscribe,
+    LiveSymbol,
+)
 from nova_db.models import Candle, UniverseEntry
 from nova_db.web import Db
 from pydantic import TypeAdapter, ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from nova_atlas.live_storage import (
     IST,
@@ -133,6 +139,53 @@ def days(
                 missing_seconds=faults,
                 no_trade_seconds=expected - len(active),
                 size_bytes=stock.size,
+            )
+        )
+    return result
+
+
+# Gap day (D80): a summarized day from the stock's first day on with no ticks, or a feed gap.
+_HISTORY = text("""
+    WITH own AS (
+        SELECT symbol, count(*) AS days, min(day) AS first_day, max(day) AS last_day,
+               sum(ticks)::bigint AS ticks, sum(size_bytes)::bigint AS bytes
+        FROM tick_days WHERE exchange = 'NSE' AND symbol = ANY(:symbols) GROUP BY symbol
+    )
+    SELECT own.*, (
+        SELECT count(*) FROM tick_sessions s
+        WHERE s.stocks > 0 AND s.day >= own.first_day
+          AND (s.feed_gap_seconds > 0 OR NOT EXISTS (
+              SELECT 1 FROM tick_days d
+              WHERE d.exchange = 'NSE' AND d.symbol = own.symbol AND d.day = s.day))
+    ) AS gaps
+    FROM own
+""")
+
+
+@router.get("/stocks", response_model=list[LiveStockHistory])
+def stocks(
+    _: CallerDep,
+    db: Db,
+    symbols: Annotated[str, Query(min_length=1, max_length=40_500)],
+) -> list[LiveStockHistory]:
+    try:
+        selected = LiveSubscribe(type="live.subscribe", symbols=symbols.split(",")).symbols
+    except ValidationError as exc:
+        raise ApiException(400, "invalid_request", "Choose 1–500 unique NSE stock symbols") from exc
+    check_symbols(db, selected)
+    found = {row.symbol: row for row in db.execute(_HISTORY, {"symbols": selected})}
+    result = []
+    for symbol in selected:
+        row = found.get(symbol)
+        result.append(
+            LiveStockHistory(
+                symbol=symbol,
+                days_stored=row.days if row else 0,
+                first_day=row.first_day if row else None,
+                last_day=row.last_day if row else None,
+                gap_days=row.gaps if row else 0,
+                tick_count=row.ticks if row else 0,
+                size_bytes=row.bytes if row else 0,
             )
         )
     return result

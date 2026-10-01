@@ -60,6 +60,7 @@ import {
   LiveTickSchema,
   LiveSnapshotItemSchema,
   LiveDaySummarySchema,
+  LiveStockHistorySchema,
   LiveSubscribeSchema,
 } from "./live";
 import { pageSchema } from "./common";
@@ -124,6 +125,7 @@ const contracts: Record<string, z.ZodType> = {
   LiveTick: LiveTickSchema,
   LiveSnapshotItem: LiveSnapshotItemSchema,
   LiveDaySummary: LiveDaySummarySchema,
+  LiveStockHistory: LiveStockHistorySchema,
   LiveSubscribe: LiveSubscribeSchema,
 };
 

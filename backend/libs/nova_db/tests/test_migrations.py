@@ -4,6 +4,8 @@ from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "tick_days",
+    "tick_sessions",
     "approval_requests",
     "users",
     "roles",
@@ -51,11 +53,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0025(engine: Engine) -> None:
+def test_head_revision_is_0026(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0025"
+    assert head == "0026"
 
 
 def test_benchmark_foreign_key_round_trip(engine: Engine, database_url: str) -> None:

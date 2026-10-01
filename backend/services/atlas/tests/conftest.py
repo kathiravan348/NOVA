@@ -55,7 +55,7 @@ def clean(engine: Engine, seeded_universe: list[dict[str, Any]]) -> Engine:
         connection.execute(
             text(
                 "TRUNCATE unavailable_days, data_jobs, instruments, candles, candle_days,"
-                " ticks, audit_entries,"
+                " ticks, tick_days, tick_sessions, audit_entries,"
                 " users, universe CASCADE"
             )
         )
