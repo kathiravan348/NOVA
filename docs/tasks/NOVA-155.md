@@ -1,6 +1,6 @@
 # NOVA-155 — Recorder: store every Kite tick field + compress ticks
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-155 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-155 · **Depends on:** —
 
 ## Goal
 The recorder keeps every field of Kite's `full` packet (D77), not 6: average price, buy/sell quantity, day OHLC,
@@ -46,4 +46,12 @@ Modify:
 - Guides: `DATABASE.md` (ticks row).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Self-review by Claude, allowed by the Owner on 1 Oct 2026 ("other agents are down, complete all works").
+- Packet offsets match Kite's full layout (ints 0–15, depth from byte 64, 10 × 12 bytes: qty, price, orders, pad).
+- Every recorder row has every column (bulk insert takes keys from the first row) — tested.
+- Readers unaffected: `live_storage.py` reads named Parquet columns and sizes rows with `pg_column_size`.
+- Load test (temporary script, throwaway database, not in the repo): 3,000 stocks × 300 s full packets →
+  900,000 rows, every field equal, 0 missing/duplicate; insert median 73 ms per 500 rows, lag p99 0.7 s.
+- Real 28 Sep ticks compressed by the new policy: 35 MB → 2.6 MB. Random data: 570 → 202 B/row.
+- Follow-up to consider: Kite values are 32-bit; `integer` columns would cut raw size. Decide after real days.
+- Verdict: done (merged and deployed before the 1 Oct open).

@@ -160,7 +160,7 @@
 | NOVA-152 | Relay Live: Monitor cards + Recorded data pages (D74) | done | Claude | 151 |
 | NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | done | Claude | 152 |
 | NOVA-154 | Recorder: Pick top 3000 by traded value (D75) | done | Claude | 153 |
-| NOVA-155 | Recorder: store every Kite tick field + compress ticks (D77) | ready-for-review | Claude | — |
+| NOVA-155 | Recorder: store every Kite tick field + compress ticks (D77) | done | Claude | — |
 | NOVA-156 | Live Monitor: search + My list (D78) | done | Claude | — |
 | NOVA-157 | Live Recorded data: stock cards instead of the table (D78) | done | Claude | — |
 | NOVA-158 | Recorder: fast restart after an interruption (D79) | planned | — | 155 |
