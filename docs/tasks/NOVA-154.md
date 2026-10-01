@@ -1,6 +1,6 @@
 # NOVA-154 — Recorder: Pick top 3000 by traded value
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-154 · **Depends on:** NOVA-153
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-154 · **Depends on:** NOVA-153
 
 ## Goal
 In **Live → Config → Stocks to record**, one button fills the selection with the 3,000 synced stocks that trade the most
