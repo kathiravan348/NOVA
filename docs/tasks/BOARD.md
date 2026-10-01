@@ -161,6 +161,8 @@
 | NOVA-153 | Relay Live: Config page; recorder card leaves Data jobs (D74) | done | Claude | 152 |
 | NOVA-154 | Recorder: Pick top 3000 by traded value (D75) | done | Claude | 153 |
 | NOVA-155 | Recorder: store every Kite tick field + compress ticks (D77) | ready-for-review | Claude | — |
+| NOVA-156 | Live Monitor: search + My list (D78) | planned | — | — |
+| NOVA-157 | Live Recorded data: stock cards instead of the table (D78) | planned | — | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -186,3 +188,4 @@
 - Agent account (D67): 130 first; then backend 131 → 132 and frontend 133 in parallel (no shared files); 133 merges after 132.
 - Fair comparisons (D72): 142 and 143 in parallel (no shared files except generated schema and guides).
 - Live module + history polish (D74): 145 and 146 start now in parallel (no shared files). 146 → 147 (backend) → 148; 145 → 149 → 150; then live 151 → 152 → 153 (Live backend can start any time; it shares no files with 145–150).
+- Live pages polish (D78): 156 and 157 in parallel (frontend only, no shared files except `USER-GUIDE.md`).
