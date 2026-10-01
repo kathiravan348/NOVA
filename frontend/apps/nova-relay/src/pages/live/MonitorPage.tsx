@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Activity } from "lucide-react";
 import type { LiveTick } from "@nova/contracts";
-import { EmptyState, Pager, Select, Skeleton } from "@nova/ui-core";
+import { Button, EmptyState, Input, Pager, Select, Skeleton, useToast } from "@nova/ui-core";
 import {
   useLiveSnapshot,
   useLiveTicks,
@@ -14,16 +14,24 @@ import {
 import { QueryError } from "../../components/QueryState";
 import { LiveStockCard } from "@nova/ui-trading";
 import { formatClock, isStale } from "../../lib/live";
+import { loadMyList, saveMyList } from "../../lib/myList";
+import { MyListModal } from "./MyListModal";
 
 const RECORDED = "";
+const MY_LIST = "mylist";
 
-/** Live monitor (D74 (1)): one card per stock of an index, updated as ticks arrive. */
+/** Live monitor (D74 (1), D78): one card per stock of a list, updated as ticks arrive. */
 export function MonitorPage() {
+  const toast = useToast();
   const universe = useUniverse();
   const indices = useMarketIndices();
   const recorder = useRecorder();
   const [source, setSource] = useState(RECORDED);
-  const paging = usePageState(source);
+  const [search, setSearch] = useState("");
+  const [myList, setMyList] = useState(loadMyList);
+  const [picking, setPicking] = useState(false);
+  const query = search.trim().toLowerCase();
+  const paging = usePageState(`${source}|${query}`);
   const [ticks, setTicks] = useState<Record<string, LiveTick>>({});
   const [now, setNow] = useState(() => new Date());
 
@@ -32,12 +40,19 @@ export function MonitorPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const stocks = useMemo(() => {
+  const listed = useMemo(() => {
     const all = universe.data ?? [];
+    if (source === MY_LIST) return all.filter((s) => myList.includes(s.symbol));
     if (source !== RECORDED) return all.filter((s) => s.indices.includes(source));
     const chosen = recorder.data?.symbols ?? [];
     return chosen.length ? all.filter((s) => chosen.includes(s.symbol)) : all;
-  }, [universe.data, recorder.data, source]);
+  }, [universe.data, recorder.data, source, myList]);
+
+  const stocks = useMemo(
+    () =>
+      query ? listed.filter((s) => `${s.symbol} ${s.name}`.toLowerCase().includes(query)) : listed,
+    [listed, query],
+  );
 
   const start = (paging.page - 1) * paging.pageSize;
   const shown = useMemo(
@@ -60,16 +75,38 @@ export function MonitorPage() {
 
   const options = [
     { value: RECORDED, label: "Recorded stocks" },
+    { value: MY_LIST, label: `My list (${myList.length})` },
     ...(indices.data ?? []).map((i) => ({ value: i.name, label: i.name })),
   ];
+
+  const saveList = (next: string[]) => {
+    const clean = [...new Set(next)].sort();
+    saveMyList(clean);
+    setMyList(clean); // also works for this visit when the browser blocks storage
+    setPicking(false);
+    setSource(MY_LIST);
+    toast.show({ title: `My list saved (${clean.length} stocks)`, tone: "success" });
+  };
 
   const body = () => {
     if (universe.isPending) return <Skeleton className="h-40 w-full" />;
     if (universe.isError)
       return <QueryError error={universe.error} onRetry={() => void universe.refetch()} />;
+    if (source === MY_LIST && listed.length === 0)
+      return (
+        <EmptyState
+          title="Your list is empty"
+          description="Use Pick stocks to choose stocks to watch."
+        />
+      );
+    if (stocks.length === 0 && query)
+      return <EmptyState title={`No stock matches “${search.trim()}”`} />;
+    if (stocks.length === 0)
+      return <EmptyState title="No stocks to show" description="Choose another list." />;
     if (snapshot.isError)
       return <QueryError error={snapshot.error} onRetry={() => void snapshot.refetch()} />;
-    if (recorder.data && !recorder.data.enabled && !snapshot.data?.some((r) => r.at !== null))
+    // Only once prices have loaded: while they load, the cards show "—" instead.
+    if (recorder.data && !recorder.data.enabled && snapshot.data?.every((r) => r.at === null))
       return (
         <EmptyState
           icon={<Activity className="h-6 w-6" />}
@@ -78,8 +115,6 @@ export function MonitorPage() {
           action={<Link to="/live/config">Open Live config</Link>}
         />
       );
-    if (stocks.length === 0)
-      return <EmptyState title="No stocks to show" description="Choose another list." />;
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {shown.map((stock) => {
@@ -107,13 +142,26 @@ export function MonitorPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="max-w-xs">
-        <Select
-          label="Stocks"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-          options={options}
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-full sm:w-56">
+          <Select
+            label="Stocks"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            options={options}
+          />
+        </div>
+        <Input
+          containerClassName="w-full sm:w-64"
+          label="Search stocks"
+          placeholder="Symbol or name"
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
+        <Button type="button" variant="secondary" onClick={() => setPicking(true)}>
+          Pick stocks
+        </Button>
       </div>
       {body()}
       <Pager
@@ -123,6 +171,12 @@ export function MonitorPage() {
         onPageChange={paging.setPage}
         onPageSizeChange={paging.setPageSize}
         loading={snapshot.isFetching}
+      />
+      <MyListModal
+        open={picking}
+        symbols={myList}
+        onClose={() => setPicking(false)}
+        onSave={saveList}
       />
     </div>
   );
