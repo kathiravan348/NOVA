@@ -1,6 +1,6 @@
 # NOVA-154 — Recorder: Pick top 3000 by traded value
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-154 · **Depends on:** NOVA-153
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-154 · **Depends on:** NOVA-153
 
 ## Goal
 In **Live → Config → Stocks to record**, one button fills the selection with the 3,000 synced stocks that trade the most
@@ -28,9 +28,9 @@ Modify:
 3. A hint under the button: "Ranked by 20-day average volume × last close; stocks with no history rank last."
 
 ## Acceptance checks
-- [ ] Unit test: ranking, ties, unsynced symbols ignored, unranked stocks last, exactly `limit` returned when more exist.
-- [ ] Modal test: with 3,899 synced mock stocks the button selects 3,000 and Save sends 3,000 symbols.
-- [ ] Definition of done in `AGENTS.md` §9.
+- [x] Unit test: ranking, ties, unsynced symbols ignored, unranked stocks last, exactly `limit` returned when more exist.
+- [x] Modal test: with 3,899 synced mock stocks the button selects 3,000 and Save sends 3,000 symbols.
+- [x] Definition of done in `AGENTS.md` §9.
 
 ## Out of scope
 - Backend changes; auto-refreshing the list daily; raising the 3,000 cap or sharding connections.
@@ -39,7 +39,17 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** `topByTradedValue` (pure ranking by `avgDailyVolume × lastClosePaise`, ties by symbol, unranked synced stocks last by symbol, cut at `limit`); **Pick top 3000 by traded value** button + hint in **Stocks to record**, disabled while the stock list or instruments load (or instruments failed, with `QueryError` + retry). It only fills the selection; **Save stocks** still saves.
+**Files changed:** relay `pages/live/{topByTradedValue.ts,topByTradedValue.test.ts,RecorderSymbolsModal.tsx,config.test.tsx}`; USER-GUIDE.
+**Commands run:** focused live tests (18 pass); `pnpm review:check` passed (1,063 tests, lint, typecheck, format, builds); demo checked in the browser (button ticks every synced demo stock).
+**New dependencies:** none. **Guides updated:** USER-GUIDE (Step 7 Config paragraph, "what do I do if" row). API/DATABASE unchanged.
+**Deviations from task:** none. **Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed: the other agents are down; diff re-read, checks re-run).
+**Fixed directly (review: commits):** none.
+**Change requests (if sent back):** none.
+**Checked:** ranking matches D75 (value = volume × close, unsynced ignored, no-history last, exactly 3,000); the button never saves by itself; the 3,000 cap message still shows for hand-picked lists; no backend change; `review:check` passed.
+**Guides checked:** USER-GUIDE matches (Step 7, table row); API and DATABASE not affected.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

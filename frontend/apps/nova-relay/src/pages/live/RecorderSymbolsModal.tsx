@@ -2,9 +2,10 @@ import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MAX_RECORDER_SYMBOLS, type RecorderSettings, type UniverseEntry } from "@nova/contracts";
 import { Button, Modal, useToast } from "@nova/ui-core";
-import { getDataMode, useUniverse, useUpdateRecorder } from "@nova/services";
+import { getDataMode, useInstruments, useUniverse, useUpdateRecorder } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { BulkStockPicker } from "../data-jobs/BulkStockPicker";
+import { topByTradedValue } from "./topByTradedValue";
 
 const columns: ColumnDef<UniverseEntry, unknown>[] = [
   { id: "symbol", header: "Symbol", accessorKey: "symbol", meta: { primary: true } },
@@ -34,10 +35,21 @@ export function RecorderSymbolsModal({ open, settings, onClose }: RecorderSymbol
 function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone: () => void }) {
   const toast = useToast();
   const universe = useUniverse();
+  const instruments = useInstruments();
   const update = useUpdateRecorder();
   const [symbols, setSymbols] = useState<string[]>(settings.symbols);
   const [failed, setFailed] = useState<string | null>(null);
   const tooMany = symbols.length > MAX_RECORDER_SYMBOLS;
+  const synced = (universe.data ?? []).filter((e) => e.synced);
+
+  const pickTop = () =>
+    setSymbols(
+      topByTradedValue(
+        synced.map((e) => e.symbol),
+        instruments.data ?? [],
+        MAX_RECORDER_SYMBOLS,
+      ),
+    );
 
   const save = async () => {
     if (tooMany) return;
@@ -57,10 +69,26 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-start gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={universe.isPending || instruments.isPending || instruments.isError}
+          onClick={pickTop}
+        >
+          Pick top {MAX_RECORDER_SYMBOLS} by traded value
+        </Button>
+        <p className="text-body-sm text-text-secondary">
+          Ranked by 20-day average volume × last close; stocks with no history rank last.
+        </p>
+        {instruments.isError && (
+          <QueryError error={instruments.error} onRetry={() => void instruments.refetch()} />
+        )}
+      </div>
       <BulkStockPicker
         caption="Stocks to record"
         columns={columns}
-        entries={(universe.data ?? []).filter((e) => e.synced)}
+        entries={synced}
         selected={symbols}
         onChange={setSymbols}
         loading={universe.isPending}
