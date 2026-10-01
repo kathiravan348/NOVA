@@ -1,6 +1,6 @@
 # NOVA-161 — Recorded data cards show history (days, gaps, ticks, size)
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-161 · **Depends on:** NOVA-160
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-161 · **Depends on:** NOVA-160
 
 ## Goal
 Each Recorded data card shows the stock's stored history instead of Monitor's live numbers (D80).
@@ -56,4 +56,4 @@ _(implementer writes here if blocked)_
 
 ## Review
 Self-review by Claude, allowed by the Owner on 1 Oct 2026: matches the task; the detail page is unchanged.
-Verdict: approved; merge right after the NOVA-160 deploy.
+Verdict: done; merged right after the NOVA-160 deploy (1 Oct 2026, 08:45 IST).
