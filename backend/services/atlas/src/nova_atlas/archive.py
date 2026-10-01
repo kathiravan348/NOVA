@@ -2,10 +2,10 @@
 
 Each day's files are written first, then that day's rows are deleted and committed. A file that
 already exists is never overwritten: the run stops with an error and leaves the rows in place.
-Files carry every Kite tick field (D77).
+Files carry every Kite tick field (D77). Rows are streamed one stock at a time, `BATCH_ROWS` at a
+time (one row group each), so memory holds one batch, never the day.
 """
 
-from collections import defaultdict
 from collections.abc import Callable
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 import pyarrow as pa
 import pyarrow.parquet as pq
 from nova_db.models import DataJob, Tick
-from sqlalchemy import delete, func, select
+from sqlalchemy import ColumnElement, delete, func, select
 from sqlalchemy.orm import Session
 
 from nova_atlas.download import finish_job
@@ -52,6 +52,7 @@ SCHEMA = pa.schema(
     ]
 )
 COLUMNS = tuple(SCHEMA.names)
+BATCH_ROWS = 50_000
 
 
 def _start(day: date) -> datetime:
@@ -62,27 +63,43 @@ def tick_path(root: Path, day: date, symbol: str) -> Path:
     return root / f"date={day.isoformat()}" / f"symbol={symbol}" / "ticks.parquet"
 
 
+def _write_symbol(
+    db: Session, path: Path, window: tuple[ColumnElement[bool], ...], symbol: str
+) -> int:
+    """Streams one symbol's rows (time order) into `path`, a row group per batch; returns rows."""
+    query = (
+        select(*(getattr(Tick, c) for c in COLUMNS))
+        .where(*window, Tick.symbol == symbol)
+        .order_by(Tick.received_at, Tick.exchange)
+        .execution_options(yield_per=BATCH_ROWS)
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_suffix(".parquet.partial")
+    written = 0
+    try:
+        with pq.ParquetWriter(partial, SCHEMA) as writer:
+            for batch in db.execute(query).partitions():
+                columns = {c: [getattr(row, c) for row in batch] for c in COLUMNS}
+                writer.write_table(pa.table(columns, schema=SCHEMA))
+                written += len(batch)
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        raise
+    partial.replace(path)
+    return written
+
+
 def _archive_day(db: Session, root: Path, day: date) -> tuple[list[Path], int]:
     window = (Tick.received_at >= _start(day), Tick.received_at < _start(day + timedelta(days=1)))
-    rows = db.execute(select(*(getattr(Tick, c) for c in COLUMNS)).where(*window)).all()
-    # Any: one symbol's column values, by column name.
-    by_symbol: dict[str, dict[str, list[Any]]] = defaultdict(lambda: {c: [] for c in COLUMNS})
-    for row in sorted(rows, key=lambda r: (r.symbol, r.received_at)):
-        for column in COLUMNS:
-            by_symbol[row.symbol][column].append(getattr(row, column))
-    paths = {symbol: tick_path(root, day, symbol) for symbol in by_symbol}
+    symbols = sorted(db.scalars(select(Tick.symbol).where(*window).distinct()))
+    paths = {symbol: tick_path(root, day, symbol) for symbol in symbols}
     taken = [str(p) for p in paths.values() if p.exists()]
     if taken:
         raise ValueError(f"Already archived, not overwriting: {', '.join(taken)}")
-    for symbol, columns in by_symbol.items():
-        path = paths[symbol]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        partial = path.with_suffix(".parquet.partial")
-        pq.write_table(pa.table(columns, schema=SCHEMA), partial)
-        partial.replace(path)
+    rows = sum(_write_symbol(db, paths[symbol], window, symbol) for symbol in symbols)
     db.execute(delete(Tick).where(*window))
     db.commit()
-    return sorted(paths.values()), len(rows)
+    return sorted(paths.values()), rows
 
 
 def archive_ticks(

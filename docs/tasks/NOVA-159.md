@@ -1,6 +1,6 @@
 # NOVA-159 — Archive: move ticks one stock at a time (bounded memory)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-159 · **Depends on:** NOVA-155
+**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-159 · **Depends on:** NOVA-155
 
 ## Goal
 An `archive` job moves a full 3,000-stock day of ticks (D75, D77) to Parquet inside the `atlas-worker` memory
@@ -42,7 +42,18 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done** (Claude, 1 Oct 2026). `_archive_day` lists the day's symbols (`SELECT DISTINCT`) and checks every
+target file before writing. `_write_symbol` streams one symbol ordered by `received_at` (then `exchange`) with
+`yield_per=BATCH_ROWS` (50,000) into one `pq.ParquetWriter` on `.parquet.partial`, a row group per batch, then
+renames it. A failure removes that symbol's `.partial` and re-raises; rows are deleted and committed only after
+every file is written. `SCHEMA`, paths and the public functions are unchanged.
+- Changed: `archive.py`, `test_archive.py` (+2 tests: batch size 2 → 5 rows in time order, 3 row groups; a
+  failure on the second symbol keeps all 4 rows and leaves no TCS `.parquet`/`.partial`), `DATABASE.md`.
+- Checks: `docker compose run --rm --no-deps backend-check` green (ruff, format, mypy, 1335 passed), run from the
+  worktree `../NOVA-159` with the main `.env`; `--no-deps`, so `db`/`redis`/recorder were never touched.
+- Not done (Owner: keep live and main separate today): no merge, no deploy. After review, after 15:45 IST:
+  `docker compose up -d --build --no-deps atlas-worker` (D76).
+- Guides: `DATABASE.md` (Parquet tick archive row, State as of). No migration, endpoint or screen.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
