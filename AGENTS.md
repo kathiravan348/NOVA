@@ -13,9 +13,11 @@ Full plan: `docs/PLAN.md`. Do not build anything from a later phase (paper or li
 
 **Primary rule — live recording never stops (D76).** From 1 Oct 2026 the Owner records live market data.
 On weekdays 09:00–15:45 IST, any task the Owner gives is done **while the recorder keeps running**:
-never stop, restart, recreate or rebuild `tick-recorder`, `db` or `redis` (no `docker compose down`, `stop`,
-`restart`, or `up` without naming services). Apply a backend change by rebuilding only the service you changed;
-migrations and full-stack restarts wait until after 15:45 IST. `docker compose run --rm backend-check` is allowed.
+never stop, restart or recreate `tick-recorder`, `db` or `redis`. No `docker compose down`, `stop`, `restart`,
+or `up` without naming services, and no `pnpm real`, `real:setup` or `real:stop` (they run those). All backend
+services share one image, so apply a change with `docker compose up -d --build --no-deps <service>` (only the
+service you changed; `--no-deps` keeps `migrate` from running). Migrations and full-stack restarts wait until after
+15:45 IST. `docker compose run --rm backend-check` is allowed (own test database, Redis db 15).
 
 ## 2. Roles (D64)
 Three roles: **planner** (plans, architecture, task files), **implementer** (builds a task), **reviewer** (reviews, fixes, merges).
@@ -82,7 +84,8 @@ Caches live on the Dev Drive `E:` (`E:\caches\pnpm-store`, `E:\caches\uv`); Dock
 - **Backend checks:** Docker is the gate (`docker compose run --rm backend-check`). While working, fast checks on
   the host are allowed: `uv run --directory backend pytest <package>` (same pins, same `uv.lock`).
 - **Docker:** every port binds to `127.0.0.1`; every Compose service has a `mem_limit` (whole stack ≤ 7 GB, D59);
-  run `docker compose down` when finished, except during market hours (§1 primary rule, D76). Never prune images/volumes or change Docker/WSL settings (Owner only).
+  run `docker compose down` when finished, except during market hours (§1 primary rule, D76).
+  Never prune images/volumes or change Docker/WSL settings (Owner only).
 - PowerShell 5.1 is the default shell: no `&&` there; `package.json` scripts stay shell-neutral (§8).
 
 ## 6. UI rules

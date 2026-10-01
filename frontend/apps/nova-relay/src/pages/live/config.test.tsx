@@ -111,6 +111,24 @@ describe("Live config", () => {
     expect(saved.at(-1)).toBe("S2998");
   });
 
+  it("disables Pick top and shows the error when instruments fail", async () => {
+    server.use(
+      http.get("*/api/v1/market-data/instruments", () =>
+        HttpResponse.json(
+          { error: { code: "invalid_request", message: "Atlas is down" } },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
+    expect(await within(dialog).findByText("Atlas is down")).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "Pick top 3000 by traded value" }),
+    ).toBeDisabled();
+  });
+
   it("removes a stock from the recorded list, but not the last one", async () => {
     server.use(
       http.get("*/api/v1/broker/recorder", () =>

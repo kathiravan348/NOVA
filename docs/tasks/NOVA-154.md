@@ -47,9 +47,11 @@ _(implementer writes here if blocked)_
 
 ## Review
 **Result:** done
-**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner allowed: the other agents are down; diff re-read, checks re-run).
-**Fixed directly (review: commits):** none.
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for it: the other agents are down; a second pass in the same session, not a fresh one).
+**Fixed directly (review: commits):** added a test that **Pick top** is disabled and the error shows when instruments fail; D76 rule tightened (below).
 **Change requests (if sent back):** none.
-**Checked:** ranking matches D75 (value = volume × close, unsynced ignored, no-history last, exactly 3,000); the button never saves by itself; the 3,000 cap message still shows for hand-picked lists; no backend change; `review:check` passed.
+**Checked:** ranking matches D75 (`avg_daily_volume` is the backend's last-20-bar average; volume × close fits safely in a JS number; unsynced ignored; no-history last; exactly 3,000); the button never saves by itself; the 3,000-cap message still shows for hand-picked lists; no backend change; `review:check` passed.
+**Known limit:** a stock whose stored history stopped long ago is ranked by its old volume (D75 accepts this; the list is a one-time fill).
 **Guides checked:** USER-GUIDE matches (Step 7, table row); API and DATABASE not affected.
-**Rulebook issues found:** none. **Follow-up tasks created:** none.
+**Rulebook issues found:** D76 first draft allowed `docker compose up -d --build <service>`, but every backend service shares `nova-backend:dev`, so that also re-runs `migrate` (new migrations mid-market); `pnpm real` / `real:setup` / `real:stop` run plain `up -d` / `down`. Rule now requires `--no-deps` and bans those scripts in market hours.
+**Follow-up tasks created:** none.
