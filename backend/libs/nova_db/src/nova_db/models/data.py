@@ -13,7 +13,7 @@ from sqlalchemy import (
     SmallInteger,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nova_db.enums import (
@@ -240,7 +240,11 @@ class ChargeRate(Base):
 
 
 class Tick(Base):
-    """One live tick from Kite's WebSocket (D11, D49); hypertable on `received_at` (rev 0004)."""
+    """One live tick from Kite's WebSocket (D11, D49); hypertable on `received_at` (rev 0004).
+
+    Every field of Kite's `full` packet is kept (D77, rev 0025); the newer columns are null on
+    older rows and on LTP-only packets. Depth arrays hold the best 5 levels, best first.
+    """
 
     __tablename__ = "ticks"
     __table_args__ = (
@@ -256,6 +260,23 @@ class Tick(Base):
     last_qty: Mapped[int] = mapped_column(BigInteger)
     volume: Mapped[int] = mapped_column(BigInteger)
     oi: Mapped[int | None] = mapped_column(BigInteger)
+    avg_price_paise: Mapped[int | None] = mapped_column(BigInteger)
+    buy_qty: Mapped[int | None] = mapped_column(BigInteger)
+    sell_qty: Mapped[int | None] = mapped_column(BigInteger)
+    open_paise: Mapped[int | None] = mapped_column(BigInteger)
+    high_paise: Mapped[int | None] = mapped_column(BigInteger)
+    low_paise: Mapped[int | None] = mapped_column(BigInteger)
+    # Kite's `close`: the previous trading day's close during the session.
+    close_paise: Mapped[int | None] = mapped_column(BigInteger)
+    last_trade_ts: Mapped[datetime | None]
+    oi_day_high: Mapped[int | None] = mapped_column(BigInteger)
+    oi_day_low: Mapped[int | None] = mapped_column(BigInteger)
+    bid_price_paise: Mapped[list[int] | None] = mapped_column(ARRAY(BigInteger))
+    bid_qty: Mapped[list[int] | None] = mapped_column(ARRAY(BigInteger))
+    bid_orders: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
+    ask_price_paise: Mapped[list[int] | None] = mapped_column(ARRAY(BigInteger))
+    ask_qty: Mapped[list[int] | None] = mapped_column(ARRAY(BigInteger))
+    ask_orders: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
 
 
 class UniverseEntry(Base):

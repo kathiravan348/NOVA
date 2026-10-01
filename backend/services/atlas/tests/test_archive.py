@@ -79,3 +79,18 @@ def test_never_overwrites(db: Session, tmp_path: Path) -> None:
     assert existing.read_bytes() == b"keep"
     assert count(db) == 4
     assert not tick_path(tmp_path, date(2026, 9, 21), "INFY").exists()
+
+
+def test_every_kite_field_round_trips(db: Session, tmp_path: Path) -> None:
+    """Depth, day OHLC and trade time reach the Parquet file unchanged (D77)."""
+    full = tick("INFY", DAY1, 100)
+    full.close_paise, full.last_trade_ts = 99, DAY1 - timedelta(seconds=2)
+    full.bid_price_paise, full.bid_orders = [100, 99, 98, 97, 96], [1, 2, 3, 4, 5]
+    db.add_all([full, tick("INFY", DAY1 + timedelta(seconds=1), 101)])
+    db.commit()
+    (path,) = archive_ticks(db, tmp_path, date(2026, 9, 22))
+    first, second = read_ticks(path)
+    assert (first["close_paise"], first["last_trade_ts"]) == (99, DAY1 - timedelta(seconds=2))
+    assert first["bid_price_paise"] == [100, 99, 98, 97, 96]
+    assert first["bid_orders"] == [1, 2, 3, 4, 5]
+    assert second["bid_price_paise"] is None and second["close_paise"] is None

@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from nova_db.models import Candle
+from nova_db.models import Candle, Tick
 from sqlalchemy import Engine, delete, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -119,3 +119,51 @@ def test_the_compression_policy_exists(engine: Engine) -> None:
         ).all()
 
     assert [tuple(p) for p in policies] == [(timedelta(hours=6), "30 days")]
+
+
+def test_ticks_compress_after_two_days(engine: Engine) -> None:
+    """Live ticks are compressed too (D77): a compressed day still reads and deletes (archive)."""
+    day = datetime(2025, 3, 3, 4, 0, tzinfo=UTC)
+    rows = [
+        {
+            "exchange": "NSE",
+            "symbol": symbol,
+            "received_at": day + timedelta(seconds=n),
+            "last_price_paise": 100 + n,
+            "last_qty": 1,
+            "volume": n,
+            "bid_qty": [n, n, n, n, n],
+        }
+        for symbol in ("INFY", "TCS")
+        for n in range(30)
+    ]
+    with Session(engine) as db:
+        db.execute(text("DELETE FROM ticks"))
+        db.execute(insert(Tick), rows)
+        db.commit()
+        db.execute(
+            text(
+                "SELECT compress_chunk(c, if_not_compressed => true)"
+                " FROM show_chunks('ticks', older_than => INTERVAL '2 days') c"
+            )
+        )
+        db.commit()
+        try:
+            policy = db.execute(
+                text(
+                    "SELECT config->>'compress_after' FROM timescaledb_information.jobs"
+                    " WHERE proc_name = 'policy_compression' AND hypertable_name = 'ticks'"
+                )
+            ).scalar_one()
+            assert policy == "2 days"
+            last = db.scalars(
+                select(Tick.bid_qty).where(Tick.symbol == "INFY").order_by(Tick.received_at.desc())
+            ).first()
+            assert last == [29, 29, 29, 29, 29]
+            db.execute(delete(Tick).where(Tick.symbol == "INFY"))
+            db.commit()
+            assert db.scalars(select(Tick.symbol).distinct()).all() == ["TCS"]
+        finally:
+            db.rollback()
+            db.execute(text("DELETE FROM ticks"))
+            db.commit()

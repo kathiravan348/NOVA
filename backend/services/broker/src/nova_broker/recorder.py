@@ -5,7 +5,7 @@ import json
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import AbstractAsyncContextManager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
@@ -68,18 +68,11 @@ class Recorder:
             symbol = self.symbols.get(tick.token)
             if symbol is None:
                 continue
-            self._buffer.append(
-                {
-                    "exchange": self.exchange,
-                    "symbol": symbol,
-                    "received_at": self._stamp(symbol),
-                    "exchange_ts": tick.exchange_ts,
-                    "last_price_paise": tick.last_price_paise,
-                    "last_qty": tick.last_qty,
-                    "volume": tick.volume,
-                    "oi": tick.oi,
-                }
-            )
+            # Every tick field becomes a column (D77); each row has all keys for the bulk insert.
+            row = asdict(tick)
+            del row["token"]
+            row |= {"exchange": self.exchange, "symbol": symbol, "received_at": self._stamp(symbol)}
+            self._buffer.append(row)
         due = (self.now() - self._flushed).total_seconds() >= BATCH_SECONDS
         if len(self._buffer) >= BATCH_SIZE or due:
             self._flush()
