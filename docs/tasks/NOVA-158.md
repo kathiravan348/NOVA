@@ -25,8 +25,8 @@ Modify:
    due flush tries again. Never raise out of `_take`, so the socket keeps reading. Cap the buffer at
    `MAX_BUFFER = 50_000` rows: drop the oldest beyond that and log how many were dropped. The final flush in
    `run()` tries once more and, if it still fails, logs the lost row count (the job then ends normally).
-3. **Redis** (`recorder_loop.py` sink): a `publish_ticks` error is logged and skipped. It must not count as a
-   failed save (the database rows are already committed; retrying would double `rows_written`).
+3. **Redis** (`recorder_loop.py` sink): `publish_ticks` already skips `RedisError`; catch any other publish error
+   there too and log it. It must not count as a failed save (rows are committed; a retry doubles `rows_written`).
 4. **Stall watchdog** (`recorder.py` `_session`): read each message with `asyncio.wait_for(…, READ_TIMEOUT=5)`.
    On every message or timeout, check `should_stop()`. If no stock tick (a parsed row, not a heartbeat) arrived
    for `STALL_SECONDS = 60` since connect or the last tick, raise so `run()` reconnects with its existing
