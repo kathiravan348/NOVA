@@ -30,8 +30,7 @@ Modify:
 4. **Stall watchdog** (`recorder.py` `_session`): read each message with `asyncio.wait_for(…, READ_TIMEOUT=5)`.
    On every message or timeout, check `should_stop()`. If no stock tick (a parsed row, not a heartbeat) arrived
    for `STALL_SECONDS = 60` since connect or the last tick, raise so `run()` reconnects with its existing
-   backoff, logging "No ticks for 60 s; reconnecting".
-5. Use the injected `now`/`sleep` for every timing so the tests need no real waiting.
+   backoff, logging "No ticks for 60 s; reconnecting". Time everything with the injected `now`/`sleep`.
 
 ## Acceptance checks
 - [ ] Loop: failures retry after 10 s, 30 s, 60 s, 60 s; a 5-minute recording resets it to 10 s; `run()` does not
