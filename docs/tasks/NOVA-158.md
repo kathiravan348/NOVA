@@ -1,6 +1,6 @@
 # NOVA-158 — Recorder: fast restart after an interruption
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-158 · **Depends on:** NOVA-155 (review done)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-158 · **Depends on:** NOVA-155 (review done)
 
 ## Goal
 An interrupted recording restarts within seconds, not minutes (D79): short job retries, a failed database save
@@ -42,7 +42,7 @@ Modify:
       within 5 s.
 - [x] Existing recorder and loop tests pass (update the 5-minute retry test to the new steps).
 - [x] Definition of done in `AGENTS.md` §9 (`docker compose run --rm backend-check` passes: 1,328).
-- [ ] Deploy (D76): rebuild **only** `tick-recorder` with `--no-deps`, after 15:45 IST on a weekday (or any time
+- [x] Deploy (D76): rebuild **only** `tick-recorder` with `--no-deps`, after 15:45 IST on a weekday (or any time
       on a weekend). Never during market hours.
 
 ## Out of scope
@@ -68,4 +68,11 @@ _(implementer writes here if blocked)_
 - Guides: `API.md` (recorder command row).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Reviewed by Claude (this session did not build it), 1 Oct 2026, 08:48 IST; Owner asked to review and deploy now.
+- Failed save keeps rows and retries once per second; the insert ignores duplicates and the save is one
+  transaction, so a retry never double-saves. Publish errors can no longer fail a save.
+- Stall: 60 s with no tick for any of 3,000 stocks only happens when the feed is broken. The read timeout also
+  flushes buffered rows in quiet periods. Backoff reset after a connection with ticks: correct, tested.
+- Merged on top of NOVA-160/161 (no shared files); broker ruff + mypy + 148 tests pass on the merge.
+- Deployed 08:50 IST, before the 09:00 freeze: `docker compose up -d --build --no-deps tick-recorder` only.
+- Verdict: done.
