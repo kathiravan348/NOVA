@@ -164,6 +164,8 @@
 | NOVA-156 | Live Monitor: search + My list (D78) | done | Claude | — |
 | NOVA-157 | Live Recorded data: stock cards instead of the table (D78) | done | Claude | — |
 | NOVA-158 | Recorder: fast restart after an interruption (D79) | planned | — | 155 |
+| NOVA-160 | Recorded data history: daily tick summaries + `GET /live/stocks` (D80) | planned | — | 155 |
+| NOVA-161 | Recorded data cards show history (D80) | planned | — | 160 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -191,3 +193,4 @@
 - Live module + history polish (D74): 145 and 146 start now in parallel (no shared files). 146 → 147 (backend) → 148; 145 → 149 → 150; then live 151 → 152 → 153 (Live backend can start any time; it shares no files with 145–150).
 - Live pages polish (D78): 156 and 157 in parallel (frontend only, no shared files except `USER-GUIDE.md`).
 - Recorder fast restart (D79): 158 is backend only and can run beside 156/157; start it after NOVA-155's review (same recorder files). Deploy after 15:45 IST (D76).
+- Recorded data history (D80): 160 (backend; shares no files with 158/159) → 161 (frontend, merges after 160 is deployed after 15:45 IST).
