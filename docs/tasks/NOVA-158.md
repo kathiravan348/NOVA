@@ -1,6 +1,6 @@
 # NOVA-158 — Recorder: fast restart after an interruption
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-158 · **Depends on:** NOVA-155 (review done)
+**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-158 · **Depends on:** NOVA-155 (review done)
 
 ## Goal
 An interrupted recording restarts within seconds, not minutes (D79): short job retries, a failed database save
@@ -33,15 +33,15 @@ Modify:
    backoff, logging "No ticks for 60 s; reconnecting". Time everything with the injected `now`/`sleep`.
 
 ## Acceptance checks
-- [ ] Loop: failures retry after 10 s, 30 s, 60 s, 60 s; a 5-minute recording resets it to 10 s; `run()` does not
+- [x] Loop: failures retry after 10 s, 30 s, 60 s, 60 s; a 5-minute recording resets it to 10 s; `run()` does not
       wait the full 30 s poll before a 10 s retry.
-- [ ] Recorder: a sink that fails twice then works saves every row once; the socket is not reconnected.
-- [ ] Recorder: past 50,000 buffered rows the oldest are dropped and the count is logged.
-- [ ] Loop: a Redis publish error leaves the job running and `rows_written` correct.
-- [ ] Recorder: heartbeats only for 60 s → one reconnect; a socket that sends nothing still checks `should_stop`
+- [x] Recorder: a sink that fails twice then works saves every row once; the socket is not reconnected.
+- [x] Recorder: past 50,000 buffered rows the oldest are dropped and the count is logged.
+- [x] Loop: a Redis publish error leaves the job running and `rows_written` correct.
+- [x] Recorder: heartbeats only for 60 s → one reconnect; a socket that sends nothing still checks `should_stop`
       within 5 s.
-- [ ] Existing recorder and loop tests pass (update the 5-minute retry test to the new steps).
-- [ ] Definition of done in `AGENTS.md` §9 (`docker compose run --rm backend-check` passes).
+- [x] Existing recorder and loop tests pass (update the 5-minute retry test to the new steps).
+- [x] Definition of done in `AGENTS.md` §9 (`docker compose run --rm backend-check` passes: 1,328).
 - [ ] Deploy (D76): rebuild **only** `tick-recorder` with `--no-deps`, after 15:45 IST on a weekday (or any time
       on a weekend). Never during market hours.
 
@@ -54,7 +54,18 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- `recorder.py`: `_flush` keeps the buffer on a failed save (cap `MAX_BUFFER`, oldest dropped, logged) and retries
+  once per `BATCH_SECONDS` while failing (not on every 500 rows). The socket is read via one pending
+  `anext` task with `asyncio.wait(timeout=read_timeout)`; the task is kept across timeouts because cancelling
+  it would close websockets' iterator. `Stalled` after 60 s without a stock tick → normal reconnect.
+- **Beyond the Build list (flag for review):** the socket backoff never went back to 1 s during a day (it reset
+  only when `_session` returned, i.e. at stop), so after a few drops every reconnect waited 30 s. It now resets
+  when the failed connection had received ticks. Schedule (1 → 30 s) unchanged. Test added.
+- `recorder_loop.py`: `RETRY_STEPS` 10/30/60 s with `failures`; `RESET_AFTER` 5 min; `step()` clears a passed
+  `retry_at`; `run()` waits `min(poll, time to retry)`. Live publish errors of any kind are logged, not raised.
+- Tests: 5 recorder, 4 loop (the old 5-minute test now checks 10/30/60/60).
+- Not deployed: D76. After 15:45 IST: `docker compose up -d --build --no-deps tick-recorder`.
+- Guides: `API.md` (recorder command row).
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

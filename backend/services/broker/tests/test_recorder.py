@@ -8,6 +8,8 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import pytest
+from nova_broker import recorder as recorder_module
 from nova_broker.recorder import BATCH_SIZE, Recorder, Socket
 from nova_db.models import Tick
 
@@ -142,3 +144,93 @@ def test_stops_mid_session() -> None:
     recorder.should_stop = lambda: harness.clock.at > START
     asyncio.run(recorder.run())
     assert sum(len(b) for b in harness.batches) == 1
+
+
+def test_a_failed_save_keeps_the_ticks_and_the_connection() -> None:
+    """D79: two failed saves, then one save with every tick, on the same socket."""
+    harness = Harness([[ltp_frame(1, 100 + n) for n in range(5)]], timedelta(seconds=1))
+    failures = 2
+
+    def sink(rows: list[dict[str, Any]]) -> None:
+        nonlocal failures
+        if failures:
+            failures -= 1
+            raise OSError("database down")
+        harness.batches.append(list(rows))
+
+    recorder = harness.recorder({1: "INFY"})
+    recorder.sink = sink
+    asyncio.run(recorder.run())
+    saved = [row["last_price_paise"] for batch in harness.batches for row in batch]
+    assert saved == [100, 101, 102, 103, 104]
+    assert len(harness.sockets) == 1 and harness.sleeps == []
+
+
+def test_unsaved_ticks_over_the_cap_drop_the_oldest(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(recorder_module, "MAX_BUFFER", 3)
+    harness = Harness([[ltp_frame(1, 100 + n) for n in range(5)]], timedelta(seconds=1))
+
+    def sink(rows: list[dict[str, Any]]) -> None:
+        raise OSError("database down")
+
+    recorder = harness.recorder({1: "INFY"})
+    recorder.sink = sink
+    asyncio.run(recorder.run())
+    assert [row["last_price_paise"] for row in recorder._buffer] == [102, 103, 104]
+    assert "Dropped the 1 oldest unsaved tick(s)" in caplog.text
+    assert "Lost 3 unsaved tick(s)" in caplog.text
+
+
+def test_a_socket_with_only_heartbeats_for_60_seconds_reconnects() -> None:
+    harness = Harness([[b"\x00"] * 61, [ltp_frame(1, 5)]], timedelta(seconds=1))
+    run(harness, {1: "INFY"})
+    assert harness.sleeps == [1]
+    assert len(harness.sockets) == 2 and not harness.sockets[0].exhausted
+    assert [len(b) for b in harness.batches] == [1]
+
+
+def test_backoff_starts_again_after_a_connection_that_got_ticks() -> None:
+    stalled: list[str | bytes] = [ltp_frame(1, 5), *[b"\x00"] * 61]
+    harness = Harness(
+        [OSError("down"), OSError("down"), stalled, [ltp_frame(1, 6)]], timedelta(seconds=1)
+    )
+    run(harness, {1: "INFY"})
+    assert harness.sleeps == [1, 2, 1]
+
+
+class SilentSocket:
+    async def send(self, message: str) -> None:
+        pass
+
+    def __aiter__(self) -> AsyncIterator[str | bytes]:
+        return self
+
+    async def __anext__(self) -> str | bytes:
+        await asyncio.Event().wait()
+        raise StopAsyncIteration
+
+
+def test_a_silent_socket_still_checks_should_stop() -> None:
+    checks = 0
+
+    def should_stop() -> bool:
+        nonlocal checks
+        checks += 1
+        return checks > 1
+
+    @asynccontextmanager
+    async def connect(url: str) -> AsyncIterator[Socket]:
+        yield SilentSocket()
+
+    recorder = Recorder(
+        url="wss://fake",
+        symbols={1: "INFY"},
+        sink=lambda rows: None,
+        connect=connect,
+        should_stop=should_stop,
+        read_timeout=0.01,
+    )
+    asyncio.run(asyncio.wait_for(recorder.run(), timeout=2))
+    assert checks == 3  # loop start, after one read timeout, loop end
