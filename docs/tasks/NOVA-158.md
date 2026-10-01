@@ -1,6 +1,6 @@
 # NOVA-158 — Recorder: fast restart after an interruption
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-158 · **Depends on:** NOVA-155 (review done)
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-158 · **Depends on:** NOVA-155 (review done)
 
 ## Goal
 An interrupted recording restarts within seconds, not minutes (D79): short job retries, a failed database save
