@@ -1,6 +1,6 @@
 # NOVA-156 — Live Monitor: search + My list
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-156 · **Depends on:** —
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-156 · **Depends on:** —
 
 ## Goal
 On **Live → Monitor** the Owner can search the cards and keep an own list of stocks to watch (D78).
