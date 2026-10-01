@@ -1,6 +1,6 @@
 # NOVA-160 — Recorded data history: daily tick summaries + `GET /live/stocks`
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-160 · **Depends on:** NOVA-155
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-160 · **Depends on:** NOVA-155
 
 ## Goal
 After each session the Atlas worker stores per-day tick summaries; `GET /live/stocks` returns each stock's
