@@ -11,6 +11,12 @@ Goal: build the backend behind the frozen screens and contracts, then switch scr
 Only the broker service may call Zerodha (D35). No orders. Screens and contracts change only through a task.
 Full plan: `docs/PLAN.md`. Do not build anything from a later phase (paper or live trading).
 
+**Primary rule — live recording never stops (D76).** From 1 Oct 2026 the Owner records live market data.
+On weekdays 09:00–15:45 IST, any task the Owner gives is done **while the recorder keeps running**:
+never stop, restart, recreate or rebuild `tick-recorder`, `db` or `redis` (no `docker compose down`, `stop`,
+`restart`, or `up` without naming services). Apply a backend change by rebuilding only the service you changed;
+migrations and full-stack restarts wait until after 15:45 IST. `docker compose run --rm backend-check` is allowed.
+
 ## 2. Roles (D64)
 Three roles: **planner** (plans, architecture, task files), **implementer** (builds a task), **reviewer** (reviews, fixes, merges).
 
@@ -76,7 +82,7 @@ Caches live on the Dev Drive `E:` (`E:\caches\pnpm-store`, `E:\caches\uv`); Dock
 - **Backend checks:** Docker is the gate (`docker compose run --rm backend-check`). While working, fast checks on
   the host are allowed: `uv run --directory backend pytest <package>` (same pins, same `uv.lock`).
 - **Docker:** every port binds to `127.0.0.1`; every Compose service has a `mem_limit` (whole stack ≤ 7 GB, D59);
-  run `docker compose down` when finished. Never prune images/volumes or change Docker/WSL settings (Owner only).
+  run `docker compose down` when finished, except during market hours (§1 primary rule, D76). Never prune images/volumes or change Docker/WSL settings (Owner only).
 - PowerShell 5.1 is the default shell: no `&&` there; `package.json` scripts stay shell-neutral (§8).
 
 ## 6. UI rules
@@ -133,6 +139,7 @@ Rules:
 - [ ] Handoff note written in the task file; board status updated
 
 ## 10. Never
+- Never stop the live recorder (or `db`/`redis`) on weekdays 09:00–15:45 IST (§1, D76).
 - Never place, modify or cancel real orders. No order code exists in Phase 1; live trading is Phase 3.
 - Never call Zerodha or other real APIs outside the broker service, and never from tests (D35).
 - Never put keys, secrets or tokens in code, mocks, fixtures, logs or commits. Infrastructure secrets live only in `.env` (git-ignored); Kite secrets only sealed in the database (D55).
