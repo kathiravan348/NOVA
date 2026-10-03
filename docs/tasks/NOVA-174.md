@@ -1,6 +1,6 @@
 # NOVA-174 — Trade exit reasons + day ledger endpoints (D82)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-174 · **Depends on:** NOVA-168 (simulator), NOVA-170 (routes, contracts)
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-174 · **Depends on:** NOVA-168 (simulator), NOVA-170 (routes, contracts)
 
 ## Goal
 New trades record why they closed, and two endpoints give a run's day-by-day ledger: buys, sells, charges,
@@ -43,10 +43,10 @@ Modify:
 4. Check: the last day's cash + holdings = the run's final equity; a test proves it on a seeded run.
 
 ## Acceptance checks
-- [ ] Stop, target, signal and 15:20 square-off exits save their reasons; old trades read `exitReason: null`.
-- [ ] Ledger cash after each event matches a hand-worked 3-trade run; the averaging case uses the exact cost.
-- [ ] Paging, `from`/`to`, `symbol`, `allDays` and the three errors have tests; migration up/down test.
-- [ ] `pnpm review:check`; `docker compose run --rm backend-check`.
+- [x] Stop, target, signal and 15:20 square-off exits save their reasons; old trades read `exitReason: null`.
+- [x] Ledger cash after each event matches a hand-worked 3-trade run; the averaging case uses the exact cost.
+- [x] Paging, `from`/`to`, `symbol`, `allDays` and the three errors have tests; migration up/down test.
+- [x] `pnpm review:check`; `docker compose run --rm backend-check`.
 - [ ] Deploy after 15:45 IST or at a weekend: migrate, then `up -d --build --no-deps backtest backtest-worker`.
 
 ## Out of scope
@@ -56,3 +56,14 @@ Modify:
 - Scope clarification (ChatGPT, planner): keep the new demo ledger static in its own fixture and handler module; `orbit.ts` registers it. Existing Orbit handlers already exceed 300 lines.
 
 ## Handoff
+
+**Done:** exit reasons, migration 0029 and computed day/event ledger with clients and static mocks.
+**Files changed:** listed files; static ledger fixture/handler and regression oracle added to scope.
+**Commands run:** frontend review:check (1,123 tests + app/Storybook builds); backend-check (1,413 tests), all pass.
+**Checked:** no screen changes; hand-worked cash, averaging, IST dates, filters, errors and migration round-trip tested.
+**New dependencies:** none.
+**Maps updated:** STRUCTURE, CONTRACTS.
+**Guides updated:** API, DATABASE.
+**Deviations from task:** added the static mock module and updated the reference simulator to compare exit reasons.
+**Known gaps:** independent review and deployment pending; migrate 0029, then rebuild only backtest/backtest-worker.
+**Gate note:** frontend used 4 fork/thread workers; earlier approval/realtime timing failures passed on rerun.
