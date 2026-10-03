@@ -87,9 +87,11 @@ export function SymbolBreakdown({ rows, onShowTrades }: SymbolBreakdownProps) {
         <h3 className="text-section-title text-text-primary">
           Results by symbol · {rows.length} symbols · {profitable} profitable
         </h3>
-        <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
-          View all {rows.length} symbols
-        </Button>
+        {rows.length > 0 && (
+          <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+            View all {rows.length} symbols
+          </Button>
+        )}
       </div>
       {rows.length <= 10 ? (
         table(ranked, "Results by symbol")
