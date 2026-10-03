@@ -1,6 +1,6 @@
 # NOVA-184 — Backtest service: research profiles table + endpoints, freeze + hash (D84, migration 0032)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-184 · **Depends on:** NOVA-181, NOVA-182
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-184 · **Depends on:** NOVA-181, NOVA-182
 
 ## Goal
 The `/research-profiles` endpoints of NOVA-182 work on the real backend: profiles and versions are stored, a draft
@@ -63,4 +63,10 @@ Pinned hash of the default settings: `b206dcab…2cf0` (`test_profiles.py`).
 **Known gaps:** the mock profile's hash (`aaa…`) is a placeholder, not the real hash of its settings.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** none needed; checked the diff against NOVA-182 Build 5 (paths, messages, 201s).
+**Change requests:** none.
+**Guides checked:** API (new section, gateway diagram) and DATABASE (0032, map, two tables) match the diff.
+**Rulebook issues found:** none. Migration and `backtest backtest-worker core` deploy wait for a quiet time (D76).
+**Follow-up tasks created:** none.
