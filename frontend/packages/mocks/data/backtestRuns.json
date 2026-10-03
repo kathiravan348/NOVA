@@ -31,9 +31,9 @@
     "version": 1,
     "skippedSymbols": [],
     "reportKept": true,
-    "dataSource": "history",
-    "recordedDaysUsed": null,
-    "recordedDaysSkipped": []
+    "dataSource": "recorded",
+    "recordedDaysUsed": 10,
+    "recordedDaysSkipped": ["2026-06-05"]
   },
   {
     "id": "run_002",

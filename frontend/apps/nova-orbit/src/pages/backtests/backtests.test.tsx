@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { handlers, mockBacktestRuns } from "@nova/mocks";
+import { handlers, mockBacktestRuns, mockStrategies } from "@nova/mocks";
 import { RUN_POLL_MS } from "@nova/services";
 import { renderApp } from "../../test/renderApp";
 
@@ -319,5 +319,60 @@ describe("New backtest form", () => {
     expect(screen.queryByLabelText("Search")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
     expect(await screen.findByText("Backtest queued (demo)")).toBeInTheDocument();
+  });
+});
+
+describe("Data source (D82)", () => {
+  it("refuses Recorded data for a delivery strategy and queues nothing", async () => {
+    renderApp("/backtests/new?strategy=stg_002");
+    const data = await screen.findByLabelText(/^Data/);
+    fireEvent.change(data, { target: { value: "recorded" } });
+    expect(
+      await screen.findByText("Recorded data backtests are intraday only"),
+    ).toBeInTheDocument();
+    fireEvent.click((await screen.findAllByRole("checkbox", { name: "Select TCS" }))[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Queue backtest" }));
+    await waitFor(() =>
+      expect(screen.getAllByText("Recorded data backtests are intraday only")).not.toHaveLength(0),
+    );
+    expect(posted).toHaveLength(0);
+  });
+
+  it("starts a seconds strategy on Recorded data and refuses History data", async () => {
+    const intraday = mockStrategies[0]!;
+    const seconds = {
+      ...intraday,
+      versions: intraday.versions.map((v) => ({
+        ...v,
+        spec: { ...v.spec, timeframe: "5s" as const },
+      })),
+    };
+    server.use(http.get("*/api/v1/strategies", () => HttpResponse.json([seconds])));
+    renderApp("/backtests/new?strategy=stg_001");
+    const data = await screen.findByLabelText(/^Data/);
+    await waitFor(() => expect(data).toHaveValue("recorded"));
+    expect(screen.getByText(/Candles built from your recorded ticks/)).toBeInTheDocument();
+    fireEvent.change(data, { target: { value: "history" } });
+    expect(
+      await screen.findByText("Seconds candles exist only in recorded data"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the data, recorded days and spread cost of a recorded run", async () => {
+    renderApp("/backtests/run_001");
+    expect(await screen.findByText("Recorded data")).toBeInTheDocument();
+    expect(screen.getByText("10 used · 1 skipped")).toHaveAttribute(
+      "title",
+      "Skipped (feed gaps over 5 minutes): 5 Jun 2026",
+    );
+    expect(await screen.findByText("Spread cost")).toBeInTheDocument();
+  });
+
+  it("shows History data and no recorded lines for a history run", async () => {
+    renderApp("/backtests/run_002");
+    expect(await screen.findByText("History data")).toBeInTheDocument();
+    expect(screen.queryByText("Recorded days")).toBeNull();
+    await screen.findByText("Calmar");
+    expect(screen.queryByText("Spread cost")).toBeNull();
   });
 });

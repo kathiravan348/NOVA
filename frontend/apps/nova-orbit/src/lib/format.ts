@@ -1,6 +1,7 @@
 import { formatInTimeZone } from "date-fns-tz";
 import type {
   BacktestRunStatus,
+  DataSource,
   Segment,
   StrategyStatus,
   StrategyTimeframe,
@@ -54,6 +55,11 @@ export const segmentLabel: Record<Segment, string> = {
   equity_intraday: "Equity intraday",
   futures: "Futures",
   options: "Options",
+};
+
+export const dataSourceLabel: Record<DataSource, string> = {
+  history: "History data",
+  recorded: "Recorded data",
 };
 
 export const timeframeLabel: Record<StrategyTimeframe, string> = {

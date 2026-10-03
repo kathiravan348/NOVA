@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-168). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-169). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -106,7 +106,9 @@ the page shows each version's backtest record, so you can see which change made 
 Go to **Strategies → New strategy** (or **Edit** on an existing one).
 
 1. **Basics** — give it a **Name** and **Description**, choose **Segment** (delivery or intraday),
-   **Exchange** (NSE) and **Timeframe** (candle size, e.g. 1 day or 5 minutes).
+   **Exchange** (NSE) and **Timeframe** (candle size, e.g. 1 day or 5 minutes). **1 second**, **5 seconds**,
+   **15 seconds** and **30 seconds** exist too; they are built from the prices NOVA recorded itself, so they run
+   on *Recorded data* only (Step 5).
 2. **Entry rules** — *when to buy*. Each rule is: **Left** thing · comparison · **Right** thing.
    - A "thing" can be a **Price** (Open, High, Low, Close, Volume), an **Indicator**, or a plain **Number**.
    - An *indicator* is a number calculated from past prices. The **Indicator** list has 43, in groups.
@@ -253,7 +255,11 @@ is a proven winner. Futures, options and short selling are not supported by this
 Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
 
 1. **Strategy** and **Version** — which idea, and which saved copy of it.
-2. **Run name** — any name you will recognise later.
+2. **Run name** — any name you will recognise later. **Data** — **History data** (Zerodha's 1-minute and
+   daily prices you downloaded, from 2020) or **Recorded data** (the prices NOVA recorded live, from
+   1 Oct 2026; intraday strategies only, no market filter). Recorded data buys at the best price sellers
+   were asking and sells at the best price buyers were bidding, and skips days when the feed was down for
+   more than 5 minutes. A seconds strategy starts on Recorded data. Editing a run keeps its data choice.
 3. **Period and capital** — **From** and **To** dates, **Initial capital** (pretend starting money, in ₹),
    and **Benchmark** — the index to compare your result with, or **None** for no comparison. It starts
    at **NIFTY 50**. Choosing **A whole index** makes it follow that index until you change **Benchmark**
@@ -267,7 +273,7 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
      index needs downloaded prices. Members with no prices during your dates are skipped and named
      on the run page. A share listed during the period joins from its first day with prices; a share
      listed after the period is skipped. If no member has prices, the run fails.
-5. Press **Queue backtest**. For **Chosen symbols**, if some shares have no price data for your dates, NOVA marks them
+5. Press **Queue backtest**. For **Chosen symbols** on History data, if some shares have no price data for your dates, NOVA marks them
    *Partial data* and asks whether to **Drop and queue** without them.
    A daily strategy needs daily prices. Every other candle size (3, 5, 15, 30 minutes, 1 hour) is built
    from 1-minute prices, so a 5-minute strategy needs 1-minute prices; a share with daily prices only
@@ -298,6 +304,9 @@ Open a run from **Backtests**. You see:
   - **Profit factor**: money won on winning trades divided by money lost on losing ones (above 1 = more won
     than lost).
   - **Calmar**: CAGR divided by the max drawdown; higher means more growth for each bit of pain.
+  - **Spread cost** (recorded data only): how much more the run paid by buying at the ask and selling at
+    the bid than it would at the last traded price. The run details also show **Data** and, for recorded
+    data, **Recorded days** (e.g. *10 used · 1 skipped*; point at it to see the skipped days).
 - **Year by year**: the run cut into 12-month blocks from its start date (the last may be shorter). Each row
   shows that year's return, profit, worst fall and the benchmark's return. A year that lost more than 5%
   gets a red **Below −5%** badge. The profits of all rows add up to the Net P&L.
@@ -619,9 +628,7 @@ approval**; in Demo mode the demo banner appears instead.
 - One saved version of a strategy cannot be deleted on its own: delete the whole strategy, or set it to *Archived* to hide it.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - Backtests on **recorded data** (prices NOVA recorded itself) start on 1 Oct 2026, are intraday only, and skip
-  any day on which the price feed was down for more than 5 minutes in total. They buy at the best price a seller
-  was asking at that moment and sell at the best price a buyer was bidding (the *spread* between the two is a real
-  cost of fast trading). Choosing recorded data on the **Run backtest** screen comes in a later update.
+  any day on which the price feed was down for more than 5 minutes in total, and cannot use a market filter yet.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
 - The Owner and one agent account can sign in; family roles come later.
 

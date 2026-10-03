@@ -3,16 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import type { BacktestRun, Strategy } from "@nova/contracts";
-import {
-  Button,
-  Card,
-  DateTimePicker,
-  Input,
-  Modal,
-  Select,
-  Skeleton,
-  useToast,
-} from "@nova/ui-core";
+import { Button, Card, DateTimePicker, Input, Select, Skeleton, useToast } from "@nova/ui-core";
 import {
   getDataMode,
   useAddBacktestVersion,
@@ -27,12 +18,15 @@ import {
   defaultsFor,
   defaultsFromParams,
   defaultsFromRun,
+  sourceProblem,
   todayIst,
   toRunCreate,
   toVersionCreate,
   type BacktestForm,
 } from "./backtestForm";
 import { BenchmarkField } from "./BenchmarkField";
+import { DataSourceField } from "./DataSourceField";
+import { UncoveredSymbolsModal } from "./UncoveredSymbolsModal";
 import { UniverseFields } from "./UniverseFields";
 
 /** The new-backtest form; with `editing` it queues the next version of that run (D60). */
@@ -76,7 +70,9 @@ export function BacktestFormView({
   const strategy = strategies.find((s) => s.id === strategyId);
   // Coverage is checked for the candle size of the chosen version (NOVA-097).
   const version = watch("version");
-  const timeframe = strategy?.versions.find((v) => String(v.version) === version)?.spec.timeframe;
+  const spec = strategy?.versions.find((v) => String(v.version) === version)?.spec;
+  const timeframe = spec?.timeframe;
+  const recorded = watch("dataSource") === "recorded";
 
   // A new strategy starts on its latest version and a matching name.
   useEffect(() => {
@@ -128,7 +124,13 @@ export function BacktestFormView({
 
   // Symbols whose data does not cover the period must be dropped before queueing (R2).
   const onValid = (values: BacktestForm) => {
-    if (values.universeType === "symbols") {
+    const problem = spec ? sourceProblem(spec, values.dataSource) : null;
+    if (problem) {
+      setError("dataSource", { message: problem });
+      return;
+    }
+    // Downloaded-candle coverage matters for history data only (D82).
+    if (values.universeType === "symbols" && !recorded) {
       const period = { from: values.from, to: values.to, timeframe };
       const missing = values.symbols.filter((symbol) => {
         const instrument = instruments.data?.find((i) => i.symbol === symbol);
@@ -181,12 +183,8 @@ export function BacktestFormView({
             error={errors.version?.message}
             {...register("version")}
           />
-          <Input
-            label="Run name"
-            containerClassName="sm:col-span-2"
-            error={errors.name?.message}
-            {...register("name")}
-          />
+          <Input label="Run name" error={errors.name?.message} {...register("name")} />
+          <DataSourceField form={form} spec={spec} locked={editing !== undefined} />
         </div>
       </Card>
       <Card title="Period and capital">
@@ -234,7 +232,7 @@ export function BacktestFormView({
           />
         </div>
       </Card>
-      <UniverseFields form={form} timeframe={timeframe} />
+      <UniverseFields form={form} timeframe={timeframe} checkCoverage={!recorded} />
       <div className="flex flex-wrap gap-3">
         <Button type="submit" loading={queueRun.isPending || addVersion.isPending}>
           {editing ? "Queue new version" : "Queue backtest"}
@@ -243,22 +241,11 @@ export function BacktestFormView({
           <Link to={editing ? `/backtests/${editing.id}` : "/backtests"}>Cancel</Link>
         </Button>
       </div>
-      <Modal
-        open={uncovered.length > 0}
-        onOpenChange={(open) => !open && setUncovered([])}
-        title="Some symbols have no data for this period"
-        description="A backtest needs data for the whole period. Drop these symbols and queue?"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setUncovered([])}>
-              Go back
-            </Button>
-            <Button onClick={dropAndQueue}>Drop and queue</Button>
-          </>
-        }
-      >
-        <p className="font-mono text-body text-text-primary">{uncovered.join(", ")}</p>
-      </Modal>
+      <UncoveredSymbolsModal
+        symbols={uncovered}
+        onCancel={() => setUncovered([])}
+        onDrop={dropAndQueue}
+      />
     </form>
   );
 }
