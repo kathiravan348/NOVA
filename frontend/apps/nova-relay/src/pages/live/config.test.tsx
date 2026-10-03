@@ -21,10 +21,17 @@ describe("Live config", () => {
     renderApp("/live/config");
     const toggle = await screen.findByRole("switch", { name: "Record live prices" });
     expect(screen.getByText("Off")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Choose indices" }));
+    const dialog = await screen.findByRole("dialog", { name: "Indices to record" });
+    const choices = await within(dialog).findAllByRole("checkbox");
+    fireEvent.click(choices[0]!);
+    expect(within(dialog).getByText(/every stock synced with Kite/)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save indices" }));
+    expect(await screen.findByText("Indices saved (demo)")).toBeInTheDocument();
     fireEvent.click(toggle);
     expect(await screen.findByText("Recording switched on (demo)")).toBeInTheDocument();
     expect(await screen.findByText("Waiting for market hours")).toBeInTheDocument();
-    expect(screen.getByText("All stocks synced with Kite")).toBeInTheDocument();
+    expect(screen.getByText("All stocks synced with Kite + 1 index")).toBeInTheDocument();
   });
 
   it.each([
@@ -36,6 +43,7 @@ describe("Live config", () => {
         HttpResponse.json({
           enabled: true,
           symbols: ["INFY"],
+          indices: [],
           state,
           jobId: state === "recording" ? "job_002" : null,
           updatedAt: "2026-09-22T04:30:00Z",
@@ -44,7 +52,7 @@ describe("Live config", () => {
     );
     renderApp("/live/config");
     expect(await screen.findByText(label)).toBeInTheDocument();
-    expect(screen.getByText("1 chosen stock")).toBeInTheDocument();
+    expect(screen.getByText("1 chosen stock + no indices")).toBeInTheDocument();
     const link = screen.queryByRole("link", { name: "Open today's recording" });
     expect(Boolean(link)).toBe(state === "recording");
   });
@@ -61,10 +69,10 @@ describe("Live config", () => {
     fireEvent.click(within(row).getByRole("checkbox"));
     fireEvent.click(within(dialog).getByRole("button", { name: "Save stocks" }));
     expect(await screen.findByText("Stocks saved (demo)")).toBeInTheDocument();
-    expect(await screen.findByText("1 chosen stock")).toBeInTheDocument();
+    expect(await screen.findByText("1 chosen stock + no indices")).toBeInTheDocument();
   });
 
-  it("picks the top 3000 of 3,899 synced stocks by traded value and saves them", async () => {
+  it("saves 19 indices, then picks and saves the top 2981 stocks in the remaining slots", async () => {
     const symbols = Array.from({ length: 3899 }, (_, i) => `S${String(i + 1).padStart(4, "0")}`);
     const base = mockInstruments[0]!;
     // S3899 trades the most; S3898 next; every other stock has no history and ranks by symbol.
@@ -73,7 +81,15 @@ describe("Live config", () => {
       { ...base, symbol: "S3898", avgDailyVolume: 500_000 },
     ];
     let saved: string[] = [];
+    let indices: string[] = [];
+    const indexList = Array.from({ length: 19 }, (_, i) => ({
+      name: `INDEX ${i}`,
+      kiteSymbol: `INDEX ${i}`,
+      members: 100,
+      updatedAt: null,
+    }));
     server.use(
+      http.get("*/api/v1/market-data/indices", () => HttpResponse.json(indexList)),
       http.get("*/api/v1/market-data/universe", () =>
         HttpResponse.json(
           symbols.map((symbol) => ({
@@ -88,10 +104,13 @@ describe("Live config", () => {
       ),
       http.get("*/api/v1/market-data/instruments", () => HttpResponse.json(instruments)),
       http.put("*/api/v1/broker/recorder", async ({ request }) => {
-        saved = ((await request.json()) as { symbols: string[] }).symbols;
+        const body = (await request.json()) as { symbols: string[]; indices?: string[] };
+        saved = body.symbols;
+        indices = body.indices ?? indices;
         return HttpResponse.json({
           enabled: false,
           symbols: saved,
+          indices,
           state: "off",
           jobId: null,
           updatedAt: "2026-09-22T04:30:00Z",
@@ -99,16 +118,28 @@ describe("Live config", () => {
       }),
     );
     renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose indices" }));
+    const indexDialog = await screen.findByRole("dialog", { name: "Indices to record" });
+    await within(indexDialog).findAllByRole("checkbox");
+    fireEvent.click(within(indexDialog).getByRole("button", { name: "Select all" }));
+    fireEvent.click(within(indexDialog).getByRole("button", { name: "Save indices" }));
+    expect(await screen.findByText("Indices saved (demo)")).toBeInTheDocument();
+    expect(indices).toEqual(indexList.map((index) => index.name));
     fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
     const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
-    const pick = within(dialog).getByRole("button", { name: "Pick top 3000 by traded value" });
+    const pick = within(dialog).getByRole("button", { name: "Pick top 2981 by traded value" });
     await waitFor(() => expect(pick).toBeEnabled());
     fireEvent.click(pick);
     fireEvent.click(within(dialog).getByRole("button", { name: "Save stocks" }));
     expect(await screen.findByText("Stocks saved (demo)")).toBeInTheDocument();
-    expect(saved).toHaveLength(3000);
+    expect(saved).toHaveLength(2981);
     expect(saved.slice(0, 3)).toEqual(["S3899", "S3898", "S0001"]);
-    expect(saved.at(-1)).toBe("S2998");
+    expect(saved.at(-1)).toBe("S2979");
+    expect(screen.getByText("2,981 chosen stocks + 19 indices")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Choose indices" }));
+    expect(
+      await screen.findByText("Stocks + indices: 2,981 + 19 = 3,000 of 3,000"),
+    ).toBeInTheDocument();
   });
 
   it("warns about stocks without daily bars and opens a prefilled 1d download", async () => {
@@ -213,6 +244,7 @@ describe("Live config", () => {
         HttpResponse.json({
           enabled: false,
           symbols: ["INFY"],
+          indices: [],
           state: "off",
           jobId: null,
           updatedAt: "2026-09-22T04:30:00Z",
@@ -228,5 +260,30 @@ describe("Live config", () => {
   it("says every stock is recorded when none are chosen", async () => {
     renderApp("/live/config");
     expect(await screen.findByText("Every synced stock is recorded")).toBeInTheDocument();
+  });
+
+  it("disables saving when adding an index to 3000 chosen stocks", async () => {
+    server.use(
+      http.get("*/api/v1/broker/recorder", () =>
+        HttpResponse.json({
+          enabled: false,
+          symbols: Array.from({ length: 3000 }, (_, i) => `S${i}`),
+          indices: [],
+          state: "off",
+          jobId: null,
+          updatedAt: "2026-09-22T04:30:00Z",
+        }),
+      ),
+    );
+    renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose indices" }));
+    const dialog = await screen.findByRole("dialog", { name: "Indices to record" });
+    fireEvent.click((await within(dialog).findAllByRole("checkbox"))[0]!);
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(
+      "Kite streams at most 3000 instruments: remove stocks or indices",
+    );
+    expect(within(dialog).getByRole("button", { name: "Save indices" })).toBeDisabled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Clear" }));
+    expect(within(dialog).getByRole("button", { name: "Save indices" })).toBeEnabled();
   });
 });

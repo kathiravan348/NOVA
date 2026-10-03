@@ -39,7 +39,8 @@ def upgrade() -> None:
         ),
     )
     op.execute(
-        "SELECT create_hypertable('index_ticks', 'received_at', chunk_time_interval => INTERVAL '1 day')"
+        "SELECT create_hypertable('index_ticks', by_range('received_at', INTERVAL '1 day'),"
+        " create_default_indexes => false)"
     )
     op.execute(
         "ALTER TABLE index_ticks SET (timescaledb.compress, timescaledb.compress_segmentby = 'symbol', timescaledb.compress_orderby = 'received_at')"

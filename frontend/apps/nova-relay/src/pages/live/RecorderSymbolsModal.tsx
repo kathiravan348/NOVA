@@ -47,7 +47,8 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
   const update = useUpdateRecorder();
   const [symbols, setSymbols] = useState<string[]>(settings.symbols);
   const [failed, setFailed] = useState<string | null>(null);
-  const tooMany = symbols.length > MAX_RECORDER_SYMBOLS;
+  const stockLimit = MAX_RECORDER_SYMBOLS - settings.indices.length;
+  const tooMany = symbols.length > stockLimit;
   const navigate = useNavigate();
   const synced = (universe.data ?? []).filter((e) => e.synced);
   const unranked = instruments.data
@@ -76,7 +77,7 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
       topByTradedValue(
         synced.map((e) => e.symbol),
         instruments.data ?? [],
-        MAX_RECORDER_SYMBOLS,
+        stockLimit,
       ),
     );
 
@@ -105,7 +106,7 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
           disabled={universe.isPending || instruments.isPending || instruments.isError}
           onClick={pickTop}
         >
-          Pick top {MAX_RECORDER_SYMBOLS} by traded value
+          Pick top {stockLimit} by traded value
         </Button>
         <p className="text-body-sm text-text-secondary">
           Ranked by 20-day average volume × last close; stocks with no history rank last.
@@ -118,7 +119,7 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
             <p>
               {unranked.length.toLocaleString("en-IN")} stocks have no daily bars, so{" "}
               <em>Pick top</em> ranks them last by name. Download their daily bars first for a true
-              top {MAX_RECORDER_SYMBOLS}.
+              top {stockLimit}.
             </p>
             <Button type="button" variant="secondary" size="sm" onClick={downloadDaily}>
               Download daily bars
@@ -145,14 +146,16 @@ function SymbolsForm({ settings, onDone }: { settings: RecorderSettings; onDone:
       />
       {(failed !== null || tooMany) && (
         <p role="alert" className="text-body-sm text-loss">
-          {tooMany ? `Kite streams at most ${MAX_RECORDER_SYMBOLS} stocks` : failed}
+          {tooMany
+            ? `Kite streams at most ${MAX_RECORDER_SYMBOLS} instruments: ${symbols.length} stocks + ${settings.indices.length} indices; remove stocks or indices`
+            : failed}
         </p>
       )}
       <div className="flex justify-end gap-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>
-        <Button type="button" disabled={update.isPending} onClick={() => void save()}>
+        <Button type="button" disabled={update.isPending || tooMany} onClick={() => void save()}>
           Save stocks
         </Button>
       </div>

@@ -54,15 +54,15 @@ def _archived_days(root: Path) -> set[date]:
 
 
 def pending_days(db: Session, root: Path, now: datetime) -> list[date]:
-    """Weekdays with stored ticks and no summary yet, oldest first; today only after 15:35 IST.
+    """Weekdays with stored ticks and no complete summary, oldest first; today after 15:35 IST.
+
+    A summary without `longest_feed_gap_seconds` (written before migration 0031) is rebuilt
+    once, but only while the day's ticks are stored: rebuilding from nothing erases its counts.
 
     Cheap enough to run every minute: it lists chunks and folders, never scans tick rows.
     """
     local = now.astimezone(IST)
     candidates = set(db.scalars(_CHUNK_DAYS)) | _archived_days(root)
-    candidates |= set(
-        db.scalars(select(TickSession.day).where(TickSession.longest_feed_gap_seconds.is_(None)))
-    )
     done = set(
         db.scalars(select(TickSession.day).where(TickSession.longest_feed_gap_seconds.is_not(None)))
     )

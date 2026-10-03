@@ -184,10 +184,10 @@
 | NOVA-176 | Strategies page: search, more filters, results by data source (D82) | done | Claude | 170 |
 | NOVA-177 | Timeline events endpoint + held time on sells (D83) | done | Claude | 175 |
 | NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | done | Claude | 177 |
-| NOVA-179 | Recorder: record chosen indices into `index_ticks` (D84, migration 0030) | in-progress | ChatGPT | — |
-| NOVA-180 | Relay Live Config: indices to record; Pick top leaves room for them (D84) | planned | — | 179 (merge after 179 is deployed) |
-| NOVA-181 | Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031) | in-progress | ChatGPT | 179 (shares `models/data.py`) |
-| NOVA-182 | Contracts: research profile (D84) | planned | — | — |
+| NOVA-179 | Recorder: record chosen indices into `index_ticks` (D84, migration 0030) | done | Claude | — |
+| NOVA-180 | Relay Live Config: indices to record; Pick top leaves room for them (D84) | done | Claude | 179 (merge after 179 is deployed) |
+| NOVA-181 | Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031) | in-progress | Claude | 179 (shares `models/data.py`) |
+| NOVA-182 | Contracts: research profile (D84) | done | Claude | — |
 | NOVA-183 | Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84) | draft | — | 182 |
 | NOVA-184 | Backtest service: research profiles table + endpoints, freeze + hash (D84, migration 0032) | draft | — | 181, 182 |
 | NOVA-185 | Intraday simulator: tick replay, fill model, exits, unresolved positions (D84) | draft | — | 181, 183 |
@@ -203,6 +203,8 @@
 | NOVA-195 | Orbit: intraday strategy form + 15 Library entries (D84) | draft | — | 183 |
 | NOVA-196 | Orbit: Experiment page (matrix, results, final lock) (D84) | draft | — | 192, 193 |
 | NOVA-197 | Signal check: intraday setups on Kite 1m history (D84) | draft | — | 188, 189 |
+| NOVA-198 | Clean slate: delete the old strategies and backtests (D85, no code) | planned | — | 197 |
+| NOVA-199 | Approvals batch test: cheap toolbar lookups (flaky test fix) | done | Claude | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -239,4 +241,4 @@
   schema, maps and guides). 179 first among the data tasks: its index recording should ship at this weekend (D76; migration 0030).
   Then 180 (after 179 is deployed) and 181 (after 179 merges; migration 0031) in parallel; 183 after 182; 184 after 181 + 182 (0032).
   Simulator: 185 → 186 and 187 in parallel → 188 → 189; 190 and 192 after 186; 191 after 188–190; 193 after 184 + 185;
-  screens 194 (after 184), 195 (after 183), 196 last; 197 after 188 + 189.
+  screens 194 (after 184), 195 (after 183), 196 last; 197 after 188 + 189. Clean slate 198 (D85) after everything else.

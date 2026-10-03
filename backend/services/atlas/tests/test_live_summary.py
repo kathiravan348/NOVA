@@ -190,6 +190,24 @@ def test_an_old_null_summary_is_rebuilt_once(clean: Engine, tmp_path: Path) -> N
         assert summarize_next(db, tmp_path, ist(WED, 16, 1)) is None
 
 
+def test_an_old_summary_without_stored_ticks_is_kept(clean: Engine, tmp_path: Path) -> None:
+    with Session(clean) as db:
+        db.add(
+            TickSession(
+                day=MON,
+                stocks=40,
+                ticks=1000,
+                feed_gap_seconds=3,
+                longest_feed_gap_seconds=None,
+                summarized_at=ist(WED, 16, 0),
+            )
+        )
+        db.commit()
+        assert summarize_next(db, tmp_path, ist(WED, 16, 0)) is None
+        summary = db.get(TickSession, MON)
+        assert summary is not None and (summary.stocks, summary.ticks) == (40, 1000)
+
+
 def test_empty_recording_has_zero_longest_gap(clean: Engine, tmp_path: Path) -> None:
     with Session(clean) as db:
         summary = summarize_day(db, tmp_path, MON, ist(WED, 16, 0))

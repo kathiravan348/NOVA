@@ -64,6 +64,7 @@ describe("Relay overview", () => {
         HttpResponse.json({
           enabled: true,
           symbols: [],
+          indices: [],
           state: "no_login",
           jobId: null,
           updatedAt: "2026-09-22T04:30:00Z",

@@ -1,0 +1,125 @@
+[
+  {
+    "id": "research_001",
+    "name": "Intraday v1",
+    "description": "Controlled losses and honest fills",
+    "versions": [
+      {
+        "version": 2,
+        "note": "Tighter spread limit",
+        "settings": {
+          "account": {
+            "initialPoolPercent": 30,
+            "addPoolPercent": 10,
+            "reservePercent": 60,
+            "stockCapPercent": 15,
+            "sectorCapPercent": 20,
+            "maxPositions": 3,
+            "riskPerPositionPercent": 0.1,
+            "openRiskPercent": 0.2,
+            "dailyLossPercent": 0.3,
+            "lossStreakPause": 2,
+            "maxNewPositionsPerDay": 5,
+            "cooldownMinutes": 15
+          },
+          "execution": {
+            "delayMs": 250,
+            "stressDelayMs": 1000,
+            "slippageTicks": 1,
+            "stressSlippageTicks": 3,
+            "maxQuoteAgeMs": 1500,
+            "maxSpreadBps": 6,
+            "maxSpreadToStopPercent": 10,
+            "maxDepthPercent": 10,
+            "minFillPercent": 25
+          },
+          "market": {
+            "marketGate": true,
+            "marketIndex": "NIFTY 50",
+            "indexRangeMinutes": 15,
+            "declineVetoPercent": 0.3
+          },
+          "signal": {
+            "minRelativeVolume": 1.2,
+            "volumeBaselineSessions": 20,
+            "minStopAtr": 0.5,
+            "maxStopAtr": 2.5,
+            "atrPeriod": 14,
+            "contextEmaPeriod": 20,
+            "rangeSpanAtr": 3
+          },
+          "timing": {
+            "earliestEntry": "09:30",
+            "lastEntry": "14:30",
+            "squareOff": "15:20",
+            "maxHoldMinutes": 60
+          },
+          "data": { "maxSessionGapSeconds": 30 }
+        },
+        "frozen": false,
+        "hash": null,
+        "createdAt": "2026-09-21T06:30:00Z",
+        "frozenAt": null
+      },
+      {
+        "version": 1,
+        "note": "Initial research settings",
+        "settings": {
+          "account": {
+            "initialPoolPercent": 30,
+            "addPoolPercent": 10,
+            "reservePercent": 60,
+            "stockCapPercent": 15,
+            "sectorCapPercent": 20,
+            "maxPositions": 3,
+            "riskPerPositionPercent": 0.1,
+            "openRiskPercent": 0.2,
+            "dailyLossPercent": 0.3,
+            "lossStreakPause": 2,
+            "maxNewPositionsPerDay": 5,
+            "cooldownMinutes": 15
+          },
+          "execution": {
+            "delayMs": 250,
+            "stressDelayMs": 1000,
+            "slippageTicks": 1,
+            "stressSlippageTicks": 3,
+            "maxQuoteAgeMs": 1500,
+            "maxSpreadBps": 8,
+            "maxSpreadToStopPercent": 10,
+            "maxDepthPercent": 10,
+            "minFillPercent": 25
+          },
+          "market": {
+            "marketGate": true,
+            "marketIndex": "NIFTY 50",
+            "indexRangeMinutes": 15,
+            "declineVetoPercent": 0.3
+          },
+          "signal": {
+            "minRelativeVolume": 1.2,
+            "volumeBaselineSessions": 20,
+            "minStopAtr": 0.5,
+            "maxStopAtr": 2.5,
+            "atrPeriod": 14,
+            "contextEmaPeriod": 20,
+            "rangeSpanAtr": 3
+          },
+          "timing": {
+            "earliestEntry": "09:30",
+            "lastEntry": "14:30",
+            "squareOff": "15:20",
+            "maxHoldMinutes": 60
+          },
+          "data": { "maxSessionGapSeconds": 30 }
+        },
+        "frozen": true,
+        "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-21T06:00:00Z",
+        "frozenAt": "2026-09-21T06:15:00Z"
+      }
+    ],
+    "createdAt": "2026-09-21T06:00:00Z",
+    "updatedAt": "2026-09-21T06:30:00Z"
+  }
+]

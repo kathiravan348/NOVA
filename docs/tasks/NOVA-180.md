@@ -1,6 +1,6 @@
 # NOVA-180 — Relay Live Config: indices to record; Pick top leaves room for them (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-180 · **Depends on:** NOVA-179 (merge after it is deployed)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-180 · **Depends on:** NOVA-179 (merge after it is deployed)
 
 ## Goal
 On Relay **Live → Config** the Owner chooses which indices the recorder records next to the stocks, and
@@ -51,7 +51,21 @@ Live → Config → **Choose indices** → **Select all** → **Save indices**; 
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** ChatGPT built the screen, tests and guide (uncommitted when it went down); Claude committed that work at
+takeover (Owner allowed, 4 Oct), merged main and finished it.
+**Files changed (takeover):** `RecorderCard.tsx` and the save toast say `1 index` / `n indices`; the dialog's count
+line explains "every stock synced with Kite" when no stocks are chosen (was `0 + 1 = 1 of 3,000`); `config.test.tsx`.
+**Commands run:** Relay tests 174/174; full `pnpm review:check` green (140/140 files, builds).
+**Checked:** demo preview of Live → Config: card, **Choose indices**, select + save, at 360 px and desktop, dark and light.
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** USER-GUIDE (Live → Config, what-if row).
+**Deviations from task:** none. **Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (4 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT + Claude (takeover). **Self-review:** yes (Owner asked Claude to finish 180).
+**Acceptance:** indices saved; Pick top then picks 2,981 and the card shows `2,981 chosen stocks + 19 indices`;
+3,000 stocks + 1 index shows the alert and disables Save; the switch keeps the indices (all in `config.test.tsx`).
+**Guides checked:** USER-GUIDE Live → Config text and the what-if row match the screen.
+**Owner step:** Live → Config → **Choose indices** → **Select all** → **Save indices**, then **Choose stocks** →
+**Pick top 2981 by traded value** → **Save stocks** (needs the real Relay, before Monday 09:00).
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
