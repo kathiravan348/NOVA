@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 from nova_backtest.bars import IST
 from nova_backtest.intraday.fills import DepthAt, Execution
+from nova_backtest.intraday.guard import Guard, Verdict
 from nova_backtest.intraday.position import OrderCharges
 from nova_backtest.intraday.replay import DayReplay, Timing
 from nova_backtest.intraday.setups import Candidate, StockDay, StockSetup
@@ -162,11 +163,40 @@ def timing(
     return Timing.of(DAY, earliest, last, square_off, hold)
 
 
+HUGE_CAPITAL = 10**12  # paise: account limits never bind unless a test sets them
+
+
+class FixedQtyGuard(Guard):
+    """The real guard, but every passing entry asks for at most `qty` shares (`qty(candidate
+    price)` when callable), so fill and exit tests control the size."""
+
+    def __init__(
+        self, qty: int | Callable[[int], int], capital: int = HUGE_CAPITAL, **account: Any
+    ) -> None:
+        from nova_contracts import default_research_settings
+
+        settings = default_research_settings().account.model_copy(update=account)
+        super().__init__(settings, capital, {}, lambda _b, _s: 0)
+        self.fixed = qty
+
+    def review_entry(self, symbol: str, *args: Any, **kwargs: Any) -> Verdict:
+        verdict = super().review_entry(symbol, *args, **kwargs)
+        if verdict.hold is None:
+            return verdict
+        price = args[3]
+        cap = self.fixed(price) if callable(self.fixed) else self.fixed
+        if cap <= 0:
+            self.release(verdict.hold)
+            return Verdict(0, ["zero_qty"], None)
+        verdict.hold.value = min(verdict.qty, cap) * price
+        return Verdict(min(verdict.qty, cap), [], verdict.hold)
+
+
 def replay(
     tapes: dict[str, Sequence[T]],
     plans: dict[str, dict[str, dict[str, Any]]],
     execution: Execution = BASE,
-    qty: int | Callable[[Candidate], int] = 100,
+    qty: int | Callable[[int], int] | Guard = 100,
     tick_size: int = 5,
     when: Timing | None = None,
     charges: OrderCharges | None = None,
@@ -176,7 +206,7 @@ def replay(
     setups: dict[str, StockSetup] = {
         s: ScriptedSetup(stock, plans.get(s, {})) for s, stock in stocks.items()
     }
-    size = qty if callable(qty) else (lambda _c: qty)
+    guard = qty if isinstance(qty, Guard) else FixedQtyGuard(qty)
     run = cls(
         stocks,
         setups,
@@ -185,7 +215,7 @@ def replay(
         dict.fromkeys(stocks, tick_size),
         DepthAt(eager_depth),
         charges or flat_charges(),
-        size,
+        guard,
     )
     run.run()
     return run

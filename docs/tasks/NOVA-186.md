@@ -1,6 +1,6 @@
 # NOVA-186 — Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-186 · **Depends on:** NOVA-185
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-186 · **Depends on:** NOVA-185
 
 ## Goal
 Every intraday candidate passes the account checks of `docs/INTRADAY-RESEARCH.md` §2 (Account) and §5 (2–4) before a

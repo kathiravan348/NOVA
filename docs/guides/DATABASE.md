@@ -1,6 +1,6 @@
 # NOVA — Database guide (what each table keeps)
 
-> State as of 4 Oct 2026 (migrations `0001`–`0033`, NOVA-185). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
+> State as of 4 Oct 2026 (migrations `0001`–`0034`, NOVA-186). Source of truth: `backend/libs/nova_db/src/nova_db/models/`.
 > One PostgreSQL database with TimescaleDB. Live counters are in Redis; old ticks go to Parquet files.
 > Update in the same task as any migration (`AGENTS.md` §7a).
 
@@ -24,7 +24,8 @@ broker_accounts ─┬─ broker_sessions            (today's Kite login, token 
 broker_profiles                                (Zerodha setup facts)
 
 strategies ── strategy_versions ── backtest_runs ─┬─ backtest_results
-                                                  └─ trades ── intraday_trades
+                                                  ├─ trades ── intraday_trades
+                                                  └─ intraday_decisions
 charge_rates                                   (fees & taxes used for trades)
 research_profiles ── research_profile_versions (intraday research settings, D84)
 
@@ -66,6 +67,7 @@ universe ─ instruments   market_indices   candles (hypertable) ─ candle_days
 | **research_profiles** | Migration 0032 (D84): a named set of intraday research settings, edited in versions. Deleting a profile (no API yet) deletes its versions (cascade). | `id` (`rp_…`), `name` (1–80 characters), `description`, `created_at`, `updated_at` (any version change) |
 | **research_profile_versions** | Every version of a profile. A draft's `settings` can be replaced; a frozen version never changes. DB check: `frozen` ⇔ `hash` set ⇔ `frozen_at` set. | PK (`profile_id` → research_profiles, `version` ≥ 1), `note`, `settings` (JSONB `ResearchSettings`), `frozen` (default false), `hash` (char(64) SHA-256 hex, see `API.md`), `created_at`, `frozen_at` |
 | **intraday_trades** | Migration 0033 (D84): one row per trade of an intraday run, deleted with it. DB checks: `stop_paise` > 0, `first_fill_paise` > `stop_paise`, `risk_paise` > 0, `target_paise` null or > 0. | `trade_id` (PK) → trades, `stop_paise`, `target_paise` (null = none), `first_fill_paise` (rounded average of the first buy), `risk_paise` (1R per share = first fill − stop), `legs` (JSONB `[{at, qty, price}]`, one per buy), `unresolved` (default false) |
+| **intraday_decisions** | Migration 0034 (D84): every candidate (or add) of an intraday run and what became of it, deleted with the run; written once per session. DB checks: `action` in `entry`/`add`, `outcome` in `filled`/`partial`/`skipped`, `first_reason` set exactly when skipped, quantities ≥ 0. Index (`run_id`, `at`). | `id` (`dec_…`), `run_id` → backtest_runs, `at` (decision time), `symbol`, `setup` (kind), `action`, `outcome`, `first_reason` (the first failed §5.4 check), `reasons` (text[]: every failed check in §5.4 order), `requested_qty`, `filled_qty`, `trade_id` → trades (set null on delete; set for filled/partial) |
 | **charge_rates** | Brokerage and statutory rates (NOVA Ledger) per segment from a date on. A rate change = a **new row**, so old trades keep their old rates. Seeded from Zerodha's schedule effective 2024-10-01 for delivery and intraday; migration 0019 adds the same values effective 2020-01-01 as an approximation (D66), so backtests from 2020 have rates. | `id`, `segment`, `effective_from` (unique with segment), `rates` (JSON: brokerage %, cap, STT buy/sell %, exchange %, SEBI per crore, stamp %, GST %, DP per sell), `source`, `created_at` |
 
 Deleting a run deletes its result and trades (`ON DELETE CASCADE`). The API deletes backtests (D60) and whole strategies with their runs (D62).

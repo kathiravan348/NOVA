@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 4 Oct 2026 (NOVA-185). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 4 Oct 2026 (NOVA-186). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -153,8 +153,12 @@ milliseconds: a setup's candidate at a 1m close is tried at close + the scenario
 listed in the run's `history_inputs` as `tick_size:<symbol>`) decide the fill; a partial fill keeps its shares.
 Exits: stop (best bid ≤ stop), target, `maxHoldMinutes`, `squareOff`, each from trigger + delay, walking the bid
 levels and retrying the rest; still held at 15:30 → exit reason `unresolved` at the last bid of the day and the run
-is marked incomplete. Every order pays its own charges (NOVA Ledger). Until NOVA-186 every entry asks for 1 share;
-setups arrive in NOVA-188/189 (until then such runs fail with "The <kind> setup arrives in NOVA-188/189").
+is marked incomplete. Every order pays its own charges (NOVA Ledger). Sizing (NOVA-186): the most shares whose loss
+at the stop plus the real charges of the buy and the sell fits `riskPerPositionPercent` (and the open-risk room), cut
+by the stock and sector caps, the initial pool and the cash reserve (all % of the starting capital); the fill is cut
+again if the real prices need it. Account checks in the §5.4 order (`maxPositions`, cooldown, losing streak, new
+positions per day, entry window, daily loss shutdown: exits every position with reason `daily_shutdown`). Every
+candidate leaves one `intraday_decisions` row (first blocking reason + all failed checks). Setups arrive in NOVA-188/189 (until then such runs fail with "The <kind> setup arrives in NOVA-188/189").
 
 ### Research profiles (`/research-profiles`, D84, NOVA-184)
 Versioned shared settings for intraday runs (`ResearchSettings`, `docs/INTRADAY-RESEARCH.md` §2). A draft version can

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from intraday_factory import (
     BASE,
+    FixedQtyGuard,
     ScriptedSetup,
     T,
     flat_charges,
@@ -24,7 +25,7 @@ from nova_backtest.intraday.replay import DayReplay, Pending
 from nova_backtest.intraday.setups import REGISTRY
 from nova_backtest.strategy_engine import StrategyEngine
 from nova_backtest.worker import run_worker
-from nova_db.models import BacktestRun, IntradayTrade, Trade
+from nova_db.models import BacktestRun, IntradayDecision, IntradayTrade, Trade
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -97,7 +98,11 @@ def test_entry_refusals_are_kept_with_their_reasons() -> None:
     assert early.decisions[0].first_reason == "entry_window"
     zero = replay({"INFY": calm()}, {"INFY": ENTRY}, qty=0)
     assert zero.decisions[0].reasons == ["zero_qty"]
-    above = replay({"INFY": calm()}, {"INFY": {"09:45": {"stop": 10_005, "target_r": 2.0}}})
+    # the 09:44 bar closes at ₹100.00, above the stop; the quote at the attempt is below it
+    fallen = [*calm("09:45:00"), T("09:45:00", 9_984, bid=9_983, ask=9_985)]
+    fallen += minute_tape("09:45:20", "15:30:00", 9_984, spread=2)
+    stop_above = {"09:45": {"stop": 9_990, "target_r": 2.0}}
+    above = replay({"INFY": fallen}, {"INFY": stop_above})
     assert above.decisions[0].first_reason == "invalid_at_fill"
 
 
@@ -154,7 +159,8 @@ def test_an_intraday_run_goes_end_to_end_through_the_worker(
     tmp_path: Path,
     parity: Parity,
 ) -> None:
-    plan = {"09:45": {"stop": 9_900, "target_r": 2.0}}
+    entry = {"stop": 9_900, "target_r": 2.0}
+    plan = {"09:20": entry, "09:45": entry}
     monkeypatch.setitem(
         REGISTRY, "opening_range_retest", lambda _s, stock: ScriptedSetup(stock, plan)
     )
@@ -177,13 +183,29 @@ def test_an_intraday_run_goes_end_to_end_through_the_worker(
         (trade,) = db.scalars(select(Trade).where(Trade.run_id == "run_i")).all()
         detail = db.get(IntradayTrade, trade.id)
         assert detail is not None
-    # Default profile: 250 ms delay, 1 tick (5 paise) slippage on each side.
-    assert (trade.qty, trade.entry_price_paise, trade.exit_price_paise) == (1, 10_007, 9_883)
+        decisions = db.scalars(
+            select(IntradayDecision)
+            .where(IntradayDecision.run_id == "run_i")
+            .order_by(IntradayDecision.at)
+        ).all()
+    # Default profile: 250 ms delay, 1 tick (5 paise) slippage on each side; ₹1,000 risk (0.10 %
+    # of ₹10 L) at ₹1.07 a share plus real charges.
+    assert (trade.entry_price_paise, trade.exit_price_paise) == (10_007, 9_883)
+    assert 850 < trade.qty < 100_000 // 107  # real charges (about ₹80 here) take ~70 shares
     assert trade.exit_reason == "stop" and trade.charges_total_paise > 0
-    assert trade.gross_pnl_paise == 9_883 - 10_007
+    assert trade.gross_pnl_paise == (9_883 - 10_007) * trade.qty
+    skipped, filled = decisions
+    assert (skipped.outcome, skipped.first_reason, skipped.reasons) == (
+        "skipped",
+        "entry_window",
+        ["entry_window"],
+    )
+    assert (filled.outcome, filled.first_reason, filled.trade_id) == ("filled", None, trade.id)
+    assert filled.requested_qty == filled.filled_qty == trade.qty
     assert (detail.stop_paise, detail.first_fill_paise, detail.risk_paise) == (9_900, 10_007, 107)
     assert detail.target_paise == 10_007 + 2 * 107 and detail.unresolved is False
-    assert detail.legs == [{"at": "2026-10-01T04:15:00.250000+00:00", "qty": 1, "price": 10_007}]
+    legs = [{"at": "2026-10-01T04:15:00.250000+00:00", "qty": trade.qty, "price": 10_007}]
+    assert detail.legs == legs
     assert list(tmp_path.iterdir()) == []  # the scratch folder is gone
 
 
@@ -201,3 +223,20 @@ def test_an_intraday_run_without_its_setup_fails_plainly(
         run = db.get(BacktestRun, "run_i")
         assert run is not None and run.status == "failed"
         assert run.error == "The opening_range_retest setup arrives in NOVA-188/189"
+
+
+def test_daily_loss_exits_everything_and_stops_new_entries() -> None:
+    # ₹10,000 account: the 0.30 % daily loss is ₹30; 100 shares falling ₹0.42 lose ₹42.
+    loose = {"stock_cap_percent": 100, "sector_cap_percent": 100, "initial_pool_percent": 100}
+    loose |= {"reserve_percent": 0, "add_pool_percent": 0, "risk_per_position_percent": 5}
+    guard = FixedQtyGuard(100, capital=1_000_000, open_risk_percent=10, **loose)
+    a = [*calm("09:50:00"), *minute_tape("09:50:00", "15:30:00", 9_960, spread=4)]
+    run = replay(
+        {"A": a, "B": calm()},
+        {"A": ENTRY, "B": {"10:00": ENTRY["09:45"]}},
+        qty=guard,
+    )
+    position = only(run)
+    assert position.exit_reason == "daily_shutdown"
+    assert position.sells[0].at_ms == ms("09:51:20")  # shut at the 09:51 close, next tick
+    assert run.decisions[1].symbol == "B" and run.decisions[1].reasons == ["daily_shutdown"]
