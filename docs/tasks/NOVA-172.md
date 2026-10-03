@@ -1,6 +1,6 @@
 # NOVA-172 — Compare: pick runs in a popup with filters (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-172 · **Depends on:** NOVA-171, NOVA-173
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-172 · **Depends on:** NOVA-171, NOVA-173
 
 ## Goal
 **Compare** no longer lists every run above the results. The chosen runs show as a short row at the top;
@@ -46,3 +46,11 @@ Modify (guide):
 ## Questions
 
 ## Handoff
+- Built by ChatGPT, 3 Oct 2026. Compact selected-run cards; comparison loads requested IDs without fetching a list.
+- Wide modal: shared filters, completed runs only, both source tabs, server paging and a three-run limit.
+- Draft choices survive tab/filter changes; Compare applies them, Cancel leaves the URL unchanged; chips remove runs.
+- Changed: ComparePage, SelectedRuns, RunPickerDialog, compare tests; removed RunPicker; USER-GUIDE updated.
+- Checks: 11 focused compare tests; full review:check green (1114 tests, app and Storybook builds).
+- Visual: page and picker at 360px/1440px, dark/light; popup stays within viewport; mock data only.
+- Guides: USER-GUIDE (Compare). Dependencies: none. RunFilters already provided hideStatus in NOVA-171.
+- Not merged: independent review required; branch follows task/NOVA-173 in the sequential review chain.
