@@ -1,6 +1,7 @@
-import type { StrategySpec } from "@nova/contracts";
+import type { CandleStrategySpec, StrategySpec } from "@nova/contracts";
 import { Card, CodeEditor, DescriptionList } from "@nova/ui-core";
 import { segmentLabel, timeframeLabel } from "../../lib/format";
+import { describeBuying, describeSetup } from "../../lib/intradayText";
 import {
   describeAveraging,
   describeExits,
@@ -32,7 +33,7 @@ function RuleBlock({
   );
 }
 
-function Body({ spec }: { spec: StrategySpec }) {
+function Body({ spec }: { spec: CandleStrategySpec }) {
   if (spec.mode === "visual") {
     return (
       <div className="grid gap-6 md:grid-cols-2">
@@ -70,6 +71,21 @@ export interface StrategySpecCardProps {
 }
 
 export function StrategySpecCard({ spec, version }: StrategySpecCardProps) {
+  if (spec.mode === "intraday") {
+    const items = [
+      { label: "Mode", value: "Intraday" },
+      { label: "Segment", value: segmentLabel[spec.segment] },
+      { label: "Exchange", value: spec.exchange },
+      { label: "Timeframe", value: "5m context, 1m confirmation" },
+      { label: "Setup", value: describeSetup(spec.setup) },
+      { label: "Buying", value: describeBuying(spec.buying) },
+    ];
+    return (
+      <Card title={`Specification · v${version}`}>
+        <DescriptionList columns={2} items={items} />
+      </Card>
+    );
+  }
   const common = [
     { label: "Segment", value: segmentLabel[spec.segment] },
     { label: "Exchange", value: spec.exchange },

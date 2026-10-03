@@ -92,6 +92,20 @@ from nova_contracts.data_job import (
 )
 from nova_contracts.error import ApiError, ApiErrorBody, ApiErrorCode
 from nova_contracts.indicators import INDICATORS, Indicator, IndicatorName, check_params
+from nova_contracts.intraday import (
+    BuyAddToWinner,
+    BuyAverageOnRecovery,
+    BuyingRule,
+    BuySingle,
+    FailedBreakoutReclaim,
+    InsideBarContinuation,
+    IntradaySetup,
+    OpeningRangeRetest,
+    PrevDayHighRetest,
+    Scenario,
+    StrategySpecIntraday,
+    VwapTrendPullback,
+)
 from nova_contracts.library import (
     LibraryBacktest,
     LibraryEntry,
@@ -306,6 +320,18 @@ __all__ = [
     "StrategySpec",
     "StrategySpecPython",
     "StrategySpecRotation",
+    "BuyAddToWinner",
+    "BuyAverageOnRecovery",
+    "BuyingRule",
+    "BuySingle",
+    "FailedBreakoutReclaim",
+    "InsideBarContinuation",
+    "IntradaySetup",
+    "OpeningRangeRetest",
+    "PrevDayHighRetest",
+    "Scenario",
+    "StrategySpecIntraday",
+    "VwapTrendPullback",
     "StrategySpecVisual",
     "StrategyStats",
     "VersionStats",

@@ -1,6 +1,6 @@
 # NOVA-183 — Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-183 · **Depends on:** NOVA-182
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-183 · **Depends on:** NOVA-182
 
 ## Goal
 A fourth strategy mode `intraday` (a setup + a buying rule, `docs/INTRADAY-RESEARCH.md` §3–§4) and the run fields
@@ -53,7 +53,19 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** intraday spec (5 setups × 3 buying rules) in Zod + Pydantic, run profile/scenario/experiment fields, two exit reasons, read-only Orbit screens.
+**Files changed:** the listed files, plus `contracts/src/trade.ts`, `backend/.../trade.py`, `mocks/data/strategyStats.json` (stats row for `stg_006`),
+`mocks/src/handlers/orbit.ts` (+ test), `orbit/src/lib/intradayText.ts` (new), `lib/format.ts`, `lib/strategyText.ts`,
+`pages/strategies/StrategyFilters.tsx`, `pages/editor/editorForm.ts`, `editorFormExtras.ts` (+ 2 tests),
+`ui-trading/.../TradeTimeline.fixtures.ts`, `backend/services/backtest/.../strategy_engine.py`, `services/strategy/tests/test_library_expansion.py`.
+**Commands run:** `pnpm review:check` pass; `docker compose run --rm backend-check` pass.
+**Checked:** no new component; spec card reuses `DescriptionList` (360px/desktop, both themes as before).
+**New dependencies:** none. **Maps updated:** CONTRACTS. **Guides updated:** none (no screen flow, endpoint or table change for users).
+**Deviations from task:** `risingBars` is 2–20 (strictly rising needs two values); run create/version bodies take the three
+profile fields as optional *nullable* (Pydantic dumps `null`); `BacktestRun` new fields default to null (mocks list them);
+`CandleStrategySpec` type added so the editor form keeps its three modes; the candle engine refuses an intraday spec with
+a plain error until NOVA-185; `ModeSwitch` needed no change (it never offered intraday).
+**Known gaps:** the version-create mock handler inherits the previous run's profile when the body has none (NOVA-185 sets the backend rule).
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

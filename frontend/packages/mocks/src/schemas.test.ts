@@ -57,6 +57,17 @@ describe("Mock data schemas and general conventions", () => {
     expect(BacktestRunSchema.array().safeParse(mockBacktestRuns).success).toBe(true);
   });
 
+  it("has one intraday strategy and one intraday run naming a profile version (D84)", () => {
+    const intraday = mockStrategies.filter((s) => s.versions[0]?.spec.mode === "intraday");
+    expect(intraday.map((s) => s.id)).toEqual(["stg_006"]);
+    const runs = mockBacktestRuns.filter((r) => r.profileId !== null);
+    expect(runs.map((r) => [r.strategyId, r.profileId, r.profileVersion, r.scenario])).toEqual([
+      ["stg_006", "research_001", 1, "base"],
+    ]);
+    const others = mockBacktestRuns.filter((r) => r.strategyId !== "stg_006");
+    expect(others.every((r) => r.scenario === null && r.experimentId === null)).toBe(true);
+  });
+
   it("validates mockBacktestResults against BacktestResultSchema array", () => {
     expect(BacktestResultSchema.array().safeParse(mockBacktestResults).success).toBe(true);
   });

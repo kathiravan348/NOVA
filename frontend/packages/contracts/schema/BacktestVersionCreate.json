@@ -98,6 +98,43 @@
           "type": "null"
         }
       ]
+    },
+    "profileId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "profileVersion": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scenario": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "base",
+            "stress"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [

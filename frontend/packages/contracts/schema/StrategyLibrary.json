@@ -2914,6 +2914,300 @@
                   "rotation"
                 ],
                 "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "const": "intraday"
+                  },
+                  "segment": {
+                    "type": "string",
+                    "const": "equity_intraday"
+                  },
+                  "exchange": {
+                    "type": "string",
+                    "const": "NSE"
+                  },
+                  "timeframe": {
+                    "type": "string",
+                    "const": "1m"
+                  },
+                  "setup": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "opening_range_retest"
+                          },
+                          "rangeMinutes": {
+                            "type": "integer",
+                            "minimum": 5,
+                            "maximum": 120
+                          },
+                          "retestBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20
+                          },
+                          "bufferAtr": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 5
+                          },
+                          "targetR": {
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 10
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "rangeMinutes",
+                          "retestBars",
+                          "bufferAtr",
+                          "targetR"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "prev_day_high_retest"
+                          },
+                          "retestBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20
+                          },
+                          "bufferAtr": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 5
+                          },
+                          "targetR": {
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 10
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "retestBars",
+                          "bufferAtr",
+                          "targetR"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "inside_bar_continuation"
+                          },
+                          "expiryBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20
+                          },
+                          "bufferAtr": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 5
+                          },
+                          "targetR": {
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 10
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "expiryBars",
+                          "bufferAtr",
+                          "targetR"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "vwap_trend_pullback"
+                          },
+                          "proximityAtr": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 5
+                          },
+                          "risingBars": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 20
+                          },
+                          "expiryBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20
+                          },
+                          "targetR": {
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 10
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "proximityAtr",
+                          "risingBars",
+                          "expiryBars",
+                          "targetR"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "failed_breakout_reclaim"
+                          },
+                          "reclaimBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20
+                          },
+                          "minRewardR": {
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 10
+                          },
+                          "exit": {
+                            "type": "string",
+                            "enum": [
+                              "vwap",
+                              "range_mid"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "reclaimBars",
+                          "minRewardR",
+                          "exit"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "buying": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "single"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "average_on_recovery"
+                          },
+                          "initialPercent": {
+                            "type": "number",
+                            "minimum": 10,
+                            "maximum": 100
+                          },
+                          "triggerAtr": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 5
+                          },
+                          "confirmBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                          },
+                          "expiryMinutes": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "initialPercent",
+                          "triggerAtr",
+                          "confirmBars",
+                          "expiryMinutes"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "add_to_winner"
+                          },
+                          "initialPercent": {
+                            "type": "number",
+                            "minimum": 10,
+                            "maximum": 100
+                          },
+                          "triggerR": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 5
+                          },
+                          "confirmBars": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                          },
+                          "expiryMinutes": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "initialPercent",
+                          "triggerR",
+                          "confirmBars",
+                          "expiryMinutes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "segment",
+                  "exchange",
+                  "timeframe",
+                  "setup",
+                  "buying"
+                ],
+                "additionalProperties": false
               }
             ]
           },

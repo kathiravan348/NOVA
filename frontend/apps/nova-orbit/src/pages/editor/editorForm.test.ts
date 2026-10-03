@@ -22,7 +22,9 @@ const ruleSpec = (form: EditorForm) => {
 
 describe("editorForm", () => {
   it("round-trips every mock spec: visual, python and rotation", () => {
-    const all = mockStrategies.flatMap((s) => s.versions.map((v) => ({ s, spec: v.spec })));
+    const all = mockStrategies.flatMap((s) =>
+      s.versions.flatMap((v) => (v.spec.mode === "intraday" ? [] : [{ s, spec: v.spec }])),
+    );
     expect(new Set(all.map(({ spec }) => spec.mode))).toEqual(
       new Set(["visual", "python", "rotation"]),
     );

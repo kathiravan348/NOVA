@@ -9,7 +9,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 
 import numpy as np
-from nova_contracts import Charges, StrategySpec
+from nova_contracts import Charges, StrategySpec, StrategySpecIntraday
 from nova_contracts.strategy import (
     OperandIndicator,
     Risk,
@@ -64,6 +64,8 @@ def _spec(db: Session, run: BacktestRun) -> Spec:
                 settings_for(operand.name, operand.params)
             except ValueError as exc:
                 raise EngineError(f"{exc}: open the strategy and save it again") from exc
+    if isinstance(spec, StrategySpecIntraday):
+        raise EngineError("Intraday setups run on the intraday simulator, which is not built yet")
     if isinstance(spec, StrategySpecRotation):
         return spec  # the contract allows only equity delivery on 1d (D62 (4))
     if spec.segment not in ("equity_delivery", "equity_intraday"):

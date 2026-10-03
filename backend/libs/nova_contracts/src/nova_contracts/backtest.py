@@ -15,6 +15,7 @@ from nova_contracts.common import (
     StrategyTimeframe,
     UtcDateTime,
 )
+from nova_contracts.intraday import Scenario
 from nova_contracts.market_data import IndexName
 from nova_contracts.trade import ExitReason
 from nova_contracts.universe import Symbol
@@ -115,6 +116,11 @@ class BacktestRun(_Period):
     data_source: DataSource
     recorded_days_used: Count | None
     recorded_days_skipped: list[IsoDate]
+    # D84: intraday runs only; null on every other run.
+    profile_id: Id | None = None
+    profile_version: Annotated[int, Field(ge=1)] | None = None
+    scenario: Scenario | None = None
+    experiment_id: Id | None = None
 
     @model_validator(mode="after")
     def _root_is_first_version(self) -> Self:
@@ -176,7 +182,22 @@ BacktestListSort = Literal[
 ]
 
 
-class BacktestRunCreate(_Period):
+class _ProfileChoice(Contract):
+    """D84: an intraday run names a research profile version and a scenario; all three or none."""
+
+    profile_id: Id | None = None
+    profile_version: Annotated[int, Field(ge=1)] | None = None
+    scenario: Scenario | None = None
+
+    @model_validator(mode="after")
+    def _all_or_none(self) -> Self:
+        given = [self.profile_id, self.profile_version, self.scenario]
+        if any(v is not None for v in given) and any(v is None for v in given):
+            raise ValueError("profileId, profileVersion and scenario go together")
+        return self
+
+
+class BacktestRunCreate(_Period, _ProfileChoice):
     """Body of `POST /backtests` (D44)."""
 
     strategy_id: Id
@@ -188,7 +209,7 @@ class BacktestRunCreate(_Period):
     data_source: DataSource = "history"
 
 
-class BacktestVersionCreate(_Period):
+class BacktestVersionCreate(_Period, _ProfileChoice):
     """Body of `POST /backtests/{id}/versions` (D60): the next version of the same strategy."""
 
     strategy_version: Annotated[int, Field(ge=1)]

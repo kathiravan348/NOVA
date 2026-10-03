@@ -19,6 +19,8 @@ export const exitReasonLabel: Record<ExitReason, string> = {
   market_filter: "Market filter",
   rotation: "Rotation",
   end_of_period: "End of period",
+  daily_shutdown: "Daily loss limit",
+  unresolved: "Unresolved",
 };
 
 export const runStatusLabel: Record<BacktestRunStatus, string> = {

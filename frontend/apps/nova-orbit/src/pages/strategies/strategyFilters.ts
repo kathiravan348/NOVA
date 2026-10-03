@@ -17,7 +17,7 @@ export interface StrategyFilterValues {
   status: StrategyStatus | "all";
   dataSource: DataSource | "all";
   sort: SortKey;
-  mode: "all" | "visual" | "python" | "rotation";
+  mode: "all" | "visual" | "python" | "rotation" | "intraday";
   segment: Segment | "all";
   timeframe: StrategyTimeframe | "all";
   tested: "all" | "tested" | "untested";
@@ -43,7 +43,7 @@ export const SORT_LABELS: Record<SortKey, string> = {
   net: "Best net P&L",
   drawdown: "Smallest drawdown",
 };
-const MODES = ["all", "visual", "python", "rotation"] as const;
+const MODES = ["all", "visual", "python", "rotation", "intraday"] as const;
 const TESTED = ["all", "tested", "untested"] as const;
 
 function pick<T extends string>(value: string | null, options: readonly T[], fallback: T): T {

@@ -127,5 +127,29 @@
         "bestRunId": null
       }
     ]
+  },
+  {
+    "strategyId": "stg_006",
+    "runsTotal": 1,
+    "runsCompleted": 0,
+    "runsFailed": 0,
+    "runsInProgress": 1,
+    "lastRunAt": "2026-09-20T10:00:00Z",
+    "bestReturnPercent": null,
+    "worstReturnPercent": null,
+    "bestCagrPercent": null,
+    "worstCagrPercent": null,
+    "winRateMinPercent": null,
+    "winRateMaxPercent": null,
+    "worstDrawdownPercent": null,
+    "bestNetPnl": null,
+    "byVersion": [
+      {
+        "version": 1,
+        "runsCompleted": 0,
+        "bestReturnPercent": null,
+        "bestRunId": null
+      }
+    ]
   }
 ]

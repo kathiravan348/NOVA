@@ -99,7 +99,12 @@ export function StrategyFilters({ values, onChange }: StrategyFiltersProps) {
           <Select
             label="Mode"
             value={draft.mode}
-            options={options({ visual: "Visual", python: "Python", rotation: "Rotation" })}
+            options={options({
+              visual: "Visual",
+              python: "Python",
+              rotation: "Rotation",
+              intraday: "Intraday",
+            })}
             onChange={(event) =>
               change({ mode: event.target.value as StrategyFilterValues["mode"] })
             }

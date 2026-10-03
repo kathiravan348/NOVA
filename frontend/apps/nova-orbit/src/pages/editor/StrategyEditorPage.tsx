@@ -1,7 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useParams } from "react-router";
-import { Button, useToast } from "@nova/ui-core";
+import { Button, EmptyState, useToast } from "@nova/ui-core";
 import type { Strategy } from "@nova/contracts";
 import {
   getDataMode,
@@ -133,6 +133,19 @@ export function EditStrategyPage() {
     <QueryState query={query} back={{ to: "/strategies", label: "Back to strategies" }}>
       {(strategy) => {
         const latest = strategy.versions.find((v) => v.version === strategy.latestVersion)!;
+        if (latest.spec.mode === "intraday") {
+          return (
+            <EmptyState
+              title="Intraday setups are edited in their own form (coming soon)"
+              description="This strategy's setup and buying rule are shown on its page."
+              action={
+                <Button asChild variant="secondary">
+                  <Link to={`/strategies/${strategy.id}`}>Back to the strategy</Link>
+                </Button>
+              }
+            />
+          );
+        }
         return (
           <StrategyEditor
             defaults={fromSpec(strategy.name, strategy.description, latest.spec)}

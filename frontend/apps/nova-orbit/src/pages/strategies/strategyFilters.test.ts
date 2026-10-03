@@ -31,6 +31,14 @@ describe("strategy filters", () => {
     expect(filterStrategies(mockStrategies, statsById, { ...values, q: "unknown" })).toEqual([]);
   });
 
+  it("filters intraday strategies by mode and reads the mode from the address (D84)", () => {
+    const intraday = { ...EMPTY_FILTERS, mode: "intraday" as const };
+    expect(filterStrategies(mockStrategies, statsById, intraday).map((s) => s.id)).toEqual([
+      "stg_006",
+    ]);
+    expect(fromQuery(new URLSearchParams("mode=intraday")).mode).toBe("intraday");
+  });
+
   it("uses completed runs in the chosen stats for Tested and minimum CAGR", () => {
     const strategy = mockStrategies[0]!;
     const tested = { ...EMPTY_FILTERS, tested: "tested" as const, minBestCagr: "10" };

@@ -433,5 +433,37 @@
     ],
     "createdAt": "2026-09-20T05:10:00Z",
     "updatedAt": "2026-09-20T05:10:00Z"
+  },
+  {
+    "id": "stg_006",
+    "name": "Opening range retest",
+    "description": "Buys a retest of the 15-minute opening range high with a structure stop and a 2R target (D84).",
+    "status": "draft",
+    "latestVersion": 1,
+    "versions": [
+      {
+        "version": 1,
+        "createdAt": "2026-09-20T09:00:00Z",
+        "note": "First version",
+        "spec": {
+          "mode": "intraday",
+          "segment": "equity_intraday",
+          "exchange": "NSE",
+          "timeframe": "1m",
+          "setup": {
+            "kind": "opening_range_retest",
+            "rangeMinutes": 15,
+            "retestBars": 3,
+            "bufferAtr": 0.1,
+            "targetR": 2
+          },
+          "buying": {
+            "kind": "single"
+          }
+        }
+      }
+    ],
+    "createdAt": "2026-09-20T09:00:00Z",
+    "updatedAt": "2026-09-20T09:00:00Z"
   }
 ]

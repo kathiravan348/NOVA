@@ -7,6 +7,7 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 import { IndicatorNameSchema } from "./indicators";
+import { StrategySpecIntradaySchema } from "./intraday";
 
 export const PriceFieldSchema = z.enum(["open", "high", "low", "close", "volume"]);
 export type PriceField = z.infer<typeof PriceFieldSchema>;
@@ -240,8 +241,11 @@ export const StrategySpecSchema = z.discriminatedUnion("mode", [
   StrategySpecVisualSchema,
   StrategySpecPythonSchema,
   StrategySpecRotationSchema,
+  StrategySpecIntradaySchema,
 ]);
 export type StrategySpec = z.infer<typeof StrategySpecSchema>;
+/** The modes the candle simulator runs and the editor form edits (D84). */
+export type CandleStrategySpec = Exclude<StrategySpec, { mode: "intraday" }>;
 
 export const StrategyVersionSchema = z.strictObject({
   version: z.number().int().min(1),

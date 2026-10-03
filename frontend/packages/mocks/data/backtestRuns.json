@@ -33,7 +33,11 @@
     "reportKept": true,
     "dataSource": "recorded",
     "recordedDaysUsed": 10,
-    "recordedDaysSkipped": ["2026-06-05"]
+    "recordedDaysSkipped": ["2026-06-05"],
+    "profileId": null,
+    "profileVersion": null,
+    "scenario": null,
+    "experimentId": null
   },
   {
     "id": "run_002",
@@ -69,7 +73,11 @@
     "reportKept": true,
     "dataSource": "history",
     "recordedDaysUsed": null,
-    "recordedDaysSkipped": []
+    "recordedDaysSkipped": [],
+    "profileId": null,
+    "profileVersion": null,
+    "scenario": null,
+    "experimentId": null
   },
   {
     "id": "run_003",
@@ -105,7 +113,11 @@
     "reportKept": true,
     "dataSource": "history",
     "recordedDaysUsed": null,
-    "recordedDaysSkipped": []
+    "recordedDaysSkipped": [],
+    "profileId": null,
+    "profileVersion": null,
+    "scenario": null,
+    "experimentId": null
   },
   {
     "id": "run_004",
@@ -145,7 +157,11 @@
     "reportKept": true,
     "dataSource": "history",
     "recordedDaysUsed": null,
-    "recordedDaysSkipped": []
+    "recordedDaysSkipped": [],
+    "profileId": null,
+    "profileVersion": null,
+    "scenario": null,
+    "experimentId": null
   },
   {
     "id": "run_005",
@@ -181,7 +197,11 @@
     "reportKept": true,
     "dataSource": "history",
     "recordedDaysUsed": null,
-    "recordedDaysSkipped": []
+    "recordedDaysSkipped": [],
+    "profileId": null,
+    "profileVersion": null,
+    "scenario": null,
+    "experimentId": null
   },
   {
     "id": "run_006",
@@ -217,6 +237,41 @@
     "reportKept": false,
     "dataSource": "history",
     "recordedDaysUsed": null,
-    "recordedDaysSkipped": []
+    "recordedDaysSkipped": [],
+    "profileId": null,
+    "profileVersion": null,
+    "scenario": null,
+    "experimentId": null
+  },
+  {
+    "id": "run_007",
+    "strategyId": "stg_006",
+    "strategyVersion": 1,
+    "name": "Opening range retest · base",
+    "universe": {
+      "type": "index",
+      "index": "NIFTY 100"
+    },
+    "status": "queued",
+    "from": "2026-09-14",
+    "to": "2026-09-18",
+    "initialCapitalPaise": 100000000,
+    "benchmark": null,
+    "createdAt": "2026-09-20T10:00:00Z",
+    "startedAt": null,
+    "finishedAt": null,
+    "error": null,
+    "progress": null,
+    "rootId": "run_007",
+    "version": 1,
+    "skippedSymbols": [],
+    "reportKept": true,
+    "dataSource": "recorded",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": [],
+    "profileId": "research_001",
+    "profileVersion": 1,
+    "scenario": "base",
+    "experimentId": null
   }
 ]

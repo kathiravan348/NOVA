@@ -6,7 +6,7 @@ import {
   StrategySpecRotationSchema,
   StrategySpecVisualSchema,
   StrategyTimeframeSchema,
-  type StrategySpec,
+  type CandleStrategySpec,
 } from "@nova/contracts";
 import {
   ExtrasFormShape,
@@ -176,7 +176,7 @@ export function hasModeWork(form: EditorForm): boolean {
   return JSON.stringify(strip(form)) !== JSON.stringify(strip(modeDefaults(form.mode)));
 }
 
-export function fromSpec(name: string, description: string, spec: StrategySpec): EditorForm {
+export function fromSpec(name: string, description: string, spec: CandleStrategySpec): EditorForm {
   const shared = {
     name,
     description,
@@ -219,7 +219,7 @@ export function fromSpec(name: string, description: string, spec: StrategySpec):
 const optionalPercent = (v: string) => (v.trim() === "" ? null : Number(v));
 
 /** Valid form → contract spec, checked with the contract schema for its mode. */
-export function toSpec(form: EditorForm): StrategySpec {
+export function toSpec(form: EditorForm): CandleStrategySpec {
   const extras = extrasToSpec(form);
   const risk = {
     stopLossPercent: optionalPercent(form.stopLossPercent),

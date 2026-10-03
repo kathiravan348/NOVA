@@ -218,6 +218,10 @@ export const orbitHandlers = [
       version: 1,
       reportKept: true,
       skippedSymbols: [],
+      profileId: body.profileId ?? null,
+      profileVersion: body.profileVersion ?? null,
+      scenario: body.scenario ?? null,
+      experimentId: null,
     };
     return HttpResponse.json(queued, { status: 201 });
   }),
@@ -269,6 +273,10 @@ export const orbitHandlers = [
       version: chain[0]!.version + 1,
       reportKept: true,
       skippedSymbols: [],
+      profileId: body.profileId ?? run.profileId,
+      profileVersion: body.profileVersion ?? run.profileVersion,
+      scenario: body.scenario ?? run.scenario,
+      experimentId: null,
     };
     return HttpResponse.json(queued, { status: 201 });
   }),

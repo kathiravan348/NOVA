@@ -18,6 +18,10 @@ export const ExitReasonSchema = z.enum([
   "market_filter",
   "rotation",
   "end_of_period",
+  /** D84 intraday: the daily loss limit closed every position. */
+  "daily_shutdown",
+  /** D84 intraday: no bid by the session end; valued at the last bid, the run is incomplete. */
+  "unresolved",
 ]);
 export type ExitReason = z.infer<typeof ExitReasonSchema>;
 
