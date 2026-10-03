@@ -1,6 +1,6 @@
 # NOVA-186 — Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-186 · **Depends on:** NOVA-185
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-186 · **Depends on:** NOVA-185
 
 ## Goal
 Every intraday candidate passes the account checks of `docs/INTRADAY-RESEARCH.md` §2 (Account) and §5 (2–4) before a
@@ -68,4 +68,11 @@ Pools are released when a position closes fully; the losing streak and cooldowns
 **Known gaps:** relative volume ranks 0 until NOVA-187; signal checks arrive in NOVA-187.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** entries waiting for their fill now count toward `maxNewPositionsPerDay`
+(two candidates of one minute could pass the limit) + test.
+**Change requests:** none.
+**Guides checked:** DATABASE (0034, map, table) and API (sizing/guard text replaced the "1 share" note) match the diff.
+**Rulebook issues found:** none. Deploy (migrate 0034, `backtest backtest-worker`) waits for a quiet time (D76).
+**Follow-up tasks created:** none.

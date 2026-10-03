@@ -191,7 +191,7 @@
 | NOVA-183 | Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84) | done | Claude | 182 |
 | NOVA-184 | Backtest service: research profiles table + endpoints, freeze + hash (D84, migration 0032) | done | Claude | 181, 182 |
 | NOVA-185 | Intraday simulator: tick replay, fill model, exits, unresolved positions (D84, migration 0033) | done | Claude | 181, 183, 184 |
-| NOVA-186 | Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034) | in-progress | Claude | 185 |
+| NOVA-186 | Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034) | done | Claude | 185 |
 | NOVA-187 | Intraday simulator: market gate, context, warm-up from history (D84) | planned | — | 179, 186 |
 | NOVA-188 | Intraday setups: opening range retest, previous day high retest, inside bar (D84) | planned | — | 187 |
 | NOVA-189 | Intraday setups: VWAP trend pullback, failed breakout reclaim (D84) | planned | — | 187 (merge after 188) |
