@@ -1,6 +1,6 @@
 # NOVA-176 — Strategies page: search, more filters, results by data source (D82)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-176 · **Depends on:** NOVA-170
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-176 · **Depends on:** NOVA-170
 
 ## Goal
 **Strategies** can be searched and filtered by status, mode, segment, timeframe, tested or not and minimum best
@@ -54,3 +54,12 @@ Modify:
 - New integration checks were split into their own file to keep all touched files below 300 lines.
 - Recorder, database and Redis start times unchanged; temporary task previews closed.
 - Pending: independent review/merge. Stacked review order: 171 → 173 → 172 → 174 → 175 → 176.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none needed.
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** search + segment, Results from Recorded + Tested, Name sort and URL restore tested.
+**Guides checked:** USER-GUIDE Strategies section matches the filters, sorts and count line.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
