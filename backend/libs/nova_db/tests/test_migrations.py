@@ -4,6 +4,7 @@ from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "intraday_trades",
     "research_profiles",
     "research_profile_versions",
     "index_ticks",
@@ -57,11 +58,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "index_ticks", "ticks"]
 
 
-def test_head_revision_is_0032(engine: Engine) -> None:
+def test_head_revision_is_0033(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0032"
+    assert head == "0033"
 
 
 def test_trade_exit_reason_round_trip(engine: Engine, database_url: str) -> None:
@@ -545,5 +546,32 @@ def test_research_profiles_round_trip(engine: Engine, database_url: str) -> None
                 )
         with engine.begin() as connection:
             connection.execute(text("DELETE FROM research_profiles WHERE id = 'rp_1'"))
+    finally:
+        upgrade(database_url)
+
+
+def test_intraday_runs_round_trip(engine: Engine, database_url: str) -> None:
+    downgrade(database_url, "0032")
+    try:
+        assert "intraday_trades" not in inspect(engine).get_table_names()
+        assert "scenario" not in {c["name"] for c in inspect(engine).get_columns("backtest_runs")}
+        upgrade(database_url)
+        assert diff(database_url) == []
+        columns = {c["name"]: c for c in inspect(engine).get_columns("backtest_runs")}
+        assert columns["incomplete"]["default"] == "false"
+        assert columns["history_inputs"]["default"] == "'{}'::text[]"
+        with engine.connect() as connection:
+            checks = dict(
+                connection.execute(
+                    text(
+                        "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint"
+                        " WHERE conname IN ('ck_trades_exit_reason',"
+                        " 'ck_backtest_runs_profile_choice')"
+                    )
+                ).all()
+            )
+        assert "unresolved" in checks["ck_trades_exit_reason"]
+        assert "daily_shutdown" in checks["ck_trades_exit_reason"]
+        assert "scenario IS NULL" in checks["ck_backtest_runs_profile_choice"]
     finally:
         upgrade(database_url)

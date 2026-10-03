@@ -8,6 +8,8 @@ import threading
 from nova_db import create_db_engine, create_session_factory
 
 from nova_backtest.engine import BacktestEngine
+from nova_backtest.intraday.dispatch import DispatchEngine
+from nova_backtest.intraday.engine import IntradayEngine
 from nova_backtest.scratch import clear_all
 from nova_backtest.settings import get_backtest_settings
 from nova_backtest.strategy_engine import StrategyEngine
@@ -16,12 +18,14 @@ from nova_backtest.worker import run_worker
 
 def default_engine() -> BacktestEngine:
     settings = get_backtest_settings()
-    return StrategyEngine(
+    candle = StrategyEngine(
         settings.backtest_max_bars,
         settings.backtest_max_bars_python,
         settings.backtest_scratch_dir,
         settings.archive_dir,
     )
+    intraday = IntradayEngine(settings.backtest_scratch_dir, settings.archive_dir)
+    return DispatchEngine(candle, intraday)
 
 
 def main(argv: list[str] | None = None) -> int:

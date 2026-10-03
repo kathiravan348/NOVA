@@ -6,11 +6,16 @@ results go with their runs (FK cascade). When a version completes, older complet
 keep only their metrics (`trim_older_versions`, called by the engine in its final commit).
 """
 
-from typing import Any
+from typing import Any, cast
 
 from nova_common import ApiException
 from nova_common.internal import Caller
-from nova_contracts import SECONDS_TIMEFRAMES, BacktestDeleteResult, BacktestVersionCreate
+from nova_contracts import (
+    SECONDS_TIMEFRAMES,
+    BacktestDeleteResult,
+    BacktestVersionCreate,
+    Scenario,
+)
 from nova_contracts import BacktestVersion as VersionContract
 from nova_db import new_id
 from nova_db.audit import record_audit
@@ -19,6 +24,7 @@ from nova_db.models import (
     BacktestRun,
     Instrument,
     MarketIndex,
+    ResearchProfileVersion,
     StrategyVersion,
     Trade,
 )
@@ -74,6 +80,39 @@ def check_source(spec: dict[str, Any], data_source: str) -> None:
         raise ApiException(400, "invalid_request", "Seconds candles exist only in recorded data")
 
 
+ProfileChoice = tuple[str | None, int | None, Scenario | None]
+
+
+def check_profile(
+    db: Session, spec: dict[str, Any], data_source: str, choice: ProfileChoice
+) -> ProfileChoice:
+    """D84: an intraday strategy runs on recorded data with a frozen research profile version and
+    a scenario; other strategies take none. Answers the choice to store. Any: spec is JSON."""
+    profile_id, version, scenario = choice
+    if spec.get("mode") != "intraday":
+        if profile_id is not None:
+            raise ApiException(400, "invalid_request", "Only intraday runs take a research profile")
+        return None, None, None
+    if data_source != "recorded":
+        raise ApiException(400, "invalid_request", "Intraday strategies run on recorded data")
+    if profile_id is None or version is None or scenario is None:
+        raise ApiException(
+            400,
+            "invalid_request",
+            "An intraday run needs a research profile version and a scenario",
+        )
+    row = db.get(ResearchProfileVersion, (profile_id, version))
+    if row is None:
+        raise ApiException(
+            400, "invalid_request", f"Research profile {profile_id} v{version} not found"
+        )
+    if not row.frozen:
+        raise ApiException(
+            400, "invalid_request", f"Freeze research profile v{version} before running it"
+        )
+    return profile_id, version, scenario
+
+
 def strategy_spec(db: Session, strategy_id: str, version: int) -> dict[str, Any]:
     """The stored spec of one strategy version; 404 when it does not exist."""
     row = db.get(StrategyVersion, (strategy_id, version))
@@ -108,7 +147,13 @@ def add_version(
         raise ApiException(400, "invalid_request", "Wait for the running version to finish")
     newest = runs[0]
     data_source = body.data_source or newest.data_source
-    check_source(strategy_spec(db, newest.strategy_id, body.strategy_version), data_source)
+    spec = strategy_spec(db, newest.strategy_id, body.strategy_version)
+    check_source(spec, data_source)
+    given: ProfileChoice = (body.profile_id, body.profile_version, body.scenario)
+    if body.profile_id is None:  # absent = the previous version's profile and scenario (D84)
+        previous = cast(Scenario | None, newest.scenario)
+        given = (newest.profile_id, newest.profile_version, previous)
+    profile_id, profile_version, scenario = check_profile(db, spec, data_source, given)
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
     check_benchmark(db, body.benchmark)
@@ -126,6 +171,9 @@ def add_version(
         root_id=newest.root_id,
         version=newest.version + 1,
         data_source=data_source,
+        profile_id=profile_id,
+        profile_version=profile_version,
+        scenario=scenario,
     )
     db.add(run)
     record_audit(

@@ -39,6 +39,7 @@ from nova_backtest.listing import list_runs as filtered_runs
 from nova_backtest.versions import (
     add_version,
     check_benchmark,
+    check_profile,
     check_source,
     check_symbols,
     delete_backtests,
@@ -201,7 +202,11 @@ def ledger_events(
 
 @router.post("")
 def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONResponse:
-    check_source(strategy_spec(db, body.strategy_id, body.strategy_version), body.data_source)
+    spec = strategy_spec(db, body.strategy_id, body.strategy_version)
+    check_source(spec, body.data_source)
+    profile_id, profile_version, scenario = check_profile(
+        db, spec, body.data_source, (body.profile_id, body.profile_version, body.scenario)
+    )
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
     check_benchmark(db, body.benchmark)
@@ -219,6 +224,9 @@ def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONRespons
         initial_capital_paise=body.initial_capital_paise,
         benchmark=body.benchmark,
         data_source=body.data_source,
+        profile_id=profile_id,
+        profile_version=profile_version,
+        scenario=scenario,
     )
     db.add(run)
     record_audit(

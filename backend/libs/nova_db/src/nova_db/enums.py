@@ -11,6 +11,7 @@ STRATEGY_STATUSES = ("draft", "active", "archived")
 BACKTEST_STATUSES = ("queued", "running", "completed", "failed")
 BACKTEST_STAGES = ("loading", "signals", "simulating", "saving", "done")
 BACKTEST_DATA_SOURCES = ("history", "recorded")
+SCENARIOS = ("base", "stress")
 
 BROKERS = ("zerodha",)
 RATE_LIMIT_ENDPOINTS = ("quote", "historical", "orders", "other")

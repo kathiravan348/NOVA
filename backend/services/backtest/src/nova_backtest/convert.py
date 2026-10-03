@@ -43,6 +43,7 @@ def run_contract(row: BacktestRun) -> RunContract:
             "report_kept": row.report_kept,
             "skipped_symbols": list(row.skipped_symbols),
             **_source(row),
+            **_profile(row),
         }
     )
 
@@ -53,6 +54,16 @@ def _source(row: BacktestRun) -> dict[str, object]:
         "data_source": row.data_source,
         "recorded_days_used": row.recorded_days_used,
         "recorded_days_skipped": sorted(row.recorded_days_skipped),
+    }
+
+
+def _profile(row: BacktestRun) -> dict[str, object]:
+    """D84: the research profile version and scenario of an intraday run (null otherwise)."""
+    return {
+        "profile_id": row.profile_id,
+        "profile_version": row.profile_version,
+        "scenario": row.scenario,
+        "experiment_id": row.experiment_id,
     }
 
 

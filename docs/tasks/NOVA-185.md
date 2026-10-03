@@ -1,6 +1,6 @@
 # NOVA-185 — Intraday simulator: tick replay, fill model, exits, unresolved positions (D84, migration 0033)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-185 · **Depends on:** NOVA-181, NOVA-183, NOVA-184
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-185 · **Depends on:** NOVA-181, NOVA-183, NOVA-184
 
 ## Goal
 `mode: "intraday"` runs go to a new simulator (`nova_backtest/intraday/`): recorded ticks, D84 fills and exits. The
