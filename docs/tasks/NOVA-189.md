@@ -1,6 +1,6 @@
 # NOVA-189 — Intraday setups: VWAP trend pullback, failed breakout reclaim (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-189 · **Depends on:** NOVA-187 (merge after NOVA-188)
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-189 · **Depends on:** NOVA-187 (merge after NOVA-188)
 
 ## Goal
 The pullback setup (family `trend`) and the reclaim setup (family `range`) of `docs/INTRADAY-RESEARCH.md` §3 produce

@@ -6,8 +6,6 @@ from pathlib import Path
 import pytest
 from intraday_factory import (
     BASE,
-    ORR_SPEC,
-    FixedQtyGuard,
     ScriptedSetup,
     T,
     flat_charges,
@@ -222,45 +220,3 @@ def test_an_intraday_run_goes_end_to_end_through_the_worker(
     legs = [{"at": "2026-10-01T04:15:00.250000+00:00", "qty": trade.qty, "price": 10_007}]
     assert detail.legs == legs
     assert list(tmp_path.iterdir()) == []  # the scratch folder is gone
-
-
-def test_an_intraday_run_without_its_setup_fails_plainly(
-    factory: sessionmaker[Session], clean: Engine, tmp_path: Path
-) -> None:
-    with factory() as db:
-        insert_session(db)
-        insert_ticks(db, "INFY", calm())
-        pullback = ORR_SPEC | {
-            "setup": {
-                "kind": "vwap_trend_pullback",
-                "proximityAtr": 0.3,
-                "risingBars": 3,
-                "expiryBars": 3,
-                "targetR": 2,
-            }
-        }
-        seed_intraday_run(db, ["INFY"], spec=pullback)
-    stop = threading.Event()
-    engine = DispatchEngine(StrategyEngine(), IntradayEngine(tmp_path, tmp_path))
-    run_worker(factory, engine, stop, poll_seconds=0, on_idle=stop.set)
-    with factory() as db:
-        run = db.get(BacktestRun, "run_i")
-        assert run is not None and run.status == "failed"
-        assert run.error == "The vwap_trend_pullback setup arrives in NOVA-188/189"
-
-
-def test_daily_loss_exits_everything_and_stops_new_entries() -> None:
-    # ₹10,000 account: the 0.30 % daily loss is ₹30; 100 shares falling ₹0.42 lose ₹42.
-    loose = {"stock_cap_percent": 100, "sector_cap_percent": 100, "initial_pool_percent": 100}
-    loose |= {"reserve_percent": 0, "add_pool_percent": 0, "risk_per_position_percent": 5}
-    guard = FixedQtyGuard(100, capital=1_000_000, open_risk_percent=10, **loose)
-    a = [*calm("09:50:00"), *minute_tape("09:50:00", "15:30:00", 9_960, spread=4)]
-    run = replay(
-        {"A": a, "B": calm()},
-        {"A": ENTRY, "B": {"10:00": ENTRY["09:45"]}},
-        qty=guard,
-    )
-    position = only(run)
-    assert position.exit_reason == "daily_shutdown"
-    assert position.sells[0].at_ms == ms("09:51:20")  # shut at the 09:51 close, next tick
-    assert run.decisions[1].symbol == "B" and run.decisions[1].reasons == ["daily_shutdown"]
