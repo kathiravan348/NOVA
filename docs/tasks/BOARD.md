@@ -171,6 +171,17 @@
 | NOVA-163 | Recorder: record 09:14–15:31, reconnect a silent feed after 10 s (D81) | planned | — | — |
 | NOVA-164 | Daily Kite check of recorded ticks + `GET /live/checks` (D81, migration 0027) | planned | — | — |
 | NOVA-165 | Recorded data shows the daily Kite check (D81) | planned | — | 164 |
+| NOVA-166 | Runs get a data source; strategies get seconds timeframes (D82, migration 0028) | planned | — | 164 |
+| NOVA-167 | Recorded runs: candles built from ticks (D82) | planned | — | 166 |
+| NOVA-168 | Recorded runs fill at bid/ask + spread cost (D82) | planned | — | 167 |
+| NOVA-169 | Orbit: choose the data source; seconds timeframes; recorded run details (D82) | planned | — | 166 |
+| NOVA-170 | Backtests list: results, filters, sorting; strategy stats by source (D82) | planned | — | 166 |
+| NOVA-171 | Backtests page: History / Recorded tabs, result columns, filters (D82) | planned | — | 169, 170 |
+| NOVA-172 | Compare: pick runs in a popup with filters (D82) | planned | — | 171, 173 |
+| NOVA-173 | Results by symbol: best 5 / worst 5 + View all popup; Modal sizes (D82) | planned | — | 169 |
+| NOVA-174 | Trade exit reasons + day ledger endpoints (D82, migration 0029) | planned | — | 168, 170 |
+| NOVA-175 | Backtest Timeline popup (day ledger) (D82) | planned | — | 173, 174 |
+| NOVA-176 | Strategies page: search, more filters, results by data source (D82) | planned | — | 170 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -201,3 +212,4 @@
 - Archive memory (NOVA-155 review): 159 shares no files with 158/160/161 and can run beside them. Until it ships, do not start an archive job for a 3,000-stock day.
 - Recorded data history (D80): 160 (backend; shares no files with 158/159) → 161 (frontend, merges after 160 is deployed after 15:45 IST).
 - Recorder data quality (D81): 162 (frontend), 163 (broker recorder) and 164 (Atlas) share no files and can run in parallel; 165 after 164 (merges after 164 is deployed). Deploy 163 and 164 after 15:45 IST or at a weekend (D76). After 162 ships, the Owner downloads daily bars for the unranked stocks, then presses *Pick top 3000* and saves.
+- Recorded backtests + screens (D82; Owner: recorded first). Engine lane: 166 → 167 → 168 → 174 (migrations 0028, 0029 in that order; 0027 from 164 first). 169 (frontend) and 170 (backend list) start after 166 and run beside 167/168 (no shared files); 169 merges after 167 is deployed. Then 171 (after 169, 170) and 176 (after 170) in parallel; 173 after 169; 172 after 171 + 173; 175 last (after 173, 174). Deploy migrations after 15:45 IST or at a weekend (D76).
