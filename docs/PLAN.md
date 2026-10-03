@@ -110,7 +110,7 @@ Rules: `docs/INTRADAY-RESEARCH.md`. A separate intraday simulator; the candle en
 | 3. Profiles | 184 profile table + endpoints | Versioned, frozen settings with a hash |
 | 4. Simulator | 185 tick replay + fill model · 186 account guard + skip reasons · 187 market gate + warm-up · 188 breakout setups · 189 pullback/reclaim setups · 190 buying rules · 191 mechanics cases | Intraday runs on recorded ticks, every guide rule tested |
 | 5. Experiments + reports | 192 intraday report · 193 experiments, blocks, final-block lock | 15 variants × base/stress, honest reports |
-| 6. Screens | 194 Research plan page · 195 intraday strategy form + Library · 196 Experiment page | All of it from Orbit, no CLI |
+| 6. Screens + Library | 194 Research plan page · 195 intraday strategy form + run form · 196 Experiment page · 200 Library H entries | All of it from Orbit, no CLI |
 | 7. Signal check | 197 setups on Kite 1m history | Years of signal evidence beside the recorded fills |
 
 Calendar: October = build + mechanics on the first sessions; development block until the freeze; validation

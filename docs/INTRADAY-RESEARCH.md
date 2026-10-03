@@ -1,6 +1,6 @@
 # Intraday safety research — frozen rules (D84)
 
-State as of 2026-10-03 — plan only (NOVA-179–197). Source: the Owner's *Intraday Research Configuration
+State as of 2026-10-03 — plan (NOVA-179–197, NOVA-200; 179–182 done). Source: the Owner's *Intraday Research Configuration
 Strategy and Backtest Guide* (3 Oct 2026), with every open point in its chapter 23 fixed below.
 The goal is **controlled losses and honest fills**, not the most profit. A day with no trade is fine.
 Long only, cash equity intraday (MIS), no leverage, no orders. Changing a rule here = a new decision.
