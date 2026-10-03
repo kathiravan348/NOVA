@@ -1,4 +1,5 @@
 import {
+  ResearchProfileSchema,
   LiveTickSchema,
   LiveSnapshotItemSchema,
   LiveDaySummarySchema,
@@ -26,6 +27,7 @@ import {
   UserSchema,
   type Candle,
 } from "@nova/contracts";
+import researchProfilesJson from "../data/researchProfiles.json";
 import auditEntriesJson from "../data/auditEntries.json";
 import candlesJson from "../data/candles.json";
 import coverageJson from "../data/coverage.json";
@@ -50,6 +52,7 @@ import liveStocksJson from "../data/liveStocks.json";
 import liveChecksJson from "../data/liveChecks.json";
 
 export const MOCK_NOW = "2026-09-21T06:30:00Z";
+export const mockResearchProfiles = ResearchProfileSchema.array().parse(researchProfilesJson);
 export const mockLiveTicks = LiveTickSchema.array().parse(liveTicksJson);
 export const mockLiveSnapshot = LiveSnapshotItemSchema.array().parse(liveSnapshotJson);
 export const mockLiveDays = LiveDaySummarySchema.array().parse(liveDaysJson);

@@ -22,3 +22,4 @@ export * from "./unavailable";
 export * from "./recorder";
 export * from "./realtime";
 export * from "./live";
+export * from "./researchProfile";

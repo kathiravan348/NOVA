@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "note": {
+      "type": "string"
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "type": "object",
+          "properties": {
+            "initialPoolPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "addPoolPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "reservePercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "stockCapPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "sectorCapPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "maxPositions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "riskPerPositionPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5
+            },
+            "openRiskPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10
+            },
+            "dailyLossPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10
+            },
+            "lossStreakPause": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "maxNewPositionsPerDay": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "cooldownMinutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "initialPoolPercent",
+            "addPoolPercent",
+            "reservePercent",
+            "stockCapPercent",
+            "sectorCapPercent",
+            "maxPositions",
+            "riskPerPositionPercent",
+            "openRiskPercent",
+            "dailyLossPercent",
+            "lossStreakPause",
+            "maxNewPositionsPerDay",
+            "cooldownMinutes"
+          ],
+          "additionalProperties": false
+        },
+        "execution": {
+          "type": "object",
+          "properties": {
+            "delayMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "stressDelayMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "slippageTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "stressSlippageTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "maxQuoteAgeMs": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 60000
+            },
+            "maxSpreadBps": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 200
+            },
+            "maxSpreadToStopPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "maxDepthPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            },
+            "minFillPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "delayMs",
+            "stressDelayMs",
+            "slippageTicks",
+            "stressSlippageTicks",
+            "maxQuoteAgeMs",
+            "maxSpreadBps",
+            "maxSpreadToStopPercent",
+            "maxDepthPercent",
+            "minFillPercent"
+          ],
+          "additionalProperties": false
+        },
+        "market": {
+          "type": "object",
+          "properties": {
+            "marketGate": {
+              "type": "boolean"
+            },
+            "marketIndex": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "pattern": "^[A-Z0-9 &-]+$"
+            },
+            "indexRangeMinutes": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "declineVetoPercent": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "marketGate",
+            "marketIndex",
+            "indexRangeMinutes",
+            "declineVetoPercent"
+          ],
+          "additionalProperties": false
+        },
+        "signal": {
+          "type": "object",
+          "properties": {
+            "minRelativeVolume": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "volumeBaselineSessions": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 60
+            },
+            "minStopAtr": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 20
+            },
+            "maxStopAtr": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 20
+            },
+            "atrPeriod": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 50
+            },
+            "contextEmaPeriod": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100
+            },
+            "rangeSpanAtr": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 20
+            }
+          },
+          "required": [
+            "minRelativeVolume",
+            "volumeBaselineSessions",
+            "minStopAtr",
+            "maxStopAtr",
+            "atrPeriod",
+            "contextEmaPeriod",
+            "rangeSpanAtr"
+          ],
+          "additionalProperties": false
+        },
+        "timing": {
+          "type": "object",
+          "properties": {
+            "earliestEntry": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 5,
+              "pattern": "^(09:(1[5-9]|[2-5][0-9])|1[0-4]:[0-5][0-9]|15:[01][0-9]|15:2[0-9])$"
+            },
+            "lastEntry": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 5,
+              "pattern": "^(09:(1[5-9]|[2-5][0-9])|1[0-4]:[0-5][0-9]|15:[01][0-9]|15:2[0-9])$"
+            },
+            "squareOff": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 5,
+              "pattern": "^(09:(1[5-9]|[2-5][0-9])|1[0-4]:[0-5][0-9]|15:[01][0-9]|15:2[0-9])$"
+            },
+            "maxHoldMinutes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 375
+            }
+          },
+          "required": [
+            "earliestEntry",
+            "lastEntry",
+            "squareOff",
+            "maxHoldMinutes"
+          ],
+          "additionalProperties": false
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "maxSessionGapSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 300
+            }
+          },
+          "required": [
+            "maxSessionGapSeconds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "account",
+        "execution",
+        "market",
+        "signal",
+        "timing",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "note",
+    "settings"
+  ],
+  "additionalProperties": false
+}

@@ -1,3 +1,11 @@
+import {
+  ResearchSettingsSchema,
+  ResearchProfileVersionSchema,
+  ResearchProfileSchema,
+  ResearchProfileCreateSchema,
+  ResearchProfileVersionCreateSchema,
+  ResearchProfileVersionUpdateSchema,
+} from "./researchProfile";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ApiErrorSchema } from "./error";
@@ -72,6 +80,12 @@ import { pageSchema } from "./common";
 // Wire contracts (request/response bodies) exported as JSON Schema for backend parity tests (D34).
 // Regenerate with `pnpm --filter @nova/contracts schema:update`. Refinements are not part of JSON Schema.
 const contracts: Record<string, z.ZodType> = {
+  ResearchSettings: ResearchSettingsSchema,
+  ResearchProfileVersion: ResearchProfileVersionSchema,
+  ResearchProfile: ResearchProfileSchema,
+  ResearchProfileCreate: ResearchProfileCreateSchema,
+  ResearchProfileVersionCreate: ResearchProfileVersionCreateSchema,
+  ResearchProfileVersionUpdate: ResearchProfileVersionUpdateSchema,
   LedgerDay: LedgerDaySchema,
   LedgerEvent: LedgerEventSchema,
   LedgerPage: pageSchema(LedgerDaySchema),
