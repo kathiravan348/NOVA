@@ -561,15 +561,14 @@ def test_intraday_runs_round_trip(engine: Engine, database_url: str) -> None:
         assert columns["incomplete"]["default"] == "false"
         assert columns["history_inputs"]["default"] == "'{}'::text[]"
         with engine.connect() as connection:
-            checks = dict(
-                connection.execute(
-                    text(
-                        "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint"
-                        " WHERE conname IN ('ck_trades_exit_reason',"
-                        " 'ck_backtest_runs_profile_choice')"
-                    )
-                ).all()
+            rows = connection.execute(
+                text(
+                    "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint"
+                    " WHERE conname IN ('ck_trades_exit_reason',"
+                    " 'ck_backtest_runs_profile_choice')"
+                )
             )
+            checks: dict[str, str] = {str(name): str(rule) for name, rule in rows}
         assert "unresolved" in checks["ck_trades_exit_reason"]
         assert "daily_shutdown" in checks["ck_trades_exit_reason"]
         assert "scenario IS NULL" in checks["ck_backtest_runs_profile_choice"]
