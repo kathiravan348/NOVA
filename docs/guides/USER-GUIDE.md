@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-163). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-165). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -537,7 +537,16 @@ stocks whose symbol or name contains what you type. **Pick stocks** opens **My l
 **Add index…** / **Add sector…**), then **Save list**; the Stocks list then shows **My list (N)** with only those
 stocks. My list is kept in this browser only (another browser or computer has its own).
 
-**Recorded data** shows a card for each recorded stock (the stocks chosen in Config, or all of them when none are
+**Recorded data** starts with the **Kite check** card. Every recorded day, after 16:00 IST, NOVA compares 50
+recorded stocks (the 10 busiest and 40 at random) with Zerodha's own 1-minute prices for that day and shows how
+often they agree: **Minute close** (same closing price in the minute), **High/low in range** (our prices stay inside
+Zerodha's high and low) and **Minute volume** (same number of shares traded). **Receive delay** is how long after the
+exchange time our computer received the prices. **Passed** means everything looks right; **Check** lists what to
+look at. If it says *Receive times are 16 s off exchange times: sync the PC clock*, the computer's clock is wrong:
+in Windows open **Settings → Time & language → Date & time** and press **Sync now**. **Show days** lists the last
+10 checks. The check needs the daily Kite login; if Zerodha is not logged in it tries again 15 minutes later.
+
+**Recorded data** then shows a card for each recorded stock (the stocks chosen in Config, or all of them when none are
 chosen), with **Search stocks** and page controls. A card shows the stock's stored history: **Days stored** with the
 first and last day (**None yet** before its first summarized day), **Ticks** and **Size** in total, and a badge
 **Gap days: No** or **Gap days: Yes (N)**. A *gap day* is a day, from the stock's first stored day on, when the stock

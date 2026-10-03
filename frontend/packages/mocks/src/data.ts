@@ -3,6 +3,7 @@ import {
   LiveSnapshotItemSchema,
   LiveDaySummarySchema,
   LiveStockHistorySchema,
+  TickCheckSchema,
   ApprovalRequestSchema,
   AgentAccountSchema,
   AuditEntrySchema,
@@ -46,12 +47,14 @@ import liveTicksJson from "../data/liveTicks.json";
 import liveSnapshotJson from "../data/liveSnapshot.json";
 import liveDaysJson from "../data/liveDays.json";
 import liveStocksJson from "../data/liveStocks.json";
+import liveChecksJson from "../data/liveChecks.json";
 
 export const MOCK_NOW = "2026-09-21T06:30:00Z";
 export const mockLiveTicks = LiveTickSchema.array().parse(liveTicksJson);
 export const mockLiveSnapshot = LiveSnapshotItemSchema.array().parse(liveSnapshotJson);
 export const mockLiveDays = LiveDaySummarySchema.array().parse(liveDaysJson);
 export const mockLiveStocks = LiveStockHistorySchema.array().parse(liveStocksJson);
+export const mockLiveChecks = TickCheckSchema.array().parse(liveChecksJson);
 
 export const mockUser = UserSchema.parse(userJson);
 export const mockAgentAccount = AgentAccountSchema.parse({

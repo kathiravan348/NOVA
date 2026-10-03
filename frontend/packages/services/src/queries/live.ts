@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { LiveTick } from "@nova/contracts";
-import { getLiveDays, getLiveSnapshot, getLiveStocks } from "../api/live";
+import { getLiveChecks, getLiveDays, getLiveSnapshot, getLiveStocks } from "../api/live";
 import { subscribeLiveTicks, useRealtimeStatus } from "../realtime";
 import { queryKeys } from "./keys";
 
@@ -13,6 +13,14 @@ export function useLiveSnapshot(symbols: string[]) {
     queryFn: ({ signal }) => getLiveSnapshot(selected, { signal }),
     enabled: selected.length > 0,
     refetchInterval: status === "open" ? 30_000 : 5_000,
+  });
+}
+
+/** Daily Kite checks (D81): written once a day after 16:00 IST, so no polling. */
+export function useLiveChecks(limit = 10) {
+  return useQuery({
+    queryKey: queryKeys.live.checks(limit),
+    queryFn: ({ signal }) => getLiveChecks(limit, { signal }),
   });
 }
 
