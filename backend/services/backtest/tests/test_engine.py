@@ -358,9 +358,10 @@ def test_runs_the_engine_cannot_do_fail_plainly(
     assert run.status == "failed" and run.error is not None and run.error.startswith(message)
 
 
-def test_a_recorded_run_fails_until_recorded_data_is_built(
+def test_a_recorded_run_reads_ticks_not_candles(
     seeded: Engine, factory: sessionmaker[Session]
 ) -> None:
+    """The seeded Kite candles are never mixed in: with no recorded day the run fails (D82)."""
     _queue(seeded)
     with Session(seeded) as db:
         db.execute(update(BacktestRun).values(data_source="recorded"))
@@ -368,7 +369,7 @@ def test_a_recorded_run_fails_until_recorded_data_is_built(
 
     run = _drain(factory)
 
-    assert run.status == "failed" and run.error == "Recorded data backtests are not built yet"
+    assert run.status == "failed" and run.error == "No usable recorded days in this period"
 
 
 def test_an_intraday_run_squares_off_and_pays_intraday_charges(

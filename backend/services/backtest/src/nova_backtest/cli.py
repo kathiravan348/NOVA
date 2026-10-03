@@ -20,6 +20,7 @@ def default_engine() -> BacktestEngine:
         settings.backtest_max_bars,
         settings.backtest_max_bars_python,
         settings.backtest_scratch_dir,
+        settings.archive_dir,
     )
 
 

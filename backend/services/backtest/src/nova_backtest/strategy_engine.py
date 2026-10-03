@@ -4,6 +4,7 @@ Pass 1 goes stock by stock: bars → signals (or rotation scores) → the scratc
 simulates every stock in time order from there; `save.py` then writes the results.
 """
 
+from collections.abc import Callable
 from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 
@@ -24,7 +25,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
-from nova_backtest.columns import Columns
+from nova_backtest.columns import Columns, load_recorded
 from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
 from nova_backtest.indicators import indicator_array, settings_for
@@ -37,6 +38,7 @@ from nova_backtest.sandbox import ENTER, EXIT, Calls, check_code, run_python_one
 from nova_backtest.save import save_result
 from nova_backtest.scratch import Bools, Floats, RunScratch
 from nova_backtest.simulate import Simulation, simulate
+from nova_backtest.tick_bars import usable_days
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 Spec = StrategySpecVisual | StrategySpecPython | StrategySpecRotation
@@ -122,8 +124,10 @@ class StrategyEngine:
         max_bars: int = 50_000_000,
         max_bars_python: int = 5_000_000,
         scratch_root: Path = DEFAULT_SCRATCH,
+        archive_root: Path = Path("archive"),
     ) -> None:
         self.scratch_root = scratch_root
+        self.archive_root = archive_root  # the Parquet tick archive (D49), for recorded runs
         self.max_bars = max_bars
         self.max_bars_python = max_bars_python
 
@@ -132,7 +136,7 @@ class StrategyEngine:
         db: Session,
         symbols: list[str],
         spec: Spec,
-        span: tuple[datetime, datetime],
+        loader: Callable[[str], Columns],
         limit: int,
         progress: ProgressSink,
         scratch: RunScratch,
@@ -158,7 +162,7 @@ class StrategyEngine:
         loaded: list[str] = []
         first, total, stored = int(start.timestamp()), 0, 0
         for done, symbol in enumerate(symbols, start=1):
-            columns = load_columns(db, "NSE", symbol, spec.timeframe, *span)
+            columns = loader(symbol)
             total += len(columns)
             if total > limit:
                 raise EngineError(
@@ -181,8 +185,6 @@ class StrategyEngine:
         run = db.get(BacktestRun, run_id)
         if run is None:
             raise EngineError(f"Backtest run {run_id} not found")
-        if run.data_source == "recorded":
-            raise EngineError("Recorded data backtests are not built yet")
         spec = _spec(db, run)
         symbols = _symbols(db, run)
         start = _ist_midnight(run.date_from)
@@ -194,26 +196,75 @@ class StrategyEngine:
         regime = None
         if spec.regime is not None:
             regime = load_regime(db, spec.regime, spec.timeframe, span, start)
+        recorded = run.data_source == "recorded"
+        recorded_days: tuple[int, list[date]] | None = None
+        if recorded:
+            loader, recorded_days = self._recorded_loader(db, run, spec, symbols, span)
+        else:
+
+            def loader(symbol: str) -> Columns:
+                return load_columns(db, "NSE", symbol, spec.timeframe, *span)
+
         scratch = RunScratch(self.scratch_root, run.id)
         try:
             total, loaded, missing = self._load(
-                db, symbols, spec, span, limit, progress, scratch, start, regime
+                db, symbols, spec, loader, limit, progress, scratch, start, regime
             )
             if run.universe["type"] == "symbols" and missing:
                 raise EngineError(
-                    f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
+                    f"No recorded ticks in the period for {', '.join(missing)}"
+                    if recorded
+                    else f"No {spec.timeframe} candles in the period for {', '.join(missing)} "
                     "(download them first)"
                 )
             if not loaded:
                 raise EngineError(
-                    f"No stock in {run.universe['index']} has {spec.timeframe} prices "
+                    f"No stock in {run.universe['index']} has recorded ticks in the period"
+                    if recorded
+                    else f"No stock in {run.universe['index']} has {spec.timeframe} prices "
                     "in the period (download them first)"
                 )
             result = self._simulate(db, run, spec, scratch, start, total, progress)
             period = (start, end)
-            save_result(db, run, spec.segment, loaded, sorted(missing), result, period, progress)
+            save_result(
+                db,
+                run,
+                spec.segment,
+                loaded,
+                sorted(missing),
+                result,
+                period,
+                progress,
+                recorded_days,
+            )
         finally:
             scratch.close()
+
+    def _recorded_loader(
+        self,
+        db: Session,
+        run: BacktestRun,
+        spec: Spec,
+        symbols: list[str],
+        span: tuple[datetime, datetime],
+    ) -> tuple[Callable[[str], Columns], tuple[int, list[date]]]:
+        """Usable recorded days (D82 (4)): warm-up days before `from` count, only period days
+        are reported. The counts are saved with the result: changing the run row now would make
+        the progress writer wait for this transaction (NOVA-137)."""
+        first = span[0].astimezone(IST).date()
+        days = usable_days(db, "NSE", symbols, first, run.date_to)
+        used = [d for d in days.sessions if d >= run.date_from]
+        if not used:
+            raise EngineError("No usable recorded days in this period")
+        skipped = [d for d in days.skipped if d >= run.date_from]
+        root = self.archive_root
+
+        def loader(symbol: str) -> Columns:
+            return load_recorded(
+                db, root, "NSE", symbol, spec.timeframe, days.by_symbol.get(symbol, [])
+            )
+
+        return loader, (len(used), skipped)
 
     def _simulate(
         self,

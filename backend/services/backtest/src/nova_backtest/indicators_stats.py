@@ -15,7 +15,18 @@ from nova_backtest.indicators_core import Series
 Floats = npt.NDArray[np.float64]
 BLOCK = 20_000
 # Bars in a trading year: 252 days, times the bars in a 09:15–15:30 session intraday.
-BARS_PER_DAY = {"1m": 375, "3m": 125, "5m": 75, "15m": 25, "30m": 13, "1h": 7}
+BARS_PER_DAY = {
+    "1s": 22_500,
+    "5s": 4500,
+    "15s": 1500,
+    "30s": 750,
+    "1m": 375,
+    "3m": 125,
+    "5m": 75,
+    "15m": 25,
+    "30m": 13,
+    "1h": 7,
+}
 
 
 def bars_per_year(timeframe: str) -> int:

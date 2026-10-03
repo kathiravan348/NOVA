@@ -25,7 +25,10 @@ def clean(engine: Engine, parity: Parity) -> Engine:
     """Owner, one strategy (`stg_1`, version 1 = the first mock spec) and INFY/TCS instruments."""
     with engine.begin() as connection:
         connection.execute(
-            text("TRUNCATE strategies, instruments, candles, audit_entries, users CASCADE")
+            text(
+                "TRUNCATE strategies, instruments, candles, audit_entries, users,"
+                " ticks, tick_sessions, tick_days CASCADE"
+            )
         )
     spec = parity.mock("strategies")[0]["versions"][0]["spec"]
     with Session(engine) as db:
