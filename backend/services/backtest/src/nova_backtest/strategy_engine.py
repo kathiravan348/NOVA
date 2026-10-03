@@ -30,6 +30,7 @@ from nova_backtest.columns import load as load_columns
 from nova_backtest.engine import EngineError
 from nova_backtest.indicators import indicator_array, settings_for
 from nova_backtest.progress import ProgressSink
+from nova_backtest.quotes import QuoteBook, TickQuotes
 from nova_backtest.regime import RegimeSeries, load_regime
 from nova_backtest.rotation import rotation_arrays, simulate_rotation
 from nova_backtest.rules import SeriesCache, check_group
@@ -38,7 +39,7 @@ from nova_backtest.sandbox import ENTER, EXIT, Calls, check_code, run_python_one
 from nova_backtest.save import save_result
 from nova_backtest.scratch import Bools, Floats, RunScratch
 from nova_backtest.simulate import Simulation, simulate
-from nova_backtest.tick_bars import usable_days
+from nova_backtest.tick_bars import read_quotes, timeframe_seconds, usable_days
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 Spec = StrategySpecVisual | StrategySpecPython | StrategySpecRotation
@@ -198,14 +199,18 @@ class StrategyEngine:
             regime = load_regime(db, spec.regime, spec.timeframe, span, start)
         recorded = run.data_source == "recorded"
         recorded_days: tuple[int, list[date]] | None = None
+        scratch = RunScratch(self.scratch_root, run.id)
+        quotes: QuoteBook | None = None
         if recorded:
-            loader, recorded_days = self._recorded_loader(db, run, spec, symbols, span)
+            if spec.segment != "equity_intraday":  # the API refuses these too (D82)
+                raise EngineError("Recorded data backtests are intraday only")
+            quotes = QuoteBook(scratch.path / "quotes", timeframe_seconds(spec.timeframe))
+            loader, recorded_days = self._recorded_loader(db, run, spec, symbols, span, quotes)
         else:
 
             def loader(symbol: str) -> Columns:
                 return load_columns(db, "NSE", symbol, spec.timeframe, *span)
 
-        scratch = RunScratch(self.scratch_root, run.id)
         try:
             total, loaded, missing = self._load(
                 db, symbols, spec, loader, limit, progress, scratch, start, regime
@@ -224,7 +229,7 @@ class StrategyEngine:
                     else f"No stock in {run.universe['index']} has {spec.timeframe} prices "
                     "in the period (download them first)"
                 )
-            result = self._simulate(db, run, spec, scratch, start, total, progress)
+            result = self._simulate(db, run, spec, scratch, start, total, progress, quotes)
             period = (start, end)
             save_result(
                 db,
@@ -238,6 +243,8 @@ class StrategyEngine:
                 recorded_days,
             )
         finally:
+            if quotes is not None:
+                quotes.close()
             scratch.close()
 
     def _recorded_loader(
@@ -247,6 +254,7 @@ class StrategyEngine:
         spec: Spec,
         symbols: list[str],
         span: tuple[datetime, datetime],
+        quotes: QuoteBook,
     ) -> tuple[Callable[[str], Columns], tuple[int, list[date]]]:
         """Usable recorded days (D82 (4)): warm-up days before `from` count, only period days
         are reported. The counts are saved with the result: changing the run row now would make
@@ -260,9 +268,11 @@ class StrategyEngine:
         root = self.archive_root
 
         def loader(symbol: str) -> Columns:
-            return load_recorded(
-                db, root, "NSE", symbol, spec.timeframe, days.by_symbol.get(symbol, [])
-            )
+            stock_days = days.by_symbol.get(symbol, [])
+            if stock_days:  # D82 (5): the ticks' quotes, for bid/ask fills in pass 2
+                parts = [read_quotes(db, root, "NSE", symbol, day) for day in stock_days]
+                quotes.add(symbol, TickQuotes.joined(parts))
+            return load_recorded(db, root, "NSE", symbol, spec.timeframe, stock_days)
 
         return loader, (len(used), skipped)
 
@@ -275,6 +285,7 @@ class StrategyEngine:
         start: datetime,
         total: int,
         progress: ProgressSink,
+        quotes: QuoteBook | None = None,
     ) -> Simulation:
         """Pass 2 (D61): all stocks in time order from the scratch folder."""
         rates: dict[date, ChargeRates] = {}
@@ -310,4 +321,5 @@ class StrategyEngine:
             on_bar=on_bar,
             portfolio=spec.portfolio,
             when_off=when_off,
+            fills=quotes,
         )

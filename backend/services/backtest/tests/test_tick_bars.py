@@ -250,3 +250,60 @@ def test_a_recorded_run_without_usable_days_fails_plainly(
         run = db.get(BacktestRun, "run_none")
         assert run is not None
         assert run.status == "failed" and run.error == "No usable recorded days in this period"
+
+
+def test_a_recorded_run_fills_at_ask_and_bid_and_reports_the_spread_cost(
+    clean: Engine, factory: sessionmaker[Session], client: TestClient, tmp_path: Path
+) -> None:
+    """Buy at 107.10 (ask; last 107.00), square off at 107.95 (bid; last 108.00): 10 shares,
+    spread cost 10 × 10 + 10 × 5 = 150 paise (D82 (5))."""
+    received = timedelta(milliseconds=400)
+    rows = [
+        tick(ist(THU, 9, 15, 5), ist(THU, 9, 15, 5) + received, 10_000, 100),
+        tick(ist(THU, 9, 16, 5), ist(THU, 9, 16, 5) + received, 10_600, 200),
+        tick(ist(THU, 9, 17, 5), ist(THU, 9, 17, 5) + received, 10_700, 300)
+        | {"bid_price_paise": [10_690], "ask_price_paise": [10_710]},
+        tick(ist(THU, 15, 21, 5), ist(THU, 15, 21, 5) + received, 10_800, 400)
+        | {"bid_price_paise": [10_795], "ask_price_paise": [10_805]},
+    ]
+    with Session(clean) as db:
+        db.add(StrategyVersion(strategy_id="stg_1", version=2, spec=INTRADAY_1M))
+        db.flush()
+        db.execute(insert(Tick), rows)
+        db.add_all(
+            [
+                TickSession(
+                    day=THU, stocks=1, ticks=4, feed_gap_seconds=0, summarized_at=ist(THU, 16, 0)
+                ),
+                TickDay(
+                    exchange="NSE",
+                    symbol="INFY",
+                    day=THU,
+                    ticks=4,
+                    size_bytes=1,
+                    seconds_with_tick=4,
+                ),
+                BacktestRun(
+                    id="run_spread",
+                    strategy_id="stg_1",
+                    strategy_version=2,
+                    name="Recorded",
+                    universe={"type": "symbols", "symbols": ["INFY"]},
+                    status="queued",
+                    date_from=THU,
+                    date_to=THU,
+                    initial_capital_paise=10_000_000,
+                    benchmark=None,
+                    data_source="recorded",
+                ),
+            ]
+        )
+        db.commit()
+    stop = threading.Event()
+    engine = StrategyEngine(archive_root=tmp_path)
+    run_worker(factory, engine, stop, poll_seconds=0, on_idle=stop.set)
+
+    (trade,) = client.get("/api/v1/backtests/run_spread/trades").json()["items"]
+    assert (trade["entryPricePaise"], trade["exitPricePaise"]) == (10_710, 10_795)
+    metrics = client.get("/api/v1/backtests/run_spread/result").json()["metrics"]
+    assert metrics["spreadCostPaise"] == 150

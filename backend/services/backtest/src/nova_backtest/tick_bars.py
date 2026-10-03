@@ -22,6 +22,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
+from nova_backtest.quotes import TickQuotes
 
 Ints = npt.NDArray[np.int64]
 SESSION_OPEN, SESSION_CLOSE = time(9, 15), time(15, 30)
@@ -193,3 +194,67 @@ def read_tick_bars(
         return bars
     path = archive_path(archive_root, day, symbol)
     return _parquet_bars(path, exchange, width, day) if path.exists() else []
+
+
+_DB_QUOTES = text("""
+    SELECT CAST(floor(extract(epoch FROM exchange_ts)) AS bigint) AS ts, last_price_paise AS ltp,
+           COALESCE(bid_price_paise[1], 0) AS bid, COALESCE(ask_price_paise[1], 0) AS ask
+    FROM ticks
+    WHERE exchange = :exchange AND symbol = :symbol
+      AND received_at >= :read_from AND received_at < :read_to
+      AND exchange_ts >= :open AND exchange_ts < :close
+    ORDER BY exchange_ts, received_at
+""")
+
+
+def _db_quotes(db: Session, exchange: str, symbol: str, day: date) -> TickQuotes:
+    open_, close = _session(day)
+    params = {
+        "exchange": exchange,
+        "symbol": symbol,
+        "open": open_,
+        "close": close,
+        "read_from": open_ - timedelta(minutes=30),
+        "read_to": close + timedelta(minutes=30),
+    }
+    rows = db.execute(_DB_QUOTES, params).all()
+    if not rows:
+        return TickQuotes.empty()
+    table = np.array(rows, dtype=np.int64)
+    return TickQuotes(
+        table[:, 0].copy(), table[:, 1].copy(), table[:, 2].copy(), table[:, 3].copy()
+    )
+
+
+def _first_level(column: object) -> Ints:
+    """The best (first) level of a depth list column; a missing list or level is 0."""
+    best = pc.fill_null(pc.list_element(column, 0), 0)
+    return np.asarray(best.to_numpy(zero_copy_only=False), dtype=np.int64)
+
+
+def _parquet_quotes(path: Path, exchange: str, day: date) -> TickQuotes:
+    names = ["exchange", "exchange_ts", "received_at", "last_price_paise"]
+    table = pq.read_table(path, columns=[*names, "bid_price_paise", "ask_price_paise"])
+    at = _epoch_us(table.column("exchange_ts"))
+    received = _epoch_us(table.column("received_at"))
+    ltp = np.asarray(table.column("last_price_paise").to_numpy(), dtype=np.int64)
+    bid = _first_level(table.column("bid_price_paise"))
+    ask = _first_level(table.column("ask_price_paise"))
+    open_, close = (int(t.timestamp()) * 1_000_000 for t in _session(day))
+    keep = (
+        (np.array(table.column("exchange").to_pylist()) == exchange) & (at >= open_) & (at < close)
+    )
+    at, received, ltp, bid, ask = at[keep], received[keep], ltp[keep], bid[keep], ask[keep]
+    order = np.lexsort((received, at))
+    return TickQuotes(at[order] // 1_000_000, ltp[order], bid[order], ask[order])
+
+
+def read_quotes(
+    db: Session, archive_root: Path, exchange: str, symbol: str, day: date
+) -> TickQuotes:
+    """One stock's tick quotes for one day, from the same source as its candles."""
+    quotes = _db_quotes(db, exchange, symbol, day)
+    if len(quotes.ts):
+        return quotes
+    path = archive_path(archive_root, day, symbol)
+    return _parquet_quotes(path, exchange, day) if path.exists() else TickQuotes.empty()

@@ -173,7 +173,7 @@
 | NOVA-165 | Recorded data shows the daily Kite check (D81) | done | Claude | 164 |
 | NOVA-166 | Runs get a data source; strategies get seconds timeframes (D82, migration 0028) | done | Claude | 164 |
 | NOVA-167 | Recorded runs: candles built from ticks (D82) | done | Claude | 166 |
-| NOVA-168 | Recorded runs fill at bid/ask + spread cost (D82) | planned | — | 167 |
+| NOVA-168 | Recorded runs fill at bid/ask + spread cost (D82) | done | Claude | 167 |
 | NOVA-169 | Orbit: choose the data source; seconds timeframes; recorded run details (D82) | planned | — | 166 |
 | NOVA-170 | Backtests list: results, filters, sorting; strategy stats by source (D82) | planned | — | 166 |
 | NOVA-171 | Backtests page: History / Recorded tabs, result columns, filters (D82) | planned | — | 169, 170 |
