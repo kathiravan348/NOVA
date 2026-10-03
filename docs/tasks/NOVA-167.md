@@ -69,3 +69,7 @@ Modify:
 Self-review: yes (Owner allowed self-review on 3 Oct 2026). History runs take the same code path (all existing
 engine tests pass unchanged). Deployed Saturday 3 Oct 2026: `up -d --build --no-deps backtest-worker`, then a
 real-data check of INFY candles for 1 Oct 2026. Verdict: done.
+Real data (3 Oct): INFY 1 Oct → 375 1m bars, 20,230 1s bars, total volume 15.06 M; only 1 Oct is usable so far
+(2 Oct was a market holiday). Speed: a cold stock-day read takes 2–4 s on the still-uncompressed 1 Oct chunk
+(≈ 28.8 k pages of wide rows with depth arrays), 0.03 s warm. Compression (D77, after 2 days) should cut the cold
+read; re-measure after 4 Oct before running 100 stocks × 20 days.
