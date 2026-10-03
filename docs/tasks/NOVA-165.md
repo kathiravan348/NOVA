@@ -1,6 +1,6 @@
 # NOVA-165 — Recorded data shows the daily Kite check
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-165 · **Depends on:** NOVA-164
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-165 · **Depends on:** NOVA-164
 
 ## Goal
 Live → Recorded data shows a **Kite check** card with the latest daily check (match percents, receive delay,
@@ -44,5 +44,15 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. `getLiveChecks` / `useLiveChecks` (+ `queryKeys.live.checks`); mock handler for
+  `/live/checks` (bad limit → 400) serving `liveChecks.json` (created in NOVA-164, now in `data.ts`).
+- `KiteCheckCard`: latest day, **Passed** / **Check**, four stats (close, range, volume, receive delay), warning
+  lines, **Show days** list; loading, error, empty states. Sits above the stock cards on Recorded data.
+- Checked in the browser (mock mode): 375 px (two stat columns, no horizontal scroll), 1440 px (four columns),
+  dark and light.
+- Checks: lint, typecheck, format, build pass; tests 1,085/1,086 (the flaky `approvalBatch` test, also on main).
+- Guides: USER-GUIDE (Step 7b: Kite check card, what to do on a clock warning).
 
 ## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task; merged after NOVA-164 was deployed.
+Frontend only: nothing to deploy. Verdict: done.

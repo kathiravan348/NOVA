@@ -1,10 +1,16 @@
 import { http, HttpResponse } from "msw";
 import { LiveSymbolSchema, LiveSymbolsSchema } from "@nova/contracts";
-import { mockLiveDays, mockLiveSnapshot, mockLiveStocks } from "../data";
+import { mockLiveChecks, mockLiveDays, mockLiveSnapshot, mockLiveStocks } from "../data";
 import { mockUniverse } from "./marketData";
 import { apiPath, badRequest, notFound } from "./api";
 
 export const liveHandlers = [
+  http.get(apiPath("/live/checks"), ({ request }) => {
+    const limit = Number(new URL(request.url).searchParams.get("limit") ?? "10");
+    if (!Number.isInteger(limit) || limit < 1 || limit > 60)
+      return badRequest("limit must be between 1 and 60");
+    return HttpResponse.json(mockLiveChecks.slice(0, limit));
+  }),
   http.get(apiPath("/live/snapshot"), ({ request }) => {
     const raw = new URL(request.url).searchParams.get("symbols");
     const parsed = LiveSymbolsSchema.safeParse(raw?.split(","));
