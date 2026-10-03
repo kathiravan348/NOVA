@@ -4,6 +4,8 @@ from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "research_profiles",
+    "research_profile_versions",
     "index_ticks",
     "tick_checks",
     "tick_days",
@@ -55,11 +57,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "index_ticks", "ticks"]
 
 
-def test_head_revision_is_0031(engine: Engine) -> None:
+def test_head_revision_is_0032(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0031"
+    assert head == "0032"
 
 
 def test_trade_exit_reason_round_trip(engine: Engine, database_url: str) -> None:
@@ -509,5 +511,39 @@ def test_tick_size_feed_gap_round_trip(engine: Engine, database_url: str) -> Non
                 )
             )
             connection.execute(text("DELETE FROM tick_sessions WHERE day = '2026-10-01'"))
+    finally:
+        upgrade(database_url)
+
+
+def test_research_profiles_round_trip(engine: Engine, database_url: str) -> None:
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    downgrade(database_url, "0031")
+    try:
+        assert "research_profiles" not in inspect(engine).get_table_names()
+        upgrade(database_url)
+        assert diff(database_url) == []
+        with engine.begin() as connection:
+            connection.execute(
+                text("INSERT INTO research_profiles (id, name) VALUES ('rp_1', 'Intraday v1')")
+            )
+        bad = [
+            "(1, true, NULL, now())",  # frozen without a hash
+            "(2, false, repeat('a', 64), NULL)",  # hash on a draft
+            "(3, true, repeat('a', 64), NULL)",  # frozen without a time
+            "(0, false, NULL, NULL)",  # version 0
+        ]
+        for values in bad:
+            with pytest.raises(IntegrityError), engine.begin() as connection:
+                connection.execute(
+                    text(
+                        "INSERT INTO research_profile_versions"
+                        " (version, frozen, hash, frozen_at, profile_id, settings)"
+                        f" VALUES {values[:-1]}, 'rp_1', '{{}}')"
+                    )
+                )
+        with engine.begin() as connection:
+            connection.execute(text("DELETE FROM research_profiles WHERE id = 'rp_1'"))
     finally:
         upgrade(database_url)
