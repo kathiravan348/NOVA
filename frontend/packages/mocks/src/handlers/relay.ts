@@ -22,11 +22,13 @@ import {
   mockKiteApps,
   mockRateLimits,
 } from "../data";
+import { mockMarketIndices } from "./marketData";
 import { apiPath, badRequest, notFound, paginate } from "./api";
 
 const RECORDER_OFF: RecorderSettings = {
   enabled: false,
   symbols: [],
+  indices: [],
   state: "off",
   jobId: null,
   updatedAt: "2026-09-22T04:30:00Z",
@@ -312,7 +314,20 @@ export const relayHandlers = [
     if (parsed.data.enabled && unknown.length > 0) {
       return badRequest(`Not synced with Kite yet: ${unknown.join(", ")}`);
     }
+    const indices = [...new Set(parsed.data.indices ?? mockRecorder.indices)].sort();
+    const badIndices = indices.filter(
+      (name) => !mockMarketIndices.some((index) => index.name === name),
+    );
+    if (badIndices.length)
+      return badRequest(`Index not synced with Kite yet: ${badIndices.join(", ")}`);
+    const count = symbols.length || mockInstruments.length;
+    if (count + indices.length > 3000) {
+      return badRequest(
+        `Kite streams at most 3000 instruments: ${count} stocks + ${indices.length} indices`,
+      );
+    }
     mockRecorder = {
+      indices,
       enabled: parsed.data.enabled,
       symbols,
       state: parsed.data.enabled ? "waiting" : "off",

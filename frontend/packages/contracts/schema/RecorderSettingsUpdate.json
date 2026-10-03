@@ -5,6 +5,23 @@
     "enabled": {
       "type": "boolean"
     },
+    "indices": {
+      "anyOf": [
+        {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "pattern": "^[A-Z0-9 &-]+$"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "symbols": {
       "maxItems": 3000,
       "type": "array",

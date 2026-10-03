@@ -116,4 +116,5 @@ class RecorderSetting(Base):
     id: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
     enabled: Mapped[bool] = mapped_column(server_default="false")
     symbols: Mapped[list[str]] = mapped_column(server_default="{}")
+    indices: Mapped[list[str]] = mapped_column(server_default="{}")
     updated_at: Mapped[datetime] = created_at_column()

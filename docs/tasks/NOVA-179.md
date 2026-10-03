@@ -1,6 +1,6 @@
 # NOVA-179 — Recorder: record chosen indices into `index_ticks` (D84, migration 0030)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-179 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-179 · **Depends on:** —
 
 ## Goal
 The recorder also streams the indices the Owner chooses and saves their ticks in a new `index_ticks` table,
@@ -52,7 +52,7 @@ Modify:
   `docker compose up -d --build --no-deps broker tick-recorder`. Indices are recorded once the Owner adds them (180).
 
 ## Questions
-_(implementer writes here if blocked)_
+Full review:check exposed recorder-response fixtures without the new required `indices` field in Relay overview/live tests (outside Files). Owner asked whether these directly affected fixtures may be updated; backend validation continues while awaiting scope confirmation.
 
 ## Handoff
 _(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_

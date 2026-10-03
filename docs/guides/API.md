@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 3 Oct 2026 (NOVA-177). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 3 Oct 2026 (NOVA-179). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -82,8 +82,8 @@ and `decidedBy` before replay; a claimed request cannot run again, be rejected o
 | `GET /broker/profiles/{broker}` | One profile (`zerodha`). | path | `BrokerProfile`; 404 |
 | `GET /broker/rate-limits` | For each account × endpoint (`quote`, `historical`, `orders`, `other`): one rule per window (`second`, `minute`, `day`) with `brokerLimit`, `novaLimit`, `used` (live from Redis), `resetsAt` (day window), plus `throttledToday`. | — | `RateLimit[]` |
 | `PATCH /broker/rate-limits/{accountId}/{endpoint}` | Changes NOVA's own limit for one window. Must be ≥ 1 and ≤ the broker limit. Audit: `broker.rate_limit_update` ("orders per day: 4,500 → 4,200"). | `RateLimitUpdate {window, novaLimit}` | 204; 400 above broker limit; 404 |
-| `GET /broker/recorder` | The live tick recording switch: `enabled`, chosen `symbols` (empty = every stock synced with Kite) and `state`: `off`; `waiting` (outside 09:15–15:30 IST on weekdays); `recording` (`jobId` = the running `tick_record` job); `no_login` (market hours but no live Kite session). | — | `RecorderSettings` |
-| `PUT /broker/recorder` | Turns recording on or off and sets its stocks (sorted, duplicates dropped). Turning on needs every chosen stock synced with Kite (or at least one synced stock when none are chosen). The always-on recorder picks the change up within 30 s. Audit: `settings.update` ("Tick recording on: 2 stock(s)" / "Tick recording off"), target `settings` / `recorder`. | `RecorderSettingsUpdate {enabled, symbols (≤ 3,000)}` | `RecorderSettings`; 400 stock not synced |
+| `GET /broker/recorder` | The live tick recording switch: `enabled`, chosen `symbols` (empty = every stock synced with Kite), chosen `indices` (always present, default empty) and `state`: `off`; `waiting` (outside 09:15–15:30 IST on weekdays); `recording` (`jobId` = the running `tick_record` job); `no_login` (market hours but no live Kite session). | — | `RecorderSettings` |
+| `PUT /broker/recorder` | Turns recording on or off and sets its stocks and optional indices (sorted, duplicates dropped). Omitted/null `indices` keeps the saved list; `[]` clears it. Indices must exist with a Kite token. Stocks + indices must be ≤ 3,000. Turning on needs every chosen stock synced with Kite (or at least one synced stock when none are chosen). The always-on recorder picks the change up within 30 s. Audit: `settings.update` ("Tick recording on: 2 stock(s)" / "Tick recording off"), target `settings` / `recorder`; selected index names are included in the audit summary. | `RecorderSettingsUpdate {enabled, symbols (≤ 3,000), indices? (≤ 50, nullable)}` | `RecorderSettings`; 400 stock/index not synced or combined stream limit exceeded |
 
 **Internal only (not under `/api/v1`, never forwarded by Core; only NOVA services with the internal token):**
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdSchema, UtcDateTimeSchema } from "./common";
+import { IndexNameSchema } from "./strategy";
 import { UniverseSymbolSchema } from "./universe";
 
 /** Kite streams at most this many instruments over one WebSocket. */
@@ -15,6 +16,7 @@ export type RecorderState = z.infer<typeof RecorderStateSchema>;
 /** Body of `PUT /broker/recorder` (D54). `symbols` empty = every stock synced with Kite. */
 export const RecorderSettingsUpdateSchema = z.strictObject({
   enabled: z.boolean(),
+  indices: z.array(IndexNameSchema).max(50).nullable().optional(),
   symbols: z
     .array(UniverseSymbolSchema)
     .max(MAX_RECORDER_SYMBOLS, `At most ${MAX_RECORDER_SYMBOLS} stocks`),
@@ -23,6 +25,7 @@ export type RecorderSettingsUpdate = z.infer<typeof RecorderSettingsUpdateSchema
 
 export const RecorderSettingsSchema = z.strictObject({
   ...RecorderSettingsUpdateSchema.shape,
+  indices: z.array(IndexNameSchema).max(50),
   state: RecorderStateSchema,
   jobId: IdSchema.nullable(),
   updatedAt: UtcDateTimeSchema,

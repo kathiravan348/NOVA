@@ -15,7 +15,7 @@ from nova_broker.recorder_loop import (
     session_progress,
 )
 from nova_broker.settings import BrokerSettings
-from nova_db.models import DataJob, RecorderSetting, Tick
+from nova_db.models import DataJob, MarketIndex, RecorderSetting, Tick
 from sqlalchemy import Engine, func, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -328,3 +328,55 @@ def test_a_restart_fails_the_recording_it_left_running(
 
     left = job(synced, "job_left")
     assert left.status == "failed" and left.error is not None
+
+
+def test_loop_subscribes_indices_and_excludes_them_from_stock_counts(
+    synced: Engine, kite_session: str, settings: BrokerSettings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from nova_broker import recorder_loop as module
+    from nova_db.models import IndexTick
+
+    with Session(synced) as db:
+        db.execute(update(RecorderSetting).values(enabled=True, indices=["NIFTY 50"]))
+        db.execute(
+            update(MarketIndex)
+            .where(MarketIndex.name == "NIFTY 50")
+            .values(instrument_token=256265)
+        )
+        db.commit()
+    clock = Clock(FRIDAY_10_IST)
+    loop = make_loop(synced, settings, clock, until_close)
+    published: list[list[dict[str, Any]]] = []
+    monkeypatch.setattr(
+        module, "publish_ticks", lambda redis, batch, closes: published.append(batch)
+    )
+    loop.redis = BrokenRedis()  # type: ignore[assignment]
+
+    def record(
+        url: str, tokens: dict[int, str], sink: Sink, should_stop: Callable[[], bool]
+    ) -> None:
+        assert sorted(tokens.values()) == ["INFY", "NIFTY 50", "TCS"]
+        sink(rows(1, clock.at))
+        sink(
+            [
+                {
+                    "symbol": "NIFTY 50",
+                    "received_at": clock.at,
+                    "exchange_ts": None,
+                    "last_price_paise": 2_500_000,
+                    "high_paise": None,
+                    "low_paise": None,
+                    "open_paise": None,
+                    "close_paise": None,
+                }
+            ]
+        )
+        clock.at = FRIDAY_10_IST.replace(hour=10, minute=1)
+
+    loop.record = record
+    job_id = loop.step()
+    assert job_id is not None and job(synced, job_id).rows_written == 1
+    assert job(synced, job_id).symbols == ["INFY", "TCS"]
+    with Session(synced) as db:
+        assert db.scalar(select(func.count()).select_from(IndexTick)) == 1
+    assert len(published) == 1 and published[0][0]["symbol"] == "INFY"

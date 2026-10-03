@@ -101,3 +101,52 @@ def test_needs_the_internal_token(client: TestClient) -> None:
     assert client.get(RECORDER, headers=headers).status_code == 401
     body = {"enabled": False, "symbols": []}
     assert client.put(RECORDER, json=body, headers=headers).status_code == 401
+
+
+def test_indices_saved_and_kept_when_omitted_or_null(client: TestClient, synced: Engine) -> None:
+    with synced.begin() as connection:
+        connection.execute(
+            text("UPDATE market_indices SET instrument_token = 256265 WHERE name = 'NIFTY 50'")
+        )
+    saved = client.put(
+        RECORDER, json={"enabled": True, "symbols": ["INFY"], "indices": ["NIFTY 50"]}
+    )
+    assert saved.status_code == 200 and saved.json()["indices"] == ["NIFTY 50"]
+    for extra in ({}, {"indices": None}):
+        response = client.put(RECORDER, json={"enabled": False, "symbols": ["INFY"]} | extra)
+        assert response.json()["indices"] == ["NIFTY 50"]
+    assert client.get(RECORDER).json()["indices"] == ["NIFTY 50"]
+
+
+@pytest.mark.parametrize("name", ["UNKNOWN INDEX", "NIFTY 50"])
+def test_unsynced_or_unknown_index_is_rejected(
+    client: TestClient, synced: Engine, name: str
+) -> None:
+    with synced.begin() as connection:
+        connection.execute(text("UPDATE market_indices SET instrument_token = NULL"))
+    response = client.put(RECORDER, json={"enabled": False, "symbols": ["INFY"], "indices": [name]})
+    assert response.status_code == 400 and name in response.json()["error"]["message"]
+
+
+def test_stocks_and_indices_share_the_3000_limit(client: TestClient, synced: Engine) -> None:
+    with synced.begin() as connection:
+        names = (
+            connection.execute(text("SELECT name FROM market_indices ORDER BY name LIMIT 11"))
+            .scalars()
+            .all()
+        )
+        assert len(names) == 11
+        for token, name in enumerate(names, 100):
+            connection.execute(
+                text("UPDATE market_indices SET instrument_token = :token WHERE name = :name"),
+                {"token": token, "name": name},
+            )
+    response = client.put(
+        RECORDER,
+        json={"enabled": False, "symbols": [f"S{i}" for i in range(2990)], "indices": names},
+    )
+    assert response.status_code == 400
+    assert (
+        response.json()["error"]["message"]
+        == "Kite streams at most 3000 instruments: 2990 stocks + 11 indices"
+    )
