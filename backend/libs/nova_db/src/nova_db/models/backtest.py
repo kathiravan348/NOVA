@@ -166,6 +166,20 @@ class Trade(Base):
         check_in("exchange", "exchange", EXCHANGES),
         check_in("segment", "segment", SEGMENTS),
         check_in("side", "side", SIDES),
+        check_in(
+            "exit_reason",
+            "exit_reason",
+            (
+                "signal",
+                "stop",
+                "target",
+                "time_exit",
+                "square_off",
+                "market_filter",
+                "rotation",
+                "end_of_period",
+            ),
+        ),
         CheckConstraint("qty > 0 AND entry_price_paise > 0", name="entry"),
         CheckConstraint(
             "(exit_at IS NULL AND exit_price_paise IS NULL)"
@@ -191,6 +205,7 @@ class Trade(Base):
     entry_price_paise: Mapped[int] = mapped_column(BigInteger)
     exit_at: Mapped[datetime | None]
     exit_price_paise: Mapped[int | None] = mapped_column(BigInteger)
+    exit_reason: Mapped[str | None]
     gross_pnl_paise: Mapped[int] = mapped_column(BigInteger)
     brokerage_paise: Mapped[int] = mapped_column(BigInteger)
     stt_paise: Mapped[int] = mapped_column(BigInteger)

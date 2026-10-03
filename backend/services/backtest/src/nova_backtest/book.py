@@ -7,6 +7,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from nova_contracts import Charges, Sizing
 from nova_contracts.strategy import SizingFixedAmount, SizingFixedQty
+from nova_contracts.trade import ExitReason
 
 # (qty, entry price, exit price, entry time) → charges of the whole trade.
 ChargesFn = Callable[[int, int, int, datetime], Charges]
@@ -22,6 +23,7 @@ class ClosedTrade:
     exit_price: int
     charges: Charges
     cost: int | None = None  # exact paise paid for all buys; None = qty × entry price (D53)
+    exit_reason: ExitReason | None = None
 
     @property
     def gross(self) -> int:
@@ -89,13 +91,21 @@ class Book:
         self.positions[symbol].buy(qty, price)
         self.cash -= qty * price
 
-    def close(self, symbol: str, at: datetime, price: int) -> None:
+    def close(self, symbol: str, at: datetime, price: int, reason: ExitReason) -> None:
         position = self.positions.pop(symbol)
         entry = position.average
         cost = self._charges(position.qty, entry, price, position.entry_at)
         self.trades.append(
             ClosedTrade(
-                symbol, position.qty, position.entry_at, entry, at, price, cost, position.cost
+                symbol,
+                position.qty,
+                position.entry_at,
+                entry,
+                at,
+                price,
+                cost,
+                position.cost,
+                reason,
             )
         )
         self.cash += position.qty * price - cost.total_paise

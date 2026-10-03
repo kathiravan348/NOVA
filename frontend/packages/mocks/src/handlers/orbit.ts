@@ -25,6 +25,7 @@ import {
 } from "../data";
 import { apiPath, badRequest, notFound, paginate } from "./api";
 import { filterRuns, statsFor } from "./backtestList";
+import { ledgerHandlers } from "./ledger";
 
 /** Mock writes (D43) answer with the resulting strategy; nothing is stored. */
 const MOCK_NOW = "2026-09-22T04:30:00Z";
@@ -73,6 +74,7 @@ function deleted(targets: BacktestRun[]): Response {
 }
 
 export const orbitHandlers = [
+  ...ledgerHandlers,
   http.get(apiPath("/me"), () => HttpResponse.json(mockUser)),
 
   // Mock sign-in (D38): any valid email signs in as the mock user; `agent@…` as the agent (D67).

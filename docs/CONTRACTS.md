@@ -37,7 +37,9 @@
 | StrategyLibrary (`families` + `entries`: IDs A01–A16/B01–B22/C01–C20/D01–D06/E01–E04/F01–F02/G01–G30, family, name, summary ≤ 140, spec, suggested `backtest`; D62, D73) | `GET /api/v1/strategies/library` | `data/strategyLibrary.json` (7 demo examples of the 100-entry real library, one per family) | Orbit |
 | LibraryInstall (`ids` 1–100, unique) → `Strategy[]` | `POST /api/v1/strategies/library/install` | stateless handler | Orbit |
 | BacktestResult (metrics, equity curve, `bySymbol` breakdown; D62: `years: YearRow[]` (12-month blocks, `[]` for older runs) and nullable metrics `benchmarkReturnPercent`, `benchmarkCagrPercent`, `exposurePercent`, `avgHoldDays`, `profitFactor`, `calmar`, `estimatedTaxPaise`, `afterTaxNetPnlPaise`, `afterTaxCagrPercent`) | `GET /api/v1/backtests/{id}/result` | `data/backtestResults.json` | Orbit |
-| Trade | `GET /api/v1/backtests/{id}/trades?limit=&cursor=` → `Page<Trade>` | `data/trades.json` | Orbit |
+| Trade (nullable `exitReason`: signal, stop, target, time_exit, square_off, market_filter, rotation, end_of_period; absent on older input defaults to null) | `GET /api/v1/backtests/{id}/trades?limit=&cursor=` → `Page<Trade>` | `data/trades.json` | Orbit |
+| LedgerDay (IST date, buy/sell counts and amounts, charges, realised net, portfolio cash/holdings/equity/open positions) | `GET /api/v1/backtests/{id}/ledger?offset=&limit=&from=&to=&symbol=&allDays=` → `Page<LedgerDay>` | `data/ledgers.json` (static) | Orbit |
+| LedgerEvent (UTC time, stock, buy/sell, quantity, price, exact amount, charges, sell net/reason, portfolio cash after) | `GET /api/v1/backtests/{id}/ledger/{date}?symbol=` → `LedgerEvent[]` | `data/ledgers.json` (static) | Orbit |
 | Charges | — | `data/trades.json` (inside each trade) | Ledger, Orbit, ui-trading |
 | BrokerAccount | `GET /api/v1/broker/accounts`, `GET /api/v1/broker/accounts/{id}` | `data/brokerAccounts.json` | Relay |
 | BrokerAccountCreate | `POST /api/v1/broker/accounts` → 201 `BrokerAccount` (400 `invalid_request` bad body or duplicate client ID) | — (mock: validated, not stored) | Relay |

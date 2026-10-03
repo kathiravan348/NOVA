@@ -102,6 +102,7 @@ def test_decide_at_close_fill_at_next_open() -> None:
     assert (trade.entry_at, trade.entry_price) == (DAY0 + timedelta(days=2), 10_700)
     assert (trade.exit_at, trade.exit_price) == (DAY0 + timedelta(days=4), 9_800)
     assert trade.gross == -9_000 and trade.net == -9_100
+    assert trade.exit_reason == "signal"
     assert [value for _, value in result.equity] == [
         10_000_000,
         10_000_000,
@@ -123,6 +124,7 @@ def test_stop_loss(day3: tuple[float, float, float, float], exit_price: int) -> 
 
     assert result.trades[0].exit_price == exit_price
     assert result.trades[0].exit_at == DAY0 + timedelta(days=3)
+    assert result.trades[0].exit_reason == "stop"
 
 
 @pytest.mark.parametrize(
@@ -136,6 +138,7 @@ def test_target(day3: tuple[float, float, float, float], exit_price: int) -> Non
     result = _run(_bars(*BASE[:3], day3), risk=risk)
 
     assert result.trades[0].exit_price == exit_price
+    assert result.trades[0].exit_reason == "target"
 
 
 def test_stop_wins_when_both_are_hit_in_one_bar() -> None:
@@ -164,6 +167,7 @@ def test_open_position_closes_at_the_last_bar() -> None:
     (trade,) = _run(_bars(*BASE[:3], (108, 110, 107, 109))).trades
 
     assert trade.exit_at == DAY0 + timedelta(days=3) and trade.exit_price == 10_900
+    assert trade.exit_reason == "end_of_period"
 
 
 def test_bars_before_the_start_only_warm_up() -> None:
@@ -217,6 +221,7 @@ def test_intraday_positions_square_off_at_1520() -> None:
 
     assert trade.entry_price == 10_600 and trade.exit_price == 10_300
     assert trade.exit_at == datetime(2026, 9, 1, 15, 20, tzinfo=IST)
+    assert trade.exit_reason == "square_off"
 
 
 def test_a_signal_at_the_cut_off_is_dropped() -> None:
@@ -233,6 +238,7 @@ def test_a_day_without_late_bars_closes_at_the_last_price_seen() -> None:
 
     assert trade.exit_price == 10_700  # the 15:05 close, not the next morning's open
     assert trade.exit_at == datetime(2026, 9, 1, 15, 5, tzinfo=IST)
+    assert trade.exit_reason == "square_off"
 
 
 class _EnterOnce:
@@ -243,6 +249,29 @@ class _EnterOnce:
 
     def exit(self, symbol: str, i: int) -> bool:
         return False
+
+
+@pytest.mark.parametrize("reason", ["time_exit", "market_filter"])
+def test_time_and_market_filter_exit_reasons(reason: str) -> None:
+    bars = _bars(FLAT, FLAT, FLAT, FLAT)
+    risk = Risk(
+        stop_loss_percent=None,
+        target_percent=None,
+        max_hold_bars=1 if reason == "time_exit" else None,
+    )
+    result = simulate_bars(
+        {"INFY": bars},
+        _EnterOnce(),
+        TEN,
+        risk,
+        10_000_000,
+        DAY0,
+        lambda *_: _charges(0),
+        regimes={"INFY": [True, False, False, False]},
+        when_off="exit_all" if reason == "market_filter" else None,
+    )
+    assert result.trades[0].exit_reason == reason
+    assert result.trades[0].exit_at == DAY0 + timedelta(days=2)
 
 
 def _average(

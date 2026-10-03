@@ -1,6 +1,6 @@
 """Trade: mirrors `frontend/packages/contracts/src/trade.ts`."""
 
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
@@ -8,6 +8,16 @@ from nova_contracts.charges import Charges
 from nova_contracts.common import Contract, Exchange, Id, Paise, Segment, Side, UtcDateTime
 
 PositivePaise = Annotated[int, Field(gt=0)]
+ExitReason = Literal[
+    "signal",
+    "stop",
+    "target",
+    "time_exit",
+    "square_off",
+    "market_filter",
+    "rotation",
+    "end_of_period",
+]
 
 
 class Trade(Contract):
@@ -22,6 +32,7 @@ class Trade(Contract):
     entry_price_paise: PositivePaise
     exit_at: UtcDateTime | None
     exit_price_paise: PositivePaise | None
+    exit_reason: ExitReason | None = None
     gross_pnl_paise: Paise
     charges: Charges
     net_pnl_paise: Paise

@@ -85,6 +85,7 @@ def save_result(
                 entry_price_paise=trade.entry_price,
                 exit_at=trade.exit_at,
                 exit_price_paise=trade.exit_price,
+                exit_reason=trade.exit_reason,
                 gross_pnl_paise=trade.gross,
                 brokerage_paise=c.brokerage_paise,
                 stt_paise=c.stt_paise,

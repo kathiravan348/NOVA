@@ -8,6 +8,128 @@ from nova_testing.parity import Parity
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
+
+def _seed_ledger(client: TestClient, body: dict[str, object], engine: Engine) -> str:
+    run_id = str(_queue(client, body)["id"])
+    with Session(engine) as db:
+        run = db.get(BacktestRun, run_id)
+        assert run is not None
+        run.status = "completed"
+        run.stage, run.progress_percent = "done", 100
+        initial = run.initial_capital_paise
+        db.add(
+            BacktestResult(
+                run_id=run_id,
+                gross_pnl_paise=200,
+                charges_paise=20,
+                net_pnl_paise=180,
+                return_percent=Decimal("0.0018"),
+                cagr_percent=Decimal("0.1"),
+                max_drawdown_percent=Decimal(0),
+                sharpe=Decimal(0),
+                win_rate_percent=Decimal(100),
+                trade_count=2,
+                win_count=2,
+                loss_count=0,
+                by_symbol=[],
+                equity_curve=[
+                    {
+                        "date": f"2025-01-0{day}",
+                        "equityPaise": initial + profit,
+                        "benchmarkPaise": None,
+                    }
+                    for day, profit in [(2, 0), (3, 100), (4, 180), (5, 180)]
+                ],
+            )
+        )
+        for symbol, day, price in [("INFY", 2, 1000), ("TCS", 3, 500)]:
+            db.add(
+                Trade(
+                    id=f"trd_ledger_{symbol}",
+                    run_id=run_id,
+                    symbol=symbol,
+                    exchange="NSE",
+                    segment="equity_delivery",
+                    side="buy",
+                    qty=1,
+                    entry_at=datetime(2025, 1, day, 4, tzinfo=UTC),
+                    entry_price_paise=price,
+                    exit_at=datetime(2025, 1, 4, 5, tzinfo=UTC),
+                    exit_price_paise=price + 100,
+                    exit_reason="target",
+                    gross_pnl_paise=100,
+                    brokerage_paise=10,
+                    stt_paise=0,
+                    exchange_txn_paise=0,
+                    sebi_fee_paise=0,
+                    stamp_duty_paise=0,
+                    gst_paise=0,
+                    dp_paise=0,
+                    charges_total_paise=10,
+                    net_pnl_paise=90,
+                )
+            )
+        db.commit()
+    return run_id
+
+
+def test_ledger_paging_filters_events_and_final_equity(
+    client: TestClient,
+    run_body: dict[str, object],
+    clean: Engine,
+    parity: Parity,
+) -> None:
+    run_id = _seed_ledger(client, run_body, clean)
+    path = f"/api/v1/backtests/{run_id}/ledger"
+    first = client.get(path, params={"limit": 2}).json()
+    rest = client.get(path, params={"offset": 2, "limit": 2}).json()
+    parity.assert_valid(first, "LedgerPage")
+    assert first["total"] == rest["total"] == 3
+    assert [day["date"] for day in first["items"] + rest["items"]] == [
+        "2025-01-02",
+        "2025-01-03",
+        "2025-01-04",
+    ]
+    final = rest["items"][0]
+    assert final["cashPaise"] + final["holdingsPaise"] == 10_000_180
+    assert final["cashPaise"] == 10_000_180 and final["openPositions"] == 0
+    assert client.get(path, params={"allDays": True}).json()["total"] == 4
+    filtered = client.get(
+        path, params={"from": "2025-01-03", "to": "2025-01-04", "symbol": "TCS"}
+    ).json()
+    assert filtered["total"] == 2 and filtered["items"][1]["sells"] == 1
+    assert filtered["items"][1]["cashPaise"] == final["cashPaise"]
+    assert client.get(path, params={"symbol": "NOPE"}).json()["total"] == 0
+    events = client.get(f"{path}/2025-01-04").json()
+    assert [event["symbol"] for event in events] == ["INFY", "TCS"]
+    for event in events:
+        parity.assert_valid(event, "LedgerEvent")
+        assert event["reason"] == "target"
+    assert len(client.get(f"{path}/2025-01-04", params={"symbol": "TCS"}).json()) == 1
+    assert client.get(f"{path}/2025-01-05").json() == []
+    assert client.get(path, params={"from": "2025-01-04", "to": "2025-01-03"}).status_code == 400
+    assert client.get(path, params={"offset": -1}).status_code == 400
+    assert client.get(f"{path}/bad-date").status_code == 400
+
+
+@pytest.mark.parametrize("suffix", ["ledger", "ledger/2025-01-02"])
+def test_ledger_errors(
+    client: TestClient, run_body: dict[str, object], clean: Engine, suffix: str
+) -> None:
+    assert client.get(f"/api/v1/backtests/nope/{suffix}").status_code == 404
+    run_id = str(_queue(client, run_body)["id"])
+    path = f"/api/v1/backtests/{run_id}/{suffix}"
+    assert client.get(path).status_code == 400
+    with Session(clean) as db:
+        run = db.get(BacktestRun, run_id)
+        assert run is not None
+        run.report_kept = False
+        db.commit()
+    response = client.get(path)
+    assert response.status_code == 400
+    assert response.json()["error"]["message"] == "Only the newest version keeps the full report"
+
+
 BACKTESTS = "/api/v1/backtests"
 
 

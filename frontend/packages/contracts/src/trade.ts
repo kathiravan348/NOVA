@@ -9,6 +9,18 @@ import {
   UtcDateTimeSchema,
 } from "./common";
 
+export const ExitReasonSchema = z.enum([
+  "signal",
+  "stop",
+  "target",
+  "time_exit",
+  "square_off",
+  "market_filter",
+  "rotation",
+  "end_of_period",
+]);
+export type ExitReason = z.infer<typeof ExitReasonSchema>;
+
 export const TradeSchema = z
   .strictObject({
     id: IdSchema,
@@ -22,6 +34,7 @@ export const TradeSchema = z
     entryPricePaise: z.number().int().positive(),
     exitAt: UtcDateTimeSchema.nullable(),
     exitPricePaise: z.number().int().positive().nullable(),
+    exitReason: ExitReasonSchema.nullable().default(null),
     grossPnlPaise: PaiseSchema,
     charges: ChargesSchema,
     netPnlPaise: PaiseSchema,

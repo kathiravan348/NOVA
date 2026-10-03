@@ -18,6 +18,7 @@ from nova_backtest.scratch import Signals
 from nova_backtest.simulate import Simulation
 from nova_contracts import Sizing
 from nova_contracts.strategy import Averaging, Portfolio, Risk
+from nova_contracts.trade import ExitReason
 
 
 def reference_simulate(
@@ -40,6 +41,7 @@ def reference_simulate(
     )
     positions: dict[str, Position] = {}
     pending: dict[str, str] = {}
+    exit_reasons: dict[str, ExitReason] = {}
     last_close: dict[str, int] = {}
     queued_rank: dict[str, float] = {}
     trails: dict[str, int] = {}  # symbol → highest trailing / ATR level of the holding
@@ -49,7 +51,7 @@ def reference_simulate(
     def worth() -> int:
         return cash + sum(p.qty * last_close[s] for s, p in positions.items())
 
-    def close(symbol: str, at: datetime, price: int) -> None:
+    def close(symbol: str, at: datetime, price: int, reason: ExitReason) -> None:
         nonlocal cash
         position = positions.pop(symbol)
         trails.pop(symbol, None)
@@ -57,7 +59,15 @@ def reference_simulate(
         cost = charges(position.qty, entry, price, position.entry_at)
         trades.append(
             ClosedTrade(
-                symbol, position.qty, position.entry_at, entry, at, price, cost, position.cost
+                symbol,
+                position.qty,
+                position.entry_at,
+                entry,
+                at,
+                price,
+                cost,
+                position.cost,
+                reason,
             )
         )
         cash += position.qty * price - cost.total_paise
@@ -90,17 +100,20 @@ def reference_simulate(
             previous = bars[symbol][i - 1] if i else None
             if previous is not None and previous.ist_date != bar.ist_date:
                 pending.pop(symbol, None)
+                exit_reasons.pop(symbol, None)
                 if symbol in positions:
-                    close(symbol, previous.ts, previous.close)
+                    close(symbol, previous.ts, previous.close, "square_off")
             if bar.ts.astimezone(IST).time() >= square_off:
                 pending.pop(symbol, None)
+                exit_reasons.pop(symbol, None)
                 if symbol in positions:
-                    close(symbol, ts, bar.open)
+                    close(symbol, ts, bar.open, "square_off")
                 return False
         if pending.get(symbol) == "exit":
             del pending[symbol]
+            reason = exit_reasons.pop(symbol)
             if symbol in positions:
-                close(symbol, ts, bar.open)
+                close(symbol, ts, bar.open, reason)
         return True
 
     def step_b(ts: datetime, waiting: list[tuple[str, int]]) -> None:
@@ -137,9 +150,9 @@ def reference_simulate(
         stop_price = stop_price_of(symbol)
         target_price = percent_of(position.average, 100 + target) if target else None
         if stop_price is not None and bar.low <= stop_price:
-            close(symbol, ts, min(bar.open, stop_price))
+            close(symbol, ts, min(bar.open, stop_price), "stop")
         elif target_price is not None and bar.high >= target_price:
-            close(symbol, ts, max(bar.open, target_price))
+            close(symbol, ts, max(bar.open, target_price), "target")
 
     def step_d(symbol: str, i: int, active: bool) -> None:
         close_ = bars[symbol][i].close
@@ -160,8 +173,10 @@ def reference_simulate(
             for level in levels:
                 trails[symbol] = max(trails.get(symbol, level), level)
             held = risk.max_hold_bars is not None and position.bars_held >= risk.max_hold_bars
-            if signals.exit(symbol, i) or held:
+            signal = signals.exit(symbol, i)
+            if signal or held:
                 pending[symbol] = "exit"
+                exit_reasons[symbol] = "signal" if signal else "time_exit"
         elif signals.enter(symbol, i):
             pending[symbol] = "enter"
             queued_rank[symbol] = ranks[symbol][i] if ranks is not None else math.nan
@@ -187,7 +202,7 @@ def reference_simulate(
 
     for symbol in list(positions):
         final = bars[symbol][-1]
-        close(symbol, final.ts, final.close)
+        close(symbol, final.ts, final.close, "end_of_period")
     if day is not None:
         equity.append((day, worth()))
     return Simulation(trades=trades, equity=equity)

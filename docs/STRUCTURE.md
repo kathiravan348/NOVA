@@ -39,6 +39,7 @@
 │  │     ├─ data/       static mock JSON per contract
 │  │     │             `liveTicks.json`, `liveSnapshot.json`, `liveDays.json`: eight stocks, TCS has recorder gaps (D74)
 │  │     ├─ src/handlers/ MSW handlers for contracts and scenarios; approvals.ts = approval + agent mocks (D67)
+│  │     │                ledger.ts = day ledger handlers; data/ledgers.json = static portfolio/symbol days and events (NOVA-174)
 │  │     └─ src/browser.ts MSW browser worker (apps' main.tsx, mock mode)
 │  └─ apps/             each: public/mockServiceWorker.js, src/routes.tsx, layout/, pages/
 │     ├─ nova-orbit/    strategy builder + backtesting (port 3000)
@@ -61,7 +62,8 @@
       │                 `live_publish.py`: committed ticks → Redis `nova:ticks`; Core `live_realtime.py` fans out selected stocks once a second (D74)
       │                 `python -m nova_broker add-account | new-token-key | record-ticks | recorder` (always-on, D54)
       ├─ strategy/      strategies, immutable versions, stats summary in SQL (D26, D43)
-      ├─ backtest/      queue runs (D44), runs/results/trades API, worker; strategy engine (visual + Python
+      ├─ backtest/      queue runs (D44), runs/results/trades API, worker; ledger.py computes IST days/events (NOVA-174);
+      │                 strategy engine (visual + Python
       │                 sandbox, delivery + intraday, D45–D47)
       └─ atlas/         NOVA Atlas: stock list (`universe` table) + instrument sync, data jobs + worker (Postgres queue, D41);
                         `unavailable.py`: successful broker-check evidence, automatic recovery and paged unavailable-date history (D70, migration 0022); Relay `stored-data/UnavailableDataPanel.tsx` uses shared `UnavailableDataTable`.

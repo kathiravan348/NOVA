@@ -1,6 +1,6 @@
 # NOVA-174 — Trade exit reasons + day ledger endpoints (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-174 · **Depends on:** NOVA-168 (simulator), NOVA-170 (routes, contracts)
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-174 · **Depends on:** NOVA-168 (simulator), NOVA-170 (routes, contracts)
 
 ## Goal
 New trades record why they closed, and two endpoints give a run's day-by-day ledger: buys, sells, charges,
@@ -12,16 +12,18 @@ cash, holdings and equity per day, and every buy/sell of one day with the cash a
 
 ## Files
 Create:
+- `frontend/packages/mocks/data/ledgers.json`, `frontend/packages/mocks/src/handlers/ledger.ts` (static demo ledger and handlers)
 - `backend/libs/nova_db/src/nova_db/migrations/versions/rev0029_trade_exit_reason.py`
 - `backend/services/backtest/src/nova_backtest/ledger.py`, test `backend/services/backtest/tests/test_ledger.py`
 Modify:
 - `backend/libs/nova_db/src/nova_db/models/backtest.py`, `libs/nova_db/tests/test_migrations.py`
 - `backend/services/backtest/src/nova_backtest/{book,simulate,rotation,save,routes,convert}.py`, tests
   `test_simulate.py`, `test_rotation.py`, `test_api.py`
+  and `reference_simulate.py` (regression oracle now compares exit reasons too)
 - `backend/libs/nova_contracts/src/nova_contracts/{trade,backtest}.py` (+ `__init__.py`), parity tests
 - `frontend/packages/contracts/src/{trade,backtest}.ts` (+ tests), generated `schema/*.json`
 - `frontend/packages/services/src/{api,queries}/orbit.ts`, `frontend/packages/mocks/src/handlers/orbit.ts` (+ tests)
-- `docs/guides/{API.md,DATABASE.md}`, `docs/CONTRACTS.md`
+- `docs/guides/{API.md,DATABASE.md}`, `docs/CONTRACTS.md`, `docs/STRUCTURE.md`
 
 ## Build
 1. Migration 0029: `trades.exit_reason` text null, check in (`signal`, `stop`, `target`, `time_exit`,
@@ -51,5 +53,6 @@ Modify:
 - Screens (175), separate rows per averaging add, storing the ledger (it is computed per request).
 
 ## Questions
+- Scope clarification (ChatGPT, planner): keep the new demo ledger static in its own fixture and handler module; `orbit.ts` registers it. Existing Orbit handlers already exceed 300 lines.
 
 ## Handoff

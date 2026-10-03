@@ -20,6 +20,9 @@ import {
   deleteBacktests,
   deleteStrategy,
   getBacktest,
+  listBacktestLedger,
+  getBacktestLedgerEvents,
+  type LedgerFilter,
   getBacktestResult,
   getMe,
   getStrategy,
@@ -37,6 +40,24 @@ import {
   type BacktestFilter,
 } from "../api/orbit";
 import { queryKeys } from "./keys";
+
+export function useBacktestLedger(id: string, filter: LedgerFilter, selection: PageSelection) {
+  const query = useQuery({
+    queryKey: [...queryKeys.backtests.detail(id), "ledger", filter, selection],
+    queryFn: ({ signal }) =>
+      listBacktestLedger(id, { ...filter, ...pageQuery(selection) }, { signal }),
+    enabled: Boolean(id),
+  });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
+}
+
+export function useBacktestLedgerEvents(id: string, date: string, symbol?: string) {
+  return useQuery({
+    queryKey: [...queryKeys.backtests.detail(id), "ledger", date, symbol],
+    queryFn: ({ signal }) => getBacktestLedgerEvents(id, date, symbol, { signal }),
+    enabled: Boolean(id && date),
+  });
+}
 import {
   cursorQuery,
   pageResult,

@@ -28,6 +28,8 @@ def test_every_mock_row_round_trips_and_matches_schema(
     parity: Parity, mock: str, model: type[BacktestRun | BacktestResult | Trade], schema: str
 ) -> None:
     for raw in parity.mock(mock):
+        if mock == "trades":
+            raw.setdefault("exitReason", None)
         dumped = model.model_validate_json(json.dumps(raw)).model_dump(mode="json")
 
         assert dumped == raw

@@ -2,6 +2,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { setupServer } from "msw/node";
 import {
   ApiErrorSchema,
+  LedgerDaySchema,
+  LedgerEventSchema,
   BacktestResultSchema,
   BacktestDeleteResultSchema,
   BacktestRunListItemSchema,
@@ -43,6 +45,41 @@ afterAll(() => {
 });
 
 describe("Orbit MSW handlers", () => {
+  it("serves static ledger pages, date and symbol filters, and portfolio cash", async () => {
+    const path = "http://localhost/api/v1/backtests/run_001/ledger";
+    const first = pageSchema(LedgerDaySchema).parse(await (await fetch(`${path}?limit=2`)).json());
+    expect(first.total).toBe(4);
+    expect(first.items.map((day) => day.date)).toEqual(["2026-06-02", "2026-06-05"]);
+    const rest = pageSchema(LedgerDaySchema).parse(
+      await (await fetch(`${path}?offset=2&limit=2`)).json(),
+    );
+    expect(rest.items.at(-1)?.cashPaise).toBe(100499474);
+    const all = pageSchema(LedgerDaySchema).parse(
+      await (await fetch(`${path}?allDays=true`)).json(),
+    );
+    expect(all.total).toBe(11);
+    const filtered = pageSchema(LedgerDaySchema).parse(
+      await (await fetch(`${path}?symbol=RELIANCE&from=2026-06-03&to=2026-06-15`)).json(),
+    );
+    expect(filtered.total).toBe(1);
+    expect(filtered.items[0]?.cashPaise).toBe(100499474);
+    const events = LedgerEventSchema.array().parse(
+      await (await fetch(`${path}/2026-06-02?symbol=RELIANCE`)).json(),
+    );
+    expect(events.map((event) => event.cashAfterPaise)).toEqual([85500000, 100241725]);
+    expect(events[1]?.reason).toBeNull();
+  });
+
+  it.each([
+    ["nope", 404],
+    ["run_003", 400],
+    ["run_006", 400],
+  ])("refuses ledger for %s", async (id, status) => {
+    const response = await fetch(`http://localhost/api/v1/backtests/${id}/ledger`);
+    expect(response.status).toBe(status);
+    expect(ApiErrorSchema.safeParse(await response.json()).success).toBe(true);
+  });
+
   it("GET /api/v1/me returns current mock user", async () => {
     const res = await fetch("http://localhost/api/v1/me");
     expect(res.status).toBe(200);
