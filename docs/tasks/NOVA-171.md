@@ -1,6 +1,6 @@
 # NOVA-171 — Backtests page: History / Recorded tabs, result columns, filters (D82)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
 
 ## Goal
 **Backtests** has two tabs, **History data** and **Recorded data**. The table shows each run's results, and a
@@ -38,10 +38,10 @@ Modify:
    Mobile cards show Name, Status, Net P&L, CAGR, Max DD; the rest hide on mobile.
 
 ## Acceptance checks
-- [ ] URL `?source=recorded&minCagr=10&sort=cagr` opens the Recorded tab with those filters and sends them.
-- [ ] Clear filters empties the URL params except `source`; changing a filter returns to page 1.
-- [ ] Mock mode: filtering by Min win rate removes the runs below it; Only profitable hides losing runs.
-- [ ] Checked at 360px and desktop, dark and light; `pnpm review:check`.
+- [x] URL `?source=recorded&minCagr=10&sort=cagr` opens the Recorded tab with those filters and sends them.
+- [x] Clear filters empties the URL params except `source`; changing a filter returns to page 1.
+- [x] Mock mode: filtering by Min win rate removes the runs below it; Only profitable hides losing runs.
+- [x] Checked at 360px and desktop, dark and light; `pnpm review:check`.
 
 ## Out of scope
 - Compare popup (172), strategies page (176), saved filter sets, column chooser, backend changes.
