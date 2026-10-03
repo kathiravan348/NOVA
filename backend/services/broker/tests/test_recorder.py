@@ -266,3 +266,47 @@ def test_a_silent_socket_still_checks_should_stop() -> None:
     )
     asyncio.run(asyncio.wait_for(recorder.run(), timeout=2))
     assert checks == 3  # loop start, after one read timeout, loop end
+
+
+def index_frame(token: int = 9) -> bytes:
+    return struct.pack(
+        ">hh7i", 1, 28, token, 2_500_000, 2_510_000, 2_490_000, 2_495_000, 2_480_000, 200
+    )
+
+
+def test_mixed_message_uses_separate_stock_and_index_batches() -> None:
+    from nova_db.models import IndexTick
+
+    message = struct.pack(">h", 2) + ltp_frame(1, 100)[2:] + index_frame()[2:]
+    harness = Harness([[message]], timedelta(0))
+    run(harness, {1: "INFY", 9: "NIFTY 50"})
+    stocks, indices = harness.batches
+    assert set(stocks[0]) == set(Tick.__table__.columns.keys())
+    assert set(indices[0]) == set(IndexTick.__table__.columns.keys())
+    assert indices[0]["symbol"] == "NIFTY 50"
+
+
+def test_index_ticks_do_not_reset_the_stock_watchdog() -> None:
+    harness = Harness([[index_frame()] * 20, [ltp_frame(1, 100)]], timedelta(seconds=1))
+    run(harness, {1: "INFY", 9: "NIFTY 50"})
+    assert harness.sleeps == [1]
+    assert len(harness.sockets) == 2 and not harness.sockets[0].exhausted
+
+
+def test_failed_index_save_keeps_only_the_unsaved_index_rows() -> None:
+    harness = Harness([[ltp_frame(1, 100), index_frame(), index_frame()]], timedelta(seconds=1))
+    recorder = harness.recorder({1: "INFY", 9: "NIFTY 50"})
+    failures = 1
+
+    def sink(rows: list[dict[str, Any]]) -> None:
+        nonlocal failures
+        if "exchange" not in rows[0] and failures:
+            failures -= 1
+            raise OSError("index save failed")
+        harness.batches.append(rows)
+
+    recorder.sink = sink
+    asyncio.run(recorder.run())
+    saved = [row for batch in harness.batches for row in batch]
+    assert sum(row["symbol"] == "INFY" for row in saved) == 1
+    assert sum(row["symbol"] == "NIFTY 50" for row in saved) == 2

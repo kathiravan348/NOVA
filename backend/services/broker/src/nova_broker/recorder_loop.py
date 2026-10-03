@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 from nova_common import ApiException
 from nova_contracts import MAX_RECORDER_SYMBOLS
 from nova_db import new_id
-from nova_db.models import DataJob, Instrument, RecorderSetting, Tick
+from nova_db.models import DataJob, IndexTick, Instrument, MarketIndex, RecorderSetting, Tick
 from redis import Redis
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -87,11 +87,35 @@ def tick_symbols(db: Session, symbols: list[str]) -> dict[int, str]:
     return found
 
 
+def tick_indices(db: Session, indices: list[str]) -> dict[int, str]:
+    """The selected indices must exist and have a synced Kite token."""
+    found = {
+        int(token): name
+        for token, name in db.execute(
+            select(MarketIndex.instrument_token, MarketIndex.name).where(
+                MarketIndex.name.in_(indices), MarketIndex.instrument_token.is_not(None)
+            )
+        ).tuples()
+        if token
+    }
+    missing = sorted(set(indices) - set(found.values()))
+    if missing:
+        raise ValueError(f"Index not synced with Kite yet: {', '.join(missing)}")
+    return found
+
+
+def check_stream_limit(stocks: int, indices: int) -> None:
+    if stocks + indices > MAX_RECORDER_SYMBOLS:
+        raise ValueError(
+            f"Kite streams at most 3000 instruments: {stocks} stocks + {indices} indices"
+        )
+
+
 def load_setting(db: Session) -> RecorderSetting:
     """The single settings row (migration 0007 creates it; recreated if someone deleted it)."""
     row = db.get(RecorderSetting, 1)
     if row is None:
-        row = RecorderSetting(id=1, enabled=False, symbols=[])
+        row = RecorderSetting(id=1, enabled=False, symbols=[], indices=[])
         db.add(row)
         db.flush()
     return row
@@ -167,6 +191,8 @@ class RecorderLoop:
             try:
                 live = active_session(db, self.cipher)
                 tokens = tick_symbols(db, list(setting.symbols))
+                indices = tick_indices(db, list(setting.indices))
+                check_stream_limit(len(tokens), len(indices))
             except (ApiException, ValueError) as exc:
                 logger.info("Not recording: %s", exc)
                 return None
@@ -185,7 +211,7 @@ class RecorderLoop:
             db.commit()
             job_id = job.id
         logger.info("Recording %s symbol(s) as %s", len(tokens), job_id)
-        self._record(job_id, kite_url(live.api_key, live.access_token), tokens)
+        self._record(job_id, kite_url(live.api_key, live.access_token), tokens | indices)
         return job_id
 
     def _record(self, job_id: str, url: str, tokens: dict[int, str]) -> None:
@@ -197,6 +223,10 @@ class RecorderLoop:
         # Any: rows are `ticks` column values for a bulk insert.
         def sink(rows: list[dict[str, Any]]) -> None:
             with self.factory() as db:
+                if "exchange" not in rows[0]:
+                    db.execute(insert(IndexTick).on_conflict_do_nothing(), rows)
+                    db.commit()
+                    return
                 db.execute(insert(Tick).on_conflict_do_nothing(), rows)
                 db.execute(
                     update(DataJob)

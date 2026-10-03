@@ -3,7 +3,7 @@
 A message is a big-endian int16 packet count, then per packet an int16 length and the packet.
 Equity packets: `ltp` 8 bytes, `quote` 44 bytes (adds quantities and day OHLC), `full` 184 bytes
 (adds timestamps, open interest and 5-level depth). Prices are paise. A 1-byte message is a
-heartbeat. Index packets (28/32 bytes) and anything else are skipped. Every field is kept (D77).
+heartbeat. Index packets (28/32 bytes) carry prices and optional exchange time (D84).
 """
 
 import struct
@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 LTP, QUOTE, FULL = 8, 44, 184
+INDEX_QUOTE, INDEX_FULL = 28, 32
 DEPTH_START, DEPTH_LEVELS, DEPTH_ENTRY = 64, 5, 12
 
 
@@ -44,6 +45,17 @@ class ParsedTick:
     ask_orders: list[int] | None = None
 
 
+@dataclass(frozen=True)
+class ParsedIndexTick:
+    token: int
+    last_price_paise: int
+    high_paise: int | None
+    low_paise: int | None
+    open_paise: int | None
+    close_paise: int | None
+    exchange_ts: datetime | None
+
+
 def _ints(packet: bytes, count: int) -> tuple[int, ...]:
     return struct.unpack(f">{count}i", packet[: count * 4])
 
@@ -61,7 +73,13 @@ def _depth(packet: bytes) -> list[tuple[int, int, int]]:
     return entries
 
 
-def _parse(packet: bytes) -> ParsedTick | None:
+def _parse(packet: bytes) -> ParsedTick | ParsedIndexTick | None:
+    if len(packet) in (INDEX_QUOTE, INDEX_FULL):
+        token, ltp, high, low, open_, close, _change = _ints(packet, 7)
+        stamp = _stamp(_ints(packet, 8)[7]) if len(packet) == INDEX_FULL else None
+        # A non-positive day price means "not known yet"; `index_ticks` only accepts positive ones.
+        high_, low_, open_p, close_p = (v if v > 0 else None for v in (high, low, open_, close))
+        return ParsedIndexTick(token, ltp, high_, low_, open_p, close_p, stamp)
     if len(packet) == LTP:
         token, ltp = _ints(packet, 2)
         return ParsedTick(token, ltp, 0, 0, None, None)
@@ -90,8 +108,8 @@ def _parse(packet: bytes) -> ParsedTick | None:
     )
 
 
-def parse_ticks(message: bytes) -> list[ParsedTick]:
-    """Every equity tick in one binary message; heartbeats and broken frames give none."""
+def parse_ticks(message: bytes) -> list[ParsedTick | ParsedIndexTick]:
+    """Every stock or index tick in one binary message; heartbeats and broken frames give none."""
     if len(message) < 2:
         return []
     (count,) = struct.unpack(">h", message[:2])

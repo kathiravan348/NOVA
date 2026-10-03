@@ -45,8 +45,8 @@
 | BrokerAccountCreate | `POST /api/v1/broker/accounts` → 201 `BrokerAccount` (400 `invalid_request` bad body or duplicate client ID) | — (mock: validated, not stored) | Relay |
 | RateLimit (v2: `rules[]` per window with brokerLimit, novaLimit, used, resetsAt) | `GET /api/v1/broker/rate-limits` | `data/rateLimits.json` | Relay |
 | RateLimitUpdate | `PATCH /api/v1/broker/rate-limits/{accountId}/{endpoint}` → 204 (400 `invalid_request` above broker limit) | — (Stage A: validated, not stored) | Relay |
-| RecorderSettings | `GET /api/v1/broker/recorder`, `PUT /api/v1/broker/recorder` (body `RecorderSettingsUpdate`; 400 stock not synced) | — | Relay |
-| RecorderSettingsUpdate | body of `PUT /api/v1/broker/recorder` | — | Relay |
+| RecorderSettings | `GET /api/v1/broker/recorder`, `PUT /api/v1/broker/recorder` (body `RecorderSettingsUpdate`; always includes `indices`; 400 stock/index not synced or stocks + indices > 3,000) | — | Relay |
+| RecorderSettingsUpdate | body of `PUT /api/v1/broker/recorder`; optional/null `indices` (max 50) keeps the saved list, `[]` clears it | — | Relay |
 | BrokerProfile (broker facts only since D55) | `GET /api/v1/broker/profiles`, `GET /api/v1/broker/profiles/{broker}` | `data/brokerProfiles.json` | Relay |
 | KiteApp (D55; `apiKeyLast4` + `secretSaved`, never the secret) | `GET /api/v1/broker/accounts/{id}/kite-app`; also returned by the two writes below | `data/kiteApps.json` | Relay |
 | KiteKeysUpdate | `PUT /api/v1/broker/accounts/{id}/kite-app/keys` → `KiteApp` | — | Relay |
