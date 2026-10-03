@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, last task NOVA-173). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, last task NOVA-172). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -348,7 +348,12 @@ just that one older version. In the **Backtests** list, tick several runs and pr
 A run that is still **Running** cannot be deleted or edited; wait for it to finish.
 
 ### Step 7 — Compare runs
-Go to **Compare**, tick two or more runs. NOVA shows their metrics side by side, including after-tax CAGR,
+Go to **Compare** and press **Choose runs**. A popup offers completed runs with **History data** and
+**Recorded data** tabs and the same filters as Backtests. You can choose runs from both tabs together,
+up to three. Your choices stay inside the popup until you press **Compare**; **Cancel** keeps the old
+comparison. The chosen runs appear as small cards with their version, data source and period. Remove
+one with its close button, or press **Choose runs** to change the selection. With two or three runs,
+NOVA shows their metrics side by side, including after-tax CAGR,
 benchmark return, profit factor and Calmar (the best value in each row is marked **Best**; a row where a run
 shows "—" is not marked) and their equity curves together.
 
