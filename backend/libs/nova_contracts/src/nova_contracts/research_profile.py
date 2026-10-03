@@ -12,6 +12,8 @@ OptionalPercent = Annotated[float, Field(ge=0, le=100)]
 AtrMultiple = Annotated[float, Field(gt=0, le=20)]
 Milliseconds = Annotated[int, Field(ge=0, le=10000)]
 Ticks = Annotated[int, Field(ge=0, le=20)]
+# Decimal percents such as 33.3 + 33.3 + 33.4 add up to a hair over 100 in floating point.
+POOL_TOLERANCE = 1e-9
 IstTime = Annotated[
     str,
     Field(
@@ -88,7 +90,8 @@ class ResearchSettings(Contract):
     @model_validator(mode="after")
     def check_relationships(self) -> Self:
         account, execution, signal, timing = self.account, self.execution, self.signal, self.timing
-        if account.initial_pool_percent + account.add_pool_percent + account.reserve_percent > 100:
+        pools = account.initial_pool_percent + account.add_pool_percent + account.reserve_percent
+        if pools > 100 + POOL_TOLERANCE:
             raise ValueError("Pools must sum to at most 100 percent")
         if account.open_risk_percent < account.risk_per_position_percent:
             raise ValueError("Open risk must be at least position risk")

@@ -113,6 +113,14 @@ describe("research profile contracts", () => {
     expect(ResearchSettingsSchema.safeParse(settings).success).toBe(true);
   });
 
+  it("accepts decimal pools that add up to exactly 100", () => {
+    const settings = structuredClone(DEFAULT_RESEARCH_SETTINGS);
+    settings.account.initialPoolPercent = 33.3;
+    settings.account.addPoolPercent = 33.3;
+    settings.account.reservePercent = 33.4;
+    expect(ResearchSettingsSchema.safeParse(settings).success).toBe(true);
+  });
+
   it.each(["account", "execution", "market", "signal", "timing", "data"])(
     "rejects extra fields in %s",
     (group) => {

@@ -69,7 +69,8 @@ export const ResearchSettingsSchema = z
       if (!valid) ctx.addIssue({ code: "custom", path, message });
     };
     check(
-      account.initialPoolPercent + account.addPoolPercent + account.reservePercent <= 100,
+      // Decimal percents such as 33.3 + 33.3 + 33.4 add up to a hair over 100 in floating point.
+      account.initialPoolPercent + account.addPoolPercent + account.reservePercent <= 100 + 1e-9,
       ["account", "reservePercent"],
       "Pools must sum to at most 100 percent",
     );

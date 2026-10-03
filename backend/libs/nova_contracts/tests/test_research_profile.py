@@ -129,6 +129,12 @@ def test_optional_zero_values() -> None:
     ResearchSettings.model_validate_json(json.dumps(settings))
 
 
+def test_decimal_pools_summing_to_100_are_accepted() -> None:
+    settings = json.loads(default_research_settings().model_dump_json())
+    settings["account"].update(initialPoolPercent=33.3, addPoolPercent=33.3, reservePercent=33.4)
+    ResearchSettings.model_validate_json(json.dumps(settings))
+
+
 def test_freeze_invariants_and_version_order(parity: Parity) -> None:
     raw = parity.mock("researchProfiles")[0]
     draft = raw["versions"][0]
