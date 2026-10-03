@@ -1,6 +1,6 @@
 # NOVA-173 — Results by symbol: best 5 / worst 5 + "View all" popup; Modal sizes (D82)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
 
 ## Goal
 A backtest's page shows a short **Results by symbol** (best 5 and worst 5). **View all N symbols** opens a
@@ -30,10 +30,10 @@ Modify:
 4. Older versions (summary only) keep showing no symbol table, as today.
 
 ## Acceptance checks
-- [ ] A run with 30 symbols shows Best 5 and Worst 5, and the popup lists all 30 over 2 pages.
-- [ ] Search "TCS" and Show Losers narrow the popup rows; Show trades filters the trades table.
-- [ ] A run with 6 symbols shows one table of 6 and still offers the popup.
-- [ ] Modal story at 360px and desktop, dark and light; `pnpm review:check`.
+- [x] A run with 30 symbols shows Best 5 and Worst 5, and the popup lists all 30 over 2 pages.
+- [x] Search "TCS" and Show Losers narrow the popup rows; Show trades filters the trades table.
+- [x] A run with 6 symbols shows one table of 6 and still offers the popup.
+- [x] Modal story at 360px and desktop, dark and light; `pnpm review:check`.
 
 ## Out of scope
 - Backend changes, per-symbol charts, CSV export.
