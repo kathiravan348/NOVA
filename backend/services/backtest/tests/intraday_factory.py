@@ -410,3 +410,119 @@ def research_settings(**groups: dict[str, Any]) -> dict[str, Any]:
     for group, fields in groups.items():
         values[group] |= fields
     return values
+
+
+Ohlc = tuple[str, int, int, int, int]  # IST "HH:MM", open, high, low, close
+
+
+def bar_tape(
+    minutes: Sequence[Ohlc],
+    spread: int = 4,
+    vwap: int | Callable[[int], int] = 0,
+    volume_per_minute: int = 3_000,
+) -> list[T]:
+    """Five ticks a minute (open :05, high :20, low :35, close :50 and :59) so each 1m bar has
+    exactly the given OHLC and a fresh quote at its close; the day volume grows
+    `volume_per_minute` a minute; `vwap` = a price or f(price)."""
+    out: list[T] = []
+    for clock, *prices in minutes:
+        hh, mm = (int(x) for x in clock.split(":"))
+        elapsed = (hh * 60 + mm) - (9 * 60 + 15)
+        for second, price in zip((5, 20, 35, 50, 59), [*prices, prices[-1]], strict=True):
+            average = vwap(price) if callable(vwap) else vwap
+            out.append(
+                T(
+                    f"{clock}:{second:02d}",
+                    price,
+                    bid=price - spread // 2,
+                    ask=price + spread // 2,
+                    volume=elapsed * volume_per_minute + second * volume_per_minute // 60,
+                    vwap=average,
+                )
+            )
+    return out
+
+
+def flat_minutes(start: str, end: str, price: int, half: int = 0) -> list[Ohlc]:
+    """Bars from `start` to `end` (IST "HH:MM", end excluded) around `price`."""
+    out: list[Ohlc] = []
+    h, m = (int(x) for x in start.split(":"))
+    eh, em = (int(x) for x in end.split(":"))
+    while (h, m) < (eh, em):
+        out.append((f"{h:02d}:{m:02d}", price, price + half, price - half, price))
+        h, m = (h + 1, 0) if m == 59 else (h, m + 1)
+    return out
+
+
+def earlier_sessions(count: int = 20, price: int = 10_000, half: int = 50) -> Any:
+    """`count` flat Kite sessions before DAY (warm-up), oldest first."""
+    from nova_backtest.intraday.context import DayBars, History
+
+    sessions = []
+    for k in range(count):
+        day = DAY - timedelta(days=count - k)
+        open_ms = ms("09:15:00", day)
+        start = open_ms + np.arange(375, dtype=np.int64) * 60_000
+
+        def same(value: int) -> Any:  # Any: an int64 array
+            return np.full(375, value, dtype=np.int64)
+
+        sessions.append(
+            DayBars(
+                open_ms,
+                start,
+                same(price + half),
+                same(price - half),
+                same(price),
+                same(price),
+                same(1_000),
+                "history",
+            )
+        )
+    return History(sessions)
+
+
+def live_replay(
+    tapes: dict[str, Sequence[T]],
+    setup: dict[str, Any],
+    history: Any = None,
+    market_gate: bool = False,
+    **signal: Any,
+) -> DayReplay:
+    """A whole day through the real setup, context, signal checks and account guard (default
+    profile on ₹10 L, no charges, the market gate switched off) with flat Kite warm-up sessions."""
+    from nova_backtest.intraday.context import build_context
+    from nova_backtest.intraday.gate import IndexGate
+    from nova_backtest.intraday.guard import SignalChecks
+    from nova_backtest.intraday.setups import factory_for
+    from nova_contracts import StrategySpecIntraday, default_research_settings
+
+    settings = default_research_settings()
+    signals = settings.signal.model_copy(update=signal)
+    market = settings.market.model_copy(update={"market_gate": market_gate})
+    spec = StrategySpecIntraday.model_validate(ORR_SPEC | {"setup": setup})
+    make = factory_for(spec.setup)
+    stocks: dict[str, StockDay] = {}
+    for symbol, tape in tapes.items():
+        plain = stock_day(symbol, tape)
+        context = build_context(plain.bars1, plain.bars5, history or earlier_sessions(), signals)
+        stocks[symbol] = StockDay(symbol, DAY, plain.ticks, plain.bars1, plain.bars5, context)
+    gate = IndexGate(market, None, None, ms("09:15:00"))
+    guard = Guard(settings.account, 100_000_000, {}, lambda _b, _s: 0)
+    run = DayReplay(
+        stocks,
+        {s: make(spec.setup, stock) for s, stock in stocks.items()},
+        BASE,
+        timing(),
+        dict.fromkeys(stocks, 5),
+        DepthAt(eager_depth),
+        flat_charges(),
+        guard,
+        SignalChecks(
+            signals,
+            {s: stock.context for s, stock in stocks.items() if stock.context is not None},
+            gate,
+        ),
+    )
+    run.run()
+    return run

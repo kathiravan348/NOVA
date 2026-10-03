@@ -68,8 +68,21 @@ def register(kind: str, factory: SetupFactory) -> None:
     REGISTRY[kind] = factory
 
 
+def _builtin() -> None:
+    """Registers the shipped setups (imported here: they import this module)."""
+    from nova_backtest.intraday.setups import breakout
+
+    for kind, factory in (
+        ("opening_range_retest", breakout.opening_range_retest),
+        ("prev_day_high_retest", breakout.prev_day_high_retest),
+        ("inside_bar_continuation", breakout.inside_bar_continuation),
+    ):
+        REGISTRY.setdefault(kind, factory)
+
+
 def factory_for(setup: IntradaySetup) -> SetupFactory:
     """The factory of a setup kind; a kind without one fails the run plainly."""
+    _builtin()
     found = REGISTRY.get(setup.kind)
     if found is None:
         raise EngineError(f"The {setup.kind} setup arrives in NOVA-188/189")

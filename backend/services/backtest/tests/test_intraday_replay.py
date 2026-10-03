@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from intraday_factory import (
     BASE,
+    ORR_SPEC,
     FixedQtyGuard,
     ScriptedSetup,
     T,
@@ -229,14 +230,23 @@ def test_an_intraday_run_without_its_setup_fails_plainly(
     with factory() as db:
         insert_session(db)
         insert_ticks(db, "INFY", calm())
-        seed_intraday_run(db, ["INFY"])
+        pullback = ORR_SPEC | {
+            "setup": {
+                "kind": "vwap_trend_pullback",
+                "proximityAtr": 0.3,
+                "risingBars": 3,
+                "expiryBars": 3,
+                "targetR": 2,
+            }
+        }
+        seed_intraday_run(db, ["INFY"], spec=pullback)
     stop = threading.Event()
     engine = DispatchEngine(StrategyEngine(), IntradayEngine(tmp_path, tmp_path))
     run_worker(factory, engine, stop, poll_seconds=0, on_idle=stop.set)
     with factory() as db:
         run = db.get(BacktestRun, "run_i")
         assert run is not None and run.status == "failed"
-        assert run.error == "The opening_range_retest setup arrives in NOVA-188/189"
+        assert run.error == "The vwap_trend_pullback setup arrives in NOVA-188/189"
 
 
 def test_daily_loss_exits_everything_and_stops_new_entries() -> None:
