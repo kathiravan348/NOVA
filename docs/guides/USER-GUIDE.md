@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **1 Oct 2026** (Stage B, tasks up to NOVA-154). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-162). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -556,7 +556,10 @@ turn it off. Past prices can't be recorded later, so leave it on. The badge says
 (do the daily Kite login, Step 3). **Choose stocks** picks which synced stocks to record; with none ticked it
 records all of them. Kite sends live prices for at most 3,000 stocks, so with more synced stocks than that, press
 **Pick top 3000 by traded value**: it ticks the 3,000 stocks that trade the most money per day (average daily
-volume over the last 20 days × last close; stocks with no price history come last). Then press **Save stocks**; the
+volume over the last 20 days × last close; stocks with no price history come last). ETF *iNAV* symbols (names
+ending in INAV: an indicative fund value, not a tradable stock) are never picked. If some stocks have no daily
+prices yet, a warning says how many; press **Download daily bars** to open prefilled downloads of their daily
+prices since 2020 (200 stocks per plan; **Plan 1 of N** steps through them), run them, then press **Pick top 3000** again for a true top 3,000. Then press **Save stocks**; the
 list stays the same until you change it. Below the card, the table lists the chosen stocks; **Remove** takes one out (the last one
 cannot be removed, because an empty list means every stock). Cancelling a running recording job also turns the
 switch off.

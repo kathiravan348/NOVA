@@ -1,6 +1,6 @@
 # NOVA-162 — Recorder: real top 3000 (skip iNAVs, warn about unranked stocks)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-162 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-162 · **Depends on:** —
 
 ## Goal
 *Pick top 3000 by traded value* picks real stocks only (no ETF iNAV symbols). When synced stocks have no daily
@@ -42,7 +42,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- Built by Claude, 3 Oct 2026. `isInav` + `unrankedStocks` in `topByTradedValue.ts`; iNAVs never ranked or picked.
+- `RecorderSymbolsModal`: warning with the count and **Download daily bars**.
+- Changed from the task text: one download plan holds at most 200 stocks (`MAX_DOWNLOAD_SYMBOLS`), and 1 Oct had
+  2,471 unranked, so the button sends batched `syncPlans` (200 each), the same state **Download required data**
+  on Instruments uses; New download steps through them (**Plan 1 of N**). Test covers 450 → 200/200/50.
+- Checks: lint, typecheck, format, build pass; tests 1,079/1,080. The one failure,
+  `approvalBatch.test.tsx` (50 approvals, 20 s timeout), also fails on `main` under full load and passes alone;
+  flagged as a separate task.
+- Guides: USER-GUIDE (Live → Config).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Diff matches the task plus the 200-stock batching
+fix above; no backend change, nothing to deploy (Relay picks it up on the next `pnpm real`). Verdict: done.
