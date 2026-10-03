@@ -24,11 +24,14 @@ class ClosedTrade:
     charges: Charges
     cost: int | None = None  # exact paise paid for all buys; None = qty × entry price (D53)
     exit_reason: ExitReason | None = None
+    # Exact paise received for all sells; None = qty × exit price (intraday exits fill in parts)
+    proceeds: int | None = None
 
     @property
     def gross(self) -> int:
         paid = self.cost if self.cost is not None else self.entry_price * self.qty
-        return self.exit_price * self.qty - paid
+        received = self.proceeds if self.proceeds is not None else self.exit_price * self.qty
+        return received - paid
 
     @property
     def net(self) -> int:

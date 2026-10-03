@@ -413,3 +413,89 @@ def test_a_new_version_keeps_the_data_source_unless_sent(
     )
     assert refused.status_code == 400
     assert refused.json()["error"]["message"] == "Seconds candles exist only in recorded data"
+
+
+INTRADAY_SPEC = {
+    "mode": "intraday",
+    "segment": "equity_intraday",
+    "exchange": "NSE",
+    "timeframe": "1m",
+    "setup": {
+        "kind": "opening_range_retest",
+        "rangeMinutes": 15,
+        "retestBars": 3,
+        "bufferAtr": 0.1,
+        "targetR": 2,
+    },
+    "buying": {"kind": "single"},
+}
+
+
+def _intraday_strategy(engine: Engine, frozen: bool = True) -> None:
+    from nova_contracts import default_research_settings
+    from nova_db.models import ResearchProfile, ResearchProfileVersion, Strategy
+
+    settings = default_research_settings().model_dump(mode="json", by_alias=True)
+    with Session(engine) as db:
+        db.add(Strategy(id="stg_i", name="ORR", status="draft", latest_version=1))
+        db.add(ResearchProfile(id="rp_1", name="Intraday v1"))
+        db.flush()
+        db.add(StrategyVersion(strategy_id="stg_i", version=1, spec=INTRADAY_SPEC))
+        db.add(
+            ResearchProfileVersion(
+                profile_id="rp_1",
+                version=1,
+                settings=settings,
+                frozen=frozen,
+                hash="a" * 64 if frozen else None,
+                frozen_at=datetime.now(UTC) if frozen else None,
+            )
+        )
+        db.add(ResearchProfileVersion(profile_id="rp_1", version=2, settings=settings))
+        db.commit()
+
+
+def test_intraday_runs_need_recorded_data_and_a_frozen_profile(
+    client: TestClient, run_body: dict[str, object], clean: Engine, parity: Parity
+) -> None:
+    _intraday_strategy(clean)
+    body = run_body | {"strategyId": "stg_i", "from": "2026-10-01", "to": "2026-10-02"}
+    profile = {"profileId": "rp_1", "profileVersion": 1, "scenario": "base"}
+    cases = [
+        (body | profile, "Intraday strategies run on recorded data"),
+        (
+            body | {"dataSource": "recorded"},
+            "An intraday run needs a research profile version and a scenario",
+        ),
+        (
+            body | {"dataSource": "recorded"} | profile | {"profileVersion": 2},
+            "Freeze research profile v2 before running it",
+        ),
+        (
+            body | {"dataSource": "recorded"} | profile | {"profileId": "rp_x"},
+            "Research profile rp_x v1 not found",
+        ),
+        (run_body | profile, "Only intraday runs take a research profile"),
+    ]
+    for case, message in cases:
+        response = client.post(BACKTESTS, json=case)
+        assert (response.status_code, response.json()["error"]["message"]) == (400, message)
+
+    run = _queue(client, body | {"dataSource": "recorded"} | profile)
+    parity.assert_valid(run, "BacktestRun")
+    assert (run["profileId"], run["profileVersion"], run["scenario"]) == ("rp_1", 1, "base")
+    assert run["experimentId"] is None
+    candle = _queue(client, run_body)
+    assert (candle["profileId"], candle["scenario"]) == (None, None)
+
+    with Session(clean) as db:
+        row = db.get(BacktestRun, str(run["id"]))
+        assert row is not None
+        row.status = "completed"
+        db.commit()
+    edit = {k: v for k, v in body.items() if k != "strategyId"} | {"name": "Stress"}
+    stress = client.post(f"{BACKTESTS}/{run['id']}/versions", json=edit | {"scenario": "stress"})
+    assert stress.status_code == 400  # all three or none
+    kept = client.post(f"{BACKTESTS}/{run['id']}/versions", json=edit)
+    assert kept.status_code == 201, kept.text
+    assert (kept.json()["profileId"], kept.json()["scenario"]) == ("rp_1", "base")

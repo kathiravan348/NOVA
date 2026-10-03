@@ -30,6 +30,7 @@ from nova_db.enums import (
     BACKTEST_STAGES,
     BACKTEST_STATUSES,
     EXCHANGES,
+    SCENARIOS,
     SEGMENTS,
     SIDES,
 )
@@ -66,6 +67,17 @@ class BacktestRun(Base):
         check_in("data_source", "data_source", BACKTEST_DATA_SOURCES),
         CheckConstraint(
             "recorded_days_used IS NULL OR recorded_days_used >= 0", name="recorded_days_used"
+        ),
+        # D84: intraday runs name a frozen research profile version and a scenario.
+        ForeignKeyConstraint(
+            ["profile_id", "profile_version"],
+            ["research_profile_versions.profile_id", "research_profile_versions.version"],
+        ),
+        check_in("scenario", "scenario", SCENARIOS),
+        CheckConstraint(
+            "(profile_id IS NULL) = (profile_version IS NULL)"
+            " AND (profile_id IS NULL) = (scenario IS NULL)",
+            name="profile_choice",
         ),
     )
 
@@ -104,6 +116,15 @@ class BacktestRun(Base):
     recorded_days_skipped: Mapped[list[date]] = mapped_column(
         ARRAY(Date), server_default=text("'{}'")
     )
+    # D84 (NOVA-185): intraday runs only (null / false / empty on every other run).
+    profile_id: Mapped[str | None]
+    profile_version: Mapped[int | None] = mapped_column(Integer)
+    scenario: Mapped[str | None]
+    experiment_id: Mapped[str | None]  # NOVA-193 adds the experiments table
+    # An unresolved position (no bid by the session end) makes the run incomplete.
+    incomplete: Mapped[bool] = mapped_column(server_default=false())
+    # Inputs taken from Kite history instead of recorded ticks, e.g. `tick_size:INFY`.
+    history_inputs: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
 
 
 class BacktestResult(Base):
@@ -181,6 +202,8 @@ class Trade(Base):
                 "market_filter",
                 "rotation",
                 "end_of_period",
+                "daily_shutdown",
+                "unresolved",
             ),
         ),
         CheckConstraint("qty > 0 AND entry_price_paise > 0", name="entry"),
@@ -255,3 +278,28 @@ class ResearchProfileVersion(Base):
     hash: Mapped[str | None] = mapped_column(CHAR(64))
     created_at: Mapped[datetime] = created_at_column()
     frozen_at: Mapped[datetime | None]
+
+
+class IntradayTrade(Base):
+    """D84 (NOVA-185): the intraday details of a trade; the trade row keeps qty, average entry
+    price, exit and charges."""
+
+    __tablename__ = "intraday_trades"
+    __table_args__ = (
+        CheckConstraint(
+            "stop_paise > 0 AND first_fill_paise > stop_paise AND risk_paise > 0", name="levels"
+        ),
+        CheckConstraint("target_paise IS NULL OR target_paise > 0", name="target"),
+    )
+
+    trade_id: Mapped[str] = mapped_column(
+        ForeignKey("trades.id", ondelete="CASCADE"), primary_key=True
+    )
+    stop_paise: Mapped[int] = mapped_column(BigInteger)
+    target_paise: Mapped[int | None] = mapped_column(BigInteger)
+    first_fill_paise: Mapped[int] = mapped_column(BigInteger)
+    # 1R per share: first fill − stop.
+    risk_paise: Mapped[int] = mapped_column(BigInteger)
+    # Every buy: [{"at": ISO UTC, "qty": n, "price": paise}] (average price of that buy's fills).
+    legs: Mapped[JsonList]
+    unresolved: Mapped[bool] = mapped_column(server_default=false())

@@ -1,4 +1,6 @@
+import sys
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +13,9 @@ from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 __all__ = ["database_url", "engine", "session"]
+
+# Test helper modules (`intraday_factory`) import by name.
+sys.path.insert(0, str(Path(__file__).parent))
 
 TOKEN = "internal-test-token"
 
@@ -27,7 +32,7 @@ def clean(engine: Engine, parity: Parity) -> Engine:
         connection.execute(
             text(
                 "TRUNCATE strategies, instruments, candles, audit_entries, users,"
-                " ticks, tick_sessions, tick_days CASCADE"
+                " ticks, tick_sessions, tick_days, research_profiles CASCADE"
             )
         )
     spec = parity.mock("strategies")[0]["versions"][0]["spec"]

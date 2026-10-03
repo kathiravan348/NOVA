@@ -4,6 +4,7 @@ from nova_db.models.auth import ApprovalRequest, AuthSession, Role, User, UserRo
 from nova_db.models.backtest import (
     BacktestResult,
     BacktestRun,
+    IntradayTrade,
     ResearchProfile,
     ResearchProfileVersion,
     Trade,
@@ -56,6 +57,7 @@ __all__ = [
     "DownloadSetting",
     "Instrument",
     "IndexTick",
+    "IntradayTrade",
     "MarketIndex",
     "RateLimitRule",
     "RecorderSetting",

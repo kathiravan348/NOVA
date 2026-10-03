@@ -1,5 +1,6 @@
 """A finished simulation → metrics, benchmark, tax, years, trades and result rows (D45, D62)."""
 
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -32,11 +33,14 @@ def save_result(
     period: tuple[datetime, datetime],
     progress: ProgressSink,
     recorded_days: tuple[int, list[date]] | None = None,
+    with_trades: Callable[[list[str]], None] | None = None,
 ) -> None:
     """Writes the run's trades and result and marks it completed, in the run's transaction.
 
-    The run row changes only after the last progress write: `Progress` updates that row from its own
-    session, and an earlier change (autoflushed by any query) makes it wait for ever (NOVA-137).
+    `with_trades` gets the new trade ids in `result.trades` order before the commit (the intraday
+    simulator adds its own rows there, D84). The run row changes only after the last progress
+    write: `Progress` updates that row from its own session, and an earlier change (autoflushed by
+    any query) makes it wait for ever (NOVA-137).
     """
     initial = run.initial_capital_paise
     dates = [day for day, _ in result.equity]
@@ -70,11 +74,13 @@ def save_result(
     progress.stage("saving", len(result.trades))
     db.execute(delete(Trade).where(Trade.run_id == run.id))
     db.execute(delete(BacktestResult).where(BacktestResult.run_id == run.id))
+    trade_ids: list[str] = []
     for trade in result.trades:
         c = trade.charges
+        trade_ids.append(new_id("trd"))
         db.add(
             Trade(
-                id=new_id("trd"),
+                id=trade_ids[-1],
                 run_id=run.id,
                 symbol=trade.symbol,
                 exchange="NSE",
@@ -137,4 +143,7 @@ def save_result(
     run.progress_percent = 100
     run.trades_so_far = len(result.trades)
     trim_older_versions(db, run)  # D60: older versions keep only their metrics
+    if with_trades is not None:
+        db.flush()  # trades first: rows that point at them follow
+        with_trades(trade_ids)
     db.commit()
