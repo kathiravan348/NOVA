@@ -1,6 +1,6 @@
 # NOVA-189 — Intraday setups: VWAP trend pullback, failed breakout reclaim (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-189 · **Depends on:** NOVA-187 (merge after NOVA-188)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-189 · **Depends on:** NOVA-187 (merge after NOVA-188)
 
 ## Goal
 The pullback setup (family `trend`) and the reclaim setup (family `range`) of `docs/INTRADAY-RESEARCH.md` §3 produce
@@ -44,7 +44,25 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** `setups/pullback.py` (`Pullback`, `Reclaim`), registered with the breakout setups; all five kinds run.
+Guide ch. 10 and 12 examples, the negative cases, end-to-end trades and the range gate on reclaim are tested.
+**Files changed:** the listed files, plus `tests/intraday_factory.py` (per-minute VWAP, `with_context`),
+`tests/test_intraday_replay.py` (the "setup not built yet" test is gone: every kind exists; an unknown kind now
+fails "The <kind> setup is not available"), `docs/guides/API.md`.
+**Commands run:** `docker compose run --rm backend-check`: 1,606 pass, 1 unrelated flaky failure
+(`core/tests/test_realtime.py::test_completed_sync_result_arrives_on_the_socket`, passes when run alone).
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** API.
+**Deviations from task:** the `range_mid` target uses the stock's first 15 minutes (the setup has no range length);
+a reclaim whose VWAP is missing gives no candidate.
+**Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** none.
+**Checked:** "3 values, not 3 rises" (`risingBars` VWAP values strictly increasing); intrabar recovery does not
+reclaim; frozen targets checked again at the fill (2R exactly passes).
+**Change requests:** none.
+**Guides checked:** API setup list matches the diff.
+**Rulebook issues found:** none. Deploy `backtest backtest-worker` with `--no-deps` at a quiet time (D76).
+**Follow-up tasks created:** none (flaky core realtime tests reported to the Owner).

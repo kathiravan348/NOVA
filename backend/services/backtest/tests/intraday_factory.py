@@ -418,7 +418,7 @@ Ohlc = tuple[str, int, int, int, int]  # IST "HH:MM", open, high, low, close
 def bar_tape(
     minutes: Sequence[Ohlc],
     spread: int = 4,
-    vwap: int | Callable[[int], int] = 0,
+    vwap: int | Callable[[int], int] | dict[str, int] = 0,
     volume_per_minute: int = 3_000,
 ) -> list[T]:
     """Five ticks a minute (open :05, high :20, low :35, close :50 and :59) so each 1m bar has
@@ -429,7 +429,10 @@ def bar_tape(
         hh, mm = (int(x) for x in clock.split(":"))
         elapsed = (hh * 60 + mm) - (9 * 60 + 15)
         for second, price in zip((5, 20, 35, 50, 59), [*prices, prices[-1]], strict=True):
-            average = vwap(price) if callable(vwap) else vwap
+            if isinstance(vwap, dict):
+                average = vwap.get(clock, 0)
+            else:
+                average = vwap(price) if callable(vwap) else vwap
             out.append(
                 T(
                     f"{clock}:{second:02d}",
@@ -526,3 +529,30 @@ def live_replay(
     )
     run.run()
     return run
+
+
+def with_context(
+    stock: StockDay,
+    atr: float,
+    prev_high: int | None = None,
+    prev_low: int | None = None,
+    vwap: float | None = None,
+) -> StockDay:
+    """The stock-day with a hand-set context: constant ATR (and VWAP), previous session levels."""
+    from nova_backtest.intraday.context import StockContext
+
+    n = len(stock.bars1)
+    nan = np.full(n, np.nan)
+    context = StockContext(
+        atr=np.full(n, atr),
+        ema=nan,
+        ema_before=nan,
+        close5=nan,
+        span6=nan,
+        vwap=nan if vwap is None else np.full(n, vwap),
+        rel_volume=nan,
+        prev_high=prev_high,
+        prev_low=prev_low,
+        sources=frozenset(),
+    )
+    return StockDay(stock.symbol, stock.day, stock.ticks, stock.bars1, stock.bars5, context)
