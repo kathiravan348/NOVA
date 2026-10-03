@@ -99,6 +99,23 @@ Claude ranks the results from the database after each stage (v1 in-sample, v2 ou
 
 Later: seconds bars from recorded ticks + jump-ahead simulator (D61 (7)); combining 2–3 strategies in one portfolio; paper trading (Phase 2).
 
+### Intraday safety research (D84; Owner choices 2026-10-03)
+Goal: test intraday setups with strict loss limits and real recorded fills before any live decision (Jan 2027).
+Rules: `docs/INTRADAY-RESEARCH.md`. A separate intraday simulator; the candle engine stays unchanged.
+
+| Step | Tasks | What exists after |
+|---|---|---|
+| 1. Data (start now) | 179 index ticks · 180 Relay indices to record · 181 tick size + longest feed gap | Index context recorded; slippage in ticks; 30 s session check |
+| 2. Contracts | 182 research profile · 183 intraday strategy spec + run fields | Shapes for profiles, setups, buying rules, scenarios |
+| 3. Profiles | 184 profile table + endpoints | Versioned, frozen settings with a hash |
+| 4. Simulator | 185 tick replay + fill model · 186 account guard + skip reasons · 187 market gate + warm-up · 188 breakout setups · 189 pullback/reclaim setups · 190 buying rules · 191 mechanics cases | Intraday runs on recorded ticks, every guide rule tested |
+| 5. Experiments + reports | 192 intraday report · 193 experiments, blocks, final-block lock | 15 variants × base/stress, honest reports |
+| 6. Screens | 194 Research plan page · 195 intraday strategy form + Library · 196 Experiment page | All of it from Orbit, no CLI |
+| 7. Signal check | 197 setups on Kite 1m history | Years of signal evidence beside the recorded fills |
+
+Calendar: October = build + mechanics on the first sessions; development block until the freeze; validation
+(20 sessions) about mid-November to mid-December; final block (20) ends about mid-January 2027.
+
 ### Segment order for engines (Stage B)
 Equity delivery → equity intraday → futures → options. The data model supports all four from day one.
 

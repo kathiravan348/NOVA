@@ -184,6 +184,25 @@
 | NOVA-176 | Strategies page: search, more filters, results by data source (D82) | done | Claude | 170 |
 | NOVA-177 | Timeline events endpoint + held time on sells (D83) | done | Claude | 175 |
 | NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | done | Claude | 177 |
+| NOVA-179 | Recorder: record chosen indices into `index_ticks` (D84, migration 0030) | planned | — | — |
+| NOVA-180 | Relay Live Config: indices to record; Pick top leaves room for them (D84) | planned | — | 179 (merge after 179 is deployed) |
+| NOVA-181 | Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031) | planned | — | 179 (shares `models/data.py`) |
+| NOVA-182 | Contracts: research profile (D84) | planned | — | — |
+| NOVA-183 | Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84) | draft | — | 182 |
+| NOVA-184 | Backtest service: research profiles table + endpoints, freeze + hash (D84, migration 0032) | draft | — | 181, 182 |
+| NOVA-185 | Intraday simulator: tick replay, fill model, exits, unresolved positions (D84) | draft | — | 181, 183 |
+| NOVA-186 | Intraday simulator: risk sizing, account guard, skip-reason log (D84) | draft | — | 185 |
+| NOVA-187 | Intraday simulator: market gate, context, warm-up from history (D84) | draft | — | 179, 185 |
+| NOVA-188 | Intraday setups: opening range retest, previous day high retest, inside bar (D84) | draft | — | 186, 187 |
+| NOVA-189 | Intraday setups: VWAP trend pullback, failed breakout reclaim (D84) | draft | — | 187 (merge after 188) |
+| NOVA-190 | Intraday buying rules: single, average on recovery, add to winner (D84) | draft | — | 186 |
+| NOVA-191 | Intraday mechanics cases: the 12 known cases as tests (D84) | draft | — | 188, 189, 190 |
+| NOVA-192 | Intraday report: skip reasons, R, expectancy, unresolved, base vs stress (D84) | draft | — | 186 |
+| NOVA-193 | Experiments: frozen plan, blocks, final-block lock, trial register (D84) | draft | — | 184, 185 |
+| NOVA-194 | Orbit: Research plan page (profile editor, notes, freeze) (D84) | draft | — | 184 |
+| NOVA-195 | Orbit: intraday strategy form + 15 Library entries (D84) | draft | — | 183 |
+| NOVA-196 | Orbit: Experiment page (matrix, results, final lock) (D84) | draft | — | 192, 193 |
+| NOVA-197 | Signal check: intraday setups on Kite 1m history (D84) | draft | — | 188, 189 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -216,3 +235,8 @@
 - Recorder data quality (D81): 162 (frontend), 163 (broker recorder) and 164 (Atlas) share no files and can run in parallel; 165 after 164 (merges after 164 is deployed). Deploy 163 and 164 after 15:45 IST or at a weekend (D76). After 162 ships, the Owner downloads daily bars for the unranked stocks, then presses *Pick top 3000* and saves.
 - Recorded backtests + screens (D82; Owner: recorded first). Engine lane: 166 → 167 → 168 → 174 (migrations 0028, 0029 in that order; 0027 from 164 first). 169 (frontend) and 170 (backend list) start after 166 and run beside 167/168 (no shared files); 169 merges after 167 is deployed. Then 171 (after 169, 170) and 176 (after 170) in parallel; 173 after 169; 172 after 171 + 173; 175 last (after 173, 174). Deploy migrations after 15:45 IST or at a weekend (D76).
 - Trade timeline (D83): 177 (backend, contracts, mocks, services; no migration, deploy only `backtest` with `--no-deps`) → 178 (frontend; merges after 177 is deployed).
+- Intraday safety research (D84, `docs/INTRADAY-RESEARCH.md`). **Start now, in parallel:** 179 and 182 (no shared files except generated
+  schema, maps and guides). 179 first among the data tasks: its index recording should ship at this weekend (D76; migration 0030).
+  Then 180 (after 179 is deployed) and 181 (after 179 merges; migration 0031) in parallel; 183 after 182; 184 after 181 + 182 (0032).
+  Simulator: 185 → 186 and 187 in parallel → 188 → 189; 190 and 192 after 186; 191 after 188–190; 193 after 184 + 185;
+  screens 194 (after 184), 195 (after 183), 196 last; 197 after 188 + 189.
