@@ -1,4 +1,6 @@
 import {
+  ResearchProfileSchema,
+  DEFAULT_RESEARCH_SETTINGS,
   AuditEntrySchema,
   BacktestResultSchema,
   BacktestRunSchema,
@@ -13,6 +15,7 @@ import {
 } from "@nova/contracts";
 import { describe, expect, it } from "vitest";
 import {
+  mockResearchProfiles,
   MOCK_NOW,
   mockAuditEntries,
   mockBacktestResults,
@@ -29,6 +32,12 @@ import {
 } from "./data";
 
 describe("Mock data schemas and general conventions", () => {
+  it("validates research profiles and the shared defaults", () => {
+    expect(ResearchProfileSchema.array().parse(mockResearchProfiles)).toEqual(mockResearchProfiles);
+    expect(mockResearchProfiles[0]?.versions[1]?.settings).toEqual(DEFAULT_RESEARCH_SETTINGS);
+    expect(mockResearchProfiles[0]?.versions[0]?.settings.execution.maxSpreadBps).toBe(6);
+  });
+
   it("validates mockUser against UserSchema", () => {
     expect(UserSchema.safeParse(mockUser).success).toBe(true);
   });

@@ -138,6 +138,15 @@ from nova_contracts.recorder import (
     RecorderSettingsUpdate,
     RecorderState,
 )
+from nova_contracts.research_profile import (
+    ResearchProfile,
+    ResearchProfileCreate,
+    ResearchProfileVersion,
+    ResearchProfileVersionCreate,
+    ResearchProfileVersionUpdate,
+    ResearchSettings,
+    default_research_settings,
+)
 from nova_contracts.strategy import (
     AtrStop,
     Condition,
@@ -166,6 +175,13 @@ from nova_contracts.universe import UniverseEntry, UniverseEntryWrite, UniverseS
 from nova_contracts.user import User, UserRole
 
 __all__ = [
+    "ResearchSettings",
+    "ResearchProfileVersion",
+    "ResearchProfile",
+    "ResearchProfileCreate",
+    "ResearchProfileVersionCreate",
+    "ResearchProfileVersionUpdate",
+    "default_research_settings",
     "MAX_LIVE_SYMBOLS",
     "LiveDaySummary",
     "LiveSnapshotItem",

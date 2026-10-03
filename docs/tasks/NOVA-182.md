@@ -1,6 +1,6 @@
 # NOVA-182 — Contracts: research profile (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-182 · **Depends on:** —
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-182 · **Depends on:** —
 
 ## Goal
 The research profile (shared intraday settings, `docs/INTRADAY-RESEARCH.md` §2) exists as Zod + Pydantic contracts
@@ -45,8 +45,8 @@ Modify:
    freeze functions + TanStack hooks under `queryKeys.research`.
 
 ## Acceptance checks
-- [ ] Schema tests: defaults valid; each cross-field rule rejects a bad value with its message; strict objects reject extra keys.
-- [ ] Parity test: Pydantic dumps of every model validate against the generated JSON Schema.
+- [x] Schema tests: defaults valid; each cross-field rule rejects a bad value with its message; strict objects reject extra keys.
+- [x] Parity test: Pydantic dumps of every model validate against the generated JSON Schema.
 - [ ] Handler tests: create, add version, update draft, update frozen → 400, freeze, freeze twice → 400, 404.
       `pnpm review:check` and `docker compose run --rm backend-check` pass.
 
@@ -57,7 +57,19 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** Six research setting groups, parity/defaults, version bodies, stateful mock endpoints and query hooks.
+**Files changed:** `backend/libs/nova_contracts/{src/nova_contracts,tests}/` research models, exports and parity test.
+`frontend/packages/contracts/{src,schema}/` research contracts, tests, exports and six generated schemas.
+`frontend/packages/mocks/{data,src}/` research fixtures, handlers, registration and schema tests.
+`frontend/packages/services/src/{api,queries}/` research functions/hooks, keys, tests and root exports.
+`docs/CONTRACTS.md`, `docs/tasks/{BOARD,NOVA-182}.md`.
+**Commands run:** `pnpm review:check` passes (Vitest max 4/min 1 workers, 1,241 tests); ruff/mypy/parity (53 tests) pass; Docker gate pending.
+**Checked:** 360px / desktop / dark / light: N/A (no screens).
+**New dependencies:** none.
+**Maps updated:** CONTRACTS.
+**Guides:** none (mock contracts only; real API comes in NOVA-184).
+**Deviations from task:** none; demo freeze uses a fixed hash, canonical backend hashing is NOVA-184.
+**Known gaps:** none.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
