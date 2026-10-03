@@ -1,6 +1,6 @@
 # NOVA-187 — Intraday simulator: market gate, context, warm-up from history (D84)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-187 · **Depends on:** NOVA-179, NOVA-186
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-187 · **Depends on:** NOVA-179, NOVA-186
 
 ## Goal
 The intraday simulator knows, at each 1m close, the inputs of `docs/INTRADAY-RESEARCH.md` §6: ATR, stock VWAP,
@@ -70,4 +70,12 @@ auction there, Kite candles do not); 5m warm-up uses the last 3 earlier sessions
 **Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** none.
+**Checked:** values use only closed bars (5m index from `searchsorted(end, at, "right")`); NaN inputs → `warmup`,
+never a guessed level; E2E run lists the history inputs; flaky core realtime test is outside this task.
+**Change requests:** none.
+**Guides checked:** API simulator paragraph matches the diff; no table or endpoint change.
+**Rulebook issues found:** none. Deploy `backtest backtest-worker` with `--no-deps` at a quiet time (D76).
+**Follow-up tasks created:** none (flaky test noted to the Owner).
