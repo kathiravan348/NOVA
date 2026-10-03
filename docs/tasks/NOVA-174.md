@@ -1,6 +1,6 @@
 # NOVA-174 — Trade exit reasons + day ledger endpoints (D82)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-174 · **Depends on:** NOVA-168 (simulator), NOVA-170 (routes, contracts)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-174 · **Depends on:** NOVA-168 (simulator), NOVA-170 (routes, contracts)
 
 ## Goal
 New trades record why they closed, and two endpoints give a run's day-by-day ledger: buys, sells, charges,
@@ -67,3 +67,15 @@ Modify:
 **Deviations from task:** added the static mock module and updated the reference simulator to compare exit reasons.
 **Known gaps:** independent review and deployment pending; migrate 0029, then rebuild only backtest/backtest-worker.
 **Gate note:** frontend used 4 fork/thread workers; earlier approval/realtime timing failures passed on rerun.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none needed. Checked every `Book.close` caller passes a reason and every
+queued exit stores one (`queue_exit`), so `exit_reasons.pop` cannot miss.
+**Note:** a stop/target exit and a pending buy at the same bar time list the sell first (the engine buys first);
+only the intermediate `cashAfterPaise` of that pair differs, day-end cash is exact. Acceptable for now.
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Guides checked:** API (`/ledger`, `/ledger/{date}`, `exitReason`), DATABASE (0029) match the code.
+**Deployment:** 3 Oct 2026 21:27 IST (Saturday): built the image, ran migration 0029 (`run --rm --no-deps migrate`), `up -d --build --no-deps backtest backtest-worker`. Recorder, db, redis untouched.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
