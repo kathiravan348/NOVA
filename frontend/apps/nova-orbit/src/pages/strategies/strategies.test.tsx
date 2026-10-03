@@ -10,7 +10,7 @@ import {
   mockStrategyStats,
 } from "@nova/mocks";
 import { renderApp } from "../../test/renderApp";
-import { sortStrategies } from "./StrategiesPage";
+import { sortStrategies } from "./strategyFilters";
 
 const server = setupServer(...handlers);
 

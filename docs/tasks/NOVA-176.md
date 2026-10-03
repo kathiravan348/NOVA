@@ -1,6 +1,6 @@
 # NOVA-176 — Strategies page: search, more filters, results by data source (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-176 · **Depends on:** NOVA-170
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-176 · **Depends on:** NOVA-170
 
 ## Goal
 **Strategies** can be searched and filtered by status, mode, segment, timeframe, tested or not and minimum best
@@ -13,6 +13,7 @@ CAGR, and its cards can show results from **History data**, **Recorded data** or
 ## Files
 Create:
 - `frontend/apps/nova-orbit/src/pages/strategies/StrategyFilters.tsx`, `strategyFilters.ts`, test `strategyFilters.test.ts`
+- `frontend/apps/nova-orbit/src/pages/strategies/strategyPageFilters.test.tsx`
 Modify:
 - `frontend/apps/nova-orbit/src/pages/strategies/StrategiesPage.tsx` (+ its existing test)
 - `docs/guides/USER-GUIDE.md` (Strategies page)
@@ -31,14 +32,34 @@ Modify:
    follow **Results from**.
 
 ## Acceptance checks
-- [ ] Search "breakout" + Segment Intraday narrows the cards; the count line updates.
-- [ ] Results from Recorded data shows recorded-run stats; Tested + Recorded hides strategies never run on it.
-- [ ] Sort by Name orders A–Z; URL params restore the filters after reload.
-- [ ] Checked at 360px and desktop, dark and light; `pnpm review:check`.
+- [x] Search "breakout" + Segment Intraday narrows the cards; the count line updates.
+- [x] Results from Recorded data shows recorded-run stats; Tested + Recorded hides strategies never run on it.
+- [x] Sort by Name orders A–Z; URL params restore the filters after reload.
+- [x] Checked at 360px and desktop, dark and light; `pnpm review:check`.
 
 ## Out of scope
 - Backend changes, tags or folders for strategies, the Library page.
 
 ## Questions
+- Scope clarification (ChatGPT, planner): keep the new page-filter checks in `strategyPageFilters.test.tsx` so the existing integration test stays below 300 lines.
 
 ## Handoff
+- Implementer: ChatGPT; implementation commit `321beef`.
+- Added URL-backed search/status/source/sort and advanced latest-spec, tested and minimum-CAGR filters.
+- Cards use statistics from the selected source; missing results sort last; empty matches offer Clear filters.
+- Tests: 28 focused checks; final `pnpm review:check` passed (1,140 tests, lint/typecheck/format, both apps and Storybook).
+- Check workers bounded to four forks/threads to avoid the existing approval-batch timing flake.
+- Visual QA: 360px and 1440px, dark/light; fields and cards fit without page overflow.
+- Guides: USER-GUIDE Strategies section; maps: none; dependencies: none.
+- New integration checks were split into their own file to keep all touched files below 300 lines.
+- Recorder, database and Redis start times unchanged; temporary task previews closed.
+- Pending: independent review/merge. Stacked review order: 171 → 173 → 172 → 174 → 175 → 176.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none needed.
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** search + segment, Results from Recorded + Tested, Name sort and URL restore tested.
+**Guides checked:** USER-GUIDE Strategies section matches the filters, sorts and count line.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
