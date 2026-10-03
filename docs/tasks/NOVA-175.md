@@ -1,6 +1,6 @@
 # NOVA-175 — Backtest Timeline popup (day ledger) (D82)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-175 · **Depends on:** NOVA-173, NOVA-174
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-175 · **Depends on:** NOVA-173, NOVA-174
 
 ## Goal
 A backtest's page has a **Timeline** button. It opens a popup with one row per trading day (buys, sells,
@@ -57,3 +57,13 @@ Modify:
 **New dependencies:** none. **Maps:** COMPONENTS. **Guides:** USER-GUIDE.
 **Deviations:** shared generic row-detail renderer needed for inline expansion; added to scope before implementation.
 **Known gaps:** independent review pending; desktop tables scroll sideways. Averaging note appears on buy days of averaging-enabled strategies.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none needed.
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** day list, expand to events with cash after, stock/date/all-days filters, "—" reason, no button on
+summary-only versions: all tested. DataTable `renderRowDetails` has a story and a test.
+**Guides checked:** USER-GUIDE Timeline paragraph and COMPONENTS DataTable row match the diff.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

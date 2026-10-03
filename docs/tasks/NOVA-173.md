@@ -1,6 +1,6 @@
 # NOVA-173 — Results by symbol: best 5 / worst 5 + "View all" popup; Modal sizes (D82)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
 
 ## Goal
 A backtest's page shows a short **Results by symbol** (best 5 and worst 5). **View all N symbols** opens a
@@ -49,3 +49,12 @@ Modify:
 - Visual: Sizes story and actual popup at 360px/1440px, dark/light; no modal overflow. Mock preview only.
 - Guides: USER-GUIDE (symbol report), COMPONENTS (Modal). Dependencies: none.
 - Not merged: independent review required; branch follows task/NOVA-171 in the sequential review chain.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** no **View all 0 symbols** button when a run has no symbol results (+ test).
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** best/worst 5, 30-row popup over 2 pages, search/losers, show trades and the 6-symbol case tested.
+**Guides checked:** USER-GUIDE result section and COMPONENTS Modal row match the diff.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

@@ -1,6 +1,6 @@
 # NOVA-172 — Compare: pick runs in a popup with filters (D82)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-172 · **Depends on:** NOVA-171, NOVA-173
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-172 · **Depends on:** NOVA-171, NOVA-173
 
 ## Goal
 **Compare** no longer lists every run above the results. The chosen runs show as a short row at the top;
@@ -54,3 +54,12 @@ Modify (guide):
 - Visual: page and picker at 360px/1440px, dark/light; popup stays within viewport; mock data only.
 - Guides: USER-GUIDE (Compare). Dependencies: none. RunFilters already provided hideStatus in NOVA-171.
 - Not merged: independent review required; branch follows task/NOVA-173 in the sequential review chain.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** none needed.
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** chips from `?runs=`, Min CAGR filter, mixed history+recorded pick, Cancel and the 3-run limit tested.
+**Guides checked:** USER-GUIDE Compare section matches the popup flow.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
