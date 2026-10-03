@@ -29,6 +29,7 @@ ROUTES: dict[str, str] = {
     "live": "atlas_url",
     "strategies": "strategy_url",
     "backtests": "backtest_url",
+    "research-profiles": "backtest_url",
 }
 METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 API_PREFIX = "/api/v1"

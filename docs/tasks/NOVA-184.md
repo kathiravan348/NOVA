@@ -1,6 +1,6 @@
 # NOVA-184 — Backtest service: research profiles table + endpoints, freeze + hash (D84, migration 0032)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-184 · **Depends on:** NOVA-181, NOVA-182
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-184 · **Depends on:** NOVA-181, NOVA-182
 
 ## Goal
 The `/research-profiles` endpoints of NOVA-182 work on the real backend: profiles and versions are stored, a draft
@@ -51,7 +51,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** migration 0032 (`research_profiles`, `research_profile_versions`), `/research-profiles` router (list, create,
+get, add version, update draft, freeze with SHA-256 hash), audit rows, gateway route + held agent writes, `get_frozen_settings`.
+**Files changed:** the listed files, plus `nova_core/api_docs.py` (research-profiles tagged under Backtests) and
+`core/tests/test_api_docs.py` (the "not available" line names both prefixes of the backtest service).
+**Commands run:** `docker compose run --rm backend-check` pass (1,546 tests). No frontend change.
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** API, DATABASE.
+**Deviations from task:** hash check is `frozen = (hash IS NOT NULL) AND frozen = (frozen_at IS NOT NULL)` (same meaning,
+valid SQL); names are trimmed and limited to 80 characters in the API (400) as well as the DB check; ids `rp_…`.
+Pinned hash of the default settings: `b206dcab…2cf0` (`test_profiles.py`).
+**Known gaps:** the mock profile's hash (`aaa…`) is a placeholder, not the real hash of its settings.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

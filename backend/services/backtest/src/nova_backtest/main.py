@@ -7,7 +7,7 @@ from fastapi import APIRouter, FastAPI
 from nova_common import install_error_handlers, openapi_url
 from nova_db import create_db_engine, create_session_factory
 
-from nova_backtest import routes
+from nova_backtest import profiles, routes
 from nova_backtest.settings import BacktestSettings, get_backtest_settings
 
 API_PREFIX = "/api/v1"
@@ -40,6 +40,7 @@ def create_app(settings: BacktestSettings | None = None) -> FastAPI:
         return {"status": "ok"}
 
     router.include_router(routes.router)
+    router.include_router(profiles.router)
     app.include_router(router)
     return app
 

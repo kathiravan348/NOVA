@@ -78,7 +78,7 @@ def test_schema_names_a_failed_service(dummy_settings: CoreSettings) -> None:
     schema = response.json()
     assert "/api/v1/auth/login" in schema["paths"]
     assert "/api/v1/strategies" in schema["paths"]
-    assert schema["info"]["description"] == "Not available right now: backtests."
+    assert schema["info"]["description"] == "Not available right now: backtests, research-profiles."
 
 
 def test_schema_groups_operations_by_area(dummy_settings: CoreSettings) -> None:

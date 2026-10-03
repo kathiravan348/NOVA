@@ -8,7 +8,9 @@ def test_every_gateway_prefix_has_an_explicit_rule() -> None:
     assert PREFIX_RULES["broker"] == "blocked"
 
 
-@pytest.mark.parametrize("prefix", ["strategies", "backtests", "market-data", "data-jobs"])
+@pytest.mark.parametrize(
+    "prefix", ["strategies", "backtests", "research-profiles", "market-data", "data-jobs"]
+)
 @pytest.mark.parametrize("method", ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"])
 def test_gateway_methods(prefix: str, method: str) -> None:
     expected = "free" if method == "GET" else "blocked" if method == "HEAD" else "held"

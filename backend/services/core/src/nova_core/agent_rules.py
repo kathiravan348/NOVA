@@ -8,6 +8,7 @@ PREFIX_RULES: dict[str, Rule] = {
     "live": "blocked",
     "strategies": "held",
     "backtests": "held",
+    "research-profiles": "held",
     "market-data": "held",
     "data-jobs": "held",
 }

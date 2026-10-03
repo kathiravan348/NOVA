@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 3 Oct 2026 (NOVA-179). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 4 Oct 2026 (NOVA-184). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -15,6 +15,7 @@ NOVA Core :8000  /api/v1/...   sign-in, /me, /audit  +  gateway
    ├── /broker/*        → broker service   (the only service that talks to Zerodha Kite, D35)
    ├── /strategies/*    → strategy service
    ├── /backtests/*     → backtest service (+ backtest worker)
+   ├── /research-profiles/* → backtest service
    ├── /market-data/*   → Atlas            (+ Atlas worker)
    ├── /data-jobs/*     → Atlas
    └── /live/*          → Atlas
@@ -142,6 +143,21 @@ Versions are never deleted on their own; `DELETE /strategies/{id}` removes a who
 | `POST /backtests/{id}/versions` | **Edit**: queues the next version of the backtest (same strategy; strategy version, stocks, period, capital, benchmark, name from the body). When a version completes, older completed versions keep only their metrics and `years`: trades deleted, result `equityCurve`/`bySymbol` emptied, `reportKept` false. Audit: `backtest.edit` ("Queued v2 of backtest IT basket"). | `BacktestVersionCreate` (`dataSource` absent or null = the previous version's source, D82) | 201 `BacktestRun` (`queued`); 400 the same data-source refusals as `POST /backtests`, "Wait for the running version to finish" (a version is queued or running), unknown symbols or "Unknown benchmark: X" (`invalid_request`, benchmark must be null or any stored index); 404 |
 | `DELETE /backtests/{id}` | `scope=all` (default): deletes the whole backtest, every version with its trades and results. `scope=version`: only this older version. Audit: `backtest.delete` ("Deleted backtest IT basket (3 versions)" / "Deleted v1 of backtest IT basket"). | path, `scope` | `BacktestDeleteResult {deletedRuns}`; 400 "A running backtest cannot be deleted", "Delete the whole backtest instead" (`scope=version` on the newest); 404 |
 | `POST /backtests/delete` | Deletes several whole backtests (every version of each id's backtest), all or nothing. Audit: `backtest.delete` ("Deleted 2 backtests (3 versions)"). | `BacktestDeleteRequest {ids (1–100)}` | `BacktestDeleteResult`; 400 a target is running; 404 unknown id |
+
+### Research profiles (`/research-profiles`, D84, NOVA-184)
+Versioned shared settings for intraday runs (`ResearchSettings`, `docs/INTRADAY-RESEARCH.md` §2). A draft version can
+change; a frozen one never does. Every write: audit `settings.update`, target `settings` / `research-profile/<id>`,
+summary "Research profile <name>: …" ("created with draft v1", "draft v2 added", "draft v2 changed", "v2 frozen").
+No delete. The agent account's writes are held for approval (D67).
+
+| Method & path | What it does | Input | Output |
+|---|---|---|---|
+| `GET /research-profiles` | Every profile with its versions (newest first), most recently updated profile first. | — | `ResearchProfile[]` |
+| `POST /research-profiles` | Creates a profile with version 1 as a draft. | `ResearchProfileCreate {name (1–80 after trimming), description, settings}` | 201 `ResearchProfile`; 400 invalid settings (cross-field messages) or name |
+| `GET /research-profiles/{id}` | One profile. | path | `ResearchProfile`; 404 "Research profile not found" |
+| `POST /research-profiles/{id}/versions` | Adds a draft after the newest version (copies nothing). | `ResearchProfileVersionCreate {note, settings}` | 201 `ResearchProfileVersion`; 404 |
+| `PUT /research-profiles/{id}/versions/{version}` | Replaces a draft's settings. | `ResearchProfileVersionUpdate {settings}` | `ResearchProfileVersion`; 400 "Frozen versions cannot change"; 404 "Research profile version not found" |
+| `POST /research-profiles/{id}/versions/{version}/freeze` | Freezes a draft: `frozen` true, `frozenAt` now, `hash` = SHA-256 hex of the settings as JSON with camelCase keys sorted at every level, separators `,` `:` (no spaces), numbers as Python writes them (float fields keep `.0`, e.g. `30.0`). Same settings → same hash, whatever the key order sent. | — | `ResearchProfileVersion`; 400 "Version is already frozen"; 404 |
 
 ## 5. NOVA Atlas — market data and data jobs
 

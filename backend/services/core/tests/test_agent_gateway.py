@@ -49,7 +49,9 @@ def agent_client(
         yield client
 
 
-@pytest.mark.parametrize("prefix", ["strategies", "backtests", "market-data", "data-jobs"])
+@pytest.mark.parametrize(
+    "prefix", ["strategies", "backtests", "research-profiles", "market-data", "data-jobs"]
+)
 def test_agent_reads_pass(
     agent_client: TestClient, sent: list[httpx2.Request], prefix: str
 ) -> None:
@@ -64,6 +66,7 @@ def test_agent_reads_pass(
     "method,path,body",
     [
         ("POST", "/backtests", {"name": "Test"}),
+        ("POST", "/research-profiles/rp_1/versions/1/freeze", None),
         ("PUT", "/strategies/stg_1", {"name": "Test"}),
         ("PATCH", "/market-data/universe/INFY", {"sector": "IT"}),
         ("DELETE", "/data-jobs/job_1", None),

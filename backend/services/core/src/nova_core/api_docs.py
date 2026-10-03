@@ -33,7 +33,11 @@ TAGS: list[tuple[str, tuple[str, ...], str]] = [
     ("Market data", ("market-data",), "Instruments and candles (Atlas)."),
     ("Data jobs", ("data-jobs",), "Instrument sync and historical downloads (Atlas)."),
     ("Strategies", ("strategies",), "Strategies, versions and stats."),
-    ("Backtests", ("backtests",), "Backtest runs, results and trades."),
+    (
+        "Backtests",
+        ("backtests", "research-profiles"),
+        "Backtest runs, results, trades and research profiles.",
+    ),
     ("Audit", ("audit",), "Audit log of changes."),
     ("System", ("health",), "Service health."),
 ]

@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    CHAR,
     BigInteger,
     CheckConstraint,
     Date,
@@ -15,6 +16,8 @@ from sqlalchemy import (
     SmallInteger,
     Text,
     UniqueConstraint,
+    false,
+    func,
     text,
     true,
 )
@@ -216,3 +219,39 @@ class Trade(Base):
     dp_paise: Mapped[int] = mapped_column(BigInteger)
     charges_total_paise: Mapped[int] = mapped_column(BigInteger)
     net_pnl_paise: Mapped[int] = mapped_column(BigInteger)
+
+
+class ResearchProfile(Base):
+    """D84: versioned shared settings of intraday runs (`docs/INTRADAY-RESEARCH.md` §2)."""
+
+    __tablename__ = "research_profiles"
+    __table_args__ = (CheckConstraint("char_length(name) BETWEEN 1 AND 80", name="name"),)
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    description: Mapped[str] = mapped_column(server_default="")
+    created_at: Mapped[datetime] = created_at_column()
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class ResearchProfileVersion(Base):
+    """A draft changes; a frozen version never does and carries the SHA-256 of its settings."""
+
+    __tablename__ = "research_profile_versions"
+    __table_args__ = (
+        CheckConstraint("version >= 1", name="version"),
+        CheckConstraint(
+            "frozen = (hash IS NOT NULL) AND frozen = (frozen_at IS NOT NULL)", name="frozen"
+        ),
+    )
+
+    profile_id: Mapped[str] = mapped_column(
+        ForeignKey("research_profiles.id", ondelete="CASCADE"), primary_key=True
+    )
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    note: Mapped[str] = mapped_column(server_default="")
+    settings: Mapped[Json]
+    frozen: Mapped[bool] = mapped_column(server_default=false())
+    hash: Mapped[str | None] = mapped_column(CHAR(64))
+    created_at: Mapped[datetime] = created_at_column()
+    frozen_at: Mapped[datetime | None]
