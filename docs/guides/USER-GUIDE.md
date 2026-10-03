@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, last task NOVA-175). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, last task NOVA-176). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -79,8 +79,15 @@ Each strategy is a **card**. A card shows:
   (click it to open that test). **CAGR** means average growth per year, so short and long tests compare fairly.
   With just one completed test, the card shows one **Return** and one **CAGR**, even while another test runs.
 
-Use **Status** to show only drafts/active/archived, and **Sort by** to order by *Recently updated*,
-**Best CAGR** or *Most runs*.
+Use **Search** to find a strategy by name and **Status** to show drafts, active or archived strategies.
+**Results from** chooses **All data**, **History data** or **Recorded data**. The cards' run counts and
+results follow that choice. **Sort by** offers **Recently updated**, **Best CAGR**, **Most runs**,
+**Name (A–Z)**, **Best net P&L** and **Smallest drawdown** (the least severe worst drop).
+**More filters** adds **Mode**, **Segment**, **Timeframe** (including seconds), **Tested** and
+**Min best CAGR %**. **Tested** means at least one completed test from the chosen data source;
+**Not tested yet** includes strategies whose tests have only failed or are still running.
+The count shows how many strategies match out of the whole list. **Clear filters** restores all choices,
+including the source and sorting. Choices stay in the page address, so reloading restores them.
 
 ### Step 3 — Open one strategy
 Click a card. You see:

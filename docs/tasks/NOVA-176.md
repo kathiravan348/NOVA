@@ -1,6 +1,6 @@
 # NOVA-176 — Strategies page: search, more filters, results by data source (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-176 · **Depends on:** NOVA-170
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-176 · **Depends on:** NOVA-170
 
 ## Goal
 **Strategies** can be searched and filtered by status, mode, segment, timeframe, tested or not and minimum best
@@ -13,6 +13,7 @@ CAGR, and its cards can show results from **History data**, **Recorded data** or
 ## Files
 Create:
 - `frontend/apps/nova-orbit/src/pages/strategies/StrategyFilters.tsx`, `strategyFilters.ts`, test `strategyFilters.test.ts`
+- `frontend/apps/nova-orbit/src/pages/strategies/strategyPageFilters.test.tsx`
 Modify:
 - `frontend/apps/nova-orbit/src/pages/strategies/StrategiesPage.tsx` (+ its existing test)
 - `docs/guides/USER-GUIDE.md` (Strategies page)
@@ -40,5 +41,6 @@ Modify:
 - Backend changes, tags or folders for strategies, the Library page.
 
 ## Questions
+- Scope clarification (ChatGPT, planner): keep the new page-filter checks in `strategyPageFilters.test.tsx` so the existing integration test stays below 300 lines.
 
 ## Handoff
