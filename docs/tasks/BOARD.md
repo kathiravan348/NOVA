@@ -204,7 +204,7 @@
 | NOVA-196 | Orbit: Experiment page (matrix, results, final lock) (D84) | draft | — | 192, 193 |
 | NOVA-197 | Signal check: intraday setups on Kite 1m history (D84) | draft | — | 188, 189 |
 | NOVA-198 | Clean slate: delete the old strategies and backtests (D85, no code) | planned | — | 197 |
-| NOVA-199 | Approvals batch: one table update per batch (flaky test fix) | in-progress | Claude | — |
+| NOVA-199 | Approvals batch test: cheap toolbar lookups (flaky test fix) | done | Claude | — |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

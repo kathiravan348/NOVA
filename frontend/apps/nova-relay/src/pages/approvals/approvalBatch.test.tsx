@@ -57,10 +57,15 @@ function mount(data: ApprovalRequest[]) {
   );
   return renderApp("/approvals");
 }
+/** The toolbar button with this exact text. `getByRole` walks the accessibility tree of every row
+ * (about 2.4 s per lookup with 50 rows in jsdom, far more on a busy machine); text is cheap (NOVA-199). */
+function toolbarButton(text: string): HTMLElement {
+  return screen.getByText(text, { selector: "button" });
+}
 async function chooseAll(action: "Approve" | "Reject", count: number) {
   await screen.findAllByText("Batch request 0");
-  fireEvent.click(screen.getByRole("button", { name: "Select all shown" }));
-  fireEvent.click(screen.getByRole("button", { name: `${action} selected (${count})` }));
+  fireEvent.click(toolbarButton("Select all shown"));
+  fireEvent.click(toolbarButton(`${action} selected (${count})`));
   return screen.getByRole("dialog");
 }
 
