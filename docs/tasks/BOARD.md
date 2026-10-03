@@ -181,7 +181,7 @@
 | NOVA-173 | Results by symbol: best 5 / worst 5 + View all popup; Modal sizes (D82) | ready-for-review | ChatGPT | 169 |
 | NOVA-174 | Trade exit reasons + day ledger endpoints (D82, migration 0029) | ready-for-review | ChatGPT | 168, 170 |
 | NOVA-175 | Backtest Timeline popup (day ledger) (D82) | ready-for-review | ChatGPT | 173, 174 |
-| NOVA-176 | Strategies page: search, more filters, results by data source (D82) | in-progress | ChatGPT | 170 |
+| NOVA-176 | Strategies page: search, more filters, results by data source (D82) | ready-for-review | ChatGPT | 170 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
