@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-171). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, last task NOVA-173). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -321,7 +321,10 @@ Open a run from **Backtests**. You see:
   gets a red **Below −5%** badge. The profits of all rows add up to the Net P&L.
 - **Equity curve**: a line of your pretend money over time, next to a dashed line for the **Benchmark** index
   you chose (named after it), if you chose one and its daily prices are downloaded.
-- **Results by symbol**: which shares made or lost money. **Show trades** filters the trade list to that share.
+- **Results by symbol**: the five best and five worst shares by net profit, or all shares when there are ten
+  or fewer. The heading counts shares and how many were profitable. **Avg per trade** divides net profit by
+  the number of trades. **View all N symbols** opens the full list with **Search**, **Show** (All, Winners or
+  Losers), sorting and pages. **Show trades** closes the popup and takes you to that share's trades.
 - **Trades**: every pretend buy and sell, with price, quantity, profit and a **charges breakdown**
   (brokerage, STT, exchange fee, SEBI fee, stamp duty, GST, DP charge) — calculated with Zerodha's real rates.
 

@@ -1,6 +1,6 @@
 # NOVA-173 — Results by symbol: best 5 / worst 5 + "View all" popup; Modal sizes (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
 
 ## Goal
 A backtest's page shows a short **Results by symbol** (best 5 and worst 5). **View all N symbols** opens a
@@ -30,10 +30,10 @@ Modify:
 4. Older versions (summary only) keep showing no symbol table, as today.
 
 ## Acceptance checks
-- [ ] A run with 30 symbols shows Best 5 and Worst 5, and the popup lists all 30 over 2 pages.
-- [ ] Search "TCS" and Show Losers narrow the popup rows; Show trades filters the trades table.
-- [ ] A run with 6 symbols shows one table of 6 and still offers the popup.
-- [ ] Modal story at 360px and desktop, dark and light; `pnpm review:check`.
+- [x] A run with 30 symbols shows Best 5 and Worst 5, and the popup lists all 30 over 2 pages.
+- [x] Search "TCS" and Show Losers narrow the popup rows; Show trades filters the trades table.
+- [x] A run with 6 symbols shows one table of 6 and still offers the popup.
+- [x] Modal story at 360px and desktop, dark and light; `pnpm review:check`.
 
 ## Out of scope
 - Backend changes, per-symbol charts, CSV export.
@@ -41,3 +41,20 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by ChatGPT, 3 Oct 2026. Best/worst five, symbol/profitable counts, average profit per trade and full popup.
+- Popup: symbol search, All/Winners/Losers, sortable columns, 25-row pages and Show trades closing/filtering/scrolling.
+- Modal: optional md/lg/xl sizes, default preserved, mobile gutter, Sizes story and per-size render tests.
+- Changed: Modal component/story/tests; SymbolBreakdown, SymbolsDialog, result page, symbols tests, COMPONENTS and USER-GUIDE.
+- Checks: 9 focused tests; full review:check green (1111 tests, app and Storybook builds).
+- Visual: Sizes story and actual popup at 360px/1440px, dark/light; no modal overflow. Mock preview only.
+- Guides: USER-GUIDE (symbol report), COMPONENTS (Modal). Dependencies: none.
+- Not merged: independent review required; branch follows task/NOVA-171 in the sequential review chain.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** no **View all 0 symbols** button when a run has no symbol results (+ test).
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** best/worst 5, 30-row popup over 2 pages, search/losers, show trades and the 6-symbol case tested.
+**Guides checked:** USER-GUIDE result section and COMPONENTS Modal row match the diff.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

@@ -14,6 +14,7 @@ export interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  size?: "md" | "lg" | "xl";
 }
 
 export function Modal({
@@ -26,6 +27,7 @@ export function Modal({
   children,
   footer,
   className,
+  size = "md",
 }: ModalProps): React.ReactElement {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange} defaultOpen={defaultOpen}>
@@ -36,7 +38,8 @@ export function Modal({
           {...(description ? {} : { "aria-describedby": undefined })}
           className={cn(
             "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50",
-            "w-[calc(100%-2rem)] max-w-lg max-h-[85vh] flex flex-col",
+            "w-[calc(100%-2rem)] max-h-[85vh] flex flex-col",
+            { md: "max-w-lg", lg: "max-w-3xl", xl: "max-w-6xl" }[size],
             "rounded-lg border border-border-default bg-bg-surface p-6 shadow-xl",
             "focus:outline-hidden",
             className,

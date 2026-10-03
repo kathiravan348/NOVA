@@ -14,6 +14,25 @@ const meta: Meta<typeof Modal> = {
 export default meta;
 type Story = StoryObj<typeof Modal>;
 
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      {(["md", "lg", "xl"] as const).map((size) => (
+        <Modal
+          key={size}
+          size={size}
+          title={`Dialog size: ${size}`}
+          trigger={<Button>{size}</Button>}
+        >
+          <p className="text-body text-text-secondary">
+            The body scrolls when its content is taller than the screen.
+          </p>
+        </Modal>
+      ))}
+    </div>
+  ),
+};
+
 export const Default: Story = {
   render: () => (
     <Modal

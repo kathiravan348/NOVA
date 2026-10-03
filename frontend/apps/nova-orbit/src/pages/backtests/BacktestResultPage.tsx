@@ -130,7 +130,9 @@ function CompletedRun({ run }: { run: BacktestRun }) {
   const trades = useBacktestTrades(run.id, paging);
   const showTrades = (s: string) => {
     setSymbol(s);
-    document.getElementById("trades")?.scrollIntoView?.({ behavior: "smooth" });
+    requestAnimationFrame(() =>
+      document.getElementById("trades")?.scrollIntoView?.({ behavior: "smooth" }),
+    );
   };
   return (
     <>
@@ -151,7 +153,6 @@ function CompletedRun({ run }: { run: BacktestRun }) {
             />
           </Card>
           <section className="flex flex-col gap-3">
-            <h3 className="text-section-title text-text-primary">Results by symbol</h3>
             <SymbolBreakdown rows={result.data.bySymbol} onShowTrades={showTrades} />
           </section>
         </>
