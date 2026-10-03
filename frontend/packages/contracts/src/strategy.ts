@@ -3,7 +3,7 @@ import {
   ExchangeSchema,
   IdSchema,
   SegmentSchema,
-  TimeframeSchema,
+  StrategyTimeframeSchema,
   UtcDateTimeSchema,
 } from "./common";
 import { IndicatorNameSchema } from "./indicators";
@@ -198,7 +198,7 @@ export type Rotation = z.infer<typeof RotationSchema>;
 const baseSpecFields = {
   segment: SegmentSchema,
   exchange: ExchangeSchema,
-  timeframe: TimeframeSchema,
+  timeframe: StrategyTimeframeSchema,
   sizing: SizingSchema,
   risk: RiskSchema,
   /** Absent = off (D53). */

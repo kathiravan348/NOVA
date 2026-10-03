@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  DataSourceSchema,
   IdSchema,
   IsoDateSchema,
   NonNegPaiseSchema,
@@ -54,6 +55,10 @@ export const BacktestRunSchema = z
     /** False for an older version trimmed to its summary (no trades, curve or per-symbol rows). */
     reportKept: z.boolean(),
     skippedSymbols: z.array(UniverseSymbolSchema),
+    /** D82: `recorded` runs use candles built from recorded ticks. */
+    dataSource: DataSourceSchema,
+    recordedDaysUsed: z.number().int().nonnegative().nullable(),
+    recordedDaysSkipped: z.array(IsoDateSchema),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
@@ -99,6 +104,8 @@ export const BacktestMetricsSchema = z
     estimatedTaxPaise: NonNegPaiseSchema.nullable(),
     afterTaxNetPnlPaise: PaiseSchema.nullable(),
     afterTaxCagrPercent: z.number().nullable(),
+    /** D82: recorded runs only: Σ |fill − last price| × qty. */
+    spreadCostPaise: NonNegPaiseSchema.nullable().optional(),
   })
   .refine((data) => data.netPnlPaise === data.grossPnlPaise - data.chargesPaise, {
     message: "netPnlPaise must equal grossPnlPaise minus chargesPaise",
@@ -173,6 +180,8 @@ export const BacktestRunCreateSchema = z
     to: IsoDateSchema,
     initialCapitalPaise: z.number().int().positive(),
     benchmark: BacktestBenchmarkSchema.nullable(),
+    /** Absent = `history` (D82). */
+    dataSource: DataSourceSchema.optional(),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
@@ -190,6 +199,8 @@ export const BacktestVersionCreateSchema = z
     to: IsoDateSchema,
     initialCapitalPaise: z.number().int().positive(),
     benchmark: BacktestBenchmarkSchema.nullable(),
+    /** Absent or null = the previous version's source (D82). */
+    dataSource: DataSourceSchema.nullable().optional(),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
@@ -213,6 +224,9 @@ export const BacktestVersionSchema = z
     createdAt: UtcDateTimeSchema,
     error: z.string().nullable(),
     reportKept: z.boolean(),
+    dataSource: DataSourceSchema,
+    recordedDaysUsed: z.number().int().nonnegative().nullable(),
+    recordedDaysSkipped: z.array(IsoDateSchema),
     metrics: BacktestMetricsSchema.nullable(),
   })
   .refine((data) => data.from <= data.to, {

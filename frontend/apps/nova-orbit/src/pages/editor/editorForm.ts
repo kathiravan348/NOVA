@@ -5,7 +5,7 @@ import {
   StrategySpecPythonSchema,
   StrategySpecRotationSchema,
   StrategySpecVisualSchema,
-  TimeframeSchema,
+  StrategyTimeframeSchema,
   type StrategySpec,
 } from "@nova/contracts";
 import {
@@ -76,7 +76,7 @@ export const EditorFormSchema = z
     description: z.string(),
     segment: SegmentSchema,
     exchange: ExchangeSchema,
-    timeframe: TimeframeSchema,
+    timeframe: StrategyTimeframeSchema,
     sizingType: z.enum(["fixed_qty", "fixed_amount", "percent_equity"]),
     qty: z.string(),
     amountRupees: z.string(),

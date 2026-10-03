@@ -18,7 +18,7 @@ from nova_contracts import BacktestRun as RunContract
 from nova_contracts import Trade as TradeContract
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.models import BacktestResult, BacktestRun, StrategyVersion, Trade
+from nova_db.models import BacktestResult, BacktestRun, Trade
 from nova_db.paging import newest_first, oldest_first
 from nova_db.web import Db
 from sqlalchemy import exists
@@ -28,10 +28,12 @@ from nova_backtest.convert import result_contract, run_contract, trade_contract
 from nova_backtest.versions import (
     add_version,
     check_benchmark,
+    check_source,
     check_symbols,
     delete_backtests,
     delete_version,
     list_versions,
+    strategy_spec,
 )
 
 router = APIRouter(prefix="/backtests")
@@ -121,13 +123,7 @@ def list_trades(
 
 @router.post("")
 def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONResponse:
-    version = db.get(StrategyVersion, (body.strategy_id, body.strategy_version))
-    if version is None:
-        raise ApiException(
-            404,
-            "not_found",
-            f"Strategy {body.strategy_id} version {body.strategy_version} not found",
-        )
+    check_source(strategy_spec(db, body.strategy_id, body.strategy_version), body.data_source)
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
     check_benchmark(db, body.benchmark)
@@ -144,6 +140,7 @@ def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONRespons
         date_to=body.to,
         initial_capital_paise=body.initial_capital_paise,
         benchmark=body.benchmark,
+        data_source=body.data_source,
     )
     db.add(run)
     record_audit(

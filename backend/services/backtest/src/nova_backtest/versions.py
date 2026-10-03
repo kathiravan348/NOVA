@@ -6,13 +6,22 @@ results go with their runs (FK cascade). When a version completes, older complet
 keep only their metrics (`trim_older_versions`, called by the engine in its final commit).
 """
 
+from typing import Any
+
 from nova_common import ApiException
 from nova_common.internal import Caller
-from nova_contracts import BacktestDeleteResult, BacktestVersionCreate
+from nova_contracts import SECONDS_TIMEFRAMES, BacktestDeleteResult, BacktestVersionCreate
 from nova_contracts import BacktestVersion as VersionContract
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.models import BacktestResult, BacktestRun, Instrument, MarketIndex, Trade
+from nova_db.models import (
+    BacktestResult,
+    BacktestRun,
+    Instrument,
+    MarketIndex,
+    StrategyVersion,
+    Trade,
+)
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
@@ -51,6 +60,28 @@ def check_symbols(db: Session, universe: dict[str, object]) -> None:
         raise ApiException(400, "invalid_request", f"Unknown symbols: {', '.join(unknown)}")
 
 
+def check_source(spec: dict[str, Any], data_source: str) -> None:
+    """400 for pairs the engine cannot run (D82). Any: a stored spec is JSON."""
+    seconds = spec.get("timeframe") in SECONDS_TIMEFRAMES
+    if data_source == "recorded":
+        if spec.get("segment") != "equity_intraday":
+            raise ApiException(400, "invalid_request", "Recorded data backtests are intraday only")
+        if spec.get("regime") is not None:
+            raise ApiException(
+                400, "invalid_request", "Market filter is not available on recorded data yet"
+            )
+    elif seconds:
+        raise ApiException(400, "invalid_request", "Seconds candles exist only in recorded data")
+
+
+def strategy_spec(db: Session, strategy_id: str, version: int) -> dict[str, Any]:
+    """The stored spec of one strategy version; 404 when it does not exist."""
+    row = db.get(StrategyVersion, (strategy_id, version))
+    if row is None:
+        raise ApiException(404, "not_found", f"Strategy {strategy_id} version {version} not found")
+    return row.spec
+
+
 def check_benchmark(db: Session, name: str | None) -> None:
     """400 when the benchmark is not a stored index; null means no benchmark."""
     if name is not None and db.get(MarketIndex, name) is None:
@@ -76,6 +107,8 @@ def add_version(
     if any(r.status in ACTIVE for r in runs):
         raise ApiException(400, "invalid_request", "Wait for the running version to finish")
     newest = runs[0]
+    data_source = body.data_source or newest.data_source
+    check_source(strategy_spec(db, newest.strategy_id, body.strategy_version), data_source)
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
     check_benchmark(db, body.benchmark)
@@ -92,6 +125,7 @@ def add_version(
         benchmark=body.benchmark,
         root_id=newest.root_id,
         version=newest.version + 1,
+        data_source=data_source,
     )
     db.add(run)
     record_audit(

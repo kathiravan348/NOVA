@@ -21,7 +21,8 @@
       "calmar": 126.09,
       "estimatedTaxPaise": null,
       "afterTaxNetPnlPaise": null,
-      "afterTaxCagrPercent": null
+      "afterTaxCagrPercent": null,
+      "spreadCostPaise": null
     },
     "equityCurve": [
       {
@@ -140,7 +141,8 @@
       "calmar": 94.45,
       "estimatedTaxPaise": null,
       "afterTaxNetPnlPaise": null,
-      "afterTaxCagrPercent": null
+      "afterTaxCagrPercent": null,
+      "spreadCostPaise": null
     },
     "equityCurve": [
       {
@@ -272,7 +274,8 @@
       "calmar": 25.56,
       "estimatedTaxPaise": null,
       "afterTaxNetPnlPaise": null,
-      "afterTaxCagrPercent": null
+      "afterTaxCagrPercent": null,
+      "spreadCostPaise": null
     },
     "equityCurve": [],
     "bySymbol": [],

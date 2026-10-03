@@ -55,6 +55,9 @@ function toVersion(run: BacktestRun): BacktestVersion {
     createdAt: run.createdAt,
     error: run.error,
     reportKept: run.reportKept,
+    dataSource: run.dataSource,
+    recordedDaysUsed: run.recordedDaysUsed,
+    recordedDaysSkipped: run.recordedDaysSkipped,
     metrics: run.status === "completed" && result ? result.metrics : null,
   };
 }
@@ -193,9 +196,13 @@ export const orbitHandlers = [
     if (!parsed.success) return badRequest("Body must be a valid BacktestRunCreate");
     const strategy = mockStrategies.find((s) => s.id === parsed.data.strategyId);
     if (!strategy) return notFound(`Strategy ${parsed.data.strategyId} not found`);
+    const { dataSource, ...body } = parsed.data;
     const queued: BacktestRun = {
       id: "run_new",
-      ...parsed.data,
+      ...body,
+      dataSource: dataSource ?? "history",
+      recordedDaysUsed: null,
+      recordedDaysSkipped: [],
       status: "queued",
       createdAt: MOCK_NOW,
       startedAt: null,
@@ -239,10 +246,14 @@ export const orbitHandlers = [
     if (chain.some((r) => r.status === "queued" || r.status === "running")) {
       return badRequest("Wait for the running version to finish");
     }
+    const { dataSource, ...body } = parsed.data;
     const queued: BacktestRun = {
       id: "run_new_version",
       strategyId: run.strategyId,
-      ...parsed.data,
+      ...body,
+      dataSource: dataSource ?? run.dataSource,
+      recordedDaysUsed: null,
+      recordedDaysSkipped: [],
       status: "queued",
       createdAt: MOCK_NOW,
       startedAt: null,

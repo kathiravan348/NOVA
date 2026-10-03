@@ -30,7 +30,10 @@
     "rootId": "run_001",
     "version": 1,
     "skippedSymbols": [],
-    "reportKept": true
+    "reportKept": true,
+    "dataSource": "history",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": []
   },
   {
     "id": "run_002",
@@ -63,7 +66,10 @@
     "rootId": "run_006",
     "version": 2,
     "skippedSymbols": [],
-    "reportKept": true
+    "reportKept": true,
+    "dataSource": "history",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": []
   },
   {
     "id": "run_003",
@@ -96,7 +102,10 @@
     "rootId": "run_003",
     "version": 1,
     "skippedSymbols": [],
-    "reportKept": true
+    "reportKept": true,
+    "dataSource": "history",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": []
   },
   {
     "id": "run_004",
@@ -133,7 +142,10 @@
     "rootId": "run_004",
     "version": 1,
     "skippedSymbols": [],
-    "reportKept": true
+    "reportKept": true,
+    "dataSource": "history",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": []
   },
   {
     "id": "run_005",
@@ -166,7 +178,10 @@
     "rootId": "run_005",
     "version": 1,
     "skippedSymbols": [],
-    "reportKept": true
+    "reportKept": true,
+    "dataSource": "history",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": []
   },
   {
     "id": "run_006",
@@ -199,6 +214,9 @@
     "rootId": "run_006",
     "version": 1,
     "skippedSymbols": ["HYUNDAI", "TATACAP"],
-    "reportKept": false
+    "reportKept": false,
+    "dataSource": "history",
+    "recordedDaysUsed": null,
+    "recordedDaysSkipped": []
   }
 ]

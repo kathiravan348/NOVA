@@ -4,7 +4,15 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
-from nova_contracts.common import Contract, Id, IsoDate, NonNegPaise, Paise, UtcDateTime
+from nova_contracts.common import (
+    Contract,
+    DataSource,
+    Id,
+    IsoDate,
+    NonNegPaise,
+    Paise,
+    UtcDateTime,
+)
 from nova_contracts.market_data import IndexName
 from nova_contracts.universe import Symbol
 
@@ -72,6 +80,10 @@ class BacktestRun(_Period):
     version: Annotated[int, Field(ge=1)]
     report_kept: bool
     skipped_symbols: list[Symbol]
+    # D82: `recorded` runs use candles built from recorded ticks; days are set when it ran.
+    data_source: DataSource
+    recorded_days_used: Count | None
+    recorded_days_skipped: list[IsoDate]
 
     @model_validator(mode="after")
     def _root_is_first_version(self) -> Self:
@@ -105,6 +117,7 @@ class BacktestRunCreate(_Period):
     universe: Universe
     initial_capital_paise: Annotated[int, Field(gt=0)]
     benchmark: BacktestBenchmark | None
+    data_source: DataSource = "history"
 
 
 class BacktestVersionCreate(_Period):
@@ -115,6 +128,8 @@ class BacktestVersionCreate(_Period):
     universe: Universe
     initial_capital_paise: Annotated[int, Field(gt=0)]
     benchmark: BacktestBenchmark | None
+    # Absent = the previous version's source (D82).
+    data_source: DataSource | None = None
 
 
 class BacktestDeleteRequest(Contract):
@@ -149,6 +164,8 @@ class BacktestMetrics(Contract):
     estimated_tax_paise: NonNegPaise | None = None
     after_tax_net_pnl_paise: Paise | None = None
     after_tax_cagr_percent: float | None = None
+    # D82: recorded runs only: Σ |fill − last price| × qty.
+    spread_cost_paise: NonNegPaise | None = None
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -219,6 +236,9 @@ class BacktestVersion(_Period):
     created_at: UtcDateTime
     error: str | None
     report_kept: bool
+    data_source: DataSource
+    recorded_days_used: Count | None
+    recorded_days_skipped: list[IsoDate]
     metrics: BacktestMetrics | None
 
     @model_validator(mode="after")

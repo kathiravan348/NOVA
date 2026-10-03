@@ -40,7 +40,7 @@ from nova_backtest.simulate import Simulation, simulate
 
 SPEC = TypeAdapter[StrategySpec](StrategySpec)
 Spec = StrategySpecVisual | StrategySpecPython | StrategySpecRotation
-WARM_UP_DAYS = {"1d": 400}
+WARM_UP_DAYS = {"1d": 400, "1s": 1, "5s": 1, "15s": 1, "30s": 1}  # seconds: D82
 # Zerodha squares off MIS equity positions from 15:20 IST (D46).
 SQUARE_OFF = time(15, 20)
 INTRADAY_WARM_UP_DAYS = 30
@@ -181,6 +181,8 @@ class StrategyEngine:
         run = db.get(BacktestRun, run_id)
         if run is None:
             raise EngineError(f"Backtest run {run_id} not found")
+        if run.data_source == "recorded":
+            raise EngineError("Recorded data backtests are not built yet")
         spec = _spec(db, run)
         symbols = _symbols(db, run)
         start = _ist_midnight(run.date_from)
