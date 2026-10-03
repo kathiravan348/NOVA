@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 from nova_broker import recorder as recorder_module
-from nova_broker.recorder import BATCH_SIZE, Recorder, Socket
+from nova_broker.recorder import BATCH_SIZE, Recorder, Socket, stall_limit
 from nova_db.models import Tick
 
 START = datetime(2026, 9, 25, 4, 0, tzinfo=UTC)
@@ -183,16 +183,48 @@ def test_unsaved_ticks_over_the_cap_drop_the_oldest(
     assert "Lost 3 unsaved tick(s)" in caplog.text
 
 
-def test_a_socket_with_only_heartbeats_for_60_seconds_reconnects() -> None:
-    harness = Harness([[b"\x00"] * 61, [ltp_frame(1, 5)]], timedelta(seconds=1))
+def test_in_the_session_10_seconds_of_heartbeats_reconnect(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    harness = Harness([[b"\x00"] * 20, [ltp_frame(1, 5)]], timedelta(seconds=1))  # 09:30 IST
     run(harness, {1: "INFY"})
     assert harness.sleeps == [1]
     assert len(harness.sockets) == 2 and not harness.sockets[0].exhausted
     assert [len(b) for b in harness.batches] == [1]
+    assert "no ticks for 10 s" in caplog.text
+
+
+def test_before_the_open_30_seconds_of_heartbeats_do_not_reconnect() -> None:
+    harness = Harness([[b"\x00"] * 30, [ltp_frame(1, 5)]], timedelta(seconds=1))
+    harness.clock.at = datetime(2026, 9, 25, 3, 44, 0, tzinfo=UTC)  # 09:14:00 IST
+    run(harness, {1: "INFY"})  # the first socket ends at 09:14:30, inside the 60 s limit
+    assert harness.sleeps == []
+    assert harness.sockets[0].exhausted
+
+
+def test_outside_the_session_60_seconds_of_heartbeats_reconnect() -> None:
+    harness = Harness([[b"\x00"] * 61, [ltp_frame(1, 5)]], timedelta(seconds=1))
+    harness.clock.at = datetime(2026, 9, 26, 4, 0, tzinfo=UTC)  # Saturday 09:30 IST
+    run(harness, {1: "INFY"})
+    assert len(harness.sockets) == 2 and not harness.sockets[0].exhausted
+
+
+@pytest.mark.parametrize(
+    ("ist", "limit"),
+    [
+        (datetime(2026, 9, 25, 9, 14, 59), 60.0),
+        (datetime(2026, 9, 25, 9, 15, 0), 10.0),
+        (datetime(2026, 9, 25, 15, 29, 59), 10.0),
+        (datetime(2026, 9, 25, 15, 30, 0), 60.0),
+        (datetime(2026, 9, 26, 11, 0, 0), 60.0),  # Saturday
+    ],
+)
+def test_stall_limit_is_10_s_in_the_session_else_60(ist: datetime, limit: float) -> None:
+    assert stall_limit(ist.replace(tzinfo=recorder_module.IST)) == limit
 
 
 def test_backoff_starts_again_after_a_connection_that_got_ticks() -> None:
-    stalled: list[str | bytes] = [ltp_frame(1, 5), *[b"\x00"] * 61]
+    stalled: list[str | bytes] = [ltp_frame(1, 5), *[b"\x00"] * 11]
     harness = Harness(
         [OSError("down"), OSError("down"), stalled, [ltp_frame(1, 6)]], timedelta(seconds=1)
     )

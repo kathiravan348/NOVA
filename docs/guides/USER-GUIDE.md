@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-162). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-163). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -550,7 +550,8 @@ counts as missed by the recorder only when other stocks had prices in that secon
 with no trade. The 1-second candles are worked out from the saved prices, not stored separately.
 
 **Config** is where recording is set up. On the **Live recording** card, turn on **Record live prices** and NOVA
-records every price change (*ticks*) of the chosen stocks every weekday from 09:15 to 15:30, by itself, until you
+records every price change (*ticks*) of the chosen stocks every weekday from 09:15 to 15:30 (it connects at 09:14 and stops at 15:31 so neither end is cut; if the
+feed goes silent for 10 seconds it reconnects), by itself, until you
 turn it off. Past prices can't be recorded later, so leave it on. The badge says what it is doing: **Off**,
 **Waiting for market hours**, **Recording** (with a link to today's recording job) or **Log in to Kite first**
 (do the daily Kite login, Step 3). **Choose stocks** picks which synced stocks to record; with none ticked it

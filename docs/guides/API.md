@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 30 Sep 2026 (NOVA-151). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 3 Oct 2026 (NOVA-163). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -223,6 +223,6 @@ services restore selections on reconnect, and snapshot/day reads provide current
 |---|---|
 | `python -m nova_core create-admin` | Creates the super-admin user (asks for the password). |
 | `python -m nova_broker new-token-key` | Makes the key used to encrypt Kite tokens. |
-| `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session. Restarts by itself (D79): a dropped socket reconnects after 1, 2, 4 … 30 s (back to 1 s once a connection got ticks), no stock tick for 60 s forces a reconnect, a failed save keeps up to 50,000 ticks for the next batch, and a failed job retries after 10 s, 30 s, then every 60 s. |
+| `python -m nova_broker recorder` | The always-on recorder (Compose service `tick-recorder`): follows `recorder_settings`, one `tick_record` job per session, connected weekdays 09:14–15:31 IST (D81: a minute either side of the 09:15–15:30 session). Restarts by itself (D79): a dropped socket reconnects after 1, 2, 4 … 30 s (back to 1 s once a connection got ticks), no stock tick for 10 s inside 09:15–15:30 (60 s outside it) forces a reconnect, the socket is checked every 2 s, a failed save keeps up to 50,000 ticks for the next batch, and a failed job retries after 10 s, 30 s, then every 60 s. |
 | `python -m nova_atlas worker` | The data-job worker (Compose service `atlas-worker`): downloads, archives. Syncing, downloads and archives are started from Relay (D55). |
 | `python -m nova_db upgrade \| check` | Runs migrations / checks models match the database. |
