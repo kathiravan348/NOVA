@@ -14,6 +14,7 @@ from typing import Literal, Protocol
 from nova_contracts import IntradaySetup
 
 from nova_backtest.engine import EngineError
+from nova_backtest.intraday.context import StockContext
 from nova_backtest.intraday.tick_data import Bars, DayTicks
 
 Family = Literal["trend", "range"]
@@ -28,6 +29,7 @@ class StockDay:
     ticks: DayTicks
     bars1: Bars
     bars5: Bars
+    context: StockContext | None = None  # NOVA-187: ATR, VWAP, previous session levels, …
 
 
 @dataclass(frozen=True)

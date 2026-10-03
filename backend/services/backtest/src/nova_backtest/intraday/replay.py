@@ -61,6 +61,8 @@ class Signals(Protocol):
 
     def relative_volume(self, candidate: Candidate) -> float: ...
 
+    def fits_at_fill(self, candidate: Candidate, price: float) -> bool: ...
+
 
 class NoSignals:
     def reasons(self, candidate: Candidate, price: int) -> list[str]:
@@ -68,6 +70,9 @@ class NoSignals:
 
     def relative_volume(self, candidate: Candidate) -> float:
         return 0.0
+
+    def fits_at_fill(self, candidate: Candidate, price: float) -> bool:
+        return True
 
 
 @dataclass
@@ -306,7 +311,8 @@ class DayReplay:
             decision.skip(result.reasons)
             return
         qty, value = self.guard.fit(pending.hold, candidate.stop, result.parts)
-        if qty <= 0 or not _valid_at_fill(candidate, value / qty):
+        valid = qty > 0 and _valid_at_fill(candidate, value / qty)
+        if not valid or not self.signals.fits_at_fill(candidate, value / qty):
             self.guard.release(pending.hold)
             decision.skip(["invalid_at_fill"])
             return

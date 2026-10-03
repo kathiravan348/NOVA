@@ -9,12 +9,16 @@ every failure is kept. A passing candidate reserves its capacity at once, so can
 moment, taken in ranked order, never spend the same pool twice.
 """
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
-from nova_contracts.research_profile import ResearchAccount
+from nova_contracts.research_profile import ResearchAccount, ResearchSignal
 
+from nova_backtest.intraday.context import StockContext
+from nova_backtest.intraday.gate import IndexGate
+from nova_backtest.intraday.setups import Candidate
 from nova_backtest.intraday.sizing import CostToClose, loss_at_stop, loss_of, money_qty, risk_qty
 
 REASONS = (
@@ -249,3 +253,59 @@ class Guard:
             self.day.shutdown = True
             return True
         return False
+
+
+class SignalChecks:
+    """The §5.4 signal checks of one day (NOVA-187), between `cooldown` and `max_positions`:
+    `market_gate` (trend gate for trend setups, range gate for range setups), `context` (upward
+    context / range condition), `relative_volume`, `warmup` (an input without enough data),
+    `stop_too_narrow` / `stop_too_wide` (entry − stop in ATR units), `reward_room` (a frozen target
+    without `minRewardR` room)."""
+
+    def __init__(
+        self, signal: ResearchSignal, contexts: dict[str, StockContext], gate: IndexGate
+    ) -> None:
+        self.signal, self.contexts, self.gate = signal, contexts, gate
+
+    def reasons(self, candidate: Candidate, price: int) -> list[str]:
+        context, i, s = self.contexts[candidate.symbol], candidate.bar, self.signal
+        reasons: list[str] = []
+        trend = candidate.family == "trend"
+        if not (self.gate.trend(candidate.at_ms) if trend else self.gate.range(candidate.at_ms)):
+            reasons.append("market_gate")
+        state = context.upward(i) if trend else context.in_range(i, s.range_span_atr)
+        if state is False:
+            reasons.append("context")
+        volume = float(context.rel_volume[i])
+        if not math.isnan(volume) and volume < s.min_relative_volume:
+            reasons.append("relative_volume")
+        atr = float(context.atr[i])
+        if state is None or math.isnan(volume) or math.isnan(atr):
+            reasons.append("warmup")
+        if not math.isnan(atr):
+            distance = (price - candidate.stop) / atr
+            if distance < s.min_stop_atr:
+                reasons.append("stop_too_narrow")
+            if distance > s.max_stop_atr:
+                reasons.append("stop_too_wide")
+        if not _reward_room(candidate, price):
+            reasons.append("reward_room")
+        return reasons
+
+    def relative_volume(self, candidate: Candidate) -> float:
+        volume = float(self.contexts[candidate.symbol].rel_volume[candidate.bar])
+        return 0.0 if math.isnan(volume) else volume
+
+    def fits_at_fill(self, candidate: Candidate, price: float) -> bool:
+        """The stop distance rules again at the real price (`invalid_at_fill` otherwise)."""
+        atr = float(self.contexts[candidate.symbol].atr[candidate.bar])
+        if math.isnan(atr):
+            return True
+        distance = (price - candidate.stop) / atr
+        return self.signal.min_stop_atr <= distance <= self.signal.max_stop_atr
+
+
+def _reward_room(candidate: Candidate, price: float) -> bool:
+    if candidate.target is None or candidate.min_reward_r is None:
+        return True
+    return candidate.target - price >= candidate.min_reward_r * (price - candidate.stop)

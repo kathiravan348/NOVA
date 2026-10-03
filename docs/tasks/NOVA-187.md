@@ -1,6 +1,6 @@
 # NOVA-187 — Intraday simulator: market gate, context, warm-up from history (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-187 · **Depends on:** NOVA-179, NOVA-186
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-187 · **Depends on:** NOVA-179, NOVA-186
 
 ## Goal
 The intraday simulator knows, at each 1m close, the inputs of `docs/INTRADAY-RESEARCH.md` §6: ATR, stock VWAP,
@@ -53,7 +53,29 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** `context.py` (ATR, EMA, VWAP, upward context, range condition, relative volume, previous session levels per
+1m bar), `gate.py` (index bars from `index_ticks`, Kite 1m fallback listed `index:<date>`, trend/range gate, decline
+veto), `warmup.py` (earlier recorded days, else Kite 1m candles; `atr|volume_baseline|prev_day:history` listed);
+`guard.py` `SignalChecks` (§5.4 order) + the stop distance re-checked at the fill; relative volume ranks candidates.
+**Files changed:** the listed files (index loading lives in `gate.py`, so `tick_data.py` did not change), plus
+`intraday/replay.py` (`Signals.fits_at_fill`), `setups/__init__.py` (`StockDay.context`), `tests/conftest.py`
+(truncates `candle_days`, `index_ticks`), `tests/intraday_factory.py` (history candles, rising volume, settings helper),
+`docs/guides/API.md` (one paragraph on the checks).
+**Commands run:** `docker compose run --rm backend-check`: 1,593 pass, 1 unrelated flaky failure
+(`core/tests/test_realtime.py::test_deleting_a_job_is_announced`, passes alone twice).
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** API.
+**Deviations from task:** relative volume leaves out the first minute everywhere (recorded bars hold the pre-open
+auction there, Kite candles do not); 5m warm-up uses the last 3 earlier sessions; a missing input never fails
+`context`, only `warmup`.
+**Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** none.
+**Checked:** values use only closed bars (5m index from `searchsorted(end, at, "right")`); NaN inputs → `warmup`,
+never a guessed level; E2E run lists the history inputs; flaky core realtime test is outside this task.
+**Change requests:** none.
+**Guides checked:** API simulator paragraph matches the diff; no table or endpoint change.
+**Rulebook issues found:** none. Deploy `backtest backtest-worker` with `--no-deps` at a quiet time (D76).
+**Follow-up tasks created:** none (flaky test noted to the Owner).
