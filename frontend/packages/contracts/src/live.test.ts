@@ -4,13 +4,21 @@ import {
   LiveSnapshotItemSchema,
   LiveSubscribeSchema,
   LiveTickSchema,
+  TickCheckSchema,
 } from "./live";
 import { RealtimeMessageSchema } from "./realtime";
 import ticks from "../../mocks/data/liveTicks.json";
 import snapshots from "../../mocks/data/liveSnapshot.json";
 import days from "../../mocks/data/liveDays.json";
+import checks from "../../mocks/data/liveChecks.json";
 
 describe("live contracts", () => {
+  it("validates three daily Kite checks, one clean and two with warnings", () => {
+    const parsed = TickCheckSchema.array().parse(checks);
+    expect(parsed.map((c) => c.warnings.length > 0)).toEqual([false, true, true]);
+    expect(() => TickCheckSchema.parse({ ...checks[0], closeMatchPercent: 101 })).toThrow();
+  });
+
   it("validates eight stocks and a stock with recorder gaps", () => {
     expect(LiveTickSchema.array().parse(ticks)).toHaveLength(8);
     expect(LiveSnapshotItemSchema.array().parse(snapshots)).toHaveLength(8);

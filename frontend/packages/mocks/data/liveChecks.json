@@ -1,0 +1,93 @@
+[
+  {
+    "day": "2026-10-02",
+    "stocksChecked": 3,
+    "stocksSkipped": 0,
+    "minutes": 1077,
+    "closeMatchPercent": 98.9,
+    "rangeOkPercent": 100,
+    "volumeMatchPercent": 98.1,
+    "clockOffsetSeconds": 0.4,
+    "warnings": [],
+    "checkedAt": "2026-10-02T10:31:00Z",
+    "stocks": [
+      {
+        "symbol": "RELIANCE",
+        "minutes": 359,
+        "closeMatchPercent": 99.4,
+        "rangeOkPercent": 100,
+        "volumeMatchPercent": 98.6
+      },
+      {
+        "symbol": "TCS",
+        "minutes": 359,
+        "closeMatchPercent": 98.6,
+        "rangeOkPercent": 100,
+        "volumeMatchPercent": 97.8
+      },
+      {
+        "symbol": "INFY",
+        "minutes": 359,
+        "closeMatchPercent": 98.6,
+        "rangeOkPercent": 100,
+        "volumeMatchPercent": 97.8
+      }
+    ]
+  },
+  {
+    "day": "2026-10-01",
+    "stocksChecked": 3,
+    "stocksSkipped": 0,
+    "minutes": 1077,
+    "closeMatchPercent": 98.7,
+    "rangeOkPercent": 100,
+    "volumeMatchPercent": 97.9,
+    "clockOffsetSeconds": 16.2,
+    "warnings": ["Receive times are 16 s off exchange times: sync the PC clock"],
+    "checkedAt": "2026-10-01T10:31:00Z",
+    "stocks": [
+      {
+        "symbol": "RELIANCE",
+        "minutes": 359,
+        "closeMatchPercent": 98.9,
+        "rangeOkPercent": 100,
+        "volumeMatchPercent": 98.1
+      },
+      {
+        "symbol": "TCS",
+        "minutes": 359,
+        "closeMatchPercent": 98.6,
+        "rangeOkPercent": 100,
+        "volumeMatchPercent": 97.8
+      },
+      {
+        "symbol": "INFY",
+        "minutes": 359,
+        "closeMatchPercent": 98.6,
+        "rangeOkPercent": 100,
+        "volumeMatchPercent": 97.8
+      }
+    ]
+  },
+  {
+    "day": "2026-09-30",
+    "stocksChecked": 1,
+    "stocksSkipped": 12,
+    "minutes": 359,
+    "closeMatchPercent": 97.5,
+    "rangeOkPercent": 99.7,
+    "volumeMatchPercent": 96.4,
+    "clockOffsetSeconds": 0.5,
+    "warnings": ["12 stocks had no Kite candles and were skipped"],
+    "checkedAt": "2026-09-30T10:31:00Z",
+    "stocks": [
+      {
+        "symbol": "HDFCBANK",
+        "minutes": 359,
+        "closeMatchPercent": 97.5,
+        "rangeOkPercent": 99.7,
+        "volumeMatchPercent": 96.4
+      }
+    ]
+  }
+]
