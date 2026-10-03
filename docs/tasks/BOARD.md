@@ -203,6 +203,7 @@
 | NOVA-195 | Orbit: intraday strategy form + 15 Library entries (D84) | draft | — | 183 |
 | NOVA-196 | Orbit: Experiment page (matrix, results, final lock) (D84) | draft | — | 192, 193 |
 | NOVA-197 | Signal check: intraday setups on Kite 1m history (D84) | draft | — | 188, 189 |
+| NOVA-198 | Clean slate: delete the old strategies and backtests (D85, no code) | planned | — | 197 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -239,4 +240,4 @@
   schema, maps and guides). 179 first among the data tasks: its index recording should ship at this weekend (D76; migration 0030).
   Then 180 (after 179 is deployed) and 181 (after 179 merges; migration 0031) in parallel; 183 after 182; 184 after 181 + 182 (0032).
   Simulator: 185 → 186 and 187 in parallel → 188 → 189; 190 and 192 after 186; 191 after 188–190; 193 after 184 + 185;
-  screens 194 (after 184), 195 (after 183), 196 last; 197 after 188 + 189.
+  screens 194 (after 184), 195 (after 183), 196 last; 197 after 188 + 189. Clean slate 198 (D85) after everything else.
