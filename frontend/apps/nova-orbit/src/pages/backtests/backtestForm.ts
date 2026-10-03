@@ -1,11 +1,16 @@
 import { z } from "zod";
 import { formatInTimeZone } from "date-fns-tz";
 import {
+  DataSourceSchema,
   IndexNameSchema,
+  SECONDS_TIMEFRAMES,
   type BacktestRun,
   type BacktestRunCreate,
   type BacktestVersionCreate,
+  type DataSource,
   type Strategy,
+  type StrategySpec,
+  type StrategyTimeframe,
   type Universe,
 } from "@nova/contracts";
 
@@ -27,6 +32,7 @@ export const BacktestFormSchema = z
     to: z.string().min(1, "End date is required"),
     capitalRupees: z.string(),
     benchmark: z.union([z.literal(""), IndexNameSchema]),
+    dataSource: DataSourceSchema,
   })
   .superRefine((f, ctx) => {
     if (f.universeType === "symbols" && f.symbols.length === 0) {
@@ -48,6 +54,20 @@ export const BacktestFormSchema = z
     }
   });
 export type BacktestForm = z.infer<typeof BacktestFormSchema>;
+
+export const isSecondsTimeframe = (timeframe: StrategyTimeframe) =>
+  (SECONDS_TIMEFRAMES as readonly string[]).includes(timeframe);
+
+/** Why this strategy cannot run on `source` (the API's own messages, D82), or null. */
+export function sourceProblem(spec: StrategySpec, source: DataSource): string | null {
+  if (source === "recorded") {
+    if (spec.segment !== "equity_intraday") return "Recorded data backtests are intraday only";
+    if ("regime" in spec && spec.regime)
+      return "Market filter is not available on recorded data yet";
+    return null;
+  }
+  return isSecondsTimeframe(spec.timeframe) ? "Seconds candles exist only in recorded data" : null;
+}
 
 function monthsBefore(isoDate: string, months: number): string {
   const d = new Date(`${isoDate}T00:00:00Z`);
@@ -76,6 +96,7 @@ export function defaultsFor(
     to,
     capitalRupees: "1000000",
     benchmark: "NIFTY 50",
+    dataSource: "history",
   };
 }
 
@@ -97,6 +118,7 @@ export function toRunCreate(form: BacktestForm): BacktestRunCreate {
     to: form.to,
     initialCapitalPaise: Math.round(Number(form.capitalRupees) * 100),
     benchmark: form.benchmark || null,
+    dataSource: form.dataSource,
   };
 }
 
@@ -113,6 +135,7 @@ export function defaultsFromRun(run: BacktestRun): BacktestForm {
     to: run.to,
     capitalRupees: String(run.initialCapitalPaise / 100),
     benchmark: run.benchmark ?? "",
+    dataSource: run.dataSource,
   };
 }
 
@@ -127,6 +150,7 @@ export function toVersionCreate(form: BacktestForm): BacktestVersionCreate {
     to: run.to,
     initialCapitalPaise: run.initialCapitalPaise,
     benchmark: run.benchmark,
+    dataSource: run.dataSource ?? null,
   };
 }
 

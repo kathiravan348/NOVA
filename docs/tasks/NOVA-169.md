@@ -1,6 +1,6 @@
 # NOVA-169 — Orbit: choose the data source; seconds timeframes; recorded run details (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-169 · **Depends on:** NOVA-166 (merge after 167 is deployed)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-169 · **Depends on:** NOVA-166 (merge after 167 is deployed)
 
 ## Goal
 **Run backtest** and **Edit backtest** let the Owner pick **History data** or **Recorded data**, the strategy
@@ -47,3 +47,19 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. `DataSourceField` (Select **Data**, hint per source, live error from
+  `sourceProblem`; a seconds strategy starts on Recorded data until the user changes it; Edit keeps the run's).
+- `backtestForm`: `dataSource` in the schema, defaults, create/edit/version bodies; `sourceProblem` and
+  `isSecondsTimeframe` (the API's messages). Submit sets the error and queues nothing.
+- Also changed (small, not listed): `UniverseFields` gets `checkCoverage` (recorded runs skip the downloaded-
+  candle coverage flags and the drop dialog); the drop dialog moved to `UncoveredSymbolsModal.tsx` to keep
+  `NewBacktestPage.tsx` under 300 lines (282).
+- Editor: seconds options (labels from NOVA-166) + hint "Seconds candles run on recorded data only".
+- Result page: **Data** and **Recorded days** ("10 used · 1 skipped", skipped dates on hover);
+  `MetricsGrid` **Spread cost** when set. Mock `run_001` is now a recorded run (10 used, 5 Jun skipped).
+- Checked in the browser (mock mode) at 375 px: hint shows, no horizontal scroll, coverage flags hidden.
+- Checks: `pnpm review:check` green (1,092 tests). Guides: USER-GUIDE (Steps 4, 5, 6; known limits).
+
+## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task. Frontend only: nothing to
+deploy. Verdict: done.
