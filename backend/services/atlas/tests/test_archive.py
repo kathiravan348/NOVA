@@ -3,7 +3,10 @@
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
+from nova_atlas import archive
 from nova_atlas.archive import archive_ticks, read_ticks, tick_path
 from nova_db.models import Tick
 from sqlalchemy import func, select, text
@@ -94,3 +97,34 @@ def test_every_kite_field_round_trips(db: Session, tmp_path: Path) -> None:
     assert first["bid_price_paise"] == [100, 99, 98, 97, 96]
     assert first["bid_orders"] == [1, 2, 3, 4, 5]
     assert second["bid_price_paise"] is None and second["close_paise"] is None
+
+
+def test_streams_in_batches_in_time_order(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(archive, "BATCH_ROWS", 2)
+    db.add_all([tick("INFY", DAY1 + timedelta(seconds=s), 100 + s) for s in (3, 0, 4, 1, 2)])
+    db.commit()
+    (path,) = archive_ticks(db, tmp_path, date(2026, 9, 22))
+    assert [r["last_price_paise"] for r in read_ticks(path)] == [100, 101, 102, 103, 104]
+    assert pq.ParquetFile(path).num_row_groups == 3
+    assert count(db) == 0
+
+
+def test_failure_on_second_symbol_keeps_rows(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class FailOnTcs(pq.ParquetWriter):  # type: ignore[misc]
+        def write_table(self, table: pa.Table, row_group_size: int | None = None) -> None:
+            if "TCS" in table.column("symbol").to_pylist():
+                raise OSError("disk full")
+            super().write_table(table, row_group_size)
+
+    seed(db)
+    monkeypatch.setattr(pq, "ParquetWriter", FailOnTcs)
+    with pytest.raises(OSError, match="disk full"):
+        archive_ticks(db, tmp_path, date(2026, 9, 22))
+    db.rollback()
+    assert count(db) == 4
+    tcs = tick_path(tmp_path, date(2026, 9, 21), "TCS")
+    assert not tcs.exists() and not tcs.with_suffix(".parquet.partial").exists()
