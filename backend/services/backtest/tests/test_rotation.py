@@ -118,6 +118,7 @@ def test_monthly_rotation_keeps_rank_3_sells_rank_4_and_splits_money_equally() -
         ("A", "sell", date(2025, 3, 3)),  # rank 4 (C is 3rd and stays)
     ]
     assert {t.qty for t in result.trades} == {50}  # ₹10,000 ÷ 2 at ₹100 each time
+    assert {t.exit_reason for t in result.trades} == {"rotation", "end_of_period"}
 
 
 def _flip(days: list[date]) -> dict[str, list[float]]:
@@ -249,6 +250,7 @@ def test_a01_on_30_stocks_for_two_years_completes(
     assert [y["year"] for y in result["years"]] == [1, 2]
     assert sum(y["profitPaise"] for y in result["years"]) == m["netPnlPaise"]
     held = client.get("/api/v1/backtests/run_a01/trades", params={"limit": 200}).json()["items"]
+    assert {trade["exitReason"] for trade in held} == {"rotation", "end_of_period"}
     firsts = {d for d in days if d.month != (d - timedelta(days=3)).month or d.day == 1}
     bought = {datetime.fromisoformat(t["entryAt"]).astimezone(IST).date() for t in held}
     assert bought <= {d for d in firsts if d >= start}  # the first weekday of a month

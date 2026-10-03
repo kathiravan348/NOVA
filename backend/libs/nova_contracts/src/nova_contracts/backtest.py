@@ -16,6 +16,7 @@ from nova_contracts.common import (
     UtcDateTime,
 )
 from nova_contracts.market_data import IndexName
+from nova_contracts.trade import ExitReason
 from nova_contracts.universe import Symbol
 
 BacktestRunStatus = Literal["queued", "running", "completed", "failed"]
@@ -24,6 +25,33 @@ BacktestBenchmark = IndexName
 Count = Annotated[int, Field(ge=0)]
 NonEmpty = Annotated[str, Field(min_length=1)]
 Percent = Annotated[float, Field(ge=0, le=100)]
+
+
+class LedgerDay(Contract):
+    date: IsoDate
+    buys: Count
+    sells: Count
+    bought_paise: NonNegPaise
+    sold_paise: NonNegPaise
+    charges_paise: NonNegPaise
+    net_pnl_paise: Paise
+    cash_paise: Paise
+    holdings_paise: Paise
+    equity_paise: Paise
+    open_positions: Count
+
+
+class LedgerEvent(Contract):
+    at: UtcDateTime
+    symbol: NonEmpty
+    side: Literal["buy", "sell"]
+    qty: Annotated[int, Field(gt=0)]
+    price_paise: Annotated[int, Field(gt=0)]
+    amount_paise: NonNegPaise
+    charges_paise: NonNegPaise
+    net_pnl_paise: Paise | None
+    reason: ExitReason | None
+    cash_after_paise: Paise
 
 
 class UniverseSymbols(Contract):

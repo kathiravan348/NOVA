@@ -136,6 +136,7 @@ def trade_contract(row: Trade) -> TradeContract:
             "entry_price_paise": row.entry_price_paise,
             "exit_at": row.exit_at,
             "exit_price_paise": row.exit_price_paise,
+            "exit_reason": row.exit_reason,
             "gross_pnl_paise": row.gross_pnl_paise,
             "charges": {
                 "brokerage_paise": row.brokerage_paise,

@@ -1,5 +1,9 @@
 import {
   BacktestDeleteResultSchema,
+  LedgerDaySchema,
+  LedgerEventSchema,
+  type LedgerDay,
+  type LedgerEvent,
   BacktestResultSchema,
   BacktestRunListItemSchema,
   BacktestRunSchema,
@@ -36,6 +40,42 @@ import {
 import { apiGet, apiPost, apiRequest, withQuery, type RequestOptions } from "../http";
 
 const id = (value: string) => encodeURIComponent(value);
+
+export interface LedgerFilter {
+  from?: string;
+  to?: string;
+  symbol?: string;
+  allDays?: boolean;
+}
+
+export function listBacktestLedger(
+  runId: string,
+  query: LedgerFilter & Pick<PageQuery, "offset" | "limit"> = {},
+  init?: RequestOptions,
+): Promise<Page<LedgerDay>> {
+  const { allDays, ...rest } = query;
+  return apiGet(
+    withQuery(`/backtests/${id(runId)}/ledger`, {
+      ...rest,
+      allDays: allDays === undefined ? undefined : String(allDays),
+    }),
+    pageSchema(LedgerDaySchema),
+    init,
+  );
+}
+
+export function getBacktestLedgerEvents(
+  runId: string,
+  date: string,
+  symbol?: string,
+  init?: RequestOptions,
+): Promise<LedgerEvent[]> {
+  return apiGet(
+    withQuery(`/backtests/${id(runId)}/ledger/${id(date)}`, { symbol }),
+    LedgerEventSchema.array(),
+    init,
+  );
+}
 
 export function getMe(init?: RequestOptions): Promise<User> {
   return apiGet("/me", UserSchema, init);

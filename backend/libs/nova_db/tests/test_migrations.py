@@ -54,11 +54,35 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0028(engine: Engine) -> None:
+def test_head_revision_is_0029(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0028"
+    assert head == "0029"
+
+
+def test_trade_exit_reason_round_trip(engine: Engine, database_url: str) -> None:
+    downgrade(database_url, "0028")
+    try:
+        assert "exit_reason" not in {
+            column["name"] for column in inspect(engine).get_columns("trades")
+        }
+        upgrade(database_url)
+        column = next(
+            column
+            for column in inspect(engine).get_columns("trades")
+            if column["name"] == "exit_reason"
+        )
+        assert column["nullable"] is True
+        checks = {
+            check["name"]: check["sqltext"]
+            for check in inspect(engine).get_check_constraints("trades")
+        }
+        assert "square_off" in checks["ck_trades_exit_reason"]
+        assert "end_of_period" in checks["ck_trades_exit_reason"]
+        assert diff(database_url) == []
+    finally:
+        upgrade(database_url)
 
 
 def test_benchmark_foreign_key_round_trip(engine: Engine, database_url: str) -> None:

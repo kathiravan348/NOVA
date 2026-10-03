@@ -14,6 +14,7 @@ describe("TradeSchema", () => {
     entryPricePaise: 290000,
     exitAt: "2026-09-02T15:15:00Z",
     exitPricePaise: 295000,
+    exitReason: null,
     grossPnlPaise: 125000,
     charges: {
       brokeragePaise: 2000,
@@ -30,6 +31,13 @@ describe("TradeSchema", () => {
 
   it("accepts a valid closed trade", () => {
     expect(TradeSchema.safeParse(validClosedTrade).success).toBe(true);
+  });
+
+  it("reads older trades with no exit reason as null and rejects unknown reasons", () => {
+    const old = { ...validClosedTrade, exitReason: undefined };
+    expect(TradeSchema.parse(old).exitReason).toBeNull();
+    expect(TradeSchema.safeParse({ ...old, exitReason: "unknown" }).success).toBe(false);
+    expect(TradeSchema.parse({ ...old, exitReason: "square_off" }).exitReason).toBe("square_off");
   });
 
   it("accepts a valid open trade with null exit details", () => {

@@ -104,7 +104,7 @@ class RotationRun(Run):
         if self.rebalancing and symbol in book.positions:
             rank = self.rank_of.get(symbol)
             if rank is None or rank > self.rotation.keep_within:
-                book.close(symbol, datetime.fromtimestamp(bar.ts, UTC), bar.open)
+                book.close(symbol, datetime.fromtimestamp(bar.ts, UTC), bar.open, "rotation")
         return True
 
     def buys(self, group: list[BarAt], active: Mapping[str, bool]) -> None:
@@ -130,8 +130,7 @@ class RotationRun(Run):
         position = self.book.positions.get(symbol)
         if position is not None:
             exits.at_close(position, bar.close, self.risk, bar.atr)
-            if exits.held_long_enough(position, self.risk) or self.all_out(bar):
-                self.pending[symbol] = "exit"
+            self.queue_exit(bar)
         self._remember(bar)
 
 

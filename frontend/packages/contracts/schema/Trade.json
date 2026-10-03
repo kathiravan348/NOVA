@@ -76,6 +76,27 @@
         }
       ]
     },
+    "exitReason": {
+      "default": null,
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "signal",
+            "stop",
+            "target",
+            "time_exit",
+            "square_off",
+            "market_filter",
+            "rotation",
+            "end_of_period"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "grossPnlPaise": {
       "type": "integer",
       "minimum": -9007199254740991,

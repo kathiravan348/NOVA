@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   BacktestRunCreateSchema,
+  LedgerDaySchema,
+  LedgerEventSchema,
   BacktestMetrics,
   BacktestMetricsSchema,
   BacktestResult,
@@ -13,6 +15,38 @@ import {
 } from "./backtest";
 
 describe("Backtest schemas", () => {
+  it("checks ledger days and events, including old null reasons", () => {
+    const day = {
+      date: "2026-06-02",
+      buys: 1,
+      sells: 1,
+      boughtPaise: 1000,
+      soldPaise: 1200,
+      chargesPaise: 10,
+      netPnlPaise: 190,
+      cashPaise: 1190,
+      holdingsPaise: 0,
+      equityPaise: 1190,
+      openPositions: 0,
+    };
+    expect(LedgerDaySchema.safeParse(day).success).toBe(true);
+    expect(LedgerDaySchema.safeParse({ ...day, buys: -1 }).success).toBe(false);
+    const event = {
+      at: "2026-06-02T04:00:00Z",
+      symbol: "INFY",
+      side: "sell",
+      qty: 1,
+      pricePaise: 1200,
+      amountPaise: 1200,
+      chargesPaise: 10,
+      netPnlPaise: 190,
+      reason: null,
+      cashAfterPaise: 1190,
+    };
+    expect(LedgerEventSchema.safeParse(event).success).toBe(true);
+    expect(LedgerEventSchema.safeParse({ ...event, qty: 0 }).success).toBe(false);
+    expect(LedgerEventSchema.safeParse({ ...event, reason: "unknown" }).success).toBe(false);
+  });
   const validRun: BacktestRun = {
     id: "run-001",
     strategyId: "strat-001",

@@ -11,6 +11,36 @@ import {
 } from "./common";
 import { IndexNameSchema, UniverseSchema } from "./strategy";
 import { UniverseSymbolSchema } from "./universe";
+import { ExitReasonSchema } from "./trade";
+
+export const LedgerDaySchema = z.strictObject({
+  date: IsoDateSchema,
+  buys: z.number().int().min(0),
+  sells: z.number().int().min(0),
+  boughtPaise: NonNegPaiseSchema,
+  soldPaise: NonNegPaiseSchema,
+  chargesPaise: NonNegPaiseSchema,
+  netPnlPaise: PaiseSchema,
+  cashPaise: PaiseSchema,
+  holdingsPaise: PaiseSchema,
+  equityPaise: PaiseSchema,
+  openPositions: z.number().int().min(0),
+});
+export type LedgerDay = z.infer<typeof LedgerDaySchema>;
+
+export const LedgerEventSchema = z.strictObject({
+  at: UtcDateTimeSchema,
+  symbol: z.string().min(1),
+  side: z.enum(["buy", "sell"]),
+  qty: z.number().int().positive(),
+  pricePaise: z.number().int().positive(),
+  amountPaise: NonNegPaiseSchema,
+  chargesPaise: NonNegPaiseSchema,
+  netPnlPaise: PaiseSchema.nullable(),
+  reason: ExitReasonSchema.nullable(),
+  cashAfterPaise: PaiseSchema,
+});
+export type LedgerEvent = z.infer<typeof LedgerEventSchema>;
 
 export const BacktestRunStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
 export type BacktestRunStatus = z.infer<typeof BacktestRunStatusSchema>;

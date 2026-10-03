@@ -22,6 +22,7 @@ from typing import Literal
 
 from nova_contracts import Sizing
 from nova_contracts.strategy import Averaging, Portfolio, Risk
+from nova_contracts.trade import ExitReason
 
 from nova_backtest import exits
 from nova_backtest.bars import Bar
@@ -78,6 +79,7 @@ class Run:
         cut = square_off
         self.cut = None if cut is None else cut.hour * 3600 + cut.minute * 60 + cut.second
         self.pending: dict[str, str] = {}
+        self.exit_reasons: dict[str, ExitReason] = {}
         self.signal_rank: dict[str, float] = {}  # rank at the close that queued a buy (D62)
         self.previous: dict[str, tuple[int, int, int]] = {}  # symbol → (ts, day, close)
 
@@ -85,13 +87,15 @@ class Run:
         """(fill, last price) from a recorded quote, else the bar price for both."""
         return (quote.price, quote.ltp) if quote is not None else (default, default)
 
-    def _sell(self, bar: BarAt, default: int, quote: Quote | None = None) -> None:
+    def _sell(
+        self, bar: BarAt, default: int, reason: ExitReason, quote: Quote | None = None
+    ) -> None:
         """Closes the whole holding of `bar.symbol`, at `quote` or the first tick from the bar."""
         if self.fills is not None and quote is None:
             quote = self.fills.at(bar.symbol, bar.ts, "sell")
         price, ltp = self._price(quote, default)
         self.spread += abs(price - ltp) * self.book.positions[bar.symbol].qty
-        self.book.close(bar.symbol, _at(bar.ts), price)
+        self.book.close(bar.symbol, _at(bar.ts), price, reason)
 
     def warm_up(self, bar: BarAt) -> None:
         """A bar before the start: only its close is remembered."""
@@ -128,17 +132,20 @@ class Run:
             previous = self.previous.get(symbol)
             if previous is not None and previous[1] != bar.day:
                 self.pending.pop(symbol, None)  # nothing carries over to a new day
+                self.exit_reasons.pop(symbol, None)
                 if symbol in book.positions:  # late bars were missing: close at the last seen price
-                    book.close(symbol, _at(previous[0]), previous[2])
+                    book.close(symbol, _at(previous[0]), previous[2], "square_off")
             if (bar.ts + IST_OFFSET_SECONDS) % DAY_SECONDS >= self.cut:
                 self.pending.pop(symbol, None)
+                self.exit_reasons.pop(symbol, None)
                 if symbol in book.positions:
-                    self._sell(bar, bar.open)
+                    self._sell(bar, bar.open, "square_off")
                 return False
         if self.pending.get(symbol) == "exit":
             del self.pending[symbol]
+            reason = self.exit_reasons.pop(symbol)
             if symbol in book.positions:
-                self._sell(bar, bar.open)
+                self._sell(bar, bar.open, reason)
         return True
 
     def _rank_key(self, bar: BarAt) -> tuple[bool, float, str]:
@@ -184,12 +191,12 @@ class Run:
         fills = self.fills
         if stop_price is not None and bar.low <= stop_price:
             cross = None if fills is None else fills.cross(symbol, bar.ts, stop_price, True, "sell")
-            self._sell(bar, min(bar.open, stop_price), cross)
+            self._sell(bar, min(bar.open, stop_price), "stop", cross)
         elif target_price is not None and bar.high >= target_price:
             cross = (
                 None if fills is None else fills.cross(symbol, bar.ts, target_price, False, "sell")
             )
-            self._sell(bar, max(bar.open, target_price), cross)
+            self._sell(bar, max(bar.open, target_price), "target", cross)
 
     def at_close(self, bar: BarAt, active: bool) -> None:
         """Step d: the close is the last price; holdings follow it; signals queue new orders."""
@@ -201,8 +208,7 @@ class Run:
         position = self.book.positions.get(symbol)
         if position is not None:
             exits.at_close(position, bar.close, self.risk, bar.atr)
-            if bar.exit or exits.held_long_enough(position, self.risk) or self.all_out(bar):
-                self.pending[symbol] = "exit"
+            self.queue_exit(bar, signal=bar.exit)
         elif bar.enter and bar.regime:
             self.pending[symbol] = "enter"
             self.signal_rank[symbol] = bar.rank
@@ -210,6 +216,19 @@ class Run:
     def all_out(self, bar: BarAt) -> bool:
         """The market filter is off at this close and says to sell everything (D62)."""
         return not bar.regime and self.when_off == "exit_all"
+
+    def queue_exit(self, bar: BarAt, signal: bool = False) -> None:
+        position = self.book.positions[bar.symbol]
+        reason: ExitReason | None = None
+        if signal:
+            reason = "signal"
+        elif exits.held_long_enough(position, self.risk):
+            reason = "time_exit"
+        elif self.all_out(bar):
+            reason = "market_filter"
+        if reason is not None:
+            self.pending[bar.symbol] = "exit"
+            self.exit_reasons[bar.symbol] = reason
 
 
 def simulate(
@@ -268,7 +287,7 @@ def run_loop(
             run.at_close(bar, active[bar.symbol])
     for symbol in list(book.positions):
         final_ts, _, final_close = run.previous[symbol]
-        book.close(symbol, _at(final_ts), final_close)
+        book.close(symbol, _at(final_ts), final_close, "end_of_period")
     if day is not None:
         equity.append((EPOCH + timedelta(days=day), book.worth()))
     if on_bar is not None and last_ts is not None:

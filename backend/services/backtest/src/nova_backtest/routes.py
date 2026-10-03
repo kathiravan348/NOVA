@@ -1,5 +1,6 @@
 """Backtest runs, results and trades (D25, D32), and queueing a run (D44)."""
 
+from datetime import date
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
@@ -16,6 +17,7 @@ from nova_contracts import (
     BacktestRunStatus,
     BacktestVersionCreate,
     DataSource,
+    LedgerDay,
     Page,
     Segment,
     StrategyTimeframe,
@@ -29,6 +31,8 @@ from nova_db.web import Db
 from sqlalchemy.orm import Session
 
 from nova_backtest.convert import result_contract, run_contract, trade_contract
+from nova_backtest.ledger import filter_days
+from nova_backtest.ledger import load as load_ledger
 from nova_backtest.listing import RunFilters
 from nova_backtest.listing import list_runs as filtered_runs
 from nova_backtest.versions import (
@@ -139,6 +143,41 @@ def list_trades(
         items=[trade_contract(r) for r in rows], next_cursor=next_cursor, total=total
     )
     return JSONResponse(page.model_dump(mode="json"))
+
+
+@router.get("/{run_id}/ledger")
+def list_ledger(
+    run_id: str,
+    _: CallerDep,
+    db: Db,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Limit = PAGE_LIMIT_DEFAULT,
+    from_: Annotated[date | None, Query(alias="from")] = None,
+    to: date | None = None,
+    symbol: Annotated[str | None, Query(min_length=1)] = None,
+    all_days: Annotated[bool, Query(alias="allDays")] = False,
+) -> JSONResponse:
+    days = filter_days(load_ledger(db, run_id), from_, to, symbol, all_days)
+    page = Page[LedgerDay](items=days[offset : offset + limit], next_cursor=None, total=len(days))
+    return JSONResponse(page.model_dump(mode="json"))
+
+
+@router.get("/{run_id}/ledger/{day}")
+def ledger_events(
+    run_id: str,
+    day: date,
+    _: CallerDep,
+    db: Db,
+    symbol: Annotated[str | None, Query(min_length=1)] = None,
+) -> JSONResponse:
+    events = load_ledger(db, run_id).events.get(day, [])
+    return JSONResponse(
+        [
+            event.model_dump(mode="json")
+            for event in events
+            if symbol is None or event.symbol == symbol
+        ]
+    )
 
 
 @router.post("")
