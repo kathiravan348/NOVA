@@ -31,8 +31,8 @@ def clean(engine: Engine, parity: Parity) -> Engine:
     with engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE strategies, instruments, candles, audit_entries, users,"
-                " ticks, tick_sessions, tick_days, research_profiles CASCADE"
+                "TRUNCATE strategies, instruments, candles, audit_entries, users, ticks,"
+                " tick_sessions, tick_days, research_profiles, candle_days, index_ticks CASCADE"
             )
         )
     spec = parity.mock("strategies")[0]["versions"][0]["spec"]

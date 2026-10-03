@@ -1,6 +1,6 @@
 # NOVA — API reference (what each endpoint does)
 
-> State as of 4 Oct 2026 (NOVA-186). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
+> State as of 4 Oct 2026 (NOVA-187). Wire types: `docs/CONTRACTS.md`. Try it live: set `NOVA_API_DOCS=true`
 > in `.env`, restart, open http://127.0.0.1:8000/api/v1/docs (dev machine only, D50).
 > Update in the same task as any endpoint or CLI change (`AGENTS.md` §7a).
 
@@ -158,7 +158,11 @@ at the stop plus the real charges of the buy and the sell fits `riskPerPositionP
 by the stock and sector caps, the initial pool and the cash reserve (all % of the starting capital); the fill is cut
 again if the real prices need it. Account checks in the §5.4 order (`maxPositions`, cooldown, losing streak, new
 positions per day, entry window, daily loss shutdown: exits every position with reason `daily_shutdown`). Every
-candidate leaves one `intraday_decisions` row (first blocking reason + all failed checks). Setups arrive in NOVA-188/189 (until then such runs fail with "The <kind> setup arrives in NOVA-188/189").
+candidate leaves one `intraday_decisions` row (first blocking reason + all failed checks). Signal checks
+(NOVA-187): the NIFTY 50 trend/range gate from recorded index ticks (Kite 1m index candles on a day without them,
+listed as `index:<date>`), upward context or range condition, relative volume, ATR stop distance and reward room;
+warm-up (ATR, volume baseline, previous session) uses earlier recorded days, else Kite 1m candles (listed as
+`atr:history`, `volume_baseline:history`, `prev_day:history`), and too little data fails the check `warmup`. Setups arrive in NOVA-188/189 (until then such runs fail with "The <kind> setup arrives in NOVA-188/189").
 
 ### Research profiles (`/research-profiles`, D84, NOVA-184)
 Versioned shared settings for intraday runs (`ResearchSettings`, `docs/INTRADAY-RESEARCH.md` §2). A draft version can

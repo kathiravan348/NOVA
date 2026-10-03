@@ -10,11 +10,13 @@ from intraday_factory import (
     ScriptedSetup,
     T,
     flat_charges,
+    insert_history_days,
     insert_session,
     insert_ticks,
     minute_tape,
     ms,
     replay,
+    research_settings,
     seed_intraday_run,
     timing,
 )
@@ -159,18 +161,24 @@ def test_an_intraday_run_goes_end_to_end_through_the_worker(
     tmp_path: Path,
     parity: Parity,
 ) -> None:
-    entry = {"stop": 9_900, "target_r": 2.0}
+    entry = {"stop": 9_900, "target_r": 2.0, "family": "range"}
     plan = {"09:20": entry, "09:45": entry}
     monkeypatch.setitem(
         REGISTRY, "opening_range_retest", lambda _s, stock: ScriptedSetup(stock, plan)
     )
-    tape = [*calm("09:50:00"), T("09:50:00", 9_910, bid=9_900, ask=9_904)]
-    tape += minute_tape("09:50:20", "15:30:00", 9_890, spread=4)
+    tape = minute_tape("09:15:00", "09:50:00", 10_000, spread=4, volume_step=1_000)
+    tape += [T("09:50:00", 9_910, bid=9_900, ask=9_904, volume=105_000)]
+    tape += minute_tape("09:50:20", "15:30:00", 9_890, spread=4, volume=110_000)
+    earlier = [date(2026, 9, d) for d in (23, 24, 25, 29, 30)]
+    # The gate is off (no index data here); 5 baseline sessions of Kite candles: ±₹0.50 a
+    # minute (ATR ≈ ₹0.64 by 09:45), 1,000 shares a minute vs 3,000 today (relative volume 3).
+    settings = research_settings(market={"marketGate": False}, signal={"volumeBaselineSessions": 5})
     with factory() as db:
         insert_session(db)
         insert_ticks(db, "INFY", tape)
+        insert_history_days(db, "INFY", earlier)
         insert_session(db, date(2026, 10, 5), longest_gap=45)  # too long a feed gap: skipped
-        seed_intraday_run(db, ["INFY"], last=date(2026, 10, 5))
+        seed_intraday_run(db, ["INFY"], last=date(2026, 10, 5), settings=settings)
     stop = threading.Event()
     engine = DispatchEngine(StrategyEngine(), IntradayEngine(tmp_path, tmp_path))
     run_worker(factory, engine, stop, poll_seconds=0, on_idle=stop.set)
@@ -179,7 +187,13 @@ def test_an_intraday_run_goes_end_to_end_through_the_worker(
         run = db.get(BacktestRun, "run_i")
         assert run is not None and run.status == "completed", run and run.error
         assert (run.recorded_days_used, run.recorded_days_skipped) == (1, [date(2026, 10, 5)])
-        assert run.history_inputs == ["tick_size:INFY"] and run.incomplete is False
+        assert run.history_inputs == [
+            "tick_size:INFY",
+            "atr:history",
+            "prev_day:history",
+            "volume_baseline:history",
+        ]
+        assert run.incomplete is False
         (trade,) = db.scalars(select(Trade).where(Trade.run_id == "run_i")).all()
         detail = db.get(IntradayTrade, trade.id)
         assert detail is not None

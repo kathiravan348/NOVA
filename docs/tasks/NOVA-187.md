@@ -1,6 +1,6 @@
 # NOVA-187 — Intraday simulator: market gate, context, warm-up from history (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-187 · **Depends on:** NOVA-179, NOVA-186
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-187 · **Depends on:** NOVA-179, NOVA-186
 
 ## Goal
 The intraday simulator knows, at each 1m close, the inputs of `docs/INTRADAY-RESEARCH.md` §6: ATR, stock VWAP,

@@ -136,14 +136,14 @@ class ScriptedSetup:
         end = int(self.stock.bars1.end[i])
         for clock, fields in self.plan.items():
             if ms(f"{clock}:00", self.stock.day) == end:
+                values: dict[str, Any] = {"family": "trend", **fields}
                 return Candidate(
                     at_ms=end,
                     symbol=self.stock.symbol,
                     setup="scripted",
-                    family="trend",
                     bar=i,
                     price=int(self.stock.bars1.close[i]),
-                    **fields,
+                    **values,
                 )
         return None
 
@@ -222,13 +222,22 @@ def replay(
 
 
 def minute_tape(
-    start: str, end: str, price: int, spread: int = 10, every_s: int = 20, **extra: Any
+    start: str,
+    end: str,
+    price: int,
+    spread: int = 10,
+    every_s: int = 20,
+    volume_step: int = 0,
+    **extra: Any,
 ) -> list[T]:
-    """Calm ticks every `every_s` seconds from `start` to `end` (IST `HH:MM:SS`, end excluded)."""
+    """Calm ticks every `every_s` seconds from `start` to `end` (IST `HH:MM:SS`, end excluded);
+    with `volume_step` the day volume grows by that much a tick from 09:15."""
     out: list[T] = []
     t = ms(start)
     while t < ms(end):
         clock = datetime.fromtimestamp(t / 1000, UTC).astimezone(IST).strftime("%H:%M:%S")
+        if volume_step:
+            extra["volume"] = (t - ms("09:15:00")) // (every_s * 1000) * volume_step
         out.append(T(clock, price, bid=price - spread // 2, ask=price + spread // 2, **extra))
         t += every_s * 1000
     return out
@@ -355,3 +364,49 @@ def seed_intraday_run(
     )
     db.commit()
     return run_id
+
+
+def insert_history_days(
+    db: Session,
+    symbol: str,
+    days: Sequence[date],
+    price: int = 10_000,
+    half_range: int = 50,
+    volume: int = 1_000,
+) -> None:
+    """Kite 1m candles for whole sessions (375 a day) with their `candle_days` rows."""
+    for day in days:
+        start = datetime.combine(day, time(9, 15), IST).astimezone(UTC)
+        for minute in range(375):
+            db.execute(
+                text(
+                    "INSERT INTO candles (exchange, symbol, timeframe, ts, open_paise, high_paise,"
+                    " low_paise, close_paise, volume) VALUES ('NSE', :symbol, '1m', :ts, :price,"
+                    " :high, :low, :price, :volume)"
+                ),
+                {
+                    "symbol": symbol,
+                    "ts": start + timedelta(minutes=minute),
+                    "price": price,
+                    "high": price + half_range,
+                    "low": price - half_range,
+                    "volume": volume,
+                },
+            )
+        db.execute(
+            text(
+                "INSERT INTO candle_days (exchange, symbol, timeframe, day, bars)"
+                " VALUES ('NSE', :symbol, '1m', :day, 375)"
+            ),
+            {"symbol": symbol, "day": day},
+        )
+
+
+def research_settings(**groups: dict[str, Any]) -> dict[str, Any]:
+    """Default research settings (camelCase JSON) with some fields changed per group."""
+    from nova_contracts import default_research_settings
+
+    values = default_research_settings().model_dump(mode="json", by_alias=True)
+    for group, fields in groups.items():
+        values[group] |= fields
+    return values

@@ -20,9 +20,11 @@ from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
 from nova_backtest.engine import EngineError
+from nova_backtest.intraday.context import build_context
 from nova_backtest.intraday.decisions import DecisionLog
 from nova_backtest.intraday.fills import DepthAt, Execution
-from nova_backtest.intraday.guard import Guard
+from nova_backtest.intraday.gate import IndexGate
+from nova_backtest.intraday.guard import Guard, SignalChecks
 from nova_backtest.intraday.position import Position
 from nova_backtest.intraday.replay import DayReplay, Timing
 from nova_backtest.intraday.setups import SetupFactory, StockDay, factory_for
@@ -34,6 +36,7 @@ from nova_backtest.intraday.tick_data import (
     tick_sizes,
     usable_sessions,
 )
+from nova_backtest.intraday.warmup import Warmup
 from nova_backtest.profiles import get_frozen_settings
 from nova_backtest.progress import ProgressSink
 from nova_backtest.save import save_result
@@ -173,6 +176,8 @@ class _Run:
             settings.account, run.initial_capital_paise, sectors, self.costs.to_close(run.date_from)
         )
         self.log = DecisionLog(db, run.id)
+        baseline = settings.signal.volume_baseline_sessions
+        self.warmup = Warmup(db, archive_root, run.date_from, run.date_to, baseline)
         self.positions: list[Position] = []
         self.equity: list[tuple[date, int]] = []
         self.loaded: set[str] = set()
@@ -242,7 +247,10 @@ class _Run:
                 done += 1
                 if len(ticks):
                     bars1, bars5 = build_bars(ticks, MINUTE_MS), build_bars(ticks, 5 * MINUTE_MS)
-                    stocks[symbol] = StockDay(symbol, day, ticks, bars1, bars5)
+                    history = self.warmup.history(symbol, day)
+                    context = build_context(bars1, bars5, history, self.settings.signal)
+                    self.history_inputs += [f"{s}:history" for s in sorted(context.sources)]
+                    stocks[symbol] = StockDay(symbol, day, ticks, bars1, bars5, context)
                     self.loaded.add(symbol)
             self._day(day, stocks, source)
             progress.advance(done, day, len(self.positions))
@@ -250,6 +258,10 @@ class _Run:
 
     def _day(self, day: date, stocks: dict[str, StockDay], source: TickSource) -> None:
         self.guard.costs = self.costs.to_close(day)
+        gate, index_input = IndexGate.load(self.db, self.settings.market, day)
+        if index_input is not None:
+            self.history_inputs.append(index_input)
+        contexts = {s: stock.context for s, stock in stocks.items() if stock.context is not None}
         replay = DayReplay(
             stocks,
             {s: self.make(self.spec.setup, stock) for s, stock in stocks.items()},
@@ -259,8 +271,11 @@ class _Run:
             DepthAt(source.depth),
             self.costs,
             self.guard,
+            SignalChecks(self.settings.signal, contexts, gate),
         )
         replay.run()
+        for symbol, stock in stocks.items():
+            self.warmup.remember(symbol, day, stock.bars1)
         self.log.write(replay.decisions)
         self.positions.extend(replay.closed)
         self.equity.append((day, self.guard.cash))
