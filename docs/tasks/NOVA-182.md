@@ -1,6 +1,6 @@
 # NOVA-182 — Contracts: research profile (D84)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-182 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-182 · **Depends on:** —
 
 ## Goal
 The research profile (shared intraday settings, `docs/INTRADAY-RESEARCH.md` §2) exists as Zod + Pydantic contracts
@@ -72,4 +72,15 @@ _(implementer writes here if blocked)_
 **Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (4 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT. **Self-review:** no.
+**Fixed directly (review: commits):** the pools check allowed a floating-point hair over 100 (33.3 + 33.3 + 33.4
+was at risk); both Zod and Pydantic now accept up to 100 + 1e-9, with a test each.
+**Checks:** backend-check 1482 passed (ruff, format, mypy clean; ChatGPT's pending Docker gate); review:check
+format, lint, typecheck, build green; tests 139/140 files, the failing `approvalBatch.test.tsx` (load timeout,
+known flake) passes alone.
+**Acceptance:** defaults valid and equal in TS and Python; each cross-field rule rejects with its message; strict
+groups reject extra keys; parity for every model; handlers: create, add version, update draft, frozen → 400,
+freeze, freeze twice → 400, 404.
+**Guides checked:** CONTRACTS.md rows match; no API/DATABASE change yet (mock endpoints only, NOVA-184).
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
