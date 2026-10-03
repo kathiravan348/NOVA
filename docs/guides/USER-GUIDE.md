@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-167). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-168). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -619,8 +619,9 @@ approval**; in Demo mode the demo banner appears instead.
 - One saved version of a strategy cannot be deleted on its own: delete the whole strategy, or set it to *Archived* to hide it.
 - Backtests are for **shares only** (delivery and intraday); futures and options come later.
 - Backtests on **recorded data** (prices NOVA recorded itself) start on 1 Oct 2026, are intraday only, and skip
-  any day on which the price feed was down for more than 5 minutes in total. Choosing recorded data on the
-  **Run backtest** screen comes in a later update.
+  any day on which the price feed was down for more than 5 minutes in total. They buy at the best price a seller
+  was asking at that moment and sell at the best price a buyer was bidding (the *spread* between the two is a real
+  cost of fast trading). Choosing recorded data on the **Run backtest** screen comes in a later update.
 - The market-data chart shows the last year of daily candles (or the last 5 days of intraday) by default.
 - The Owner and one agent account can sign in; family roles come later.
 

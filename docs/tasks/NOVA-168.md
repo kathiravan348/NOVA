@@ -1,6 +1,6 @@
 # NOVA-168 — Recorded runs fill at bid/ask (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-168 · **Depends on:** NOVA-167
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-168 · **Depends on:** NOVA-167
 
 ## Goal
 In a `recorded` run every buy fills at the best ask and every sell at the best bid of the first tick at or after
@@ -47,3 +47,17 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. `quotes.py`: `TickQuotes`, `QuoteBook` (memmaps in the run scratch folder,
+  `at` = first tick at/after t on the same IST day, `cross` = first tick in the bar past a level).
+  `read_quotes` lives in `nova_backtest/tick_bars.py` (NOVA-167 moved the reader there, not `nova_db`).
+- `simulate`: optional `fills`; open fills (buys, signal sells, square-off) use `at`; stops, targets and adds
+  use `cross`; `Simulation.spread_cost` (None without fills) → `backtest_results.spread_cost_paise`.
+  Sizing uses the fill price, as history runs size on the bar open (the task text said previous close).
+- Engine: recorded runs fill a `QuoteBook` while loading each stock and refuse non-intraday specs.
+- Tests: `test_quotes.py`; `test_tick_bars.py` end to end (ask 107.10 / bid 107.95, spread 150 paise). All
+  history simulator and engine tests unchanged. backend-check 1,373 passed.
+- Guides: API (fills, `spreadCostPaise`), USER-GUIDE (known limits: how recorded runs fill).
+
+## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task. Deployed Saturday 3 Oct 2026:
+`up -d --build --no-deps backtest backtest-worker`. Verdict: done.

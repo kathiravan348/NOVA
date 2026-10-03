@@ -124,6 +124,7 @@ def save_result(
             estimated_tax_paise=m["estimated_tax_paise"],
             after_tax_net_pnl_paise=m["after_tax_net_pnl_paise"],
             years=wire["years"],
+            spread_cost_paise=result.spread_cost,
         )
     )
     run.skipped_symbols = skipped

@@ -9,6 +9,9 @@ levels and bars held follow it, and signals queue new orders.
 With `square_off` (intraday, D46) nothing is held past that IST time or overnight.
 With a market filter (`when_off`, D62) no buy is queued at a close where it is off, and
 `exit_all` also queues a sell of every holding there. Rotation (`rotation.py`) reuses this loop.
+With `fills` (recorded runs, D82 (5)) prices come from the recorded quotes instead: the ask of the
+first tick at or after a fill moment for a buy, its bid for a sell; stops, targets and adds fill at
+the first tick in the bar that crosses their level. The spread cost is added up on every fill.
 """
 
 import math
@@ -24,6 +27,7 @@ from nova_backtest import exits
 from nova_backtest.bars import Bar
 from nova_backtest.book import Book, ChargesFn, ClosedTrade, percent_of, shares
 from nova_backtest.columns import DAY_SECONDS, IST_OFFSET_SECONDS
+from nova_backtest.quotes import Quote, QuoteBook
 from nova_backtest.scratch import MemoryStore, Signals, Store
 from nova_backtest.timeline import BarAt, walk
 
@@ -48,6 +52,7 @@ WhenOff = Literal["no_new_entries", "exit_all"]
 class Simulation:
     trades: list[ClosedTrade]
     equity: list[tuple[date, int]]  # end-of-day equity per IST trading date in the period
+    spread_cost: int | None = None  # D82: Σ |fill − last price| × qty; None without `fills`
 
 
 def _at(ts: int) -> datetime:
@@ -64,14 +69,29 @@ class Run:
         square_off: time | None,
         portfolio: Portfolio | None,
         when_off: WhenOff | None = None,
+        fills: QuoteBook | None = None,
     ) -> None:
         self.book, self.sizing, self.risk, self.averaging = book, sizing, risk, averaging
+        self.fills = fills
+        self.spread = 0
         self.portfolio, self.when_off = portfolio, when_off
         cut = square_off
         self.cut = None if cut is None else cut.hour * 3600 + cut.minute * 60 + cut.second
         self.pending: dict[str, str] = {}
         self.signal_rank: dict[str, float] = {}  # rank at the close that queued a buy (D62)
         self.previous: dict[str, tuple[int, int, int]] = {}  # symbol → (ts, day, close)
+
+    def _price(self, quote: Quote | None, default: int) -> tuple[int, int]:
+        """(fill, last price) from a recorded quote, else the bar price for both."""
+        return (quote.price, quote.ltp) if quote is not None else (default, default)
+
+    def _sell(self, bar: BarAt, default: int, quote: Quote | None = None) -> None:
+        """Closes the whole holding of `bar.symbol`, at `quote` or the first tick from the bar."""
+        if self.fills is not None and quote is None:
+            quote = self.fills.at(bar.symbol, bar.ts, "sell")
+        price, ltp = self._price(quote, default)
+        self.spread += abs(price - ltp) * self.book.positions[bar.symbol].qty
+        self.book.close(bar.symbol, _at(bar.ts), price)
 
     def warm_up(self, bar: BarAt) -> None:
         """A bar before the start: only its close is remembered."""
@@ -90,10 +110,14 @@ class Run:
             stop_price = exits.stop_level(position, self.risk)
             if bar.low > trigger or (stop_price is not None and stop_price >= trigger):
                 return
-            fill = min(bar.open, trigger)
+            quote = None
+            if self.fills is not None:
+                quote = self.fills.cross(bar.symbol, bar.ts, trigger, below=True, side="buy")
+            fill, ltp = self._price(quote, min(bar.open, trigger))
             qty = shares(self.sizing, self.book.worth(), fill)
             if qty < 1 or qty * fill > self.book.cash:
                 return
+            self.spread += abs(fill - ltp) * qty
             self.book.add(bar.symbol, qty, fill)
             position.adds += 1
 
@@ -109,12 +133,12 @@ class Run:
             if (bar.ts + IST_OFFSET_SECONDS) % DAY_SECONDS >= self.cut:
                 self.pending.pop(symbol, None)
                 if symbol in book.positions:
-                    book.close(symbol, _at(bar.ts), bar.open)
+                    self._sell(bar, bar.open)
                 return False
         if self.pending.get(symbol) == "exit":
             del self.pending[symbol]
             if symbol in book.positions:
-                book.close(symbol, _at(bar.ts), bar.open)
+                self._sell(bar, bar.open)
         return True
 
     def _rank_key(self, bar: BarAt) -> tuple[bool, float, str]:
@@ -140,9 +164,12 @@ class Run:
                 return
             if bar.symbol in book.positions:
                 continue
-            qty = shares(self.sizing, book.worth(), bar.open)
-            if qty >= 1 and qty * bar.open <= book.cash:
-                book.open(bar.symbol, _at(bar.ts), qty, bar.open)
+            quote = None if self.fills is None else self.fills.at(bar.symbol, bar.ts, "buy")
+            price, ltp = self._price(quote, bar.open)
+            qty = shares(self.sizing, book.worth(), price)
+            if qty >= 1 and qty * price <= book.cash:
+                self.spread += abs(price - ltp) * qty
+                book.open(bar.symbol, _at(bar.ts), qty, price)
 
     def risk_exits(self, bar: BarAt) -> None:
         """Step c: adds, then stop before target, inside the bar."""
@@ -154,10 +181,15 @@ class Run:
         target = self.risk.target_percent
         stop_price = exits.stop_level(position, self.risk)
         target_price = percent_of(position.average, 100 + target) if target else None
+        fills = self.fills
         if stop_price is not None and bar.low <= stop_price:
-            book.close(symbol, _at(bar.ts), min(bar.open, stop_price))
+            cross = None if fills is None else fills.cross(symbol, bar.ts, stop_price, True, "sell")
+            self._sell(bar, min(bar.open, stop_price), cross)
         elif target_price is not None and bar.high >= target_price:
-            book.close(symbol, _at(bar.ts), max(bar.open, target_price))
+            cross = (
+                None if fills is None else fills.cross(symbol, bar.ts, target_price, False, "sell")
+            )
+            self._sell(bar, max(bar.open, target_price), cross)
 
     def at_close(self, bar: BarAt, active: bool) -> None:
         """Step d: the close is the last price; holdings follow it; signals queue new orders."""
@@ -193,9 +225,10 @@ def simulate(
     window_bars: int = 500_000,
     portfolio: Portfolio | None = None,
     when_off: WhenOff | None = None,
+    fills: QuoteBook | None = None,
 ) -> Simulation:
     book = Book(cash, charges)
-    run = Run(book, sizing, risk, averaging, square_off, portfolio, when_off)
+    run = Run(book, sizing, risk, averaging, square_off, portfolio, when_off, fills)
     return run_loop(store, run, start, on_bar, window_bars)
 
 
@@ -240,7 +273,8 @@ def run_loop(
         equity.append((EPOCH + timedelta(days=day), book.worth()))
     if on_bar is not None and last_ts is not None:
         on_bar(done, _at(last_ts), len(book.trades))
-    return Simulation(trades=book.trades, equity=equity)
+    spread = None if run.fills is None else run.spread
+    return Simulation(trades=book.trades, equity=equity, spread_cost=spread)
 
 
 def simulate_bars(

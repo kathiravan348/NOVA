@@ -364,6 +364,8 @@ def test_a_recorded_run_reads_ticks_not_candles(
     """The seeded Kite candles are never mixed in: with no recorded day the run fails (D82)."""
     _queue(seeded)
     with Session(seeded) as db:
+        spec = _spec(segment="equity_intraday", timeframe="1m")
+        db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
         db.execute(update(BacktestRun).values(data_source="recorded"))
         db.commit()
 
