@@ -57,7 +57,7 @@ def test_expansion_counts_and_defaults() -> None:
         assert entry.backtest.initial_capital_paise == 100_000_000
         assert entry.backtest.from_.isoformat() == "2023-01-02"
         assert entry.backtest.to.isoformat() == "2024-12-31"
-        if entry.spec.mode != "rotation":
+        if entry.spec.mode in ("visual", "python"):
             assert entry.spec.averaging is None
 
 

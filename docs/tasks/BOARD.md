@@ -188,7 +188,7 @@
 | NOVA-180 | Relay Live Config: indices to record; Pick top leaves room for them (D84) | done | Claude | 179 (merge after 179 is deployed) |
 | NOVA-181 | Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031) | done | Claude | 179 (shares `models/data.py`) |
 | NOVA-182 | Contracts: research profile (D84) | done | Claude | — |
-| NOVA-183 | Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84) | planned | — | 182 |
+| NOVA-183 | Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84) | done | Claude | 182 |
 | NOVA-184 | Backtest service: research profiles table + endpoints, freeze + hash (D84, migration 0032) | planned | — | 181, 182 |
 | NOVA-185 | Intraday simulator: tick replay, fill model, exits, unresolved positions (D84, migration 0033) | planned | — | 181, 183, 184 |
 | NOVA-186 | Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034) | planned | — | 185 |

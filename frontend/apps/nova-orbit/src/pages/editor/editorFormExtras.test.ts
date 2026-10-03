@@ -3,12 +3,12 @@ import { mockStrategies } from "@nova/mocks";
 import type { StrategySpec } from "@nova/contracts";
 import { EditorFormSchema, emptyForm, fromSpec, toSpec, type EditorForm } from "./editorForm";
 
-type EditableSpec = Exclude<StrategySpec, { mode: "rotation" }>;
+type EditableSpec = Exclude<StrategySpec, { mode: "rotation" | "intraday" }>;
 
 const turtle = (): EditableSpec => {
   const s = mockStrategies.find((m) => m.id === "stg_004")!;
   const spec = s.versions.find((v) => v.version === s.latestVersion)!.spec;
-  if (spec.mode === "rotation") throw new Error("stg_004 is a visual mock");
+  if (spec.mode === "rotation" || spec.mode === "intraday") throw new Error("stg_004 is visual");
   return spec;
 };
 

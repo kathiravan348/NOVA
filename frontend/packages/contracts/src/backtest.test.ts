@@ -82,6 +82,10 @@ describe("Backtest schemas", () => {
     dataSource: "history",
     recordedDaysUsed: null,
     recordedDaysSkipped: [],
+    profileId: null,
+    profileVersion: null,
+    scenario: null,
+    experimentId: null,
   };
 
   const validMetrics: BacktestMetrics = {

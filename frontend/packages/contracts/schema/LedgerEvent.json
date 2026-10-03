@@ -74,7 +74,9 @@
             "square_off",
             "market_filter",
             "rotation",
-            "end_of_period"
+            "end_of_period",
+            "daily_shutdown",
+            "unresolved"
           ]
         },
         {

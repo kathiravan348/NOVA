@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, last task NOVA-180). NOVA **never places real orders**: it only
+> State as of **4 Oct 2026** (Stage B, last task NOVA-183). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -83,7 +83,7 @@ Use **Search** to find a strategy by name and **Status** to show drafts, active 
 **Results from** chooses **All data**, **History data** or **Recorded data**. The cards' run counts and
 results follow that choice. **Sort by** offers **Recently updated**, **Best CAGR**, **Most runs**,
 **Name (A–Z)**, **Best net P&L** and **Smallest drawdown** (the least severe worst drop).
-**More filters** adds **Mode**, **Segment**, **Timeframe** (including seconds), **Tested** and
+**More filters** adds **Mode** (**Visual**, **Python**, **Rotation** or **Intraday**), **Segment**, **Timeframe** (including seconds), **Tested** and
 **Min best CAGR %**. **Tested** means at least one completed test from the chosen data source;
 **Not tested yet** includes strategies whose tests have only failed or are still running.
 The count shows how many strategies match out of the whole list. **Clear filters** restores all choices,
@@ -91,7 +91,10 @@ including the source and sorting. Choices stay in the page address, so reloading
 
 ### Step 3 — Open one strategy
 Click a card. You see:
-- the **rules written in plain words** (e.g. "Enter when Close crosses above SMA(20)");
+- the **rules written in plain words** (e.g. "Enter when Close crosses above SMA(20)"). An **Intraday**
+  strategy shows its **Setup** (the price pattern that starts a trade, with its own stop and target) and its
+  **Buying** rule (one buy, or a first buy plus at most one add). Intraday strategies cannot be edited or run
+  yet: **Edit** says "Intraday setups are edited in their own form (coming soon)";
 - a **Backtests** tab: every test run of this strategy;
 - a **Versions** tab: every saved copy with its date, note and its **Backtests** record (how many finished
   test runs used that version and its best return, which opens that run).

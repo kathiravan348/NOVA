@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Portfolio, Regime, Risk, StrategySpec } from "@nova/contracts";
+import type { CandleStrategySpec, Portfolio, Regime, Risk } from "@nova/contracts";
 import {
   ConditionFormSchema,
   OperandFormSchema,
@@ -104,7 +104,7 @@ export function extrasIssues(f: ExtrasForm, issue: Issue, portfolio = true): voi
 
 /** `whenOff`: the market filter's choice when the spec has none (rotation defaults to selling). */
 export function extrasFromSpec(
-  spec: StrategySpec,
+  spec: CandleStrategySpec,
   whenOff: ExtrasForm["regimeWhenOff"],
 ): ExtrasForm {
   const form = emptyExtras();

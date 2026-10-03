@@ -8,6 +8,8 @@ export const reasonLabels: Record<ExitReason, string> = {
   square_off: "Square-off 15:20",
   market_filter: "Market filter",
   rotation: "Rotation",
+  daily_shutdown: "Daily loss limit",
+  unresolved: "Unresolved",
   end_of_period: "End of period",
 };
 

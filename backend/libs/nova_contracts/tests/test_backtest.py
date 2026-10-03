@@ -64,6 +64,7 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
         )
     }
 
+    body |= {"profileId": None, "profileVersion": None, "scenario": None}
     dumped = BacktestRunCreate.model_validate_json(json.dumps(body)).model_dump(mode="json")
 
     assert dumped == body
@@ -167,6 +168,9 @@ def test_version_bodies_match_their_schemas(parity: Parity) -> None:
         "initialCapitalPaise": old["initialCapitalPaise"],
         "benchmark": None,
         "dataSource": None,  # absent or null = keep the previous version's source (D82)
+        "profileId": None,  # D84: intraday runs only
+        "profileVersion": None,
+        "scenario": None,
     }
     for model, body, schema in (
         (BacktestVersion, version, "BacktestVersion"),

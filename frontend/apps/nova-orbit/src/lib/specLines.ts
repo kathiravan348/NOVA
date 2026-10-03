@@ -1,5 +1,6 @@
 import type { RuleGroup, StrategySpec } from "@nova/contracts";
 import { segmentLabel, timeframeLabel } from "./format";
+import { describeBuying, describeSetup } from "./intradayText";
 import {
   describeAveraging,
   describeExits,
@@ -42,7 +43,12 @@ function ruleLines(name: "Entry" | "Exit" | "Filter", group: RuleGroup): SpecLin
   ];
 }
 
-const modeText = { visual: "Visual rules", python: "Python", rotation: "Rotation" } as const;
+const modeText = {
+  visual: "Visual rules",
+  python: "Python",
+  rotation: "Rotation",
+  intraday: "Intraday",
+} as const;
 
 /** Rotation settings, score terms and the optional filter (D62 (4)). */
 function rotationLines(spec: Extract<StrategySpec, { mode: "rotation" }>): SpecLine[] {
@@ -63,6 +69,13 @@ export function specLines(spec: StrategySpec): SpecLine[] {
     { key: "exchange", label: "Exchange", value: spec.exchange },
     { key: "timeframe", label: "Timeframe", value: timeframeLabel[spec.timeframe] },
   ];
+  if (spec.mode === "intraday") {
+    return [
+      ...common,
+      { key: "setup", label: "Setup", value: describeSetup(spec.setup) },
+      { key: "buying", label: "Buying", value: describeBuying(spec.buying) },
+    ];
+  }
   const risk: SpecLine[] = [
     { key: "stop", label: "Stop-loss", value: percentOrNone(spec.risk.stopLossPercent) },
     { key: "target", label: "Target", value: percentOrNone(spec.risk.targetPercent) },

@@ -6,6 +6,7 @@ from pydantic import Field, model_validator
 
 from nova_contracts.common import Contract, Exchange, Id, Segment, StrategyTimeframe, UtcDateTime
 from nova_contracts.indicators import INTRADAY_ONLY, IndicatorName, param_problems
+from nova_contracts.intraday import StrategySpecIntraday
 from nova_contracts.market_data import IndexName
 
 PriceField = Literal["open", "high", "low", "close", "volume"]
@@ -190,9 +191,10 @@ class StrategySpecRotation(Contract):
 
 
 StrategySpec = Annotated[
-    StrategySpecVisual | StrategySpecPython | StrategySpecRotation, Field(discriminator="mode")
+    StrategySpecVisual | StrategySpecPython | StrategySpecRotation | StrategySpecIntraday,
+    Field(discriminator="mode"),
 ]
-AnySpec = StrategySpecVisual | StrategySpecPython | StrategySpecRotation
+AnySpec = StrategySpecVisual | StrategySpecPython | StrategySpecRotation | StrategySpecIntraday
 
 
 class StrategyVersion(Contract):
@@ -225,6 +227,8 @@ def _group_operands(group: RuleGroup | None) -> list[Operand]:
 
 def spec_operands(spec: AnySpec) -> list[Operand]:
     """Every operand of a spec: rules, rank, market filter, rotation score and filter (D62)."""
+    if isinstance(spec, StrategySpecIntraday):
+        return []  # setups and buying rules have numbers only (D84)
     regime = [spec.regime.condition.left, spec.regime.condition.right] if spec.regime else []
     if isinstance(spec, StrategySpecRotation):
         score: list[Operand] = [t.operand for t in spec.rotation.score]
@@ -250,7 +254,7 @@ def spec_param_problems(spec: AnySpec) -> list[str]:
     opening_range = any(
         isinstance(o, OperandIndicator) and o.name in INTRADAY_ONLY for o in operands
     )
-    if opening_range and spec.timeframe == "1d":
+    if opening_range and not isinstance(spec, StrategySpecIntraday) and spec.timeframe == "1d":
         problems.append("Opening range needs an intraday timeframe")
     return problems
 

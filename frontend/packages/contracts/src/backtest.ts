@@ -12,6 +12,7 @@ import {
 import { IndexNameSchema, UniverseSchema } from "./strategy";
 import { UniverseSymbolSchema } from "./universe";
 import { ExitReasonSchema } from "./trade";
+import { ScenarioSchema, type Scenario } from "./intraday";
 
 export const LedgerDaySchema = z.strictObject({
   date: IsoDateSchema,
@@ -93,6 +94,11 @@ export const BacktestRunSchema = z
     dataSource: DataSourceSchema,
     recordedDaysUsed: z.number().int().nonnegative().nullable(),
     recordedDaysSkipped: z.array(IsoDateSchema),
+    /** D84: intraday runs only; null on every other run. */
+    profileId: IdSchema.nullable().default(null),
+    profileVersion: z.number().int().min(1).nullable().default(null),
+    scenario: ScenarioSchema.nullable().default(null),
+    experimentId: IdSchema.nullable().default(null),
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
@@ -241,6 +247,26 @@ export const BacktestListSortSchema = z.enum([
 ]);
 export type BacktestListSort = z.infer<typeof BacktestListSortSchema>;
 
+/** D84: an intraday run names a research profile version and a scenario; all three or none. */
+const profileChoiceFields = {
+  profileId: IdSchema.nullable().optional(),
+  profileVersion: z.number().int().min(1).nullable().optional(),
+  scenario: ScenarioSchema.nullable().optional(),
+};
+
+const profileChoiceTogether = (data: {
+  profileId?: string | null | undefined;
+  profileVersion?: number | null | undefined;
+  scenario?: Scenario | null | undefined;
+}) => {
+  const given = [data.profileId, data.profileVersion, data.scenario].filter((v) => v != null);
+  return given.length === 0 || given.length === 3;
+};
+const profileChoiceMessage = {
+  message: "profileId, profileVersion and scenario go together",
+  path: ["profileId"],
+};
+
 /** Body of `POST /backtests` (D44): queues a run of one strategy version on a universe. */
 export const BacktestRunCreateSchema = z
   .strictObject({
@@ -254,11 +280,13 @@ export const BacktestRunCreateSchema = z
     benchmark: BacktestBenchmarkSchema.nullable(),
     /** Absent = `history` (D82). */
     dataSource: DataSourceSchema.optional(),
+    ...profileChoiceFields,
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
     path: ["from"],
-  });
+  })
+  .refine(profileChoiceTogether, profileChoiceMessage);
 export type BacktestRunCreate = z.infer<typeof BacktestRunCreateSchema>;
 
 /** Body of `POST /backtests/{id}/versions` (D60): the next version of the same strategy. */
@@ -273,11 +301,13 @@ export const BacktestVersionCreateSchema = z
     benchmark: BacktestBenchmarkSchema.nullable(),
     /** Absent or null = the previous version's source (D82). */
     dataSource: DataSourceSchema.nullable().optional(),
+    ...profileChoiceFields,
   })
   .refine((data) => data.from <= data.to, {
     message: "from date must be less than or equal to to date",
     path: ["from"],
-  });
+  })
+  .refine(profileChoiceTogether, profileChoiceMessage);
 export type BacktestVersionCreate = z.infer<typeof BacktestVersionCreateSchema>;
 
 /** One version of a backtest in its history (D60); metrics only when completed. */

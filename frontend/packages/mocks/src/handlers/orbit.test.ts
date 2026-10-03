@@ -432,7 +432,7 @@ describe("Backtests list filters (D82)", () => {
   };
 
   it("filters by source, results and name like the backend", async () => {
-    expect(await ids("dataSource=recorded")).toEqual(["run_001"]);
+    expect(await ids("dataSource=recorded")).toEqual(["run_001", "run_007"]);
     expect(await ids("minCagr=12")).toEqual(["run_001"]);
     expect(await ids("profitable=true")).toEqual(["run_001", "run_002"]);
     expect(await ids("status=failed")).toEqual(["run_005"]);

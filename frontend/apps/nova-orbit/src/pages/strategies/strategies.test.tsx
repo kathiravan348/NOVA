@@ -61,9 +61,10 @@ describe("Strategies list", () => {
         .map((h) => h.textContent);
     expect(names()[0]).toBe("VWAP Momentum Intraday");
     fireEvent.change(screen.getByLabelText("Status"), { target: { value: "draft" } });
-    expect(names()).toHaveLength(3);
+    expect(names()).toHaveLength(4);
     expect(names()).toEqual(
       expect.arrayContaining([
+        "Opening range retest",
         "Delivery Mean Reversion",
         "Turtle 55/20 (ranked)",
         "12-1 momentum rotation",
@@ -192,6 +193,12 @@ describe("Strategy detail", () => {
     expect(
       screen.getByText("NIFTY 50: Close > SMA(200); otherwise sell everything"),
     ).toBeInTheDocument();
+  });
+
+  it("shows an intraday strategy's setup and buying rule (D84)", async () => {
+    renderApp("/strategies/stg_006");
+    expect(await screen.findByText(/opening range retest, 15 min range/)).toBeInTheDocument();
+    expect(screen.getByText("single entry")).toBeInTheDocument();
   });
 
   it("explains python strategies", async () => {

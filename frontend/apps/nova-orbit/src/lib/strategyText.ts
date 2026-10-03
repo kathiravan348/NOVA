@@ -118,9 +118,10 @@ const modeNames: Record<StrategySpec["mode"], string> = {
   visual: "Visual",
   python: "Python",
   rotation: "Rotation",
+  intraday: "Intraday",
 };
 
-/** "Visual", "Python" or "Rotation" (D62). */
+/** "Visual", "Python", "Rotation" (D62) or "Intraday" (D84). */
 export function modeLabel(mode: StrategySpec["mode"]): string {
   return modeNames[mode];
 }

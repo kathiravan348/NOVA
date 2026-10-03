@@ -17,6 +17,8 @@ ExitReason = Literal[
     "market_filter",
     "rotation",
     "end_of_period",
+    "daily_shutdown",
+    "unresolved",
 ]
 
 

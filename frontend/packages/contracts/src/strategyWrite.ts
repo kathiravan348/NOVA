@@ -14,6 +14,7 @@ const groupOperands = (group: RuleGroup | undefined): Operand[] =>
 
 /** Every operand of a spec: rules, rank, market filter, rotation score and filter (D51, D62). */
 export function specOperands(spec: StrategySpec): Operand[] {
+  if (spec.mode === "intraday") return []; // setups and buying rules have numbers only (D84)
   const regime = spec.regime ? [spec.regime.condition.left, spec.regime.condition.right] : [];
   if (spec.mode === "rotation") {
     return [
@@ -35,7 +36,7 @@ export function specParamProblems(spec: StrategySpec): string[] {
     o.kind === "indicator" ? checkIndicatorParams(o.name, o.params) : [],
   );
   const openingRange = operands.some((o) => o.kind === "indicator" && INTRADAY_ONLY.has(o.name));
-  if (openingRange && spec.timeframe === "1d") {
+  if (openingRange && spec.mode !== "intraday" && spec.timeframe === "1d") {
     problems.push("Opening range needs an intraday timeframe");
   }
   return problems;
