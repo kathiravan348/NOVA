@@ -1,6 +1,6 @@
 # NOVA-188 — Intraday setups: opening range retest, previous day high retest, inside bar (D84)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-188 · **Depends on:** NOVA-187
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-188 · **Depends on:** NOVA-187
 
 ## Goal
 The three breakout ("trend" family) setups of `docs/INTRADAY-RESEARCH.md` §3 produce candidates with their own stop
@@ -60,4 +60,11 @@ also through the worker and the database.
 **Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** none.
+**Checked:** setups read only bars up to `i` (no look-ahead); one candidate per sequence; guide numbers match.
+**Change requests:** none.
+**Guides checked:** API setup list matches the diff.
+**Rulebook issues found:** none. Deploy `backtest backtest-worker` with `--no-deps` at a quiet time (D76).
+**Follow-up tasks created:** none.
