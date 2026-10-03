@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "strategyId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "strategyVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "universe": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "symbols"
+            },
+            "symbols": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "type",
+            "symbols"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "index"
+            },
+            "index": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "pattern": "^[A-Z0-9 &-]+$"
+            }
+          },
+          "required": [
+            "type",
+            "index"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "completed",
+        "failed"
+      ]
+    },
+    "from": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+    },
+    "to": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+    },
+    "initialCapitalPaise": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "benchmark": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[A-Z0-9 &-]+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "startedAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finishedAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "progress": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "stage": {
+              "type": "string",
+              "enum": [
+                "loading",
+                "signals",
+                "simulating",
+                "saving",
+                "done"
+              ]
+            },
+            "percent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "symbolsDone": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "symbolsTotal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "barsDone": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "barsTotal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "tradesSoFar": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "simulatedTo": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "stage",
+            "percent",
+            "symbolsDone",
+            "symbolsTotal",
+            "barsDone",
+            "barsTotal",
+            "tradesSoFar",
+            "simulatedTo"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rootId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "reportKept": {
+      "type": "boolean"
+    },
+    "skippedSymbols": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z0-9&-]{1,20}$"
+      }
+    },
+    "dataSource": {
+      "type": "string",
+      "enum": [
+        "history",
+        "recorded"
+      ]
+    },
+    "recordedDaysUsed": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recordedDaysSkipped": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date",
+        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+      }
+    },
+    "segment": {
+      "type": "string",
+      "enum": [
+        "equity_delivery",
+        "equity_intraday",
+        "futures",
+        "options"
+      ]
+    },
+    "timeframe": {
+      "type": "string",
+      "enum": [
+        "1s",
+        "5s",
+        "15s",
+        "30s",
+        "1m",
+        "3m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "1d"
+      ]
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "netPnlPaise": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "returnPercent": {
+              "type": "number"
+            },
+            "cagrPercent": {
+              "type": "number"
+            },
+            "maxDrawdownPercent": {
+              "type": "number",
+              "maximum": 0
+            },
+            "winRatePercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "tradeCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "profitFactor": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sharpe": {
+              "type": "number"
+            },
+            "afterTaxCagrPercent": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "spreadCostPaise": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "netPnlPaise",
+            "returnPercent",
+            "cagrPercent",
+            "maxDrawdownPercent",
+            "winRatePercent",
+            "tradeCount",
+            "profitFactor",
+            "sharpe",
+            "afterTaxCagrPercent",
+            "spreadCostPaise"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "strategyId",
+    "strategyVersion",
+    "name",
+    "universe",
+    "status",
+    "from",
+    "to",
+    "initialCapitalPaise",
+    "benchmark",
+    "createdAt",
+    "startedAt",
+    "finishedAt",
+    "error",
+    "progress",
+    "rootId",
+    "version",
+    "reportKept",
+    "skippedSymbols",
+    "dataSource",
+    "recordedDaysUsed",
+    "recordedDaysSkipped",
+    "segment",
+    "timeframe",
+    "summary"
+  ],
+  "additionalProperties": false
+}

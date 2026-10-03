@@ -175,7 +175,7 @@
 | NOVA-167 | Recorded runs: candles built from ticks (D82) | done | Claude | 166 |
 | NOVA-168 | Recorded runs fill at bid/ask + spread cost (D82) | done | Claude | 167 |
 | NOVA-169 | Orbit: choose the data source; seconds timeframes; recorded run details (D82) | done | Claude | 166 |
-| NOVA-170 | Backtests list: results, filters, sorting; strategy stats by source (D82) | planned | — | 166 |
+| NOVA-170 | Backtests list: results, filters, sorting; strategy stats by source (D82) | done | Claude | 166 |
 | NOVA-171 | Backtests page: History / Recorded tabs, result columns, filters (D82) | planned | — | 169, 170 |
 | NOVA-172 | Compare: pick runs in a popup with filters (D82) | planned | — | 171, 173 |
 | NOVA-173 | Results by symbol: best 5 / worst 5 + View all popup; Modal sizes (D82) | planned | — | 169 |

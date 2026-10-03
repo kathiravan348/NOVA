@@ -10,6 +10,7 @@ import {
   mockAuditEntries,
   mockBacktestResults,
   mockBacktestRuns,
+  toListItem,
   paginate,
   mockBrokerAccounts,
   mockBrokerProfiles,
@@ -71,9 +72,10 @@ afterEach(() => {
 afterAll(() => server.close());
 
 /** The list shows only the newest version of each backtest (D60). */
-const listedRuns = mockBacktestRuns.filter(
-  (r) => !mockBacktestRuns.some((o) => o.rootId === r.rootId && o.version > r.version),
-);
+const listedRuns = mockBacktestRuns
+  .filter((r) => !mockBacktestRuns.some((o) => o.rootId === r.rootId && o.version > r.version))
+  .map(toListItem);
+const listItems = mockBacktestRuns.map(toListItem);
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={createQueryClient()}>{children}</QueryClientProvider>;
@@ -119,16 +121,16 @@ describe("query hooks", () => {
       http.get("*/api/v1/backtests", ({ request }) => {
         const url = new URL(request.url);
         if (!url.searchParams.has("limit")) url.searchParams.set("limit", "2");
-        return paginate(mockBacktestRuns, url.toString());
+        return paginate(listItems, url.toString());
       }),
     );
     const { result } = renderHook(() => useBacktests(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual(mockBacktestRuns.slice(0, 2));
+    expect(result.current.data).toEqual(listItems.slice(0, 2));
     expect(result.current.hasNextPage).toBe(true);
 
     await result.current.fetchNextPage();
-    await waitFor(() => expect(result.current.data).toEqual(mockBacktestRuns.slice(0, 4)));
+    await waitFor(() => expect(result.current.data).toEqual(listItems.slice(0, 4)));
   });
 
   it("useBacktests({ strategyId }) sends the filter", async () => {
@@ -140,7 +142,7 @@ describe("query hooks", () => {
   });
 
   it("offset hooks expose totals, retain previous rows and use distinct page keys", async () => {
-    const rows = mockBacktestRuns;
+    const rows = listItems;
     server.use(http.get("*/api/v1/backtests", ({ request }) => paginate(rows, request.url)));
     const { result, rerender } = renderHook(({ page }) => useBacktests({}, { page, pageSize: 2 }), {
       wrapper,

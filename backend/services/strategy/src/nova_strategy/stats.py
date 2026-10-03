@@ -27,6 +27,7 @@ _STATS = text(
            max(res.net_pnl_paise) AS best_net_pnl
     FROM strategies s
     LEFT JOIN backtest_runs r ON r.strategy_id = s.id
+        AND (CAST(:source AS text) IS NULL OR r.data_source = :source)
     LEFT JOIN backtest_results res ON res.run_id = r.id AND r.status = 'completed'
     GROUP BY s.id, s.created_at
     ORDER BY s.created_at, s.id
@@ -46,6 +47,7 @@ _BY_VERSION = text(
     LEFT JOIN backtest_runs r
         ON r.strategy_id = v.strategy_id AND r.strategy_version = v.version
         AND r.status = 'completed'
+        AND (CAST(:source AS text) IS NULL OR r.data_source = :source)
     LEFT JOIN backtest_results res ON res.run_id = r.id
     GROUP BY v.strategy_id, v.version
     ORDER BY v.strategy_id, v.version
@@ -58,9 +60,11 @@ def _number(value: Any) -> float | None:
     return None if value is None else float(value)
 
 
-def strategy_stats(db: Session) -> list[StrategyStats]:
+def strategy_stats(db: Session, data_source: str | None = None) -> list[StrategyStats]:
+    """Counts and bests from every run, or from one data source's runs only (D82 (10))."""
+    params = {"source": data_source}
     by_version: dict[str, list[dict[str, Any]]] = {}
-    for row in db.execute(_BY_VERSION):
+    for row in db.execute(_BY_VERSION, params):
         by_version.setdefault(row.strategy_id, []).append(
             {
                 "version": row.version,
@@ -93,5 +97,5 @@ def strategy_stats(db: Session) -> list[StrategyStats]:
                 "by_version": by_version.get(row.strategy_id, []),
             }
         )
-        for row in db.execute(_STATS)
+        for row in db.execute(_STATS, params)
     ]

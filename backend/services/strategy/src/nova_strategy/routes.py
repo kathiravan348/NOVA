@@ -1,13 +1,15 @@
 """Strategies with immutable versions (D9, D25, D43) and the stats summary (D26)."""
 
 from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from nova_common import ApiException
 from nova_common.internal import Caller, CallerDep
 from nova_contracts import (
     BacktestDeleteResult,
+    DataSource,
     LibraryInstall,
     StrategyCreate,
     StrategyUpdate,
@@ -81,8 +83,13 @@ def list_strategies(_: CallerDep, db: Db) -> JSONResponse:
 
 
 @router.get("/stats")
-def list_stats(_: CallerDep, db: Db) -> JSONResponse:
-    return JSONResponse([stats.model_dump(mode="json") for stats in strategy_stats(db)])
+def list_stats(
+    _: CallerDep,
+    db: Db,
+    data_source: Annotated[DataSource | None, Query(alias="dataSource")] = None,
+) -> JSONResponse:
+    stats = strategy_stats(db, data_source)
+    return JSONResponse([row.model_dump(mode="json") for row in stats])
 
 
 @router.get("/library")

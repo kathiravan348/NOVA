@@ -1,6 +1,6 @@
 # NOVA-170 — Backtests list: results, filters and sorting; strategy stats by source (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-170 · **Depends on:** NOVA-166
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-170 · **Depends on:** NOVA-166
 
 ## Goal
 `GET /backtests` returns each run's key results, segment and timeframe, and filters and sorts on them on the
@@ -50,3 +50,19 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. Contracts `BacktestRunSummary`, `BacktestRunListItem` (TS: `safeExtend` keeps the
+  run rules), `BacktestListSort`. `nova_backtest/listing.py` (new, not listed: keeps `routes.py` small): one query
+  joins the strategy version (segment/timeframe from the spec JSON) and the result; `q` escapes `%`/`_`.
+- Bad values answer 400 (the app's validation status), not 422 as the task said. Ties on a null metric are newest
+  first (e.g. a run with no profit factor and a queued run).
+- `GET /strategies/stats?dataSource=` filters both SQL queries; `useStrategyStats({ dataSource })`.
+- Services: `BacktestFilter` has every param (`profitable` sent as text); list returns `Page<BacktestRunListItem>`.
+- Mocks: `handlers/backtestList.ts` (filters, sorts, stats per source); newest-first keeps the file order so screens
+  and tests stay stable; `toListItem` exported for tests.
+- Tests: `test_listing.py` (each filter, sorts asc/desc, nulls last, totals, offset paging, cursor refused, parity),
+  stats by source, mock filter tests. backend-check 1,403 passed; `pnpm review:check` green (1,096 tests).
+- Guides: API (`GET /backtests`, `GET /strategies/stats`), CONTRACTS.
+
+## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task. Deployed Saturday 3 Oct 2026:
+`up -d --build --no-deps backtest strategy`. Verdict: done.

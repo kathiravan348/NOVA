@@ -11,6 +11,8 @@ from nova_contracts.common import (
     IsoDate,
     NonNegPaise,
     Paise,
+    Segment,
+    StrategyTimeframe,
     UtcDateTime,
 )
 from nova_contracts.market_data import IndexName
@@ -106,6 +108,43 @@ class BacktestRun(_Period):
         if self.status == "completed" and not done:
             raise ValueError("a completed run has progress done at 100 percent")
         return self
+
+
+class BacktestRunSummary(Contract):
+    """A completed run's key results for the Backtests list (D82 (6))."""
+
+    net_pnl_paise: Paise
+    return_percent: float
+    cagr_percent: float
+    max_drawdown_percent: Annotated[float, Field(le=0)]
+    win_rate_percent: Percent
+    trade_count: Count
+    profit_factor: Annotated[float, Field(ge=0)] | None
+    sharpe: float
+    after_tax_cagr_percent: float | None
+    spread_cost_paise: NonNegPaise | None
+
+
+class BacktestRunListItem(BacktestRun):
+    """`GET /backtests` rows: the run, its strategy version's segment and timeframe, and its
+    results (`summary` null until completed), D82 (6)."""
+
+    segment: Segment
+    timeframe: StrategyTimeframe
+    summary: BacktestRunSummary | None
+
+
+BacktestListSort = Literal[
+    "created",
+    "netPnl",
+    "return",
+    "cagr",
+    "maxDrawdown",
+    "winRate",
+    "profitFactor",
+    "sharpe",
+    "trades",
+]
 
 
 class BacktestRunCreate(_Period):
