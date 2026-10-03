@@ -37,6 +37,7 @@ def _events(trades: Sequence[Trade]) -> list[LedgerEvent]:
                 trade.id,
                 LedgerEvent(
                     at=trade.entry_at,
+                    entry_at=None,
                     symbol=trade.symbol,
                     side="buy",
                     qty=trade.qty,
@@ -58,6 +59,7 @@ def _events(trades: Sequence[Trade]) -> list[LedgerEvent]:
                     trade.id,
                     LedgerEvent(
                         at=exit_at,
+                        entry_at=trade.entry_at,
                         symbol=trade.symbol,
                         side="sell",
                         qty=trade.qty,
@@ -134,6 +136,25 @@ def load(db: Session, run_id: str) -> Ledger:
     )
 
 
+def _check_dates(from_: date | None, to: date | None) -> None:
+    if from_ is not None and to is not None and from_ > to:
+        raise ApiException(400, "invalid_request", "from must be on or before to")
+
+
+def timeline(
+    ledger: Ledger, from_: date | None, to: date | None, symbol: str | None
+) -> list[LedgerEvent]:
+    """Every buy and sell in ledger order, inside the IST dates (D83)."""
+    _check_dates(from_, to)
+    return [
+        event
+        for day in sorted(ledger.events)
+        if (from_ is None or day >= from_) and (to is None or day <= to)
+        for event in ledger.events[day]
+        if symbol is None or event.symbol == symbol
+    ]
+
+
 def filter_days(
     ledger: Ledger,
     from_: date | None,
@@ -141,8 +162,7 @@ def filter_days(
     symbol: str | None,
     all_days: bool,
 ) -> list[LedgerDay]:
-    if from_ is not None and to is not None and from_ > to:
-        raise ApiException(400, "invalid_request", "from must be on or before to")
+    _check_dates(from_, to)
     days: list[LedgerDay] = []
     for day in ledger.days:
         if (from_ is not None and day.date < from_) or (to is not None and day.date > to):

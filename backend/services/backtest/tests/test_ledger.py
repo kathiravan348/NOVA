@@ -1,8 +1,8 @@
-"""Hand-worked cash movements, exact averaging costs and same-time exits (NOVA-174)."""
+"""Hand-worked cash movements, exact averaging costs and same-time exits (NOVA-174, NOVA-177)."""
 
 from datetime import UTC, date, datetime
 
-from nova_backtest.ledger import build, filter_days
+from nova_backtest.ledger import build, filter_days, timeline
 from nova_contracts import Charges, EquityPoint, Trade
 from nova_testing.parity import Parity
 
@@ -80,3 +80,29 @@ def test_pending_sell_precedes_buy_and_entry_bar_exit_follows_buy() -> None:
         ("B", "buy", 0),
         ("B", "sell", 1200),
     ]
+
+
+def test_sells_carry_entry_time_and_timeline_filters_by_ist_date() -> None:
+    trades = [
+        _trade("A", "2024-12-31T22:00", "2025-01-02T05:00", 1, 1000, 1100, 100, 0),
+        _trade("B", "2025-01-02T04:00", "2025-01-03T05:00", 1, 1000, 900, -100, 0),
+    ]
+    ledger = build(trades, [], 10000)
+    events = timeline(ledger, None, None, None)
+    assert [(event.symbol, event.side) for event in events] == [
+        ("A", "buy"),
+        ("B", "buy"),
+        ("A", "sell"),
+        ("B", "sell"),
+    ]
+    assert [event.entry_at for event in events if event.side == "buy"] == [None, None]
+    assert [event.entry_at for event in events if event.side == "sell"] == [
+        trades[0].entry_at,
+        trades[1].entry_at,
+    ]
+    # A's buy at 22:00 UTC on 31 Dec is 1 Jan in IST.
+    first_day = timeline(ledger, date(2025, 1, 1), date(2025, 1, 1), None)
+    assert [event.at.day for event in first_day] == [31]
+    only_b = timeline(ledger, date(2025, 1, 2), None, "B")
+    assert [event.side for event in only_b] == ["buy", "sell"]
+    assert only_b[1].cash_after_paise == events[3].cash_after_paise

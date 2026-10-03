@@ -75,6 +75,7 @@ const contracts: Record<string, z.ZodType> = {
   LedgerDay: LedgerDaySchema,
   LedgerEvent: LedgerEventSchema,
   LedgerPage: pageSchema(LedgerDaySchema),
+  LedgerEventPage: pageSchema(LedgerEventSchema),
   ApprovalRequest: ApprovalRequestSchema,
   AgentAccount: AgentAccountSchema,
   AgentAccountCreate: AgentAccountCreateSchema,

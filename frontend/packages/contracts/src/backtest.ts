@@ -30,6 +30,8 @@ export type LedgerDay = z.infer<typeof LedgerDaySchema>;
 
 export const LedgerEventSchema = z.strictObject({
   at: UtcDateTimeSchema,
+  /** When the sold position was bought (D83); null on buys. */
+  entryAt: UtcDateTimeSchema.nullable(),
   symbol: z.string().min(1),
   side: z.enum(["buy", "sell"]),
   qty: z.number().int().positive(),

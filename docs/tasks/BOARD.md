@@ -182,7 +182,7 @@
 | NOVA-174 | Trade exit reasons + day ledger endpoints (D82, migration 0029) | done | Claude | 168, 170 |
 | NOVA-175 | Backtest Timeline popup (day ledger) (D82) | done | Claude | 173, 174 |
 | NOVA-176 | Strategies page: search, more filters, results by data source (D82) | done | Claude | 170 |
-| NOVA-177 | Timeline events endpoint + held time on sells (D83) | planned | — | 175 |
+| NOVA-177 | Timeline events endpoint + held time on sells (D83) | done | Claude | 175 |
 | NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | planned | — | 177 |
 
 ## Parallel lanes (tasks that can run at the same time)

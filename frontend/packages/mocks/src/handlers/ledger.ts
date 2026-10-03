@@ -28,6 +28,14 @@ function checkRun(id: string): Response | undefined {
   return undefined;
 }
 
+function badRange(from: string | null, to: string | null): boolean {
+  return (
+    (from !== null && !IsoDateSchema.safeParse(from).success) ||
+    (to !== null && !IsoDateSchema.safeParse(to).success) ||
+    (from !== null && to !== null && from > to)
+  );
+}
+
 export const ledgerHandlers = [
   http.get(apiPath("/backtests/:id/ledger"), async ({ params, request }) => {
     const id = String(params["id"]);
@@ -37,12 +45,7 @@ export const ledgerHandlers = [
     const from = query.get("from"),
       to = query.get("to"),
       symbol = query.get("symbol");
-    if (
-      (from !== null && !IsoDateSchema.safeParse(from).success) ||
-      (to !== null && !IsoDateSchema.safeParse(to).success) ||
-      (from !== null && to !== null && from > to)
-    )
-      return badRequest("Invalid date range");
+    if (badRange(from, to)) return badRequest("Invalid date range");
     if (symbol === "") return badRequest("symbol must not be empty");
     const allDays = query.get("allDays");
     if (allDays !== null && allDays !== "true" && allDays !== "false")
@@ -70,6 +73,25 @@ export const ledgerHandlers = [
     const response = paginate(rows, request.url);
     if (!response.ok) return response;
     const page = pageSchema(LedgerDaySchema).parse(await response.json());
+    return HttpResponse.json({ ...page, nextCursor: null });
+  }),
+  http.get(apiPath("/backtests/:id/timeline"), async ({ params, request }) => {
+    const id = String(params["id"]);
+    const error = checkRun(id);
+    if (error) return error;
+    const query = new URL(request.url).searchParams;
+    const from = query.get("from"),
+      to = query.get("to"),
+      symbol = query.get("symbol");
+    if (badRange(from, to)) return badRequest("Invalid date range");
+    if (symbol === "") return badRequest("symbol must not be empty");
+    const rows = (fixtures[id]?.events ?? []).filter((event) => {
+      const date = event.at.slice(0, 10);
+      return (!from || date >= from) && (!to || date <= to) && (!symbol || event.symbol === symbol);
+    });
+    const response = paginate(rows, request.url);
+    if (!response.ok) return response;
+    const page = pageSchema(LedgerEventSchema).parse(await response.json());
     return HttpResponse.json({ ...page, nextCursor: null });
   }),
   http.get(apiPath("/backtests/:id/ledger/:date"), ({ params, request }) => {

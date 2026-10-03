@@ -112,7 +112,41 @@ def test_ledger_paging_filters_events_and_final_equity(
     assert client.get(f"{path}/bad-date").status_code == 400
 
 
-@pytest.mark.parametrize("suffix", ["ledger", "ledger/2025-01-02"])
+def test_timeline_lists_events_oldest_first_with_paging_and_filters(
+    client: TestClient,
+    run_body: dict[str, object],
+    clean: Engine,
+    parity: Parity,
+) -> None:
+    run_id = _seed_ledger(client, run_body, clean)
+    path = f"/api/v1/backtests/{run_id}/timeline"
+    first = client.get(path, params={"limit": 3}).json()
+    rest = client.get(path, params={"offset": 3, "limit": 3}).json()
+    parity.assert_valid(first, "LedgerEventPage")
+    assert first["total"] == rest["total"] == 4 and first["nextCursor"] is None
+    events = first["items"] + rest["items"]
+    assert [(event["symbol"], event["side"]) for event in events] == [
+        ("INFY", "buy"),
+        ("TCS", "buy"),
+        ("INFY", "sell"),
+        ("TCS", "sell"),
+    ]
+    assert [event["entryAt"] for event in events] == [
+        None,
+        None,
+        "2025-01-02T04:00:00Z",
+        "2025-01-03T04:00:00Z",
+    ]
+    assert events[-1]["cashAfterPaise"] == 10_000_180
+    tcs = client.get(path, params={"symbol": "TCS", "from": "2025-01-04"}).json()
+    assert tcs["total"] == 1 and tcs["items"][0]["side"] == "sell"
+    assert client.get(path, params={"to": "2025-01-02"}).json()["total"] == 1
+    assert client.get(path, params={"symbol": "NOPE"}).json()["total"] == 0
+    assert client.get(path, params={"from": "2025-01-04", "to": "2025-01-03"}).status_code == 400
+    assert client.get(path, params={"offset": -1}).status_code == 400
+
+
+@pytest.mark.parametrize("suffix", ["ledger", "ledger/2025-01-02", "timeline"])
 def test_ledger_errors(
     client: TestClient, run_body: dict[str, object], clean: Engine, suffix: str
 ) -> None:

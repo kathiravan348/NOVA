@@ -31,6 +31,7 @@ import {
   useDeleteBacktest,
   useDeleteBacktests,
   useBacktestResults,
+  useBacktestTimeline,
   useBacktests,
   useMe,
   useStrategies,
@@ -131,6 +132,20 @@ describe("query hooks", () => {
 
     await result.current.fetchNextPage();
     await waitFor(() => expect(result.current.data).toEqual(listItems.slice(0, 4)));
+  });
+
+  it("useBacktestTimeline loads offset pages in order until the end", async () => {
+    const { result } = renderHook(() => useBacktestTimeline("run_001", {}, 5), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toHaveLength(5);
+    expect(result.current.total).toBe(8);
+    expect(result.current.hasNextPage).toBe(true);
+    await result.current.fetchNextPage();
+    await waitFor(() => expect(result.current.data).toHaveLength(8));
+    const times = result.current.data?.map((event) => event.at) ?? [];
+    expect(times).toEqual([...times].sort());
+    expect(result.current.hasNextPage).toBe(false);
+    expect(requests.filter((path) => path.endsWith("/timeline"))).toHaveLength(2);
   });
 
   it("useBacktests({ strategyId }) sends the filter", async () => {
