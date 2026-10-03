@@ -1,6 +1,6 @@
 # NOVA-189 — Intraday setups: VWAP trend pullback, failed breakout reclaim (D84)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-189 · **Depends on:** NOVA-187 (merge after NOVA-188)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-189 · **Depends on:** NOVA-187 (merge after NOVA-188)
 
 ## Goal
 The pullback setup (family `trend`) and the reclaim setup (family `range`) of `docs/INTRADAY-RESEARCH.md` §3 produce
@@ -57,4 +57,12 @@ a reclaim whose VWAP is missing gives no candidate.
 **Known gaps:** none.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** none.
+**Checked:** "3 values, not 3 rises" (`risingBars` VWAP values strictly increasing); intrabar recovery does not
+reclaim; frozen targets checked again at the fill (2R exactly passes).
+**Change requests:** none.
+**Guides checked:** API setup list matches the diff.
+**Rulebook issues found:** none. Deploy `backtest backtest-worker` with `--no-deps` at a quiet time (D76).
+**Follow-up tasks created:** none (flaky core realtime tests reported to the Owner).

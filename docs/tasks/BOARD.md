@@ -194,7 +194,7 @@
 | NOVA-186 | Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034) | done | Claude | 185 |
 | NOVA-187 | Intraday simulator: market gate, context, warm-up from history (D84) | done | Claude | 179, 186 |
 | NOVA-188 | Intraday setups: opening range retest, previous day high retest, inside bar (D84) | done | Claude | 187 |
-| NOVA-189 | Intraday setups: VWAP trend pullback, failed breakout reclaim (D84) | in-progress | Claude | 187 (merge after 188) |
+| NOVA-189 | Intraday setups: VWAP trend pullback, failed breakout reclaim (D84) | done | Claude | 187 (merge after 188) |
 | NOVA-190 | Intraday buying rules: single, average on recovery, add to winner (D84) | planned | — | 187 |
 | NOVA-191 | Intraday mechanics cases: the 12 known cases as tests (D84) | planned | — | 188, 189, 190 |
 | NOVA-192 | Intraday report: skip reasons, R, expectancy, unresolved, base vs stress (D84) | planned | — | 186 |
