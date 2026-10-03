@@ -73,4 +73,10 @@ NonNegPaise = Annotated[int, Field(ge=0)]
 Segment = Literal["equity_delivery", "equity_intraday", "futures", "options"]
 Exchange = Literal["NSE", "NFO"]
 Timeframe = Literal["1m", "3m", "5m", "15m", "30m", "1h", "1d"]
+# D82: strategies may also use seconds candles, built from recorded ticks only.
+SecondsTimeframe = Literal["1s", "5s", "15s", "30s"]
+StrategyTimeframe = Literal["1s", "5s", "15s", "30s", "1m", "3m", "5m", "15m", "30m", "1h", "1d"]
+SECONDS_TIMEFRAMES: tuple[SecondsTimeframe, ...] = ("1s", "5s", "15s", "30s")
+# D82: where a backtest's candles come from.
+DataSource = Literal["history", "recorded"]
 Side = Literal["buy", "sell"]

@@ -358,6 +358,19 @@ def test_runs_the_engine_cannot_do_fail_plainly(
     assert run.status == "failed" and run.error is not None and run.error.startswith(message)
 
 
+def test_a_recorded_run_fails_until_recorded_data_is_built(
+    seeded: Engine, factory: sessionmaker[Session]
+) -> None:
+    _queue(seeded)
+    with Session(seeded) as db:
+        db.execute(update(BacktestRun).values(data_source="recorded"))
+        db.commit()
+
+    run = _drain(factory)
+
+    assert run.status == "failed" and run.error == "Recorded data backtests are not built yet"
+
+
 def test_an_intraday_run_squares_off_and_pays_intraday_charges(
     seeded: Engine, factory: sessionmaker[Session], client: TestClient, parity: Parity
 ) -> None:

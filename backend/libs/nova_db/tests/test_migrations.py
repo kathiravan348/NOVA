@@ -54,11 +54,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0027(engine: Engine) -> None:
+def test_head_revision_is_0028(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0027"
+    assert head == "0028"
 
 
 def test_benchmark_foreign_key_round_trip(engine: Engine, database_url: str) -> None:
@@ -386,4 +386,17 @@ def test_tick_checks_table_round_trip(engine: Engine, database_url: str) -> None
     assert "tick_checks" not in inspect(engine).get_table_names()
     upgrade(database_url)
     assert "tick_checks" in inspect(engine).get_table_names()
+    assert diff(database_url) == []
+
+
+def test_backtest_data_source_round_trip(engine: Engine, database_url: str) -> None:
+    columns = {c["name"]: c for c in inspect(engine).get_columns("backtest_runs")}
+    assert columns["data_source"]["default"] == "'history'::text"
+    assert {"recorded_days_used", "recorded_days_skipped"} <= set(columns)
+    downgrade(database_url, "0027")
+    assert "data_source" not in {c["name"] for c in inspect(engine).get_columns("backtest_runs")}
+    assert "spread_cost_paise" not in {
+        c["name"] for c in inspect(engine).get_columns("backtest_results")
+    }
+    upgrade(database_url)
     assert diff(database_url) == []

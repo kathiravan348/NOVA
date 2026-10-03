@@ -42,6 +42,9 @@ describe("Backtest schemas", () => {
     version: 1,
     reportKept: true,
     skippedSymbols: [],
+    dataSource: "history",
+    recordedDaysUsed: null,
+    recordedDaysSkipped: [],
   };
 
   const validMetrics: BacktestMetrics = {

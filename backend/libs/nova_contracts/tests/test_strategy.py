@@ -4,6 +4,7 @@ from typing import Any
 import pytest
 from nova_contracts import (
     Contract,
+    DataJobPlanRequest,
     Strategy,
     StrategyCreate,
     StrategySpecVisual,
@@ -265,3 +266,22 @@ def test_bad_settings_in_rank_regime_and_multiplier_are_refused(parity: Parity) 
     for spec in (rank, regime, number_rank, zero):
         with pytest.raises(ValidationError):
             _create(spec)
+
+
+def test_a_strategy_may_use_seconds_candles_but_a_download_may_not() -> None:
+    """D82: seconds timeframes are for strategies on recorded data; data jobs keep 1m/1d."""
+    spec = _visual({"kind": "price", "field": "close"}) | {
+        "segment": "equity_intraday",
+        "timeframe": "5s",
+    }
+    StrategyVersionCreate.model_validate_json(json.dumps({"note": "", "spec": spec}))
+    with pytest.raises(ValidationError):
+        DataJobPlanRequest.model_validate(
+            {
+                "symbols": ["INFY"],
+                "timeframe": "5s",
+                "from": "2026-10-01",
+                "to": "2026-10-01",
+                "mode": "skip_existing",
+            }
+        )

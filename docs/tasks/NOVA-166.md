@@ -1,6 +1,6 @@
 # NOVA-166 — Runs get a data source; strategies get seconds timeframes (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-166 · **Depends on:** NOVA-164 (migration 0027)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-166 · **Depends on:** NOVA-164 (migration 0027)
 
 ## Goal
 A backtest run records whether it uses `history` or `recorded` data, strategies may use `1s 5s 15s 30s`, and
@@ -51,3 +51,19 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. Migration 0028 (`data_source`, `recorded_days_used`, `recorded_days_skipped`,
+  `backtest_results.spread_cost_paise`). Contracts: `DataSource`, `StrategyTimeframe` (+ `SECONDS_TIMEFRAMES`),
+  run/version fields, create `dataSource` (default history), version `dataSource` (null/absent = keep),
+  `BacktestMetrics.spreadCostPaise`.
+- `versions.check_source` + `strategy_spec` (the version create now also 404s an unknown strategy version).
+  Engine fails recorded runs "Recorded data backtests are not built yet"; seconds warm-up 1 day.
+- Frontend: to keep the build green, `timeframeLabel` gets the seconds labels and the editor/coverage helpers
+  take `StrategyTimeframe` (so the editor already lists seconds options). NOVA-169 adds the hint, Data field
+  and form rules. Mocks: every run `history`, results `spreadCostPaise: null`.
+- Checks: frontend 1,086 tests, lint, typecheck, format, build pass; backend 1,362/1,363 — the one failure was
+  `core/test_realtime.py::test_deleting_a_job_is_announced` (CancelledError), passes alone; flagged as a task.
+- Guides: API, DATABASE (0028), CONTRACTS.
+
+## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task. Deployed Saturday 3 Oct 2026:
+`migrate`, then `backtest backtest-worker strategy` with `--no-deps`. Verdict: done.

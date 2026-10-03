@@ -43,15 +43,19 @@ from nova_contracts.broker import (
 )
 from nova_contracts.charges import Charges
 from nova_contracts.common import (
+    SECONDS_TIMEFRAMES,
     Contract,
+    DataSource,
     Email,
     Exchange,
     Id,
     IsoDate,
     NonNegPaise,
     Paise,
+    SecondsTimeframe,
     Segment,
     Side,
+    StrategyTimeframe,
     Timeframe,
     UtcDateTime,
 )
@@ -285,6 +289,10 @@ __all__ = [
     "StrategyVersionCreate",
     "SymbolBreakdown",
     "Side",
+    "SECONDS_TIMEFRAMES",
+    "DataSource",
+    "SecondsTimeframe",
+    "StrategyTimeframe",
     "Timeframe",
     "Trade",
     "Universe",

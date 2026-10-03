@@ -42,8 +42,18 @@ def run_contract(row: BacktestRun) -> RunContract:
             "version": row.version,
             "report_kept": row.report_kept,
             "skipped_symbols": list(row.skipped_symbols),
+            **_source(row),
         }
     )
+
+
+def _source(row: BacktestRun) -> dict[str, object]:
+    """D82: where the candles came from, and the recorded days a recorded run used."""
+    return {
+        "data_source": row.data_source,
+        "recorded_days_used": row.recorded_days_used,
+        "recorded_days_skipped": sorted(row.recorded_days_skipped),
+    }
 
 
 def _float(value: Decimal | None) -> float | None:
@@ -72,6 +82,7 @@ def metrics_of(row: BacktestResult) -> dict[str, object]:
         "estimated_tax_paise": row.estimated_tax_paise,
         "after_tax_net_pnl_paise": row.after_tax_net_pnl_paise,
         "after_tax_cagr_percent": _float(row.after_tax_cagr_percent),
+        "spread_cost_paise": row.spread_cost_paise,
     }
 
 
@@ -93,6 +104,7 @@ def version_contract(row: BacktestRun, result: BacktestResult | None) -> Version
             "created_at": row.created_at,
             "error": row.error,
             "report_kept": row.report_kept,
+            **_source(row),
             "metrics": metrics_of(result) if completed and result is not None else None,
         }
     )

@@ -47,6 +47,7 @@ def test_run_create_matches_its_schema(parity: Parity) -> None:
             "to",
             "initialCapitalPaise",
             "benchmark",
+            "dataSource",
         )
     }
 
@@ -144,11 +145,15 @@ def test_version_bodies_match_their_schemas(parity: Parity) -> None:
         "createdAt": old["createdAt"],
         "error": old["error"],
         "reportKept": old["reportKept"],
+        "dataSource": old["dataSource"],
+        "recordedDaysUsed": old["recordedDaysUsed"],
+        "recordedDaysSkipped": old["recordedDaysSkipped"],
         "metrics": results["run_006"]["metrics"],
     }
     edit = {k: version[k] for k in ("strategyVersion", "name", "universe", "from", "to")} | {
         "initialCapitalPaise": old["initialCapitalPaise"],
         "benchmark": None,
+        "dataSource": None,  # absent or null = keep the previous version's source (D82)
     }
     for model, body, schema in (
         (BacktestVersion, version, "BacktestVersion"),

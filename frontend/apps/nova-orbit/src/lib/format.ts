@@ -1,5 +1,10 @@
 import { formatInTimeZone } from "date-fns-tz";
-import type { BacktestRunStatus, Segment, StrategyStatus, Timeframe } from "@nova/contracts";
+import type {
+  BacktestRunStatus,
+  Segment,
+  StrategyStatus,
+  StrategyTimeframe,
+} from "@nova/contracts";
 
 const IST = "Asia/Kolkata";
 
@@ -51,7 +56,11 @@ export const segmentLabel: Record<Segment, string> = {
   options: "Options",
 };
 
-export const timeframeLabel: Record<Timeframe, string> = {
+export const timeframeLabel: Record<StrategyTimeframe, string> = {
+  "1s": "1 second",
+  "5s": "5 seconds",
+  "15s": "15 seconds",
+  "30s": "30 seconds",
   "1m": "1 minute",
   "3m": "3 minutes",
   "5m": "5 minutes",

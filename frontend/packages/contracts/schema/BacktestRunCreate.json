@@ -88,6 +88,13 @@
           "type": "null"
         }
       ]
+    },
+    "dataSource": {
+      "type": "string",
+      "enum": [
+        "history",
+        "recorded"
+      ]
     }
   },
   "required": [

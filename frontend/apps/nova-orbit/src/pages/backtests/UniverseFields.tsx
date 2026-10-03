@@ -1,5 +1,5 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { MarketIndex, Timeframe } from "@nova/contracts";
+import type { MarketIndex, StrategyTimeframe } from "@nova/contracts";
 import { Card, Select } from "@nova/ui-core";
 import { useInstruments, useMarketIndices } from "@nova/services";
 import { InstrumentTable } from "../../components/InstrumentTable";
@@ -13,7 +13,7 @@ export function UniverseFields({
 }: {
   form: UseFormReturn<BacktestForm>;
   /** The chosen strategy version's candle size; coverage is checked for it. */
-  timeframe?: Timeframe;
+  timeframe?: StrategyTimeframe;
 }) {
   const { register, control, watch, formState } = form;
   const instruments = useInstruments();

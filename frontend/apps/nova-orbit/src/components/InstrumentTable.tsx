@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Instrument, Timeframe } from "@nova/contracts";
+import type { Instrument, StrategyTimeframe } from "@nova/contracts";
 import { Badge, Checkbox, DataTable, Select } from "@nova/ui-core";
 import { formatPercent, formatPrice, formatQuantity } from "@nova/ui-trading";
 import { formatCalendarDate, formatPeriod } from "../lib/format";
@@ -10,13 +10,13 @@ export interface Period {
   from: string;
   to: string;
   /** The strategy's candle size: only that timeframe's data counts (NOVA-097). */
-  timeframe?: Timeframe;
+  timeframe?: StrategyTimeframe;
 }
 
 /** Stored dates of one timeframe (or of any, without one); null when that timeframe has none. */
 export function dataRange(
   i: Instrument,
-  timeframe?: Timeframe,
+  timeframe?: StrategyTimeframe,
 ): { from: string; to: string } | null {
   if (!timeframe) return { from: i.dataFrom, to: i.dataTo };
   const span = i.coverage.find((c) => c.timeframe === timeframe);
