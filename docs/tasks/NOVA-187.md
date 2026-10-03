@@ -53,7 +53,21 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** `context.py` (ATR, EMA, VWAP, upward context, range condition, relative volume, previous session levels per
+1m bar), `gate.py` (index bars from `index_ticks`, Kite 1m fallback listed `index:<date>`, trend/range gate, decline
+veto), `warmup.py` (earlier recorded days, else Kite 1m candles; `atr|volume_baseline|prev_day:history` listed);
+`guard.py` `SignalChecks` (§5.4 order) + the stop distance re-checked at the fill; relative volume ranks candidates.
+**Files changed:** the listed files (index loading lives in `gate.py`, so `tick_data.py` did not change), plus
+`intraday/replay.py` (`Signals.fits_at_fill`), `setups/__init__.py` (`StockDay.context`), `tests/conftest.py`
+(truncates `candle_days`, `index_ticks`), `tests/intraday_factory.py` (history candles, rising volume, settings helper),
+`docs/guides/API.md` (one paragraph on the checks).
+**Commands run:** `docker compose run --rm backend-check`: 1,593 pass, 1 unrelated flaky failure
+(`core/tests/test_realtime.py::test_deleting_a_job_is_announced`, passes alone twice).
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** API.
+**Deviations from task:** relative volume leaves out the first minute everywhere (recorded bars hold the pre-open
+auction there, Kite candles do not); 5m warm-up uses the last 3 earlier sessions; a missing input never fails
+`context`, only `warmup`.
+**Known gaps:** none.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
