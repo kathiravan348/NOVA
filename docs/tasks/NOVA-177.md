@@ -1,6 +1,6 @@
 # NOVA-177 — Timeline events endpoint + held time on sells (D83)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-177 · **Depends on:** NOVA-175
+**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-177 · **Depends on:** NOVA-175
 
 ## Goal
 `GET /backtests/{id}/timeline` returns a run's buys and sells as one flat list, oldest first, and paged.
@@ -53,7 +53,14 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+
+**Done:** `GET /backtests/{id}/timeline` (offset pages, IST date/symbol filters), `entryAt` on sell events, mock handler, `useBacktestTimeline`.
+**Files changed:** listed files; `schema/LedgerEventPage.json` is new (generated).
+**Commands run:** backend-check (1417 passed); review:check: format, lint, typecheck green; tests 1146/1147 (relay `approvalBatch` timed out while Docker ran in parallel), re-run with 4 workers 1147/1147; builds green.
+**Checked:** no screen changes (n/a).
+**New dependencies:** none. **Maps updated:** CONTRACTS. **Guides updated:** API.
+**Deviations from task:** none. `ledger.py` shares the reversed-date check between `/ledger` and `/timeline`.
+**Known gaps:** none. Mocks filter by the UTC date prefix, like `/ledger/{date}` (all mock times are IST daytime).
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

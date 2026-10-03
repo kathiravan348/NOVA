@@ -68,14 +68,37 @@ describe("Orbit MSW handlers", () => {
     );
     expect(events.map((event) => event.cashAfterPaise)).toEqual([85500000, 100241725]);
     expect(events[1]?.reason).toBeNull();
+    expect(events.map((event) => event.entryAt)).toEqual([null, "2026-06-02T04:00:00Z"]);
+  });
+
+  it("serves the timeline oldest first with paging and filters", async () => {
+    const path = "http://localhost/api/v1/backtests/run_001/timeline";
+    const parse = async (query: string) =>
+      pageSchema(LedgerEventSchema).parse(await (await fetch(`${path}${query}`)).json());
+    const first = await parse("?limit=5");
+    const rest = await parse("?offset=5&limit=5");
+    expect(first.total).toBe(8);
+    expect(first.nextCursor).toBeNull();
+    const events = [...first.items, ...rest.items];
+    expect(events.map((event) => event.at)).toEqual([...events.map((event) => event.at)].sort());
+    expect(events.filter((event) => event.side === "sell").every((event) => event.entryAt)).toBe(
+      true,
+    );
+    expect(events.at(-1)?.cashAfterPaise).toBe(100499474);
+    const filtered = await parse("?symbol=RELIANCE&from=2026-06-03");
+    expect(filtered.items.map((event) => event.side)).toEqual(["buy", "sell"]);
+    expect((await fetch(`${path}?from=2026-06-05&to=2026-06-01`)).status).toBe(400);
   });
 
   it.each([
-    ["nope", 404],
-    ["run_003", 400],
-    ["run_006", 400],
-  ])("refuses ledger for %s", async (id, status) => {
-    const response = await fetch(`http://localhost/api/v1/backtests/${id}/ledger`);
+    ["nope", "ledger", 404],
+    ["run_003", "ledger", 400],
+    ["run_006", "ledger", 400],
+    ["nope", "timeline", 404],
+    ["run_003", "timeline", 400],
+    ["run_006", "timeline", 400],
+  ])("refuses %s %s", async (id, suffix, status) => {
+    const response = await fetch(`http://localhost/api/v1/backtests/${id}/${suffix}`);
     expect(response.status).toBe(status);
     expect(ApiErrorSchema.safeParse(await response.json()).success).toBe(true);
   });

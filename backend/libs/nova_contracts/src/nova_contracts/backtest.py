@@ -43,6 +43,7 @@ class LedgerDay(Contract):
 
 class LedgerEvent(Contract):
     at: UtcDateTime
+    entry_at: UtcDateTime | None
     symbol: NonEmpty
     side: Literal["buy", "sell"]
     qty: Annotated[int, Field(gt=0)]

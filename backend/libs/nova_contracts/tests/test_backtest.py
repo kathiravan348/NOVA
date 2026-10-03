@@ -9,6 +9,7 @@ from nova_contracts import (
     BacktestRunCreate,
     BacktestVersion,
     BacktestVersionCreate,
+    LedgerEvent,
     Trade,
     YearRow,
 )
@@ -34,6 +35,16 @@ def test_every_mock_row_round_trips_and_matches_schema(
 
         assert dumped == raw
         parity.assert_valid(dumped, schema)
+
+
+def test_ledger_mock_events_round_trip_with_entry_time(parity: Parity) -> None:
+    for ledger in parity.mock("ledgers").values():
+        for raw in ledger["events"]:
+            dumped = LedgerEvent.model_validate_json(json.dumps(raw)).model_dump(mode="json")
+
+            assert dumped == raw
+            assert (dumped["entryAt"] is None) == (dumped["side"] == "buy")
+            parity.assert_valid(dumped, "LedgerEvent")
 
 
 def test_run_create_matches_its_schema(parity: Parity) -> None:

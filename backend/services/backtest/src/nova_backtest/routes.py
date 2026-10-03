@@ -18,6 +18,7 @@ from nova_contracts import (
     BacktestVersionCreate,
     DataSource,
     LedgerDay,
+    LedgerEvent,
     Page,
     Segment,
     StrategyTimeframe,
@@ -31,7 +32,7 @@ from nova_db.web import Db
 from sqlalchemy.orm import Session
 
 from nova_backtest.convert import result_contract, run_contract, trade_contract
-from nova_backtest.ledger import filter_days
+from nova_backtest.ledger import filter_days, timeline
 from nova_backtest.ledger import load as load_ledger
 from nova_backtest.listing import RunFilters
 from nova_backtest.listing import list_runs as filtered_runs
@@ -159,6 +160,24 @@ def list_ledger(
 ) -> JSONResponse:
     days = filter_days(load_ledger(db, run_id), from_, to, symbol, all_days)
     page = Page[LedgerDay](items=days[offset : offset + limit], next_cursor=None, total=len(days))
+    return JSONResponse(page.model_dump(mode="json"))
+
+
+@router.get("/{run_id}/timeline")
+def list_timeline(
+    run_id: str,
+    _: CallerDep,
+    db: Db,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Limit = PAGE_LIMIT_DEFAULT,
+    from_: Annotated[date | None, Query(alias="from")] = None,
+    to: date | None = None,
+    symbol: Annotated[str | None, Query(min_length=1)] = None,
+) -> JSONResponse:
+    events = timeline(load_ledger(db, run_id), from_, to, symbol)
+    page = Page[LedgerEvent](
+        items=events[offset : offset + limit], next_cursor=None, total=len(events)
+    )
     return JSONResponse(page.model_dump(mode="json"))
 
 

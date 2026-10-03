@@ -33,6 +33,7 @@ describe("Backtest schemas", () => {
     expect(LedgerDaySchema.safeParse({ ...day, buys: -1 }).success).toBe(false);
     const event = {
       at: "2026-06-02T04:00:00Z",
+      entryAt: "2026-06-01T04:00:00Z",
       symbol: "INFY",
       side: "sell",
       qty: 1,
@@ -46,6 +47,8 @@ describe("Backtest schemas", () => {
     expect(LedgerEventSchema.safeParse(event).success).toBe(true);
     expect(LedgerEventSchema.safeParse({ ...event, qty: 0 }).success).toBe(false);
     expect(LedgerEventSchema.safeParse({ ...event, reason: "unknown" }).success).toBe(false);
+    expect(LedgerEventSchema.safeParse({ ...event, entryAt: null }).success).toBe(true);
+    expect(LedgerEventSchema.safeParse({ ...event, entryAt: undefined }).success).toBe(false);
   });
   const validRun: BacktestRun = {
     id: "run-001",

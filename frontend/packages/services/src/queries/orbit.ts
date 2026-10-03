@@ -8,6 +8,8 @@ import {
 import type {
   BacktestRun,
   BacktestRunCreate,
+  LedgerEvent,
+  Page,
   BacktestVersionCreate,
   DataSource,
   StrategyCreate,
@@ -22,7 +24,9 @@ import {
   getBacktest,
   listBacktestLedger,
   getBacktestLedgerEvents,
+  listBacktestTimeline,
   type LedgerFilter,
+  type TimelineFilter,
   getBacktestResult,
   getMe,
   getStrategy,
@@ -46,6 +50,23 @@ export function useBacktestLedger(id: string, filter: LedgerFilter, selection: P
     queryKey: [...queryKeys.backtests.detail(id), "ledger", filter, selection],
     queryFn: ({ signal }) =>
       listBacktestLedger(id, { ...filter, ...pageQuery(selection) }, { signal }),
+    enabled: Boolean(id),
+  });
+  return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };
+}
+
+/** A run's buys and sells, oldest first; `fetchNextPage` loads the next `pageSize` (D83). */
+export function useBacktestTimeline(id: string, filter: TimelineFilter, pageSize = 50) {
+  const query = useInfiniteQuery({
+    queryKey: [...queryKeys.backtests.detail(id), "timeline", filter, pageSize],
+    queryFn: ({ signal, pageParam }) =>
+      listBacktestTimeline(id, { ...filter, offset: pageParam, limit: pageSize }, { signal }),
+    initialPageParam: 0,
+    getNextPageParam: (last: Page<LedgerEvent>, pages: Page<LedgerEvent>[]) => {
+      const loaded = pages.reduce((count, page) => count + page.items.length, 0);
+      return last.items.length > 0 && loaded < last.total ? loaded : undefined;
+    },
+    select: pageResult,
     enabled: Boolean(id),
   });
   return { ...query, data: query.data?.items, total: query.data?.total ?? 0 };

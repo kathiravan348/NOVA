@@ -64,6 +64,25 @@ export function listBacktestLedger(
   );
 }
 
+export interface TimelineFilter {
+  from?: string;
+  to?: string;
+  symbol?: string;
+}
+
+/** Every buy and sell of a run, oldest first, one offset page at a time (D83). */
+export function listBacktestTimeline(
+  runId: string,
+  query: TimelineFilter & Pick<PageQuery, "offset" | "limit"> = {},
+  init?: RequestOptions,
+): Promise<Page<LedgerEvent>> {
+  return apiGet(
+    withQuery(`/backtests/${id(runId)}/timeline`, { ...query }),
+    pageSchema(LedgerEventSchema),
+    init,
+  );
+}
+
 export function getBacktestLedgerEvents(
   runId: string,
   date: string,
