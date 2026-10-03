@@ -182,6 +182,8 @@
 | NOVA-174 | Trade exit reasons + day ledger endpoints (D82, migration 0029) | done | Claude | 168, 170 |
 | NOVA-175 | Backtest Timeline popup (day ledger) (D82) | done | Claude | 173, 174 |
 | NOVA-176 | Strategies page: search, more filters, results by data source (D82) | done | Claude | 170 |
+| NOVA-177 | Timeline events endpoint + held time on sells (D83) | planned | — | 175 |
+| NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | planned | — | 177 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -213,3 +215,4 @@
 - Recorded data history (D80): 160 (backend; shares no files with 158/159) → 161 (frontend, merges after 160 is deployed after 15:45 IST).
 - Recorder data quality (D81): 162 (frontend), 163 (broker recorder) and 164 (Atlas) share no files and can run in parallel; 165 after 164 (merges after 164 is deployed). Deploy 163 and 164 after 15:45 IST or at a weekend (D76). After 162 ships, the Owner downloads daily bars for the unranked stocks, then presses *Pick top 3000* and saves.
 - Recorded backtests + screens (D82; Owner: recorded first). Engine lane: 166 → 167 → 168 → 174 (migrations 0028, 0029 in that order; 0027 from 164 first). 169 (frontend) and 170 (backend list) start after 166 and run beside 167/168 (no shared files); 169 merges after 167 is deployed. Then 171 (after 169, 170) and 176 (after 170) in parallel; 173 after 169; 172 after 171 + 173; 175 last (after 173, 174). Deploy migrations after 15:45 IST or at a weekend (D76).
+- Trade timeline (D83): 177 (backend, contracts, mocks, services; no migration, deploy only `backtest` with `--no-deps`) → 178 (frontend; merges after 177 is deployed).
