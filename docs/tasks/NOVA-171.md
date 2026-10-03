@@ -1,6 +1,6 @@
 # NOVA-171 — Backtests page: History / Recorded tabs, result columns, filters (D82)
 
-**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
 
 ## Goal
 **Backtests** has two tabs, **History data** and **Recorded data**. The table shows each run's results, and a
@@ -59,3 +59,12 @@ Its fixture selection must follow History data; added that regression file to th
 - Visual: 360px/1440px, dark/light, captured and inspected; no viewport overflow. Mock preview only.
 - Guides: USER-GUIDE (list tabs, results, filters, sorting and URL persistence). Dependencies: none.
 - Not merged: independent review required. Subsequent task branches may build on this verified branch.
+
+## Review
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT (Claude wrote the paused first commit). **Self-review:** partial — Owner asked Claude to review all ready tasks; the finished work is ChatGPT's.
+**Fixed directly (review: commits):** `hasFilters` comment now says it counts a non-default sort too (as Clear filters does).
+**Checks:** frontend gate on the full stack (171–176): format, lint, typecheck, 1141 tests, app + Storybook builds green (the slow relay `approvalBatch` test timed out twice under full parallel load, passes alone in 6.4 s on main and branch; tests re-run with 4 workers all green). Backend gate: 1413 passed.
+**Acceptance:** URL filters + source tab, clear/page reset and mock min-win-rate/profitable filtering covered by tests.
+**Guides checked:** USER-GUIDE Backtests section matches the tabs, columns, filters and URL behaviour.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
