@@ -148,7 +148,8 @@ class Guard:
             reasons.append("daily_shutdown")
         if a.loss_streak_pause > 0 and self.day.streak >= a.loss_streak_pause:
             reasons.append("loss_pause")
-        if self.day.new_positions >= a.max_new_positions_per_day:
+        waiting = sum(1 for h in self._all() if h.pool == "initial" and not h.filled)
+        if self.day.new_positions + waiting >= a.max_new_positions_per_day:
             reasons.append("daily_new_limit")
         if decided_ms < self.day.cooldown_until.get(symbol, 0):
             reasons.append("cooldown")

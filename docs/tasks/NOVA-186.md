@@ -54,7 +54,18 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** migration 0034 (`intraday_decisions`); `sizing.py` (risk search with real charges), `guard.py` (account
+state, §5.4 order, reservations, daily shutdown), `decisions.py` (one row per candidate per session, trade ids linked
+at save); replay and engine use them.
+**Files changed:** the listed files, plus `intraday/fills.py` (fills keep their per-level parts so the guard can cut a
+fill to the room at the real prices), `tests/intraday_factory.py` (`FixedQtyGuard`), `docs/guides/API.md` (sizing text).
+**Commands run:** `docker compose run --rm backend-check` pass (1,582 tests).
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** DATABASE, API.
+**Deviations from task:** guide ch. 16 "≤ 450 shares" holds with the guide's ₹100 cost reserve (test); real charges
+for that example are about ₹50, so real sizing gives 475 (tested: < 500 and the largest fitting quantity).
+Sizing starts from the last ask at the decision + slippage; the fill is cut when real prices need it (`partial`).
+Pools are released when a position closes fully; the losing streak and cooldowns reset each day.
+**Known gaps:** relative volume ranks 0 until NOVA-187; signal checks arrive in NOVA-187.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

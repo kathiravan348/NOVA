@@ -145,3 +145,11 @@ def test_a_fill_is_cut_to_the_room_at_the_real_prices() -> None:
     assert (qty, value) == (468, 300 * 10_010 + 168 * 10_020)  # ₹999.60 of the ₹1,000 room
     hold.allowance = 100
     assert g.fit(hold, 9_800, [(10, 10_000)]) == (0, 0)  # …one share risks ₹2 > ₹1: invalid
+
+
+def test_entries_waiting_for_their_fill_count_toward_the_new_position_limit() -> None:
+    g = guard(
+        {s: s for s in "ABC"}, max_positions=10, max_new_positions_per_day=2, open_risk_percent=1
+    )
+    assert entry(g, "A").reasons == [] and entry(g, "B").reasons == []
+    assert entry(g, "C").reasons == ["daily_new_limit"]
