@@ -2,6 +2,8 @@ import { z } from "zod";
 import {
   DataSourceSchema,
   IdSchema,
+  SegmentSchema,
+  StrategyTimeframeSchema,
   IsoDateSchema,
   NonNegPaiseSchema,
   PaiseSchema,
@@ -168,6 +170,44 @@ export const BacktestResultSchema = z
     path: ["bySymbol"],
   });
 export type BacktestResult = z.infer<typeof BacktestResultSchema>;
+
+/** A completed run's key results for the Backtests list (D82 (6)). */
+export const BacktestRunSummarySchema = z.strictObject({
+  netPnlPaise: PaiseSchema,
+  returnPercent: z.number(),
+  cagrPercent: z.number(),
+  maxDrawdownPercent: z.number().lte(0),
+  winRatePercent: z.number().min(0).max(100),
+  tradeCount: z.number().int().nonnegative(),
+  profitFactor: z.number().nonnegative().nullable(),
+  sharpe: z.number(),
+  afterTaxCagrPercent: z.number().nullable(),
+  spreadCostPaise: NonNegPaiseSchema.nullable(),
+});
+export type BacktestRunSummary = z.infer<typeof BacktestRunSummarySchema>;
+
+/** `GET /backtests` rows (D82 (6)): the run plus its strategy version's segment and timeframe,
+ * and its results (`summary` null until completed). */
+export const BacktestRunListItemSchema = BacktestRunSchema.safeExtend({
+  segment: SegmentSchema,
+  timeframe: StrategyTimeframeSchema,
+  summary: BacktestRunSummarySchema.nullable(),
+});
+export type BacktestRunListItem = z.infer<typeof BacktestRunListItemSchema>;
+
+/** Sorts `GET /backtests` offers; every sort but `created` pages by offset only. */
+export const BacktestListSortSchema = z.enum([
+  "created",
+  "netPnl",
+  "return",
+  "cagr",
+  "maxDrawdown",
+  "winRate",
+  "profitFactor",
+  "sharpe",
+  "trades",
+]);
+export type BacktestListSort = z.infer<typeof BacktestListSortSchema>;
 
 /** Body of `POST /backtests` (D44): queues a run of one strategy version on a universe. */
 export const BacktestRunCreateSchema = z

@@ -9,6 +9,7 @@ import type {
   BacktestRun,
   BacktestRunCreate,
   BacktestVersionCreate,
+  DataSource,
   StrategyCreate,
   StrategyUpdate,
   StrategyVersionCreate,
@@ -57,10 +58,11 @@ export function useStrategies() {
 }
 
 /** Backtest summary for every strategy (D26). */
-export function useStrategyStats() {
+/** Stats from every run, or from one data source's runs (D82 (10)). */
+export function useStrategyStats({ dataSource }: { dataSource?: DataSource } = {}) {
   return useQuery({
-    queryKey: queryKeys.strategies.stats,
-    queryFn: ({ signal }) => listStrategyStats({ signal }),
+    queryKey: [...queryKeys.strategies.stats, dataSource ?? "all"],
+    queryFn: ({ signal }) => listStrategyStats({ signal }, dataSource),
   });
 }
 

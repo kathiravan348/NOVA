@@ -147,3 +147,36 @@ def test_stats_by_version_follow_each_strategy_version(
         {"version": 1, "runsCompleted": 2, "bestReturnPercent": 5.0, "bestRunId": "run_y"},
         {"version": 2, "runsCompleted": 0, "bestReturnPercent": None, "bestRunId": None},
     ]
+
+
+def test_stats_can_count_one_data_source_only(
+    client: TestClient, spec: dict[str, object], clean: Engine
+) -> None:
+    """D82 (10): `dataSource=recorded` ignores history runs, and the other way round."""
+    sid = client.post(
+        "/api/v1/strategies", json={"name": "Both", "description": "", "spec": spec}
+    ).json()["id"]
+    recorded = _run("run_r", sid, "completed", 1)
+    recorded.data_source = "recorded"
+    with Session(clean) as db:
+        db.add_all([_run("run_h", sid, "completed", 2), recorded])
+        db.flush()
+        db.add_all(
+            [
+                _result("run_h", "10", "50", "-5", 1_000_000),
+                _result("run_r", "2", "70", "-1", 200_000),
+            ]
+        )
+        db.commit()
+
+    def stats(**params: str) -> dict[str, object]:
+        rows = client.get(STATS, params=params).json()
+        found: dict[str, object] = next(row for row in rows if row["strategyId"] == sid)
+        return found
+
+    assert stats()["runsCompleted"] == 2
+    only_recorded = stats(dataSource="recorded")
+    assert only_recorded["runsTotal"] == 1 and only_recorded["bestReturnPercent"] == 2.0
+    assert only_recorded["bestNetPnl"] == {"runId": "run_r", "netPnlPaise": 200_000}
+    assert stats(dataSource="history")["bestReturnPercent"] == 10.0
+    assert client.get(STATS, params={"dataSource": "live"}).status_code == 400

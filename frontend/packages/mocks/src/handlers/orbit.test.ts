@@ -4,6 +4,7 @@ import {
   ApiErrorSchema,
   BacktestResultSchema,
   BacktestDeleteResultSchema,
+  BacktestRunListItemSchema,
   BacktestRunSchema,
   BacktestVersionSchema,
   StrategyLibrarySchema,
@@ -23,10 +24,11 @@ import {
   mockUser,
 } from "../data";
 import { orbitHandlers } from "./orbit";
+import { toListItem } from "./backtestList";
 
 const server = setupServer(...orbitHandlers);
 // The list shows only the newest version of each backtest (D60): run_006 is v1 of run_002.
-const listed = mockBacktestRuns.filter((r) => r.id !== "run_006");
+const listed = mockBacktestRuns.filter((r) => r.id !== "run_006").map(toListItem);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -82,7 +84,7 @@ describe("Orbit MSW handlers", () => {
     const res = await fetch("http://localhost/api/v1/backtests");
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(pageSchema(BacktestRunSchema).parse(data)).toEqual({
+    expect(pageSchema(BacktestRunListItemSchema).parse(data)).toEqual({
       items: listed,
       total: listed.length,
       nextCursor: null,
@@ -97,7 +99,7 @@ describe("Orbit MSW handlers", () => {
       const query: string = cursor ? `&cursor=${encodeURIComponent(cursor)}` : "";
       const res = await fetch(`http://localhost/api/v1/backtests?limit=1${query}`);
       expect(res.status).toBe(200);
-      const page = pageSchema(BacktestRunSchema).parse(await res.json());
+      const page = pageSchema(BacktestRunListItemSchema).parse(await res.json());
       expect(page.items).toHaveLength(1);
       seen.push(...page.items.map((r) => r.id));
       cursor = page.nextCursor;
@@ -109,7 +111,7 @@ describe("Orbit MSW handlers", () => {
   it("GET /api/v1/backtests?strategyId= returns only that strategy's runs", async () => {
     const strategyId = mockBacktestRuns[0]!.strategyId;
     const res = await fetch(`http://localhost/api/v1/backtests?strategyId=${strategyId}`);
-    const page = pageSchema(BacktestRunSchema).parse(await res.json());
+    const page = pageSchema(BacktestRunListItemSchema).parse(await res.json());
     expect(page.items).toEqual(listed.filter((r) => r.strategyId === strategyId));
     expect(page.items.length).toBeLessThan(listed.length);
   });
@@ -357,5 +359,38 @@ describe("Orbit MSW handlers", () => {
     expect(BacktestDeleteResultSchema.parse(await res.json()).deletedRuns).toBe(3);
     expect((await post(["run_003"])).status).toBe(400);
     expect((await post([])).status).toBe(400);
+  });
+});
+
+describe("Backtests list filters (D82)", () => {
+  const ids = async (query: string) => {
+    const res = await fetch(`http://localhost/api/v1/backtests?${query}`);
+    expect(res.status).toBe(200);
+    return pageSchema(BacktestRunListItemSchema)
+      .parse(await res.json())
+      .items.map((r) => r.id);
+  };
+
+  it("filters by source, results and name like the backend", async () => {
+    expect(await ids("dataSource=recorded")).toEqual(["run_001"]);
+    expect(await ids("minCagr=12")).toEqual(["run_001"]);
+    expect(await ids("profitable=true")).toEqual(["run_001", "run_002"]);
+    expect(await ids("status=failed")).toEqual(["run_005"]);
+    expect(await ids("q=delivery")).toEqual(["run_003"]);
+  });
+
+  it("sorts by a result with runs without one last, and refuses a cursor with it", async () => {
+    expect((await ids("sort=cagr&order=asc")).slice(0, 2)).toEqual(["run_002", "run_001"]);
+    const res = await fetch("http://localhost/api/v1/backtests?sort=cagr&cursor=abc");
+    expect(res.status).toBe(400);
+    expect((await fetch("http://localhost/api/v1/backtests?minCagr=x")).status).toBe(400);
+  });
+
+  it("serves strategy stats for one data source", async () => {
+    const res = await fetch("http://localhost/api/v1/strategies/stats?dataSource=recorded");
+    const rows = StrategyStatsSchema.array().parse(await res.json());
+    const vwap = rows.find((r) => r.strategyId === "stg_001")!;
+    expect(vwap.runsTotal).toBe(1);
+    expect(vwap.bestNetPnl).toEqual({ runId: "run_001", netPnlPaise: 499_474 });
   });
 });
