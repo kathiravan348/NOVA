@@ -17,6 +17,8 @@ class BacktestSettings(Settings):
     backtest_max_bars_python: int = Field(5_000_000, gt=0)
     # D61: pass 1 writes each run's columns and signals here; removed after the run and on start.
     backtest_scratch_dir: Path = Path("/tmp/nova-backtest")  # noqa: S108 - the container's disk
+    # D82: recorded runs read archived ticks here (mounted read-only from the Atlas archive volume).
+    archive_dir: Path = Path("archive")
 
 
 @lru_cache(maxsize=1)

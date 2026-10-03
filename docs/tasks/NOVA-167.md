@@ -1,6 +1,6 @@
 # NOVA-167 — Recorded runs: candles built from ticks (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-167 · **Depends on:** NOVA-166
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-167 · **Depends on:** NOVA-166
 
 ## Goal
 A `recorded` backtest runs on candles built from the recorder's ticks (database, else Parquet archive), on usable
@@ -52,3 +52,20 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. Changed from the task text: the reader lives in the backtest service
+  (`nova_backtest/tick_bars.py`, test `tests/test_tick_bars.py`), not `nova_db`, because only the backtest worker
+  reads ticks this way and `nova_db` would otherwise need pyarrow. `pyarrow==25.0.1` (Atlas' pin) added to the
+  backtest service.
+- `usable_days` (≤ 300 feed-gap seconds, `tick_days` per stock), `read_tick_bars` (DB: `time_bucket` with origin
+  09:15 IST, first/last by `exchange_ts` then `received_at`; Parquet: numpy reduceat), `timeframe_seconds`.
+  `columns.load_recorded`; the engine's pass 1 takes a loader; seconds in `BARS_PER_DAY`.
+- Bug found while testing: setting the run's day counts during the run deadlocked with the progress writer
+  (same as NOVA-137). The counts now go to `save_result(..., recorded_days)` and are written in its final commit.
+- `compose.yaml`: `backtest-worker` mounts `tick-archive:/archive:ro`, `NOVA_ARCHIVE_DIR=/archive` (the service
+  `environment` repeats the shared variables, as atlas-worker does). Setting `archive_dir` added.
+- Checks: backend-check 1,369 passed. Guides: API (recorded run rules and errors), USER-GUIDE (known limits).
+
+## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). History runs take the same code path (all existing
+engine tests pass unchanged). Deployed Saturday 3 Oct 2026: `up -d --build --no-deps backtest-worker`, then a
+real-data check of INFY candles for 1 Oct 2026. Verdict: done.
