@@ -5,6 +5,7 @@ import { getDataMode, useRecorder, useUpdateRecorder } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
 import { recorderStateLabel, recorderStateTone } from "../../lib/labels";
 import { RecorderSymbolsModal } from "./RecorderSymbolsModal";
+import { RecorderIndicesModal } from "./RecorderIndicesModal";
 
 /** Recording (D54, D74): the switch, its state and the stocks to record. */
 export function RecorderCard() {
@@ -12,6 +13,7 @@ export function RecorderCard() {
   const recorder = useRecorder();
   const update = useUpdateRecorder();
   const [choosing, setChoosing] = useState(false);
+  const [choosingIndices, setChoosingIndices] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
   if (recorder.isPending) return <Skeleton className="h-40 w-full" />;
@@ -36,8 +38,10 @@ export function RecorderCard() {
   };
 
   const stocks = settings.symbols.length
-    ? `${settings.symbols.length} chosen ${settings.symbols.length === 1 ? "stock" : "stocks"}`
+    ? `${settings.symbols.length.toLocaleString("en-IN")} chosen ${settings.symbols.length === 1 ? "stock" : "stocks"}`
     : "All stocks synced with Kite";
+  const count = settings.indices.length;
+  const indices = count ? `${count} ${count === 1 ? "index" : "indices"}` : "no indices";
 
   return (
     <Card title="Live recording">
@@ -71,9 +75,14 @@ export function RecorderCard() {
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-body-sm text-text-primary">{stocks}</span>
+          <span className="text-body-sm text-text-primary">
+            {stocks} + {indices}
+          </span>
           <Button size="sm" variant="secondary" onClick={() => setChoosing(true)}>
             Choose stocks
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setChoosingIndices(true)}>
+            Choose indices
           </Button>
         </div>
       </div>
@@ -81,6 +90,11 @@ export function RecorderCard() {
         open={choosing}
         settings={settings}
         onClose={() => setChoosing(false)}
+      />
+      <RecorderIndicesModal
+        open={choosingIndices}
+        settings={settings}
+        onClose={() => setChoosingIndices(false)}
       />
     </Card>
   );
