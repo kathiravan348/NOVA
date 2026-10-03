@@ -1,6 +1,6 @@
 # NOVA-181 — Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-181 · **Depends on:** NOVA-179 (shares `models/data.py`, migration after 0030)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-181 · **Depends on:** NOVA-179 (shares `models/data.py`, migration after 0030)
 
 ## Goal
 Every synced stock stores its price step (`tick_size_paise`) from Kite, and every summarized recording day stores
@@ -52,7 +52,23 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** ChatGPT built the migration, tick-size parsing, longest-gap summary, tests and guide (uncommitted when it
+went down); Claude committed that work at takeover (Owner allowed, 4 Oct), merged main and finished it.
+**Files changed (takeover):** `live_summary.py` (a null summary is rebuilt only while its ticks are stored, so a
+day whose ticks are gone keeps its counts) + test; `rev0031` downgrade drops the checks by full name (`op.f`);
+`DATABASE.md` wording.
+**Commands run:** full backend-check: 1475 passed, 17 migration tests failed on the downgrade name (fixed);
+then nova_db + atlas 295 passed in Docker; ruff, format, mypy clean.
+**Checked:** no screens. **New dependencies:** none. **Maps updated:** none. **Guides updated:** DATABASE.
+**Deviations from task:** Build 4 narrowed to days with stored ticks (safer than the task text).
+**Known gaps:** tick size is today's value only (no history), as the task says.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (4 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT + Claude (takeover). **Self-review:** yes (Owner asked Claude to finish 181).
+**Acceptance:** `0.05` → 5, `0.01` → 1, blank/invalid → null and saved on sync; gaps 12 s + 45 s → 45, start and end
+gaps count, empty day 0; a null summary with ticks is rebuilt once, one without ticks is kept; migration round trip.
+**Guides checked:** DATABASE.md header (0031), `instruments.tick_size_paise`, `tick_sessions.longest_feed_gap_seconds`.
+**Deploy:** Sunday (D76 allows): migrate 0031, then `atlas atlas-worker` with `--no-deps`; Owner presses
+**Sync with Kite** once (Relay → Instruments) to fill tick sizes.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
