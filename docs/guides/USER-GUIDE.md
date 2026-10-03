@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, last task NOVA-172). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, last task NOVA-175). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -327,6 +327,17 @@ Open a run from **Backtests**. You see:
   Losers), sorting and pages. **Show trades** closes the popup and takes you to that share's trades.
 - **Trades**: every pretend buy and sell, with price, quantity, profit and a **charges breakdown**
   (brokerage, STT, exchange fee, SEBI fee, stamp duty, GST, DP charge) — calculated with Zerodha's real rates.
+
+**Timeline.** On a finished run with a full report, press **Timeline** next to **Compare**. Each row is a
+day: how many buys and sells happened, their amounts, **Charges**, **Day P&L**, **Cash**, **Holdings** and
+**Equity**. Cash is money available. Holdings is the value of shares still held. Equity is cash plus holdings.
+Type a symbol in **Stock**, choose **From** and **To**, or turn on **Show days without trades** to include
+quiet days. Cash, holdings and equity always describe the whole backtest, even when one stock is selected.
+Press a day's date to expand its buys and sells: time in IST, stock, quantity, price, amount, charges, net
+profit, why it sold and cash after each event. Recorded runs show seconds. Older trades with no saved reason
+show “—”. Extra buys for averaging appear as one buy at the average price. Days start oldest first, with
+25 per page. On a computer, scroll the table sideways for the last columns; on a phone, days and events
+are cards. **Try again** reloads a failed request. Older summary-only versions have no **Timeline** button.
 
 How the pretend trading works (so results are fair): a rule is checked when a candle closes and the trade
 happens at the next candle's opening price, so NOVA never "peeks into the future". Intraday trades are
@@ -672,7 +683,7 @@ approval**; in Demo mode the demo banner appears instead.
 | A stock stays **Not synced** after a sync | Zerodha does not know that symbol on NSE. Check the spelling (Edit is not possible for the symbol: remove it and add it again). |
 | Backtest *Failed* | Open it: the red box explains why (e.g. a Python error or missing data). Under it, **Stopped while** says what the run was doing and how far it got. |
 | **Edit** is missing on a backtest | It is still queued or running: edit it when it has finished. |
-| An old version has no trades or chart | Only the newest finished version keeps its full report; older versions keep their numbers. Open the newest from the **Versions** table. |
+| An old version has no trades, chart or **Timeline** | Only the newest finished version keeps its full report; older versions keep their numbers. Open the newest from the **Versions** table. |
 | **Could not delete**: *A running backtest cannot be deleted* | Wait until it finishes (or fails), then delete it. |
 | **Could not delete**: *Wait for the running backtest to finish* (deleting a strategy) | One of its backtests is running. Wait until it finishes (or fails), then delete the strategy. |
 | A backtest stays **Waiting to start** | Another run is still going; runs go one at a time. If nothing is **Running** for minutes, NOVA's backtest part is not running: start the NOVA stack again. |

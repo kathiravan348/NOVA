@@ -23,7 +23,7 @@
 | TextBlock | Full plain text in a wrapped, scrollable monospace block with keyboard focus; empty and long-content states | `Core/TextBlock` |
 | Tabs | Data-driven horizontal tabs with active indicator and mobile horizontal scroll | `Core/Tabs` |
 | ToastProvider / useToast | Radix toast notification manager with tone icons (success, danger, neutral) | `Core/Toast` |
-| DataTable | Generic TanStack Table with sortable headers, client pagination via Pager when `pageSize` is set (user-changeable), desktop table and mobile stacked cards; optional row selection (`selectedIds`, "Select all shown"), optional `groups` (D63: collapsible groups, a row may sit in several, header summary + actions, no pagination, not with selection), search box and toolbar slot | `Core/DataTable` |
+| DataTable | Generic TanStack Table with sortable headers, client pagination via Pager when `pageSize` is set (user-changeable), desktop table and mobile stacked cards; optional `renderRowDetails(row)` after a table row and inside its mobile card (return null when closed; not with groups), row selection (`selectedIds`, "Select all shown"), optional `groups` (D63: collapsible groups, a row may sit in several, header summary + actions, no pagination, not with selection), search box and toolbar slot | `Core/DataTable` (RowDetails) |
 | Field | Form control wrapper with label, helper description, and error message | `Core/Field` |
 | Input | Accessible text/numeric input with leading/trailing adornments wrapped in Field | `Core/Input` |
 | Select | Native select dropdown with ChevronDown indicator wrapped in Field; options with the same `group` render in one `<optgroup>` | `Core/Select` |

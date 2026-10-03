@@ -12,6 +12,7 @@ export interface DataTableCardsProps<TData> {
   emptyState?: React.ReactNode;
   /** Rows to show instead of the table's current page (a group, D63). */
   rows?: Row<TData>[];
+  renderRowDetails?: (row: TData) => React.ReactNode;
 }
 
 export function DataTableCards<TData>({
@@ -21,6 +22,7 @@ export function DataTableCards<TData>({
   error,
   emptyState,
   rows: onlyRows,
+  renderRowDetails,
 }: DataTableCardsProps<TData>): React.ReactElement {
   if (loading) {
     return (
@@ -111,6 +113,7 @@ export function DataTableCards<TData>({
                 })}
               </dl>
             )}
+            {renderRowDetails?.(row.original)}
           </li>
         );
       })}
