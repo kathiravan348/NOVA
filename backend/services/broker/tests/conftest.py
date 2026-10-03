@@ -112,9 +112,16 @@ def synced(clean: Engine) -> Engine:
     recording switch off (as migration 0007 leaves it)."""
     with clean.begin() as connection:
         connection.execute(
-            text("TRUNCATE unavailable_days, instruments, data_jobs, data_job_steps, ticks")
+            text(
+                "TRUNCATE unavailable_days, instruments, data_jobs, data_job_steps, ticks,"
+                " index_ticks"
+            )
         )
-        connection.execute(text("UPDATE recorder_settings SET enabled = false, symbols = '{}'"))
+        connection.execute(
+            text("UPDATE recorder_settings SET enabled = false, symbols = '{}', indices = '{}'")
+        )
+        # Index tests give indices Kite tokens; none has one until a test says so.
+        connection.execute(text("UPDATE market_indices SET instrument_token = NULL"))
     with Session(clean) as db:
         for symbol, token in [*SYNCED.items(), ("NOTOKEN", None)]:
             db.add(

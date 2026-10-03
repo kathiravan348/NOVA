@@ -1,6 +1,6 @@
 # NOVA-179 — Recorder: record chosen indices into `index_ticks` (D84, migration 0030)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-179 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-179 · **Depends on:** —
 
 ## Goal
 The recorder also streams the indices the Owner chooses and saves their ticks in a new `index_ticks` table,
@@ -53,9 +53,28 @@ Modify:
 
 ## Questions
 Full review:check exposed recorder-response fixtures without the new required `indices` field in Relay overview/live tests (outside Files). Owner asked whether these directly affected fixtures may be updated; backend validation continues while awaiting scope confirmation.
+**Answer (Claude, planner, 3 Oct):** yes — test fixtures that return `RecorderSettings` get `indices: []`; done in the takeover.
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** ChatGPT built the task (`f791f04`) and stopped on the question above; Claude took over (ChatGPT down, Owner request 3 Oct).
+**Files changed (takeover):** Relay fixtures `overview.test.tsx`, `live/config.test.tsx`, `live/live.test.tsx` (`indices: []`);
+`rev0030_index_ticks.py` (hypertable without default indexes, like `ticks`); `broker/tests/conftest.py` (resets
+`indices`, `index_ticks` and index tokens between tests); `ticks.py` (non-positive index day prices → null) + test.
+**Commands run:** backend-check 1416 passed / 12 failed before the fixes (model diff from the default hypertable
+index; settings tests leaking `NIFTY 50`; one limiter timing flake); after: nova_db + broker 266 passed in Docker,
+ruff, format, mypy clean. review:check: format, lint, typecheck, build green; tests 137/138 files, the failing
+`approvalBatch.test.tsx` (timeout under Docker load, as in NOVA-177) passes alone.
+**Checked:** no screens. **New dependencies:** none. **Maps updated:** CONTRACTS. **Guides updated:** API, DATABASE.
+**Deviations from task:** `conftest.py` and three Relay test files outside Files (test state only).
+**Known gaps:** index ticks are not archived to Parquet (out of scope).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / ChatGPT + Claude (takeover). **Self-review:** yes (Owner asked Claude to finish and self-review while ChatGPT is down).
+**Fixed directly:** the takeover fixes above.
+**Acceptance:** 28/32-byte index packets parsed (zero LTP skipped); index rows go to `index_ticks`, stock rows to
+`ticks`; index-only ticks do not feed the stall watchdog, Redis or stock counts; `indices` kept when absent/null,
+unknown or tokenless index 400, 2,990 + 11 → 400; migration round trip, hypertable + compression.
+**Guides checked:** API.md recorder rows, DATABASE.md `index_ticks` + `recorder_settings.indices`, CONTRACTS.md match the diff.
+**Deploy:** Saturday night (D76 allows): migrate 0030, then `broker tick-recorder` with `--no-deps`.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.

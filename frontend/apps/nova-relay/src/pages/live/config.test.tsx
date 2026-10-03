@@ -36,6 +36,7 @@ describe("Live config", () => {
         HttpResponse.json({
           enabled: true,
           symbols: ["INFY"],
+          indices: [],
           state,
           jobId: state === "recording" ? "job_002" : null,
           updatedAt: "2026-09-22T04:30:00Z",
@@ -92,6 +93,7 @@ describe("Live config", () => {
         return HttpResponse.json({
           enabled: false,
           symbols: saved,
+          indices: [],
           state: "off",
           jobId: null,
           updatedAt: "2026-09-22T04:30:00Z",
@@ -213,6 +215,7 @@ describe("Live config", () => {
         HttpResponse.json({
           enabled: false,
           symbols: ["INFY"],
+          indices: [],
           state: "off",
           jobId: null,
           updatedAt: "2026-09-22T04:30:00Z",

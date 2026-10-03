@@ -184,7 +184,7 @@
 | NOVA-176 | Strategies page: search, more filters, results by data source (D82) | done | Claude | 170 |
 | NOVA-177 | Timeline events endpoint + held time on sells (D83) | done | Claude | 175 |
 | NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | done | Claude | 177 |
-| NOVA-179 | Recorder: record chosen indices into `index_ticks` (D84, migration 0030) | in-progress | ChatGPT | — |
+| NOVA-179 | Recorder: record chosen indices into `index_ticks` (D84, migration 0030) | done | Claude | — |
 | NOVA-180 | Relay Live Config: indices to record; Pick top leaves room for them (D84) | planned | — | 179 (merge after 179 is deployed) |
 | NOVA-181 | Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031) | planned | — | 179 (shares `models/data.py`) |
 | NOVA-182 | Contracts: research profile (D84) | planned | — | — |
