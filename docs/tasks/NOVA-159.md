@@ -1,6 +1,6 @@
 # NOVA-159 — Archive: move ticks one stock at a time (bounded memory)
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-159 · **Depends on:** NOVA-155
+**Status:** in-review · **Owner:** ChatGPT · **Branch:** task/NOVA-159 · **Depends on:** NOVA-155
 
 ## Goal
 An `archive` job moves a full 3,000-stock day of ticks (D75, D77) to Parquet inside the `atlas-worker` memory
