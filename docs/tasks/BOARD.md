@@ -183,7 +183,7 @@
 | NOVA-175 | Backtest Timeline popup (day ledger) (D82) | done | Claude | 173, 174 |
 | NOVA-176 | Strategies page: search, more filters, results by data source (D82) | done | Claude | 170 |
 | NOVA-177 | Timeline events endpoint + held time on sells (D83) | done | Claude | 175 |
-| NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | planned | — | 177 |
+| NOVA-178 | Timeline popup: trade-by-trade vertical timeline (D83) | ready-for-review | Claude | 177 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.

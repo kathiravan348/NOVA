@@ -1,201 +1,108 @@
 import { useEffect, useState } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
-import type { BacktestRun, LedgerDay } from "@nova/contracts";
-import { useBacktestLedger, useStrategy } from "@nova/services";
-import { Button, DataTable, DateTimePicker, Input, Modal, Pager, Switch } from "@nova/ui-core";
-import { PnLText, formatInr } from "@nova/ui-trading";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import type { BacktestRun } from "@nova/contracts";
+import { useBacktestTimeline, useStrategy } from "@nova/services";
+import { DateTimePicker, Input, LoadMore, Modal } from "@nova/ui-core";
+import { TradeTimeline, type TradeTimelineClock } from "@nova/ui-trading";
 import { QueryError } from "../../components/QueryState";
-import { formatCalendarDate } from "../../lib/format";
-import { TimelineDayEvents } from "./TimelineDayEvents";
+import { exitReasonLabel } from "../../lib/format";
 
 interface TimelineDialogProps {
   run: BacktestRun;
   onOpenChange: (open: boolean) => void;
 }
 
+const trades = (count: number) => `${count} ${count === 1 ? "trade" : "trades"}`;
+
 export function TimelineDialog({ run, onOpenChange }: TimelineDialogProps) {
   const [stock, setStock] = useState("");
   const [symbol, setSymbol] = useState("");
   const [from, setFrom] = useState<string | undefined>(run.from);
   const [to, setTo] = useState<string | undefined>(run.to);
-  const [allDays, setAllDays] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const [expanded, setExpanded] = useState<string[]>([]);
   useEffect(() => {
     if (stock.trim().toUpperCase() === symbol) return;
-    const timer = setTimeout(() => {
-      setSymbol(stock.trim().toUpperCase());
-      setPage(1);
-      setExpanded([]);
-    }, 400);
+    const timer = setTimeout(() => setSymbol(stock.trim().toUpperCase()), 400);
     return () => clearTimeout(timer);
   }, [stock, symbol]);
-  const query = useBacktestLedger(
-    run.id,
-    { symbol: symbol || undefined, from, to, allDays },
-    { page, pageSize },
-  );
+  const query = useBacktestTimeline(run.id, { symbol: symbol || undefined, from, to });
   const strategy = useStrategy(run.strategyId);
   const spec = strategy.data?.versions.find((v) => v.version === run.strategyVersion)?.spec;
   const averaging = Boolean(spec && "averaging" in spec && spec.averaging);
-  const toggle = (date: string) =>
-    setExpanded((current) =>
-      current.includes(date) ? current.filter((d) => d !== date) : [...current, date],
-    );
-  const reset = () => {
-    setPage(1);
-    setExpanded([]);
-  };
+  const timeframe = spec?.timeframe;
+  const clock: TradeTimelineClock =
+    run.dataSource === "recorded" || timeframe?.endsWith("s")
+      ? "seconds"
+      : timeframe === "1d"
+        ? "none"
+        : "minutes";
   const bound = (value: string | null) =>
     value ? (value < run.from ? run.from : value > run.to ? run.to : value) : undefined;
-  const columns: ColumnDef<LedgerDay, unknown>[] = [
-    {
-      id: "date",
-      header: "Date",
-      accessorKey: "date",
-      meta: { primary: true },
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-expanded={expanded.includes(row.original.date)}
-          aria-label={`${expanded.includes(row.original.date) ? "Collapse" : "Expand"} ${formatCalendarDate(row.original.date)}`}
-          onClick={() => toggle(row.original.date)}
-        >
-          {expanded.includes(row.original.date) ? (
-            <ChevronDown className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          )}
-          {formatCalendarDate(row.original.date)}
-        </Button>
-      ),
-    },
-    { id: "buys", header: "Buys", accessorKey: "buys", meta: { numeric: true } },
-    { id: "sells", header: "Sells", accessorKey: "sells", meta: { numeric: true } },
-    ...(
-      [
-        ["boughtPaise", "Bought"],
-        ["soldPaise", "Sold"],
-        ["chargesPaise", "Charges"],
-      ] as const
-    ).map(([key, label]) => ({
-      id: key,
-      header: label,
-      accessorKey: key,
-      meta: { numeric: true },
-      cell: ({ row }: { row: { original: LedgerDay } }) => formatInr(row.original[key]),
-    })),
-    {
-      id: "net",
-      header: "Day P&L",
-      accessorKey: "netPnlPaise",
-      meta: { numeric: true },
-      cell: ({ row }) => <PnLText paise={row.original.netPnlPaise} />,
-    },
-    ...(
-      [
-        ["cashPaise", "Cash"],
-        ["holdingsPaise", "Holdings"],
-        ["equityPaise", "Equity"],
-      ] as const
-    ).map(([key, label]) => ({
-      id: key,
-      header: label,
-      accessorKey: key,
-      meta: { numeric: true },
-      cell: ({ row }: { row: { original: LedgerDay } }) => formatInr(row.original[key]),
-    })),
-  ];
-  columns.forEach((column) => {
-    column.enableSorting = false;
-  });
+  const events = query.data ?? [];
   return (
     <Modal open onOpenChange={onOpenChange} title="Timeline" description={run.name} size="xl">
       <div className="flex flex-col gap-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Input
-            label="Stock"
-            type="search"
-            placeholder="All stocks"
-            value={stock}
-            onChange={(event) => setStock(event.target.value)}
-          />
-          <DateTimePicker
-            label="From"
-            mode="date"
-            value={from}
-            min={run.from}
-            max={to ?? run.to}
-            onChange={(value) => {
-              setFrom(bound(value));
-              reset();
-            }}
-          />
-          <DateTimePicker
-            label="To"
-            mode="date"
-            value={to}
-            min={from ?? run.from}
-            max={run.to}
-            onChange={(value) => {
-              setTo(bound(value));
-              reset();
-            }}
-          />
+        <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-border-default bg-bg-surface pb-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Input
+              containerClassName="col-span-2 sm:col-span-1"
+              label="Stock"
+              type="search"
+              placeholder="All stocks"
+              value={stock}
+              onChange={(event) => setStock(event.target.value)}
+            />
+            <DateTimePicker
+              label="From"
+              mode="date"
+              value={from}
+              min={run.from}
+              max={to ?? run.to}
+              onChange={(value) => setFrom(bound(value))}
+            />
+            <DateTimePicker
+              label="To"
+              mode="date"
+              value={to}
+              min={from ?? run.from}
+              max={run.to}
+              onChange={(value) => setTo(bound(value))}
+            />
+          </div>
+          <p className="text-body-sm text-text-muted">
+            {[
+              query.isSuccess ? trades(query.total) : "",
+              averaging ? "Added buys are shown as one buy at the average price." : "",
+            ]
+              .filter(Boolean)
+              .join(". ")}
+          </p>
         </div>
-        <Switch
-          label="Show days without trades"
-          checked={allDays}
-          onCheckedChange={(value) => {
-            setAllDays(value);
-            reset();
-          }}
-        />
         <p className="text-body-sm text-text-muted">
-          Cash is money available. Holdings is the value of stocks still held. Equity is cash plus
-          holdings. These remain the whole portfolio when you filter a stock.
+          Cash after is the money available after each trade, for the whole backtest even when you
+          filter a stock.
         </p>
-        <DataTable
-          caption="Day ledger"
-          columns={columns}
-          data={query.data ?? []}
-          getRowId={(day) => day.date}
-          loading={query.isPending}
-          emptyState="No trades in these days"
-          error={
-            query.isError ? (
-              <QueryError error={query.error} onRetry={() => void query.refetch()} />
-            ) : undefined
-          }
-          renderRowDetails={(day) =>
-            expanded.includes(day.date) ? (
-              <TimelineDayEvents
-                runId={run.id}
-                date={day.date}
-                symbol={symbol || undefined}
-                recorded={run.dataSource === "recorded"}
-                averaging={averaging}
-              />
-            ) : null
-          }
+        {query.isError ? (
+          <QueryError error={query.error} onRetry={() => void query.refetch()} />
+        ) : (
+          <TradeTimeline
+            events={events}
+            clock={clock}
+            reasonLabels={exitReasonLabel}
+            loading={query.isPending}
+            emptyState="No trades for these filters"
+          />
+        )}
+        <LoadMore
+          auto
+          hasMore={!query.isError && query.hasNextPage}
+          loading={query.isFetchingNextPage}
+          onLoadMore={() => void query.fetchNextPage()}
+          label="Load more trades"
         />
-        <Pager
-          page={page}
-          pageSize={pageSize}
-          total={query.total}
-          loading={query.isFetching}
-          onPageChange={(value) => {
-            setPage(value);
-            setExpanded([]);
-          }}
-          onPageSizeChange={(value) => {
-            setPageSize(value);
-            reset();
-          }}
-        />
+        {query.isSuccess && !query.hasNextPage && events.length > 0 && (
+          <p className="text-center text-body-sm text-text-muted">
+            End of timeline · {trades(query.total)}
+          </p>
+        )}
       </div>
     </Modal>
   );

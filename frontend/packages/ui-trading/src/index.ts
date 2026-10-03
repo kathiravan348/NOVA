@@ -37,3 +37,9 @@ export {
   UnavailableDataTable,
   type UnavailableDataTableProps,
 } from "./components/UnavailableDataTable/UnavailableDataTable";
+export {
+  TradeTimeline,
+  type TradeTimelineClock,
+  type TradeTimelineProps,
+} from "./components/TradeTimeline/TradeTimeline";
+export { heldTime } from "./components/TradeTimeline/heldTime";

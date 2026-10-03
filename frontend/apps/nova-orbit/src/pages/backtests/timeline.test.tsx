@@ -3,11 +3,10 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { handlers, mockBacktestRuns } from "@nova/mocks";
-import type { LedgerDay } from "@nova/contracts";
+import { handlers, mockBacktestRuns, mockStrategies } from "@nova/mocks";
+import type { BacktestRun, LedgerEvent } from "@nova/contracts";
 import { renderApp } from "../../test/renderApp";
 import { TimelineDialog } from "./TimelineDialog";
-import { TimelineDayEvents } from "./TimelineDayEvents";
 
 const server = setupServer(...handlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -18,59 +17,59 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
-async function openTimeline() {
-  renderApp("/backtests/run_001");
+async function openTimeline(runId = "run_001") {
+  renderApp(`/backtests/${runId}`);
   fireEvent.click(await screen.findByRole("button", { name: "Timeline" }));
   const dialog = screen.getByRole("dialog");
-  await within(dialog).findAllByRole("button", { name: "Expand 2 Jun 2026" });
+  await within(dialog).findByRole("list", { name: "Trades" });
   return dialog;
 }
 
+function renderDialog(run: BacktestRun) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <TimelineDialog run={run} onOpenChange={vi.fn()} />
+    </QueryClientProvider>,
+  );
+  return screen.getByRole("dialog");
+}
+
+const items = (dialog: HTMLElement) =>
+  within(within(dialog).getByRole("list", { name: "Trades" })).getAllByRole("listitem");
+
 describe("Backtest Timeline", () => {
-  it("expands a day into buys and sells with IST seconds, cash after, and unknown reasons", async () => {
+  it("lists every trade oldest first with seconds, held time, cash after and the end line", async () => {
     const dialog = await openTimeline();
-    const expand = within(dialog).getAllByRole("button", { name: "Expand 2 Jun 2026" })[0]!;
-    expect(expand).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(expand);
-    const events = (
-      await within(dialog).findAllByRole("table", { name: "Events for 2 Jun 2026" })
-    )[0]!;
-    await within(events).findByText("09:30:00");
-    expect(within(events).getByText("Buy")).toBeInTheDocument();
-    expect(within(events).getByText("Sell")).toBeInTheDocument();
-    expect(within(events).getByText("₹8,55,000.00")).toBeInTheDocument();
-    expect(within(events).getByText("₹10,02,417.25")).toBeInTheDocument();
-    expect(within(events).getAllByText("—").length).toBeGreaterThanOrEqual(2);
-    const collapse = within(dialog).getAllByRole("button", { name: "Collapse 2 Jun 2026" })[0]!;
-    expect(collapse).toHaveAttribute("aria-expanded", "true");
-    fireEvent.click(collapse);
-    expect(
-      within(dialog).queryByRole("table", { name: "Events for 2 Jun 2026" }),
-    ).not.toBeInTheDocument();
+    const rows = items(dialog);
+    expect(rows).toHaveLength(8);
+    expect(rows.map((row) => row.dataset["tone"]).slice(0, 2)).toEqual(["buy", "profit"]);
+    expect(within(rows[0]!).getByText("Buy")).toBeInTheDocument();
+    expect(within(rows[0]!).getAllByText("09:30:00").length).toBeGreaterThan(0);
+    expect(within(rows[0]!).getByText("₹8,55,000.00")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Sell")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("1 h 30 min")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("₹10,02,417.25")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("—")).toBeInTheDocument();
+    expect(within(dialog).getByText("End of timeline · 8 trades")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("switch")).not.toBeInTheDocument();
   });
 
-  it("filters stocks and dates and includes quiet days only with the switch", async () => {
+  it("shows minutes for a 5m history run", async () => {
+    const dialog = await openTimeline("run_002");
+    await waitFor(() =>
+      expect(within(items(dialog)[0]!).getAllByText("09:30").length).toBeGreaterThan(0),
+    );
+  });
+
+  it("filters by stock and dates", async () => {
     const dialog = await openTimeline();
     fireEvent.change(within(dialog).getByLabelText("Stock"), { target: { value: "reliance" } });
-    await waitFor(() =>
-      expect(
-        within(dialog).queryByRole("button", { name: "Expand 5 Jun 2026" }),
-      ).not.toBeInTheDocument(),
-    );
-    fireEvent.click(within(dialog).getByRole("switch", { name: "Show days without trades" }));
-    await within(dialog).findAllByRole("button", { name: "Expand 1 Jun 2026" });
-    fireEvent.click(within(dialog).getByRole("switch", { name: "Show days without trades" }));
+    await waitFor(() => expect(items(dialog)).toHaveLength(4));
     fireEvent.change(within(dialog).getByLabelText("From"), { target: { value: "2026-06-03" } });
-    await waitFor(() =>
-      expect(
-        within(dialog).queryByRole("button", { name: "Expand 2 Jun 2026" }),
-      ).not.toBeInTheDocument(),
-    );
-    await within(dialog).findAllByRole("button", { name: "Expand 12 Jun 2026" });
+    await waitFor(() => expect(items(dialog)).toHaveLength(2));
     fireEvent.change(within(dialog).getByLabelText("To"), { target: { value: "2026-06-11" } });
-    expect((await within(dialog).findAllByText("No trades in these days")).length).toBeGreaterThan(
-      0,
-    );
+    await within(dialog).findByText("No trades for these filters");
   });
 
   it("hides Timeline on a summary-only version", async () => {
@@ -79,11 +78,11 @@ describe("Backtest Timeline", () => {
     expect(screen.queryByRole("button", { name: "Timeline" })).not.toBeInTheDocument();
   });
 
-  it("retries a ledger error", async () => {
+  it("retries a timeline error", async () => {
     server.use(
-      http.get("*/api/v1/backtests/:id/ledger", () =>
+      http.get("*/api/v1/backtests/:id/timeline", () =>
         HttpResponse.json(
-          { error: { code: "internal", message: "Ledger unavailable" } },
+          { error: { code: "internal", message: "Timeline unavailable" } },
           { status: 500 },
         ),
       ),
@@ -91,64 +90,66 @@ describe("Backtest Timeline", () => {
     renderApp("/backtests/run_001");
     fireEvent.click(await screen.findByRole("button", { name: "Timeline" }));
     const dialog = screen.getByRole("dialog");
-    await within(dialog).findAllByText("Ledger unavailable", {}, { timeout: 5000 });
+    await within(dialog).findAllByText("Timeline unavailable", {}, { timeout: 5000 });
     server.resetHandlers();
     fireEvent.click(within(dialog).getAllByRole("button", { name: "Try again" })[0]!);
-    await within(dialog).findAllByRole("button", { name: "Expand 2 Jun 2026" });
+    await within(dialog).findByRole("list", { name: "Trades" });
   });
 
-  it("requests the next server page at offset 25", async () => {
-    const rows: LedgerDay[] = Array.from({ length: 30 }, (_, i) => ({
-      date: `2026-06-${String(i + 1).padStart(2, "0")}`,
-      buys: 1,
-      sells: 1,
-      boughtPaise: 1000,
-      soldPaise: 1000,
+  it("loads the next 50 trades and then shows the end", async () => {
+    const events: LedgerEvent[] = Array.from({ length: 60 }, (_, i) => ({
+      at: new Date(Date.UTC(2026, 5, 2, 4, i)).toISOString().replace(".000Z", "Z"),
+      entryAt: null,
+      symbol: "INFY",
+      side: "buy",
+      qty: 1,
+      pricePaise: 100,
+      amountPaise: 100,
       chargesPaise: 0,
-      netPnlPaise: 0,
-      cashPaise: 100000000,
-      holdingsPaise: 0,
-      equityPaise: 100000000,
-      openPositions: 0,
+      netPnlPaise: null,
+      reason: null,
+      cashAfterPaise: 1000,
     }));
     const offsets: number[] = [];
     server.use(
-      http.get("*/api/v1/backtests/:id/ledger", ({ request }) => {
+      http.get("*/api/v1/backtests/:id/timeline", ({ request }) => {
         const query = new URL(request.url).searchParams;
         const offset = Number(query.get("offset")),
           limit = Number(query.get("limit"));
         offsets.push(offset);
         return HttpResponse.json({
-          items: rows.slice(offset, offset + limit),
-          total: 30,
+          items: events.slice(offset, offset + limit),
+          total: 60,
           nextCursor: null,
         });
       }),
     );
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={client}>
-        <TimelineDialog
-          run={{ ...mockBacktestRuns[0]!, to: "2026-06-30" }}
-          onOpenChange={vi.fn()}
-        />
-      </QueryClientProvider>,
-    );
-    const dialog = screen.getByRole("dialog");
-    await within(dialog).findAllByRole("button", { name: "Expand 25 Jun 2026" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Next page" }));
-    await within(dialog).findAllByRole("button", { name: "Expand 26 Jun 2026" });
-    expect(offsets).toEqual([0, 25]);
-    expect(within(dialog).getByLabelText("Jump to page")).toHaveValue(2);
+    const dialog = renderDialog(mockBacktestRuns[0]!);
+    await waitFor(() => expect(items(dialog)).toHaveLength(50));
+    expect(within(dialog).queryByText(/End of timeline/)).not.toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Load more trades" }));
+    await waitFor(() => expect(items(dialog)).toHaveLength(60));
+    expect(offsets).toEqual([0, 50]);
+    expect(within(dialog).getByText("End of timeline · 60 trades")).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "Load more trades" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("explains combined averaging buys under the day events", async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={client}>
-        <TimelineDayEvents runId="run_001" date="2026-06-02" recorded averaging />
-      </QueryClientProvider>,
+  it("explains combined averaging buys", async () => {
+    const strategy = mockStrategies.find((s) => s.id === "stg_001")!;
+    server.use(
+      http.get("*/api/v1/strategies/:id", () =>
+        HttpResponse.json({
+          ...strategy,
+          versions: strategy.versions.map((version) => ({
+            ...version,
+            spec: { ...version.spec, averaging: { dropPercent: 2, maxAdds: 2 } },
+          })),
+        }),
+      ),
     );
-    await screen.findByText("Added buys are shown as one buy at the average price.");
+    const dialog = renderDialog(mockBacktestRuns[0]!);
+    await within(dialog).findByText(/Added buys are shown as one buy at the average price\./);
   });
 });

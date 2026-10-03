@@ -1,6 +1,6 @@
 # NOVA-178 — Timeline popup: trade-by-trade vertical timeline (D83)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-178 · **Depends on:** NOVA-177 (merge after it is deployed)
+**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-178 · **Depends on:** NOVA-177 (merge after it is deployed)
 
 ## Goal
 The backtest **Timeline** popup shows every buy and sell as a node on a coloured vertical rail, oldest first.
@@ -54,7 +54,14 @@ Delete: `frontend/apps/nova-orbit/src/pages/backtests/TimelineDayEvents.tsx`
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+
+**Done:** `TradeTimeline` + `heldTime` (ui-trading), `LoadMore auto`, Timeline popup rewritten as a trade-by-trade rail with pinned filters and scroll loading.
+**Files changed:** listed files, plus `TradeTimeline.fixtures.ts` (shared by story and test); `TimelineDayEvents.tsx` deleted.
+**Commands run:** review:check: format, lint, typecheck green; tests 1161/1162 (relay `approvalBatch` timeout, flaky before this task), re-run with 4 workers 1162/1162; builds green.
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (app popup on mock run_001 + TradeTimeline story).
+**New dependencies:** none. **Maps updated:** COMPONENTS. **Guides updated:** USER-GUIDE.
+**Deviations from task:** (1) at 360px From/To sit side by side and the cash explanation scrolls with the list, so the pinned block stays small (it took half the popup at first); (2) a fixtures file for story + test.
+**Known gaps:** `DataTable` row details (NOVA-175) is now unused by apps; kept as a generic feature.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_

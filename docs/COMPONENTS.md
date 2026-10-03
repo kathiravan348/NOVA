@@ -17,7 +17,7 @@
 | ThemeToggle | Ghost icon button toggling dark/light mode with sun/moon icon | `Core/ThemeToggle` |
 | DemoBanner | Non-dismissible full-width disclaimer bar for prototype data | `Core/DemoBanner` |
 | EmptyState | Centered empty or error placeholder with icon, title, description, and action | `Core/EmptyState` |
-| LoadMore | "Load more" button under a paged list; hidden when nothing is left, disabled while loading | `Core/LoadMore` |
+| LoadMore | "Load more" button under a paged list; hidden when nothing is left, disabled while loading; `auto` also loads when it scrolls into view (infinite scroll) | `Core/LoadMore` |
 | Pager | Controlled entry range and total, page count, first/previous/next/last, Enter to jump, and rows per page (25/50/100/200); empty/loading states | `Core/Pager` |
 | Modal | Accessible Radix dialog with title, description, body scroll and footer actions; md/lg/xl widths with a mobile gutter | `Core/Modal` |
 | TextBlock | Full plain text in a wrapped, scrollable monospace block with keyboard focus; empty and long-content states | `Core/TextBlock` |
@@ -45,6 +45,7 @@
 | EquityCurve | Responsive Recharts line of backtest equity with an optional dashed benchmark line (`benchmarkLabel`, default NIFTY 50) | `Trading/EquityCurve` |
 | CandlestickChart | Lightweight Charts OHLC candles + volume, token colours re-read on theme switch, IST times | `Trading/CandlestickChart` |
 | LiveStockCard | Live monitor card: price, signed change, last tick time, seconds with a tick; amber `stale` state, dashes before the first tick | `Trading/LiveStockCard` |
+| TradeTimeline | Backtest buys and sells as nodes on a vertical rail, oldest first: date + clock (`seconds`/`minutes`/`none`), stock, qty @ price, amount, sell charges/net/held time/reason, cash after; colours buy `action`, profit, loss, zero muted; Stop-loss chip; loading and empty. `heldTime(entryAt, at)` formats held time | `Trading/TradeTimeline` |
 | StrategyCard | Strategy card: title/status slots, facts line, run counts and best/worst results from `StrategyStats` (loading, no-results, unavailable) | `Trading/StrategyCard` |
 | StrategyStatsList | The stats block of StrategyCard, also used on the strategy detail page; `renderBestRun` wraps the best P&L in a link | `Trading/StrategyCard` |
 | UnavailableDataTable | Broker response evidence per trading date, IST checks, attempts, state, last-job link and exact-date recheck; mobile cards; loading/empty/error/disabled/resolved states | `Trading/UnavailableDataTable` |

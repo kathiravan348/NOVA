@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, last task NOVA-176). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, last task NOVA-178). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -335,16 +335,17 @@ Open a run from **Backtests**. You see:
 - **Trades**: every pretend buy and sell, with price, quantity, profit and a **charges breakdown**
   (brokerage, STT, exchange fee, SEBI fee, stamp duty, GST, DP charge) — calculated with Zerodha's real rates.
 
-**Timeline.** On a finished run with a full report, press **Timeline** next to **Compare**. Each row is a
-day: how many buys and sells happened, their amounts, **Charges**, **Day P&L**, **Cash**, **Holdings** and
-**Equity**. Cash is money available. Holdings is the value of shares still held. Equity is cash plus holdings.
-Type a symbol in **Stock**, choose **From** and **To**, or turn on **Show days without trades** to include
-quiet days. Cash, holdings and equity always describe the whole backtest, even when one stock is selected.
-Press a day's date to expand its buys and sells: time in IST, stock, quantity, price, amount, charges, net
-profit, why it sold and cash after each event. Recorded runs show seconds. Older trades with no saved reason
-show “—”. Extra buys for averaging appear as one buy at the average price. Days start oldest first, with
-25 per page. On a computer, scroll the table sideways for the last columns; on a phone, days and events
-are cards. **Try again** reloads a failed request. Older summary-only versions have no **Timeline** button.
+**Timeline.** On a finished run with a full report, press **Timeline** next to **Compare**. Every buy and
+sell is one point on a line, oldest at the top. On the left are the date and the time in IST: seconds for
+recorded runs and second strategies, hours and minutes for minute and hour strategies, the date only for daily
+strategies. On the right are the stock, quantity and price, the **Amount** and **Cash after** (money still
+available after that trade). A sell also shows **Charges**, **Net P&L**, **Held** (how long the shares were kept,
+for example *42 s*, *12 min*, *2 h 5 min* or *3 days*) and the reason it sold (an orange tag for **Stop-loss**;
+“—” for older trades with no saved reason). Colours: blue for a buy, green for a sell with profit, red for a sell
+with a loss, grey for a sell at exactly ₹0. Type a symbol in **Stock** or choose **From** and **To**; these stay at
+the top while the list scrolls. Scroll down to load the next 50 trades, until **End of timeline**. Cash after
+always describes the whole backtest, even when one stock is selected. Extra buys for averaging appear as one buy
+at the average price. **Try again** reloads a failed request. Older summary-only versions have no **Timeline** button.
 
 How the pretend trading works (so results are fair): a rule is checked when a candle closes and the trade
 happens at the next candle's opening price, so NOVA never "peeks into the future". Intraday trades are
