@@ -361,3 +361,21 @@ describe("Relay MSW handlers", () => {
     });
   });
 });
+
+it("remembers recorder indices across omitted and null updates", async () => {
+  resetMockRecorder();
+  const put = (body: unknown) =>
+    fetch("http://localhost/api/v1/broker/recorder", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const saved = await put({ enabled: true, symbols: ["INFY"], indices: ["NIFTY 50"] });
+  expect(RecorderSettingsSchema.parse(await saved.json()).indices).toEqual(["NIFTY 50"]);
+  for (const extra of [{}, { indices: null }]) {
+    const response = await put({ enabled: false, symbols: ["INFY"], ...extra });
+    expect(RecorderSettingsSchema.parse(await response.json()).indices).toEqual(["NIFTY 50"]);
+  }
+  expect((await put({ enabled: false, symbols: [], indices: ["UNKNOWN"] })).status).toBe(400);
+  resetMockRecorder();
+});

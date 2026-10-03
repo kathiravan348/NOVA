@@ -13,7 +13,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from nova_broker.deps import CallerDep
-from nova_broker.recorder_loop import in_market_hours, load_setting, running_job, tick_symbols
+from nova_broker.recorder_loop import (
+    check_stream_limit,
+    in_market_hours,
+    load_setting,
+    running_job,
+    tick_indices,
+    tick_symbols,
+)
 
 router = APIRouter(prefix="/broker")
 
@@ -47,6 +54,7 @@ def _view(db: Session, row: RecorderSetting, now: datetime) -> dict[str, object]
         {
             "enabled": row.enabled,
             "symbols": row.symbols,
+            "indices": row.indices,
             "state": state,
             "job_id": job.id if job is not None and row.enabled else None,
             "updated_at": row.updated_at,
@@ -65,6 +73,15 @@ def get_recorder(_: CallerDep, db: Db) -> JSONResponse:
 @router.put("/recorder")
 def put_recorder(body: RecorderSettingsUpdate, caller: CallerDep, db: Db) -> JSONResponse:
     symbols = sorted(set(body.symbols))
+    row = load_setting(db)
+    indices = sorted(set(body.indices)) if body.indices is not None else list(row.indices)
+    try:
+        tick_indices(db, indices)
+        stocks = len(tick_symbols(db, symbols)) if body.enabled or not symbols else len(symbols)
+        check_stream_limit(stocks, len(indices))
+    except ValueError as exc:
+        if body.enabled or indices:
+            raise ApiException(400, "invalid_request", str(exc)) from exc
     summary = "Tick recording off"
     if body.enabled:
         try:
@@ -73,7 +90,9 @@ def put_recorder(body: RecorderSettingsUpdate, caller: CallerDep, db: Db) -> JSO
             raise ApiException(400, "invalid_request", str(exc)) from exc
         which = f"{len(symbols)} stock(s)" if symbols else f"all {len(chosen)} synced stock(s)"
         summary = f"Tick recording on: {which}"
-    row = load_setting(db)
+    if indices:
+        summary += f"; indices: {', '.join(indices)}"
+    row.indices = indices
     row.enabled = body.enabled
     row.symbols = symbols
     row.updated_at = datetime.now(UTC)

@@ -279,6 +279,28 @@ class Tick(Base):
     ask_orders: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
 
 
+class IndexTick(Base):
+    """Recorded index prices (D84); a compressed hypertable on receive time."""
+
+    __tablename__ = "index_ticks"
+    __table_args__ = (
+        CheckConstraint("last_price_paise > 0", name="last_price"),
+        *(
+            CheckConstraint(f"{name}_paise > 0", name=name)
+            for name in ("high", "low", "open", "close")
+        ),
+    )
+
+    symbol: Mapped[str] = mapped_column(ForeignKey("market_indices.name"), primary_key=True)
+    received_at: Mapped[datetime] = mapped_column(primary_key=True)
+    exchange_ts: Mapped[datetime | None]
+    last_price_paise: Mapped[int] = mapped_column(BigInteger)
+    high_paise: Mapped[int | None] = mapped_column(BigInteger)
+    low_paise: Mapped[int | None] = mapped_column(BigInteger)
+    open_paise: Mapped[int | None] = mapped_column(BigInteger)
+    close_paise: Mapped[int | None] = mapped_column(BigInteger)
+
+
 class TickSession(Base):
     """One summarized recording day (D80): written by the Atlas worker after the session."""
 

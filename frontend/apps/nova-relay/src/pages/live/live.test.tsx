@@ -142,6 +142,7 @@ describe("Recorded data", () => {
         HttpResponse.json({
           enabled: true,
           symbols: ["TCS", "INFY", "RELIANCE"],
+          indices: [],
           state: "waiting",
           jobId: null,
           updatedAt: "2026-09-22T04:30:00Z",

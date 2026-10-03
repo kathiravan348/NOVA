@@ -8,6 +8,7 @@ from pydantic import ValidationError
 SETTINGS = {
     "enabled": True,
     "symbols": ["INFY"],
+    "indices": [],
     "state": "recording",
     "jobId": "job_1",
     "updatedAt": "2026-09-25T03:45:00Z",

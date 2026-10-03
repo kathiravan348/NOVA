@@ -15,7 +15,7 @@ from datetime import UTC, datetime, time, timedelta
 from typing import Any, Protocol
 from zoneinfo import ZoneInfo
 
-from nova_broker.ticks import parse_ticks
+from nova_broker.ticks import ParsedIndexTick, parse_ticks
 
 logger = logging.getLogger("nova.broker.recorder")
 
@@ -72,6 +72,7 @@ class Recorder:
     def __post_init__(self) -> None:
         self._last: dict[str, datetime] = {}
         self._buffer: list[dict[str, Any]] = []
+        self._index_buffer: list[dict[str, Any]] = []
         self._flushed = self.now()
         self._failing = False
         self._last_tick = self.now()
@@ -89,32 +90,37 @@ class Recorder:
     def _flush(self) -> bool:
         """Saves the buffer; on failure keeps it (newest `MAX_BUFFER` rows) and returns False."""
         self._flushed = self.now()
-        if not self._buffer:
-            return True
+        saved = True
+        for buffer in (self._buffer, self._index_buffer):
+            if buffer and not self._save(buffer):
+                saved = False
+        self._failing = not saved
+        return saved
+
+    def _save(self, buffer: list[dict[str, Any]]) -> bool:
+        """Save either sink independently: a failed index save never repeats saved stocks."""
         try:
-            self.sink(self._buffer)
+            self.sink(list(buffer))
         except Exception:  # database trouble must not drop the socket: retry at the next batch
             logger.warning(
                 "Saving %s tick(s) failed; keeping them for the next batch",
-                len(self._buffer),
+                len(buffer),
                 exc_info=True,
             )
-            self._failing = True
-            dropped = len(self._buffer) - MAX_BUFFER
+            dropped = len(buffer) - MAX_BUFFER
             if dropped > 0:
-                self._buffer = self._buffer[dropped:]
+                del buffer[:dropped]
                 logger.warning(
                     "Dropped the %s oldest unsaved tick(s) (over %s)", dropped, MAX_BUFFER
                 )
             return False
-        self._buffer = []
-        self._failing = False
+        buffer.clear()
         return True
 
     def _flush_if_due(self) -> None:
         # While saves fail, retry once per batch interval, not on every 500 rows.
         due = (self.now() - self._flushed).total_seconds() >= BATCH_SECONDS
-        if due or (len(self._buffer) >= BATCH_SIZE and not self._failing):
+        if due or (len(self._buffer) + len(self._index_buffer) >= BATCH_SIZE and not self._failing):
             self._flush()
 
     def _take(self, message: bytes) -> None:
@@ -125,10 +131,14 @@ class Recorder:
             # Every tick field becomes a column (D77); each row has all keys for the bulk insert.
             row = asdict(tick)
             del row["token"]
-            row |= {"exchange": self.exchange, "symbol": symbol, "received_at": self._stamp(symbol)}
-            self._buffer.append(row)
-            self._last_tick = self.now()
-            self._received += 1
+            row |= {"symbol": symbol, "received_at": self._stamp(symbol)}
+            if isinstance(tick, ParsedIndexTick):
+                self._index_buffer.append(row)
+            else:
+                row["exchange"] = self.exchange
+                self._buffer.append(row)
+                self._last_tick = self.now()
+                self._received += 1
         self._flush_if_due()
 
     async def _session(self) -> None:
@@ -185,7 +195,10 @@ class Recorder:
                 await self.sleep(backoff)
                 backoff = min(backoff * 2, MAX_BACKOFF_SECONDS)
         if not self._flush():
-            logger.error("Lost %s unsaved tick(s) at the end of the recording", len(self._buffer))
+            logger.error(
+                "Lost %s unsaved tick(s) at the end of the recording",
+                len(self._buffer) + len(self._index_buffer),
+            )
 
 
 def kite_url(api_key: str, access_token: str) -> str:

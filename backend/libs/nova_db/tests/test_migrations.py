@@ -4,6 +4,7 @@ from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "index_ticks",
     "tick_checks",
     "tick_days",
     "tick_sessions",
@@ -51,14 +52,14 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
             text("SELECT hypertable_name FROM timescaledb_information.hypertables")
         ).scalars()
 
-        assert sorted(names) == ["candles", "ticks"]
+        assert sorted(names) == ["candles", "index_ticks", "ticks"]
 
 
-def test_head_revision_is_0029(engine: Engine) -> None:
+def test_head_revision_is_0030(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0029"
+    assert head == "0030"
 
 
 def test_trade_exit_reason_round_trip(engine: Engine, database_url: str) -> None:
@@ -424,3 +425,42 @@ def test_backtest_data_source_round_trip(engine: Engine, database_url: str) -> N
     }
     upgrade(database_url)
     assert diff(database_url) == []
+
+
+def test_index_ticks_migration_round_trip(engine: Engine, database_url: str) -> None:
+    downgrade(database_url, "0029")
+    try:
+        assert "index_ticks" not in inspect(engine).get_table_names()
+        assert "indices" not in {
+            c["name"] for c in inspect(engine).get_columns("recorder_settings")
+        }
+        upgrade(database_url)
+        with engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text("SELECT indices FROM recorder_settings WHERE id = 1")
+                ).scalar_one()
+                == []
+            )
+            assert (
+                connection.execute(
+                    text(
+                        "SELECT compression_enabled FROM timescaledb_information.hypertables"
+                        " WHERE hypertable_name = 'index_ticks'"
+                    )
+                ).scalar_one()
+                is True
+            )
+            assert (
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM timescaledb_information.jobs"
+                        " WHERE hypertable_name = 'index_ticks'"
+                        " AND proc_name = 'policy_compression'"
+                    )
+                ).scalar_one()
+                == 1
+            )
+        assert diff(database_url) == []
+    finally:
+        upgrade(database_url)
