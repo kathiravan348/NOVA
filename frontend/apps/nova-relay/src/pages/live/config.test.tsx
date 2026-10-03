@@ -25,12 +25,13 @@ describe("Live config", () => {
     const dialog = await screen.findByRole("dialog", { name: "Indices to record" });
     const choices = await within(dialog).findAllByRole("checkbox");
     fireEvent.click(choices[0]!);
+    expect(within(dialog).getByText(/every stock synced with Kite/)).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole("button", { name: "Save indices" }));
     expect(await screen.findByText("Indices saved (demo)")).toBeInTheDocument();
     fireEvent.click(toggle);
     expect(await screen.findByText("Recording switched on (demo)")).toBeInTheDocument();
     expect(await screen.findByText("Waiting for market hours")).toBeInTheDocument();
-    expect(screen.getByText("All stocks synced with Kite + 1 indices")).toBeInTheDocument();
+    expect(screen.getByText("All stocks synced with Kite + 1 index")).toBeInTheDocument();
   });
 
   it.each([

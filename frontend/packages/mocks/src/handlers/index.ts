@@ -1,3 +1,4 @@
+import { researchProfileHandlers } from "./researchProfiles";
 import { downloadHandlers } from "./downloads";
 import { approvalHandlers } from "./approvals";
 import { marketDataHandlers } from "./marketData";
@@ -7,6 +8,7 @@ import { liveHandlers } from "./live";
 
 // Download handlers first: `/data-jobs/settings` must win over `/data-jobs/:id`.
 export const handlers = [
+  ...researchProfileHandlers,
   ...downloadHandlers,
   ...approvalHandlers,
   ...orbitHandlers,
@@ -23,4 +25,5 @@ export * from "./orbit";
 export * from "./relay";
 export * from "./scenarios";
 export * from "./live";
+export * from "./researchProfiles";
 export { toListItem } from "./backtestList";

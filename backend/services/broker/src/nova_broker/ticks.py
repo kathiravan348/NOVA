@@ -77,9 +77,9 @@ def _parse(packet: bytes) -> ParsedTick | ParsedIndexTick | None:
     if len(packet) in (INDEX_QUOTE, INDEX_FULL):
         token, ltp, high, low, open_, close, _change = _ints(packet, 7)
         stamp = _stamp(_ints(packet, 8)[7]) if len(packet) == INDEX_FULL else None
-        return ParsedIndexTick(
-            token, ltp, high or None, low or None, open_ or None, close or None, stamp
-        )
+        # A non-positive day price means "not known yet"; `index_ticks` only accepts positive ones.
+        high_, low_, open_p, close_p = (v if v > 0 else None for v in (high, low, open_, close))
+        return ParsedIndexTick(token, ltp, high_, low_, open_p, close_p, stamp)
     if len(packet) == LTP:
         token, ltp = _ints(packet, 2)
         return ParsedTick(token, ltp, 0, 0, None, None)

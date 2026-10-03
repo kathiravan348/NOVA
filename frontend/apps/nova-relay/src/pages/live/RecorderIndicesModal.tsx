@@ -36,7 +36,10 @@ function IndicesForm({ settings, onDone }: { settings: RecorderSettings; onDone:
       await update.mutateAsync({ enabled: settings.enabled, symbols: settings.symbols, indices });
       toast.show({
         title: `Indices saved${getDataMode() === "mock" ? " (demo)" : ""}`,
-        description: `${indices.length} indices`,
+        description:
+          indices.length === 0
+            ? "No indices"
+            : `${indices.length} ${indices.length === 1 ? "index" : "indices"}`,
         tone: "success",
       });
       onDone();
@@ -84,7 +87,10 @@ function IndicesForm({ settings, onDone }: { settings: RecorderSettings; onDone:
         </div>
       )}
       <p className="text-body-sm text-text-primary">
-        Stocks + indices: {format(stocks)} + {format(indices.length)} = {format(total)} of 3,000
+        {stocks === 0
+          ? // No chosen stocks means every synced stock (D54): Kite's limit is checked on save.
+            "Stocks: every stock synced with Kite. Choose stocks first to leave room for indices."
+          : `Stocks + indices: ${format(stocks)} + ${format(indices.length)} = ${format(total)} of 3,000`}
       </p>
       {(tooMany || failed) && (
         <p role="alert" className="text-body-sm text-loss">

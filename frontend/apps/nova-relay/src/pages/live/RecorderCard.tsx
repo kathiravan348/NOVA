@@ -40,7 +40,8 @@ export function RecorderCard() {
   const stocks = settings.symbols.length
     ? `${settings.symbols.length.toLocaleString("en-IN")} chosen ${settings.symbols.length === 1 ? "stock" : "stocks"}`
     : "All stocks synced with Kite";
-  const indices = settings.indices.length ? `${settings.indices.length} indices` : "no indices";
+  const count = settings.indices.length;
+  const indices = count ? `${count} ${count === 1 ? "index" : "indices"}` : "no indices";
 
   return (
     <Card title="Live recording">

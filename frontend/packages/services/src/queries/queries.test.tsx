@@ -5,6 +5,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
+  resetResearchProfiles,
+  mockResearchProfiles,
   errorHandlers,
   handlers,
   mockAuditEntries,
@@ -20,6 +22,16 @@ import {
   mockStrategyStats,
   mockUser,
 } from "@nova/mocks";
+import { DEFAULT_RESEARCH_SETTINGS } from "@nova/contracts";
+import {
+  useResearchProfiles,
+  useResearchProfile,
+  useCreateResearchProfile,
+  useAddResearchProfileVersion,
+  useUpdateResearchProfileVersion,
+  useFreezeResearchProfileVersion,
+} from "./research";
+import { createResearchProfile, updateResearchProfileVersion } from "../api/research";
 import { ApiRequestError } from "../http";
 import { queryKeys } from "./keys";
 import { applyJobUpdate } from "../realtime";
@@ -68,6 +80,7 @@ server.events.on("request:start", ({ request }) => {
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
+  resetResearchProfiles();
   requests = [];
 });
 afterAll(() => server.close());
@@ -444,5 +457,94 @@ describe("shouldRetry and keys", () => {
       "list",
       { strategyId: "s1" },
     ]);
+  });
+});
+
+describe("research profile hooks", () => {
+  it("reads list and detail and disables an unselected detail", async () => {
+    const { result } = renderHook(
+      () => ({
+        list: useResearchProfiles(),
+        detail: useResearchProfile("research_001"),
+        empty: useResearchProfile(null),
+      }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.detail.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.list.isSuccess).toBe(true));
+    expect(result.current.list.data).toEqual(mockResearchProfiles);
+    expect(result.current.detail.data).toEqual(mockResearchProfiles[0]);
+    expect(result.current.empty.fetchStatus).toBe("idle");
+    expect(requests).not.toContain("/api/v1/research-profiles/");
+  });
+
+  it("creates profiles and invalidates the mounted list", async () => {
+    const { result } = renderHook(
+      () => ({ list: useResearchProfiles(), create: useCreateResearchProfile() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.list.isSuccess).toBe(true));
+    const created = await result.current.create.mutateAsync({
+      name: "New plan",
+      description: "",
+      settings: DEFAULT_RESEARCH_SETTINGS,
+    });
+    await waitFor(() => expect(result.current.list.data?.[0]?.id).toBe(created.id));
+    expect(result.current.list.data).toHaveLength(2);
+  });
+
+  it("refreshes list/detail after add, update and freeze and surfaces frozen errors", async () => {
+    const { result } = renderHook(
+      () => ({
+        list: useResearchProfiles(),
+        detail: useResearchProfile("research_001"),
+        add: useAddResearchProfileVersion("research_001"),
+        update: useUpdateResearchProfileVersion("research_001", 3),
+        freeze: useFreezeResearchProfileVersion("research_001", 3),
+      }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.detail.isSuccess).toBe(true));
+    const added = await result.current.add.mutateAsync({
+      note: "Third draft",
+      settings: DEFAULT_RESEARCH_SETTINGS,
+    });
+    expect(added.version).toBe(3);
+    await waitFor(() => expect(result.current.detail.data?.versions[0]?.version).toBe(3));
+    await waitFor(() => expect(result.current.list.data?.[0]?.versions[0]?.version).toBe(3));
+    const settings = structuredClone(DEFAULT_RESEARCH_SETTINGS);
+    settings.execution.maxSpreadBps = 5;
+    await result.current.update.mutateAsync({ settings });
+    await waitFor(() =>
+      expect(result.current.detail.data?.versions[0]?.settings.execution.maxSpreadBps).toBe(5),
+    );
+    await waitFor(() =>
+      expect(result.current.list.data?.[0]?.versions[0]?.settings.execution.maxSpreadBps).toBe(5),
+    );
+    await result.current.freeze.mutateAsync();
+    await waitFor(() => expect(result.current.detail.data?.versions[0]?.frozen).toBe(true));
+    await waitFor(() => expect(result.current.list.data?.[0]?.versions[0]?.frozen).toBe(true));
+    await expect(result.current.update.mutateAsync({ settings })).rejects.toMatchObject({
+      status: 400,
+      message: "Frozen versions cannot change",
+    });
+    await expect(result.current.freeze.mutateAsync()).rejects.toMatchObject({
+      status: 400,
+      message: "Version is already frozen",
+    });
+  });
+
+  it("returns unknown-profile errors and validates write bodies before sending", async () => {
+    const { result } = renderHook(() => useResearchProfile("missing"), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toMatchObject({ status: 404 });
+    const count = requests.length;
+    expect(() =>
+      createResearchProfile({ name: "", description: "", settings: DEFAULT_RESEARCH_SETTINGS }),
+    ).toThrow();
+    expect(() =>
+      updateResearchProfileVersion("research_001", 0, { settings: DEFAULT_RESEARCH_SETTINGS }),
+    ).toThrow();
+    expect(requests).toHaveLength(count);
   });
 });

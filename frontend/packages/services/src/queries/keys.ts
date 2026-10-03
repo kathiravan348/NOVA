@@ -1,4 +1,9 @@
 export const queryKeys = {
+  research: {
+    all: ["research"] as const,
+    list: ["research", "list"] as const,
+    detail: (id: string) => ["research", "detail", id] as const,
+  },
   live: {
     all: ["live"] as const,
     snapshot: (symbols: string[]) => ["live", "snapshot", symbols] as const,

@@ -1,6 +1,6 @@
 # NOVA-180 — Relay Live Config: indices to record; Pick top leaves room for them (D84)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-180 · **Depends on:** NOVA-179 (merge after it is deployed)
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-180 · **Depends on:** NOVA-179 (merge after it is deployed)
 
 ## Goal
 On Relay **Live → Config** the Owner chooses which indices the recorder records next to the stocks, and

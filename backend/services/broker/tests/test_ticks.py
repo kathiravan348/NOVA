@@ -136,3 +136,14 @@ def test_index_quote_and_full_keep_prices_and_exchange_time() -> None:
     ) == values[1:6]
     assert quote_tick.exchange_ts is None
     assert full_tick.exchange_ts == datetime.fromtimestamp(1_790_000_000, UTC)
+
+
+def test_index_zero_price_is_skipped_and_unknown_day_prices_are_none() -> None:
+    from nova_broker.ticks import ParsedIndexTick
+
+    skipped = struct.pack(">7i", 1, 0, 10, 10, 10, 10, 0)
+    early = struct.pack(">7i", 2, 2_500_000, 0, -1, 0, 2_480_000, 0)
+    (tick,) = parse_ticks(frame(skipped, early))
+    assert isinstance(tick, ParsedIndexTick) and tick.token == 2
+    assert (tick.high_paise, tick.low_paise, tick.open_paise) == (None, None, None)
+    assert tick.close_paise == 2_480_000
