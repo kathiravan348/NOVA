@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from nova_db import create_db_engine, create_session_factory
 
 from nova_atlas.broker_client import BrokerData
+from nova_atlas.live_check import DailyCheck
 from nova_atlas.live_summary import summarize_next
 from nova_atlas.settings import get_atlas_settings
 from nova_atlas.sync_job import maybe_queue_daily_sync
@@ -27,18 +28,21 @@ def main(argv: list[str] | None = None) -> int:
 
     settings = get_atlas_settings()
     engine = create_db_engine(settings.database_url.get_secret_value())
+    broker = BrokerData(settings.broker_url, settings.internal_token.get_secret_value())
+    daily_check = DailyCheck(broker)
     stop = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     signal.signal(signal.SIGINT, lambda *_: stop.set())
     try:
         run_worker(
             create_session_factory(engine),
-            BrokerData(settings.broker_url, settings.internal_token.get_secret_value()),
+            broker,
             stop,
             settings.worker_poll_seconds,
             archive_dir=settings.archive_dir,
             schedule=maybe_queue_daily_sync,
             summarize=lambda db: summarize_next(db, settings.archive_dir, datetime.now(UTC)),
+            check=lambda db: daily_check.check_next(db, datetime.now(UTC)),
         )
     finally:
         engine.dispose()

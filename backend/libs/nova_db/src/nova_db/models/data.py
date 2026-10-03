@@ -29,7 +29,7 @@ from nova_db.enums import (
     TIMEFRAMES,
     sql_in,
 )
-from nova_db.models.base import Base, Json, check_in, created_at_column
+from nova_db.models.base import Base, Json, JsonList, check_in, created_at_column
 
 
 class DataJob(Base):
@@ -312,6 +312,39 @@ class TickDay(Base):
     ticks: Mapped[int] = mapped_column(BigInteger)
     size_bytes: Mapped[int] = mapped_column(BigInteger)
     seconds_with_tick: Mapped[int] = mapped_column(Integer)
+
+
+class TickCheck(Base):
+    """One day's check of recorded ticks against Kite's 1-minute candles (D81 (4))."""
+
+    __tablename__ = "tick_checks"
+    __table_args__ = (
+        CheckConstraint(
+            "stocks_checked >= 0 AND stocks_skipped >= 0 AND minutes >= 0 AND close_matches >= 0"
+            " AND range_ok >= 0 AND volume_minutes >= 0 AND volume_matches >= 0",
+            name="counts",
+        ),
+        CheckConstraint(
+            "close_matches <= minutes AND range_ok <= minutes AND volume_minutes <= minutes"
+            " AND volume_matches <= volume_minutes",
+            name="matches",
+        ),
+    )
+
+    day: Mapped[date] = mapped_column(primary_key=True)
+    stocks_checked: Mapped[int] = mapped_column(Integer)
+    stocks_skipped: Mapped[int] = mapped_column(Integer)
+    minutes: Mapped[int] = mapped_column(Integer)
+    close_matches: Mapped[int] = mapped_column(Integer)
+    range_ok: Mapped[int] = mapped_column(Integer)
+    # Minutes whose volume could be compared (the previous minute was recorded too).
+    volume_minutes: Mapped[int] = mapped_column(Integer)
+    volume_matches: Mapped[int] = mapped_column(Integer)
+    # Median received_at − exchange_ts of the sample: a wrong PC clock shows here.
+    clock_offset_ms: Mapped[int | None] = mapped_column(BigInteger)
+    # Per stock: symbol, minutes, closeMatches, rangeOk, volumeMinutes, volumeMatches.
+    stocks: Mapped[JsonList]
+    checked_at: Mapped[datetime]
 
 
 class UniverseEntry(Base):

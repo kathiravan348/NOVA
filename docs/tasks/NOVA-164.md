@@ -1,6 +1,6 @@
 # NOVA-164 — Daily Kite check of recorded ticks + `GET /live/checks`
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-164 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-164 · **Depends on:** —
 
 ## Goal
 After each recorded day the Atlas worker compares 50 stocks' ticks with Kite's 1-minute candles, stores one
@@ -46,7 +46,7 @@ Modify:
 - [ ] Seeded ticks + fake broker: matching minutes count as matches; a wrong close, a high above Kite's and a wrong
       volume each count once; a stock with no candles is skipped; a 16 s receive delay gives the clock warning.
 - [ ] `check_next`: today not before 16:00 IST; a checked day is not checked again; a broker error waits 15 min.
-- [ ] `GET /live/checks` returns percents and warnings; 422 for `limit=0`; agent denied.
+- [ ] `GET /live/checks` returns percents and warnings; 400 for `limit=0` (the app maps validation errors to 400); agent denied.
 - [ ] Migration up/down test; Definition of done in `AGENTS.md` §9 (`docker compose run --rm backend-check`).
 - [ ] Deploy (D76) after 15:45 IST or at a weekend: `docker compose run --rm --no-deps migrate`, then
       `docker compose up -d --build --no-deps atlas atlas-worker`.
@@ -57,5 +57,19 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by Claude, 3 Oct 2026. `nova_atlas/live_check.py`: `sample` (10 busiest + 40 seeded-random, ≥ 200 ticks,
+  no iNAVs), `compare`, `check_day` (upsert), `next_day`, `DailyCheck.check_next` (15 min wait after a
+  `BrokerDataError`), `warnings`, `contract`. Worker `check=` runs after `summarize`; `cli.py` wires it.
+- Added column `volume_minutes` (not in the task text): volume can only be compared when the previous minute was
+  recorded, so the volume percent uses its own denominator instead of counting those minutes as misses.
+- Ticks are bucketed by `COALESCE(exchange_ts, received_at)` per IST minute; Kite rows parsed like downloads.
+- `GET /live/checks?limit=1–60` (bad limit → 400, the app's validation status). Agents: `live` area is blocked in
+  `agent_rules.py`, so no new rule was needed.
+- Mock `frontend/packages/mocks/data/liveChecks.json` created here (needed by the parity test); NOVA-165 wires it
+  into services and handlers.
+- Checks: backend-check 1,354 passed; contracts + mocks tests, lint, typecheck, format pass.
+- Guides: API, DATABASE (migration 0027), CONTRACTS.
 
 ## Review
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task plus `volume_minutes`. Deployed
+Saturday 3 Oct 2026: `migrate`, then `atlas atlas-worker` with `--no-deps`. Verdict: done.

@@ -4,6 +4,7 @@ from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "tick_checks",
     "tick_days",
     "tick_sessions",
     "approval_requests",
@@ -53,11 +54,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "ticks"]
 
 
-def test_head_revision_is_0026(engine: Engine) -> None:
+def test_head_revision_is_0027(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0026"
+    assert head == "0027"
 
 
 def test_benchmark_foreign_key_round_trip(engine: Engine, database_url: str) -> None:
@@ -377,4 +378,12 @@ def test_agent_audits_are_removed_on_downgrade(engine: Engine, database_url: str
             is None
         )
     upgrade(database_url)
+    assert diff(database_url) == []
+
+
+def test_tick_checks_table_round_trip(engine: Engine, database_url: str) -> None:
+    downgrade(database_url, "0026")
+    assert "tick_checks" not in inspect(engine).get_table_names()
+    upgrade(database_url)
+    assert "tick_checks" in inspect(engine).get_table_names()
     assert diff(database_url) == []

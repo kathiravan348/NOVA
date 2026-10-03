@@ -1,7 +1,13 @@
 import json
 
 import pytest
-from nova_contracts.live import LiveDaySummary, LiveSnapshotItem, LiveSubscribe, LiveTick
+from nova_contracts.live import (
+    LiveDaySummary,
+    LiveSnapshotItem,
+    LiveSubscribe,
+    LiveTick,
+    TickCheck,
+)
 from nova_contracts.realtime import LiveTickMessage
 from nova_testing.parity import Parity
 from pydantic import ValidationError
@@ -13,12 +19,13 @@ from pydantic import ValidationError
         ("liveTicks", LiveTick, "LiveTick"),
         ("liveSnapshot", LiveSnapshotItem, "LiveSnapshotItem"),
         ("liveDays", LiveDaySummary, "LiveDaySummary"),
+        ("liveChecks", TickCheck, "TickCheck"),
     ],
 )
 def test_mocks_round_trip(
     parity: Parity,
     name: str,
-    model: type[LiveTick | LiveSnapshotItem | LiveDaySummary],
+    model: type[LiveTick | LiveSnapshotItem | LiveDaySummary | TickCheck],
     schema: str,
 ) -> None:
     for raw in parity.mock(name):

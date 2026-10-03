@@ -97,6 +97,8 @@ from nova_contracts.live import (
     LiveStockHistory,
     LiveSubscribe,
     LiveTick,
+    TickCheck,
+    TickCheckStock,
 )
 from nova_contracts.market_data import (
     Candle,
@@ -159,6 +161,8 @@ __all__ = [
     "LiveDaySummary",
     "LiveSnapshotItem",
     "LiveStockHistory",
+    "TickCheck",
+    "TickCheckStock",
     "LiveSubscribe",
     "LiveTick",
     "LiveTickMessage",
