@@ -488,6 +488,7 @@ dependencies = [
     { name = "nova-db" },
     { name = "nova-ledger" },
     { name = "numpy" },
+    { name = "pyarrow" },
     { name = "uvicorn" },
 ]
 
@@ -499,6 +500,7 @@ requires-dist = [
     { name = "nova-db", editable = "libs/nova_db" },
     { name = "nova-ledger", editable = "libs/nova_ledger" },
     { name = "numpy", specifier = "==2.5.3" },
+    { name = "pyarrow", specifier = "==25.0.1" },
     { name = "uvicorn", specifier = "==0.53.0" },
 ]
 

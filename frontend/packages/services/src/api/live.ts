@@ -4,9 +4,11 @@ import {
   LiveStockHistorySchema,
   LiveSymbolSchema,
   LiveSymbolsSchema,
+  TickCheckSchema,
   type LiveDaySummary,
   type LiveSnapshotItem,
   type LiveStockHistory,
+  type TickCheck,
 } from "@nova/contracts";
 import { apiGet, type RequestOptions } from "../http";
 
@@ -33,4 +35,10 @@ export function getLiveStocks(
   if (!selected.length) return Promise.resolve([]);
   const query = new URLSearchParams({ symbols: selected.join(",") });
   return apiGet(`/live/stocks?${query}`, LiveStockHistorySchema.array(), init);
+}
+
+/** The newest daily Kite checks of recorded ticks (D81), newest first. */
+export function getLiveChecks(limit = 10, init?: RequestOptions): Promise<TickCheck[]> {
+  const query = new URLSearchParams({ limit: String(limit) });
+  return apiGet(`/live/checks?${query}`, TickCheckSchema.array(), init);
 }

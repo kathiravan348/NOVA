@@ -16,6 +16,7 @@ import {
   BacktestDeleteResultSchema,
   BacktestResultSchema,
   BacktestRunCreateSchema,
+  BacktestRunListItemSchema,
   BacktestRunSchema,
   BacktestVersionCreateSchema,
   BacktestVersionSchema,
@@ -62,6 +63,7 @@ import {
   LiveDaySummarySchema,
   LiveStockHistorySchema,
   LiveSubscribeSchema,
+  TickCheckSchema,
 } from "./live";
 import { pageSchema } from "./common";
 
@@ -79,6 +81,7 @@ const contracts: Record<string, z.ZodType> = {
   AuditPage: pageSchema(AuditEntrySchema),
   BacktestResult: BacktestResultSchema,
   BacktestRun: BacktestRunSchema,
+  BacktestRunListItem: BacktestRunListItemSchema,
   BacktestRunCreate: BacktestRunCreateSchema,
   BrokerAccount: BrokerAccountSchema,
   BrokerAccountCreate: BrokerAccountCreateSchema,
@@ -127,6 +130,7 @@ const contracts: Record<string, z.ZodType> = {
   LiveDaySummary: LiveDaySummarySchema,
   LiveStockHistory: LiveStockHistorySchema,
   LiveSubscribe: LiveSubscribeSchema,
+  TickCheck: TickCheckSchema,
 };
 
 describe("JSON Schema export", () => {

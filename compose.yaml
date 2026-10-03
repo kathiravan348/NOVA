@@ -106,6 +106,18 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    # D82: recorded runs read archived ticks (written by atlas-worker); read-only here.
+    # A service `environment` replaces the shared one, so the common variables are repeated.
+    environment:
+      NOVA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:?set in .env}
+      NOVA_REDIS_URL: redis://redis:6379/0
+      NOVA_LOG_LEVEL: ${NOVA_LOG_LEVEL:-info}
+      NOVA_API_DOCS: ${NOVA_API_DOCS:-false}
+      NOVA_INTERNAL_TOKEN: ${NOVA_INTERNAL_TOKEN:?set in .env}
+      NOVA_COOKIE_SECURE: ${NOVA_COOKIE_SECURE:-false}
+      NOVA_ARCHIVE_DIR: /archive
+    volumes:
+      - tick-archive:/archive:ro
     stop_grace_period: 30s
     # D59: room for the bar limits (1.5 M visual, 750 k Python); restarts itself after a crash.
     mem_limit: 1536m

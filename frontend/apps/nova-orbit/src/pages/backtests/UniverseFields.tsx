@@ -1,5 +1,5 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { MarketIndex, Timeframe } from "@nova/contracts";
+import type { MarketIndex, StrategyTimeframe } from "@nova/contracts";
 import { Card, Select } from "@nova/ui-core";
 import { useInstruments, useMarketIndices } from "@nova/services";
 import { InstrumentTable } from "../../components/InstrumentTable";
@@ -10,10 +10,13 @@ import type { BacktestForm } from "./backtestForm";
 export function UniverseFields({
   form,
   timeframe,
+  checkCoverage = true,
 }: {
   form: UseFormReturn<BacktestForm>;
   /** The chosen strategy version's candle size; coverage is checked for it. */
-  timeframe?: Timeframe;
+  timeframe?: StrategyTimeframe;
+  /** False for recorded data (D82): downloaded candles do not matter there. */
+  checkCoverage?: boolean;
 }) {
   const { register, control, watch, formState } = form;
   const instruments = useInstruments();
@@ -70,7 +73,7 @@ export function UniverseFields({
                   }
                   selected={field.value}
                   onSelectedChange={field.onChange}
-                  period={from && to ? { from, to, timeframe } : undefined}
+                  period={checkCoverage && from && to ? { from, to, timeframe } : undefined}
                   pageSize={8}
                 />
               )}

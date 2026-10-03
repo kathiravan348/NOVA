@@ -1,4 +1,5 @@
 import { useFormContext } from "react-hook-form";
+import { SECONDS_TIMEFRAMES } from "@nova/contracts";
 import { Card, Input, Select, Switch, type SelectOption } from "@nova/ui-core";
 import { segmentLabel, timeframeLabel } from "../../lib/format";
 import type { EditorForm } from "./editorForm";
@@ -14,6 +15,8 @@ export function BasicsFields() {
   // Rotation runs on daily prices, delivery only (D62 (4)): shown, not editable; no sizing.
   const rotation = watch("mode") === "rotation";
   const locked = "Rotation runs on daily prices, delivery only";
+  // D82: seconds candles are built from recorded ticks only.
+  const seconds = (SECONDS_TIMEFRAMES as readonly string[]).includes(watch("timeframe"));
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -59,6 +62,7 @@ export function BasicsFields() {
               <Select
                 label="Timeframe"
                 options={toOptions(timeframeLabel)}
+                description={seconds ? "Seconds candles run on recorded data only" : undefined}
                 {...register("timeframe")}
               />
             )}

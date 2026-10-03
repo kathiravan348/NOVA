@@ -4,6 +4,7 @@ export const queryKeys = {
     snapshot: (symbols: string[]) => ["live", "snapshot", symbols] as const,
     days: (symbol: string) => ["live", "days", symbol] as const,
     stocks: (symbols: string[]) => ["live", "stocks", symbols] as const,
+    checks: (limit: number) => ["live", "checks", limit] as const,
   },
   approvals: {
     all: ["approvals"] as const,
@@ -21,7 +22,7 @@ export const queryKeys = {
   backtests: {
     all: ["backtests"] as const,
     lists: ["backtests", "list"] as const,
-    list: (filter: { strategyId?: string }) => ["backtests", "list", filter] as const,
+    list: (filter: object) => ["backtests", "list", filter] as const,
     detail: (id: string) => ["backtests", id] as const,
     result: (id: string) => ["backtests", id, "result"] as const,
     trades: (id: string) => ["backtests", id, "trades"] as const,

@@ -1,7 +1,8 @@
 """Live tick recorder (D11, D49): Kite WebSocket → `ticks` in batches, reconnecting with backoff.
 
 Interruptions (D79): a failed save keeps the ticks for the next batch instead of dropping the
-connection, and a socket that sends no stock tick for `STALL_SECONDS` is reconnected.
+connection, and a socket that sends no stock tick for `stall_limit(now)` seconds is reconnected:
+10 s inside the 09:15–15:30 IST session, 60 s outside it (D81).
 """
 
 import asyncio
@@ -10,8 +11,9 @@ import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import AbstractAsyncContextManager
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from typing import Any, Protocol
+from zoneinfo import ZoneInfo
 
 from nova_broker.ticks import parse_ticks
 
@@ -21,13 +23,25 @@ KITE_WS = "wss://ws.kite.trade"
 BATCH_SIZE = 500
 BATCH_SECONDS = 1.0
 MAX_BACKOFF_SECONDS = 30.0
-READ_TIMEOUT_SECONDS = 5.0
-STALL_SECONDS = 60.0
+READ_TIMEOUT_SECONDS = 2.0
+SESSION_STALL_SECONDS = 10.0
+IDLE_STALL_SECONDS = 60.0
+# Own copies: `recorder_loop` imports this module, so it cannot be imported here.
+IST = ZoneInfo("Asia/Kolkata")
+SESSION_OPEN = time(9, 15)
+SESSION_CLOSE = time(15, 30)
 MAX_BUFFER = 50_000
 
 
+def stall_limit(now: datetime) -> float:
+    """Seconds without a stock tick before a reconnect: 10 in the session, else 60 (D81)."""
+    local = now.astimezone(IST)
+    in_session = local.weekday() < 5 and SESSION_OPEN <= local.time() < SESSION_CLOSE
+    return SESSION_STALL_SECONDS if in_session else IDLE_STALL_SECONDS
+
+
 class Stalled(Exception):
-    """The socket is open but no stock tick arrived for `STALL_SECONDS`."""
+    """The socket is open but no stock tick arrived for `stall_limit(now)` seconds."""
 
 
 class Socket(Protocol):
@@ -143,8 +157,10 @@ class Recorder:
                         self._flush_if_due()
                     if self.should_stop():
                         return
-                    if (self.now() - self._last_tick).total_seconds() >= STALL_SECONDS:
-                        raise Stalled(f"no ticks for {STALL_SECONDS:.0f} s")
+                    now = self.now()
+                    limit = stall_limit(now)
+                    if (now - self._last_tick).total_seconds() >= limit:
+                        raise Stalled(f"no ticks for {limit:.0f} s")
             finally:
                 pending.cancel()
 

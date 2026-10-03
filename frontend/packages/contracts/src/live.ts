@@ -81,3 +81,32 @@ export const LiveStockHistorySchema = z
     "first day is after last day",
   );
 export type LiveStockHistory = z.infer<typeof LiveStockHistorySchema>;
+
+const CheckPercentSchema = z.number().min(0).max(100).nullable();
+
+/** One checked stock of a daily Kite check (D81 (4)); percents are null with no minutes. */
+export const TickCheckStockSchema = z.strictObject({
+  symbol: LiveSymbolSchema,
+  minutes: z.number().int().nonnegative(),
+  closeMatchPercent: CheckPercentSchema,
+  rangeOkPercent: CheckPercentSchema,
+  volumeMatchPercent: CheckPercentSchema,
+});
+export type TickCheckStock = z.infer<typeof TickCheckStockSchema>;
+
+/** Recorded ticks compared with Kite's 1-minute candles for one day (D81 (4)). */
+export const TickCheckSchema = z.strictObject({
+  day: IsoDateSchema,
+  stocksChecked: z.number().int().nonnegative(),
+  stocksSkipped: z.number().int().nonnegative(),
+  minutes: z.number().int().nonnegative(),
+  closeMatchPercent: CheckPercentSchema,
+  rangeOkPercent: CheckPercentSchema,
+  volumeMatchPercent: CheckPercentSchema,
+  /** Median receive delay (received − exchange time) in seconds; null without exchange times. */
+  clockOffsetSeconds: z.number().nullable(),
+  warnings: z.array(z.string()),
+  checkedAt: UtcDateTimeSchema,
+  stocks: z.array(TickCheckStockSchema),
+});
+export type TickCheck = z.infer<typeof TickCheckSchema>;

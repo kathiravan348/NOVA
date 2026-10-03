@@ -1,6 +1,7 @@
 import {
   BacktestDeleteResultSchema,
   BacktestResultSchema,
+  BacktestRunListItemSchema,
   BacktestRunSchema,
   StrategySchema,
   BacktestVersionSchema,
@@ -17,7 +18,13 @@ import {
   type StrategyUpdate,
   type StrategyVersionCreate,
   type BacktestResult,
+  type BacktestListSort,
   type BacktestRun,
+  type BacktestRunListItem,
+  type BacktestRunStatus,
+  type DataSource,
+  type Segment,
+  type StrategyTimeframe,
   type Strategy,
   type StrategyLibrary,
   type StrategyStats,
@@ -38,9 +45,12 @@ export function listStrategies(init?: RequestOptions): Promise<Strategy[]> {
   return apiGet("/strategies", StrategySchema.array(), init);
 }
 
-/** Backtest summary per strategy (D26). */
-export function listStrategyStats(init?: RequestOptions): Promise<StrategyStats[]> {
-  return apiGet("/strategies/stats", StrategyStatsSchema.array(), init);
+/** Per-strategy run counts and bests, from every run or one data source's runs (D82 (10)). */
+export function listStrategyStats(
+  init?: RequestOptions,
+  dataSource?: DataSource,
+): Promise<StrategyStats[]> {
+  return apiGet(withQuery("/strategies/stats", { dataSource }), StrategyStatsSchema.array(), init);
 }
 
 /** The 60 library strategies in their families (D62 (7)). */
@@ -57,16 +67,34 @@ export function getStrategy(strategyId: string, init?: RequestOptions): Promise<
   return apiGet(`/strategies/${id(strategyId)}`, StrategySchema, init);
 }
 
+/** `GET /backtests` filters and sorting, all optional (D32, D82 (6)). */
 export interface BacktestFilter {
   strategyId?: string;
+  dataSource?: DataSource;
+  status?: BacktestRunStatus;
+  q?: string;
+  segment?: Segment;
+  timeframe?: StrategyTimeframe;
+  minReturn?: number;
+  minCagr?: number;
+  /** Positive: drawdown not worse than −N %. */
+  maxDrawdown?: number;
+  minWinRate?: number;
+  minTrades?: number;
+  minProfitFactor?: number;
+  profitable?: boolean;
+  sort?: BacktestListSort;
+  order?: "asc" | "desc";
 }
 
-/** One page of backtest runs, optionally for one strategy (D32). */
+/** One page of backtest runs with their results (D32, D82). */
 export function listBacktests(
   query: BacktestFilter & PageQuery = {},
   init?: RequestOptions,
-): Promise<Page<BacktestRun>> {
-  return apiGet(withQuery("/backtests", { ...query }), pageSchema(BacktestRunSchema), init);
+): Promise<Page<BacktestRunListItem>> {
+  const { profitable, ...rest } = query;
+  const params = { ...rest, profitable: profitable === undefined ? undefined : String(profitable) };
+  return apiGet(withQuery("/backtests", params), pageSchema(BacktestRunListItemSchema), init);
 }
 
 export function getBacktest(runId: string, init?: RequestOptions): Promise<BacktestRun> {

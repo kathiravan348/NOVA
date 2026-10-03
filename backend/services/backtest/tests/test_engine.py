@@ -358,6 +358,22 @@ def test_runs_the_engine_cannot_do_fail_plainly(
     assert run.status == "failed" and run.error is not None and run.error.startswith(message)
 
 
+def test_a_recorded_run_reads_ticks_not_candles(
+    seeded: Engine, factory: sessionmaker[Session]
+) -> None:
+    """The seeded Kite candles are never mixed in: with no recorded day the run fails (D82)."""
+    _queue(seeded)
+    with Session(seeded) as db:
+        spec = _spec(segment="equity_intraday", timeframe="1m")
+        db.execute(update(StrategyVersion).where(StrategyVersion.version == 2).values(spec=spec))
+        db.execute(update(BacktestRun).values(data_source="recorded"))
+        db.commit()
+
+    run = _drain(factory)
+
+    assert run.status == "failed" and run.error == "No usable recorded days in this period"
+
+
 def test_an_intraday_run_squares_off_and_pays_intraday_charges(
     seeded: Engine, factory: sessionmaker[Session], client: TestClient, parity: Parity
 ) -> None:

@@ -93,3 +93,33 @@ class LiveStockHistory(Contract):
         if self.first_day and self.last_day and self.first_day > self.last_day:
             raise ValueError("first day is after last day")
         return self
+
+
+CheckPercent = Annotated[float, Field(ge=0, le=100)]
+
+
+class TickCheckStock(Contract):
+    """One checked stock of a daily Kite check (D81 (4)); percents are null with no minutes."""
+
+    symbol: LiveSymbol
+    minutes: Count
+    close_match_percent: CheckPercent | None
+    range_ok_percent: CheckPercent | None
+    volume_match_percent: CheckPercent | None
+
+
+class TickCheck(Contract):
+    """Recorded ticks compared with Kite's 1-minute candles for one day (D81 (4))."""
+
+    day: IsoDate
+    stocks_checked: Count
+    stocks_skipped: Count
+    minutes: Count
+    close_match_percent: CheckPercent | None
+    range_ok_percent: CheckPercent | None
+    volume_match_percent: CheckPercent | None
+    # Median receive delay (received_at − exchange_ts); null when no tick had an exchange time.
+    clock_offset_seconds: float | None
+    warnings: list[str]
+    checked_at: UtcDateTime
+    stocks: list[TickCheckStock]

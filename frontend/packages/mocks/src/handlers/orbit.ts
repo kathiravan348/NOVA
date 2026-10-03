@@ -24,6 +24,7 @@ import {
   mockUser,
 } from "../data";
 import { apiPath, badRequest, notFound, paginate } from "./api";
+import { filterRuns, statsFor } from "./backtestList";
 
 /** Mock writes (D43) answer with the resulting strategy; nothing is stored. */
 const MOCK_NOW = "2026-09-22T04:30:00Z";
@@ -55,6 +56,9 @@ function toVersion(run: BacktestRun): BacktestVersion {
     createdAt: run.createdAt,
     error: run.error,
     reportKept: run.reportKept,
+    dataSource: run.dataSource,
+    recordedDaysUsed: run.recordedDaysUsed,
+    recordedDaysSkipped: run.recordedDaysSkipped,
     metrics: run.status === "completed" && result ? result.metrics : null,
   };
 }
@@ -85,8 +89,11 @@ export const orbitHandlers = [
   }),
 
   // Registered before `/strategies/:id` so "stats" is not read as an id.
-  http.get(apiPath("/strategies/stats"), () => {
-    return HttpResponse.json(mockStrategyStats);
+  http.get(apiPath("/strategies/stats"), ({ request }) => {
+    const source = new URL(request.url).searchParams.get("dataSource");
+    if (source === null) return HttpResponse.json(mockStrategyStats);
+    if (source !== "history" && source !== "recorded") return badRequest("Unknown data source");
+    return HttpResponse.json(statsFor(mockBacktestRuns, source));
   }),
 
   http.get(apiPath("/strategies/library"), () => {
@@ -182,10 +189,9 @@ export const orbitHandlers = [
   }),
 
   http.get(apiPath("/backtests"), ({ request }) => {
-    const strategyId = new URL(request.url).searchParams.get("strategyId");
-    const newest = mockBacktestRuns.filter(isNewest);
-    const runs = strategyId ? newest.filter((r) => r.strategyId === strategyId) : newest;
-    return paginate(runs, request.url);
+    const rows = filterRuns(mockBacktestRuns.filter(isNewest), new URL(request.url).searchParams);
+    if (typeof rows === "string") return badRequest(rows);
+    return paginate(rows, request.url);
   }),
 
   http.post(apiPath("/backtests"), async ({ request }) => {
@@ -193,9 +199,13 @@ export const orbitHandlers = [
     if (!parsed.success) return badRequest("Body must be a valid BacktestRunCreate");
     const strategy = mockStrategies.find((s) => s.id === parsed.data.strategyId);
     if (!strategy) return notFound(`Strategy ${parsed.data.strategyId} not found`);
+    const { dataSource, ...body } = parsed.data;
     const queued: BacktestRun = {
       id: "run_new",
-      ...parsed.data,
+      ...body,
+      dataSource: dataSource ?? "history",
+      recordedDaysUsed: null,
+      recordedDaysSkipped: [],
       status: "queued",
       createdAt: MOCK_NOW,
       startedAt: null,
@@ -239,10 +249,14 @@ export const orbitHandlers = [
     if (chain.some((r) => r.status === "queued" || r.status === "running")) {
       return badRequest("Wait for the running version to finish");
     }
+    const { dataSource, ...body } = parsed.data;
     const queued: BacktestRun = {
       id: "run_new_version",
       strategyId: run.strategyId,
-      ...parsed.data,
+      ...body,
+      dataSource: dataSource ?? run.dataSource,
+      recordedDaysUsed: null,
+      recordedDaysSkipped: [],
       status: "queued",
       createdAt: MOCK_NOW,
       startedAt: null,

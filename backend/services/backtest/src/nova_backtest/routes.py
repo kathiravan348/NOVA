@@ -10,28 +10,36 @@ from nova_contracts import (
     PAGE_LIMIT_DEFAULT,
     PAGE_LIMIT_MAX,
     BacktestDeleteRequest,
+    BacktestListSort,
     BacktestRunCreate,
+    BacktestRunListItem,
+    BacktestRunStatus,
     BacktestVersionCreate,
+    DataSource,
     Page,
+    Segment,
+    StrategyTimeframe,
 )
-from nova_contracts import BacktestRun as RunContract
 from nova_contracts import Trade as TradeContract
 from nova_db import new_id
 from nova_db.audit import record_audit
-from nova_db.models import BacktestResult, BacktestRun, StrategyVersion, Trade
-from nova_db.paging import newest_first, oldest_first
+from nova_db.models import BacktestResult, BacktestRun, Trade
+from nova_db.paging import oldest_first
 from nova_db.web import Db
-from sqlalchemy import exists
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session
 
 from nova_backtest.convert import result_contract, run_contract, trade_contract
+from nova_backtest.listing import RunFilters
+from nova_backtest.listing import list_runs as filtered_runs
 from nova_backtest.versions import (
     add_version,
     check_benchmark,
+    check_source,
     check_symbols,
     delete_backtests,
     delete_version,
     list_versions,
+    strategy_spec,
 )
 
 router = APIRouter(prefix="/backtests")
@@ -52,30 +60,44 @@ def list_runs(
     _: CallerDep,
     db: Db,
     strategy_id: Annotated[str | None, Query(alias="strategyId", min_length=1)] = None,
+    data_source: Annotated[DataSource | None, Query(alias="dataSource")] = None,
+    status: BacktestRunStatus | None = None,
+    q: Annotated[str | None, Query(min_length=1, max_length=200)] = None,
+    segment: Segment | None = None,
+    timeframe: StrategyTimeframe | None = None,
+    min_return: Annotated[float | None, Query(alias="minReturn")] = None,
+    min_cagr: Annotated[float | None, Query(alias="minCagr")] = None,
+    max_drawdown: Annotated[float | None, Query(alias="maxDrawdown", ge=0, le=100)] = None,
+    min_win_rate: Annotated[float | None, Query(alias="minWinRate", ge=0, le=100)] = None,
+    min_trades: Annotated[int | None, Query(alias="minTrades", ge=0)] = None,
+    min_profit_factor: Annotated[float | None, Query(alias="minProfitFactor", ge=0)] = None,
+    profitable: bool | None = None,
+    sort: BacktestListSort = "created",
+    order: Literal["asc", "desc"] = "desc",
     limit: Limit = PAGE_LIMIT_DEFAULT,
     cursor: Cursor = None,
     offset: Annotated[int | None, Query(ge=0)] = None,
 ) -> JSONResponse:
-    # Only the newest version of each backtest (D60).
-    newer = aliased(BacktestRun)
-    where = [
-        ~exists().where(newer.root_id == BacktestRun.root_id, newer.version > BacktestRun.version)
-    ]
-    if strategy_id:
-        where.append(BacktestRun.strategy_id == strategy_id)
-    rows, next_cursor, total = newest_first(
-        db,
-        BacktestRun,
-        BacktestRun.created_at,
-        BacktestRun.id,
-        limit=limit,
-        cursor=cursor,
-        offset=offset,
-        where=where,
+    """Newest version of each backtest with its results, filtered and sorted (D60, D82 (6))."""
+    filters = RunFilters(
+        data_source=data_source,
+        status=status,
+        strategy_id=strategy_id,
+        q=q,
+        segment=segment,
+        timeframe=timeframe,
+        min_return=min_return,
+        min_cagr=min_cagr,
+        max_drawdown=max_drawdown,
+        min_win_rate=min_win_rate,
+        min_trades=min_trades,
+        min_profit_factor=min_profit_factor,
+        profitable=profitable,
     )
-    page = Page[RunContract](
-        items=[run_contract(r) for r in rows], next_cursor=next_cursor, total=total
+    items, next_cursor, total = filtered_runs(
+        db, filters, sort, order == "desc", limit, cursor, offset
     )
+    page = Page[BacktestRunListItem](items=items, next_cursor=next_cursor, total=total)
     return JSONResponse(page.model_dump(mode="json"))
 
 
@@ -121,13 +143,7 @@ def list_trades(
 
 @router.post("")
 def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONResponse:
-    version = db.get(StrategyVersion, (body.strategy_id, body.strategy_version))
-    if version is None:
-        raise ApiException(
-            404,
-            "not_found",
-            f"Strategy {body.strategy_id} version {body.strategy_version} not found",
-        )
+    check_source(strategy_spec(db, body.strategy_id, body.strategy_version), body.data_source)
     universe = body.universe.model_dump(mode="json")
     check_symbols(db, universe)
     check_benchmark(db, body.benchmark)
@@ -144,6 +160,7 @@ def queue_run(body: BacktestRunCreate, caller: CallerDep, db: Db) -> JSONRespons
         date_to=body.to,
         initial_capital_paise=body.initial_capital_paise,
         benchmark=body.benchmark,
+        data_source=body.data_source,
     )
     db.add(run)
     record_audit(

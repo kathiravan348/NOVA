@@ -13,12 +13,15 @@ from nova_contracts.live import (
     LiveStockHistory,
     LiveSubscribe,
     LiveSymbol,
+    TickCheck,
 )
 from nova_db.models import Candle, UniverseEntry
+from nova_db.models import TickCheck as TickCheckRow
 from nova_db.web import Db
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import select, text
 
+from nova_atlas.live_check import contract as check_contract
 from nova_atlas.live_storage import (
     IST,
     day_data,
@@ -189,3 +192,10 @@ def stocks(
             )
         )
     return result
+
+
+@router.get("/checks", response_model=list[TickCheck])
+def checks(_: CallerDep, db: Db, limit: Annotated[int, Query(ge=1, le=60)] = 10) -> list[TickCheck]:
+    """The newest daily Kite checks of recorded ticks (D81 (4)), newest first."""
+    rows = db.scalars(select(TickCheckRow).order_by(TickCheckRow.day.desc()).limit(limit))
+    return [check_contract(row) for row in rows]

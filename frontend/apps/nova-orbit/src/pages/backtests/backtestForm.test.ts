@@ -5,6 +5,8 @@ import {
   defaultsFor,
   defaultsFromParams,
   defaultsFromRun,
+  isSecondsTimeframe,
+  sourceProblem,
   todayIst,
   toRunCreate,
   toUniverse,
@@ -131,5 +133,31 @@ describe("backtestForm", () => {
     const future = new URLSearchParams("from=2026-09-01&to=2027-01-01&benchmark=none");
     expect(defaultsFromParams(future, "2026-09-27")).toEqual({ benchmark: "" });
     expect(defaultsFromParams(new URLSearchParams("strategy=stg_001"), "2026-09-27")).toEqual({});
+  });
+
+  it("refuses data-source pairs the engine cannot run, with the API's messages (D82)", () => {
+    const intraday = mockStrategies[0]!.versions[0]!.spec;
+    if (intraday.mode !== "visual") throw new Error("the first mock strategy is visual");
+    const delivery = mockStrategies[1]!.versions[0]!.spec;
+    const ranked = mockStrategies[3]!.versions[0]!.spec;
+    expect(sourceProblem(intraday, "recorded")).toBeNull();
+    expect(sourceProblem(intraday, "history")).toBeNull();
+    expect(sourceProblem(delivery, "recorded")).toBe("Recorded data backtests are intraday only");
+    const seconds = { ...intraday, timeframe: "5s" as const };
+    expect(sourceProblem(seconds, "history")).toBe("Seconds candles exist only in recorded data");
+    expect(sourceProblem(seconds, "recorded")).toBeNull();
+    const filtered = { ...intraday, regime: "regime" in ranked ? ranked.regime : undefined };
+    expect(sourceProblem(filtered, "recorded")).toBe(
+      "Market filter is not available on recorded data yet",
+    );
+    expect(isSecondsTimeframe("30s") && !isSecondsTimeframe("1m")).toBe(true);
+  });
+
+  it("sends the data source on create and keeps a run's own on edit", () => {
+    expect(toRunCreate({ ...valid, dataSource: "recorded" }).dataSource).toBe("recorded");
+    const recorded = mockBacktestRuns.find((r) => r.dataSource === "recorded")!;
+    const form = defaultsFromRun(recorded);
+    expect(form.dataSource).toBe("recorded");
+    expect(toVersionCreate(form).dataSource).toBe("recorded");
   });
 });

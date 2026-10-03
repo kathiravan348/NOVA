@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
+    Date,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
@@ -22,6 +23,7 @@ from sqlalchemy.engine.default import DefaultExecutionContext
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nova_db.enums import (
+    BACKTEST_DATA_SOURCES,
     BACKTEST_STAGES,
     BACKTEST_STATUSES,
     EXCHANGES,
@@ -58,6 +60,10 @@ class BacktestRun(Base):
         UniqueConstraint("root_id", "version"),
         CheckConstraint("version >= 1", name="version"),
         CheckConstraint("(version = 1) = (root_id = id)", name="root_first"),
+        check_in("data_source", "data_source", BACKTEST_DATA_SOURCES),
+        CheckConstraint(
+            "recorded_days_used IS NULL OR recorded_days_used >= 0", name="recorded_days_used"
+        ),
     )
 
     id: Mapped[str] = mapped_column(primary_key=True)
@@ -89,6 +95,12 @@ class BacktestRun(Base):
     # False once a newer version completed: trades, curve and per-symbol rows are gone.
     report_kept: Mapped[bool] = mapped_column(server_default=true())
     skipped_symbols: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    # D82: `history` = Kite candles, `recorded` = candles built from recorded ticks.
+    data_source: Mapped[str] = mapped_column(server_default="history")
+    recorded_days_used: Mapped[int | None] = mapped_column(Integer)
+    recorded_days_skipped: Mapped[list[date]] = mapped_column(
+        ARRAY(Date), server_default=text("'{}'")
+    )
 
 
 class BacktestResult(Base):
@@ -133,6 +145,8 @@ class BacktestResult(Base):
     estimated_tax_paise: Mapped[int | None] = mapped_column(BigInteger)
     after_tax_net_pnl_paise: Mapped[int | None] = mapped_column(BigInteger)
     years: Mapped[JsonList] = mapped_column(server_default=text("'[]'::jsonb"))
+    # D82: fills vs last price on recorded runs; null for history runs.
+    spread_cost_paise: Mapped[int | None] = mapped_column(BigInteger)
 
 
 CHARGE_COLUMNS = (

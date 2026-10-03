@@ -94,6 +94,13 @@ export function MetricsGrid({ metrics: m, benchmark, segment }: MetricsGridProps
           value={orDash(m.calmar, (v) => v.toFixed(2))}
           caption="CAGR ÷ max drawdown"
         />
+        {m.spreadCostPaise !== null && m.spreadCostPaise !== undefined && (
+          <StatCard
+            label="Spread cost"
+            value={mono(formatInr(m.spreadCostPaise))}
+            caption="Paid at the ask and bid vs the last price"
+          />
+        )}
       </div>
     </div>
   );

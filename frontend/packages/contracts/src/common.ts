@@ -24,6 +24,15 @@ export type Exchange = z.infer<typeof ExchangeSchema>;
 export const TimeframeSchema = z.enum(["1m", "3m", "5m", "15m", "30m", "1h", "1d"]);
 export type Timeframe = z.infer<typeof TimeframeSchema>;
 
+/** D82: seconds candles exist only in recorded data; strategies may use them. */
+export const SECONDS_TIMEFRAMES = ["1s", "5s", "15s", "30s"] as const;
+export const StrategyTimeframeSchema = z.enum([...SECONDS_TIMEFRAMES, ...TimeframeSchema.options]);
+export type StrategyTimeframe = z.infer<typeof StrategyTimeframeSchema>;
+
+/** D82: where a backtest's candles come from. */
+export const DataSourceSchema = z.enum(["history", "recorded"]);
+export type DataSource = z.infer<typeof DataSourceSchema>;
+
 export const SideSchema = z.enum(["buy", "sell"]);
 export type Side = z.infer<typeof SideSchema>;
 

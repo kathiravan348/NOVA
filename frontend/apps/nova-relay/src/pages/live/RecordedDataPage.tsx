@@ -3,6 +3,7 @@ import { Database } from "lucide-react";
 import { EmptyState, Input, Pager, Skeleton } from "@nova/ui-core";
 import { useLiveStocks, usePageState, useRecorder, useUniverse } from "@nova/services";
 import { QueryError } from "../../components/QueryState";
+import { KiteCheckCard } from "./KiteCheckCard";
 import { RecordedStockCard } from "./RecordedStockCard";
 
 /** Recorded data (D74 (2), D78, D80): a card per recorded stock with its stored history. */
@@ -70,6 +71,7 @@ export function RecordedDataPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <KiteCheckCard />
       <div className="flex flex-col gap-1">
         <Input
           containerClassName="w-full sm:w-64"

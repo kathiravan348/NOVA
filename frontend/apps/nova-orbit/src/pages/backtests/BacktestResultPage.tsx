@@ -21,7 +21,14 @@ import {
   useStrategy,
 } from "@nova/services";
 import { QueryError, QueryState } from "../../components/QueryState";
-import { formatIstDateTime, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
+import {
+  dataSourceLabel,
+  formatCalendarDate,
+  formatIstDateTime,
+  formatPeriod,
+  runStatusLabel,
+  runStatusTone,
+} from "../../lib/format";
 import { describeUniverse } from "../../lib/strategyText";
 import { DeleteBacktestButton } from "./DeleteBacktestButton";
 import { MetricsGrid } from "./MetricsGrid";
@@ -93,6 +100,10 @@ function RunHeader({ run }: { run: BacktestRun }) {
               numeric: true,
             },
             { label: "Benchmark", value: run.benchmark ?? "None" },
+            { label: "Data", value: dataSourceLabel[run.dataSource] },
+            ...(run.dataSource === "recorded" && run.recordedDaysUsed !== null
+              ? [{ label: "Recorded days", value: <RecordedDays run={run} /> }]
+              : []),
             { label: "Created", value: formatIstDateTime(run.createdAt) },
             {
               label: "Finished",
@@ -168,6 +179,19 @@ function CompletedRun({ run }: { run: BacktestRun }) {
         />
       </section>
     </>
+  );
+}
+
+/** "10 used · 2 skipped"; the skipped feed-gap days show on hover (D82). */
+function RecordedDays({ run }: { run: BacktestRun }) {
+  const skipped = run.recordedDaysSkipped;
+  const text = `${run.recordedDaysUsed ?? 0} used · ${skipped.length} skipped`;
+  if (skipped.length === 0) return <span className="font-mono">{text}</span>;
+  const days = skipped.map(formatCalendarDate).join(", ");
+  return (
+    <span className="font-mono" title={`Skipped (feed gaps over 5 minutes): ${days}`}>
+      {text}
+    </span>
   );
 }
 

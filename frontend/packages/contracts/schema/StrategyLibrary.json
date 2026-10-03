@@ -99,6 +99,10 @@
                   "timeframe": {
                     "type": "string",
                     "enum": [
+                      "1s",
+                      "5s",
+                      "15s",
+                      "30s",
                       "1m",
                       "3m",
                       "5m",
@@ -1383,6 +1387,10 @@
                   "timeframe": {
                     "type": "string",
                     "enum": [
+                      "1s",
+                      "5s",
+                      "15s",
+                      "30s",
                       "1m",
                       "3m",
                       "5m",

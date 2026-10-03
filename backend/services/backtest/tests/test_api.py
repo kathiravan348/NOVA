@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
-from nova_db.models import AuditEntry, BacktestResult, Trade
+from nova_db.models import AuditEntry, BacktestResult, BacktestRun, StrategyVersion, Trade
 from nova_testing.parity import Parity
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
@@ -173,3 +173,87 @@ def test_result_and_trades(
 def test_unknown_run_is_not_found(client: TestClient) -> None:
     for path in ("", "/result", "/trades"):
         assert client.get(f"{BACKTESTS}/run_nope{path}").status_code == 404
+
+
+REGIME = {
+    "index": "NIFTY 50",
+    "condition": {
+        "left": {"kind": "price", "field": "close"},
+        "op": "gt",
+        "right": {"kind": "indicator", "name": "sma", "params": {"period": 200}},
+    },
+    "whenOff": "no_new_entries",
+}
+
+
+def _add_version(engine: Engine, parity: Parity, version: int, **change: object) -> None:
+    """Stores `stg_1` version `version`: the first mock spec with `change` applied (D82)."""
+    spec = parity.mock("strategies")[0]["versions"][0]["spec"] | change
+    with Session(engine) as db:
+        db.add(StrategyVersion(strategy_id="stg_1", version=version, spec=spec))
+        db.commit()
+
+
+def test_a_run_without_a_data_source_uses_history(
+    client: TestClient, run_body: dict[str, object]
+) -> None:
+    run = _queue(client, run_body)
+    assert run["dataSource"] == "history"
+    assert run["recordedDaysUsed"] is None and run["recordedDaysSkipped"] == []
+
+
+def test_a_recorded_intraday_run_is_queued(
+    client: TestClient, run_body: dict[str, object], parity: Parity
+) -> None:
+    run = _queue(client, run_body | {"dataSource": "recorded"})
+    assert run["dataSource"] == "recorded"
+    parity.assert_valid(run, "BacktestRun")
+
+
+@pytest.mark.parametrize(
+    ("change", "source", "message"),
+    [
+        ({"segment": "equity_delivery"}, "recorded", "Recorded data backtests are intraday only"),
+        ({"timeframe": "5s"}, "history", "Seconds candles exist only in recorded data"),
+        ({"regime": REGIME}, "recorded", "Market filter is not available on recorded data yet"),
+    ],
+)
+def test_source_pairs_the_engine_cannot_run_are_refused(
+    client: TestClient,
+    run_body: dict[str, object],
+    clean: Engine,
+    parity: Parity,
+    change: dict[str, object],
+    source: str,
+    message: str,
+) -> None:
+    _add_version(clean, parity, 2, **change)
+    response = client.post(BACKTESTS, json=run_body | {"strategyVersion": 2, "dataSource": source})
+    assert response.status_code == 400
+    assert response.json()["error"]["message"] == message
+
+
+def test_a_new_version_keeps_the_data_source_unless_sent(
+    client: TestClient, run_body: dict[str, object], clean: Engine, parity: Parity
+) -> None:
+    _add_version(clean, parity, 2, timeframe="5s")
+    first = _queue(client, run_body | {"dataSource": "recorded"})
+    with Session(clean) as db:
+        run = db.get(BacktestRun, first["id"])
+        assert run is not None
+        run.status = "completed"
+        db.commit()
+    body = {k: v for k, v in run_body.items() if k != "strategyId"} | {"strategyVersion": 2}
+    kept = client.post(f"{BACKTESTS}/{first['id']}/versions", json=body)
+    assert kept.status_code == 201, kept.text
+    assert kept.json()["dataSource"] == "recorded"
+    with Session(clean) as db:
+        run = db.get(BacktestRun, kept.json()["id"])
+        assert run is not None
+        run.status = "completed"
+        db.commit()
+    refused = client.post(
+        f"{BACKTESTS}/{first['id']}/versions", json=body | {"dataSource": "history"}
+    )
+    assert refused.status_code == 400
+    assert refused.json()["error"]["message"] == "Seconds candles exist only in recorded data"

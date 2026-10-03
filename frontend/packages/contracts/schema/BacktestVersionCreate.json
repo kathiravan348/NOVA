@@ -84,6 +84,20 @@
           "type": "null"
         }
       ]
+    },
+    "dataSource": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "history",
+            "recorded"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [

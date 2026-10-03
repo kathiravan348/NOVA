@@ -4,7 +4,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
-from nova_contracts.common import Contract, Exchange, Id, Segment, Timeframe, UtcDateTime
+from nova_contracts.common import Contract, Exchange, Id, Segment, StrategyTimeframe, UtcDateTime
 from nova_contracts.indicators import INTRADAY_ONLY, IndicatorName, param_problems
 from nova_contracts.market_data import IndexName
 
@@ -157,7 +157,7 @@ class Rotation(Contract):
 class _SpecBase(Contract):
     segment: Segment
     exchange: Exchange
-    timeframe: Timeframe
+    timeframe: StrategyTimeframe
     sizing: Sizing
     risk: Risk
     # Absent = off, and never written when off, so older specs stay identical (D53, D62).

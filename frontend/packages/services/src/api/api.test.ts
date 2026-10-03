@@ -7,6 +7,7 @@ import {
   mockAuditEntries,
   mockBacktestResults,
   mockBacktestRuns,
+  toListItem,
   mockBrokerAccounts,
   mockBrokerProfiles,
   mockCandles,
@@ -59,9 +60,9 @@ afterAll(() => server.close());
 const strategy = mockStrategies[0]!;
 const run = mockBacktestRuns[0]!;
 /** The list shows only the newest version of each backtest (D60). */
-const listedRuns = mockBacktestRuns.filter(
-  (r) => !mockBacktestRuns.some((o) => o.rootId === r.rootId && o.version > r.version),
-);
+const listedRuns = mockBacktestRuns
+  .filter((r) => !mockBacktestRuns.some((o) => o.rootId === r.rootId && o.version > r.version))
+  .map(toListItem);
 
 const result = mockBacktestResults[0]!;
 const account = mockBrokerAccounts[0]!;

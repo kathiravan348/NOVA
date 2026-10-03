@@ -55,11 +55,13 @@ def run_worker(
     schedule: Schedule | None = None,
     clock: Callable[[], float] = time.monotonic,
     summarize: Callable[[Session], object] | None = None,
+    check: Callable[[Session], object] | None = None,
 ) -> None:
     """Runs until `stop` is set; `on_idle` runs whenever the queue is empty (tests stop there).
 
     Once a minute while idle it cancels expired plans (D57), runs `schedule`, which queues
-    timed jobs (the daily sync, D56), and `summarize`, which stores one day's tick summary (D80).
+    timed jobs (the daily sync, D56), `summarize`, which stores one day's tick summary (D80), and
+    `check`, which compares one recorded day with Kite's candles (D81).
     """
     with session_factory() as db:
         requeued = requeue_running(db, DataJob, OWNED)
@@ -101,6 +103,12 @@ def run_worker(
                     summarize(db)
                 except Exception:
                     logger.exception("Tick summary failed; retried in a minute")
+                    db.rollback()
+            if due and check is not None:
+                try:
+                    check(db)
+                except Exception:
+                    logger.exception("Kite check of recorded ticks failed; retried in a minute")
                     db.rollback()
         if on_idle is not None:
             on_idle()

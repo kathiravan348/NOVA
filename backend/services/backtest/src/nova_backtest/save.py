@@ -1,6 +1,6 @@
 """A finished simulation → metrics, benchmark, tax, years, trades and result rows (D45, D62)."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from nova_contracts import BacktestResult as ResultContract
@@ -31,6 +31,7 @@ def save_result(
     result: Simulation,
     period: tuple[datetime, datetime],
     progress: ProgressSink,
+    recorded_days: tuple[int, list[date]] | None = None,
 ) -> None:
     """Writes the run's trades and result and marks it completed, in the run's transaction.
 
@@ -123,9 +124,12 @@ def save_result(
             estimated_tax_paise=m["estimated_tax_paise"],
             after_tax_net_pnl_paise=m["after_tax_net_pnl_paise"],
             years=wire["years"],
+            spread_cost_paise=result.spread_cost,
         )
     )
     run.skipped_symbols = skipped
+    if recorded_days is not None:  # D82: used sessions and feed-gap days of a recorded run
+        run.recorded_days_used, run.recorded_days_skipped = recorded_days
     run.status = "completed"
     run.finished_at = datetime.now(UTC)
     run.stage = "done"

@@ -62,6 +62,56 @@ describe("Live monitor", () => {
   });
 });
 
+describe("Kite check card", () => {
+  it("shows the latest check's percents, Passed, and lists the days", async () => {
+    renderApp("/live/recorded");
+    expect(await screen.findByRole("heading", { name: "Kite check" })).toBeInTheDocument();
+    expect(await screen.findByText("Fri 2 Oct")).toBeInTheDocument();
+    expect(screen.getByText("98.9 %")).toBeInTheDocument();
+    expect(screen.getByText("Passed")).toBeInTheDocument();
+    expect(screen.getByText("0.4 s")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show days" }));
+    const days = screen.getByRole("list", { name: "Kite check days" });
+    expect(within(days).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(days).getAllByText("Check")).toHaveLength(2);
+  });
+
+  it("shows Check and the warning text for a day with warnings", async () => {
+    server.use(
+      http.get("*/api/v1/live/checks", () =>
+        HttpResponse.json([
+          {
+            day: "2026-10-01",
+            stocksChecked: 1,
+            stocksSkipped: 0,
+            minutes: 359,
+            closeMatchPercent: 98.6,
+            rangeOkPercent: 100,
+            volumeMatchPercent: 97.8,
+            clockOffsetSeconds: 16.2,
+            warnings: ["Receive times are 16 s off exchange times: sync the PC clock"],
+            checkedAt: "2026-10-01T10:31:00Z",
+            stocks: [],
+          },
+        ]),
+      ),
+    );
+    renderApp("/live/recorded");
+    expect(
+      await screen.findByText("Receive times are 16 s off exchange times: sync the PC clock"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Check")).toBeInTheDocument();
+  });
+
+  it("says when no check exists yet", async () => {
+    server.use(http.get("*/api/v1/live/checks", () => HttpResponse.json([])));
+    renderApp("/live/recorded");
+    expect(
+      await screen.findByText("No check yet — the first runs after 16:00 IST on a recorded day."),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("Recorded data", () => {
   it("shows a card per stock (no table) with days stored, gap days, ticks and size", async () => {
     renderApp("/live/recorded");
