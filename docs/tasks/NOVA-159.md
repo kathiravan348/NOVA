@@ -1,6 +1,6 @@
 # NOVA-159 — Archive: move ticks one stock at a time (bounded memory)
 
-**Status:** in-review · **Owner:** ChatGPT · **Branch:** task/NOVA-159 · **Depends on:** NOVA-155
+**Status:** done · **Owner:** ChatGPT · **Branch:** task/NOVA-159 · **Depends on:** NOVA-155
 
 ## Goal
 An `archive` job moves a full 3,000-stock day of ticks (D75, D77) to Parquet inside the `atlas-worker` memory
@@ -27,12 +27,12 @@ Modify:
 4. Keep `SCHEMA`, file paths, `archive_ticks`, `archive_days`, `archive_symbols` and `read_ticks` unchanged.
 
 ## Acceptance checks
-- [ ] Existing archive tests pass unchanged (files, never-overwrite, every Kite field round-trips).
-- [ ] With the batch size patched to 2, a symbol with 5 ticks gives one file with 5 rows in time order and
+- [x] Existing archive tests pass unchanged (files, never-overwrite, every Kite field round-trips).
+- [x] With the batch size patched to 2, a symbol with 5 ticks gives one file with 5 rows in time order and
       3 row groups.
-- [ ] A write failure on the second symbol leaves every row in `ticks` and no `.parquet` for that symbol.
-- [ ] Definition of done in `AGENTS.md` §9 (`docker compose run --rm backend-check` passes).
-- [ ] Deploy (D76): rebuild only `atlas-worker` with `--no-deps`; never stop `tick-recorder`, `db` or `redis`.
+- [x] A write failure on the second symbol leaves every row in `ticks` and no `.parquet` for that symbol.
+- [x] Definition of done in `AGENTS.md` §9 (`docker compose run --rm backend-check` passes).
+- [x] Deploy (D76): rebuild only `atlas-worker` with `--no-deps`; never stop `tick-recorder`, `db` or `redis`.
 
 ## Out of scope
 - Changing `mem_limit`, the Parquet layout or columns, compression settings, or the Relay archive screens.
@@ -56,4 +56,11 @@ every file is written. `SCHEMA`, paths and the public functions are unchanged.
 - Guides: `DATABASE.md` (Parquet tick archive row, State as of). No migration, endpoint or screen.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** ChatGPT / Claude. **Self-review:** no.
+**Fixed directly:** merged current main; kept current schema guide and the archive-writing row.
+**Checks:** backend gate green (1405 passed); frontend review:check green (1096 tests, app and Storybook builds).
+**Acceptance:** batch size 2 produces 3 time-ordered row groups; second-symbol failure preserves all ticks.
+**Guides checked:** DATABASE.md matches the streamed Parquet writes; no schema or endpoint change.
+**Deployment:** rebuilt only atlas-worker with --no-deps. Recorder, PostgreSQL and Redis retain their start times.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
