@@ -55,7 +55,7 @@ describe("Deleting backtests (D60)", () => {
   it("deletes the selected backtests from the list", async () => {
     renderApp("/backtests");
     const table = await screen.findByRole("table", { name: "Backtests" });
-    for (const name of ["VWAP Intraday v1 Backtest", "SMA Breakout Legacy Run"]) {
+    for (const name of ["VWAP Intraday v2 Backtest · v2", "SMA Breakout Legacy Run"]) {
       const row = (await within(table).findByRole("link", { name })).closest("tr")!;
       fireEvent.click(within(row).getByRole("checkbox"));
     }
@@ -64,7 +64,7 @@ describe("Deleting backtests (D60)", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
     await waitFor(() =>
       expect(sent("POST", "/api/v1/backtests/delete")?.body).toEqual({
-        ids: ["run_001", "run_005"],
+        ids: ["run_002", "run_005"],
       }),
     );
     expect(await screen.findByRole("button", { name: "Delete selected (0)" })).toBeDisabled();

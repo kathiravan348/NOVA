@@ -1,17 +1,37 @@
 import { Link } from "react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { BacktestRun } from "@nova/contracts";
+import type { BacktestRunListItem, BacktestRunSummary } from "@nova/contracts";
 import { StatusBadge } from "@nova/ui-core";
-import { formatInr } from "@nova/ui-trading";
+import { formatInr, formatPercent, PnLText } from "@nova/ui-trading";
 import { useStrategies } from "@nova/services";
 import { formatIstDate, formatPeriod, runStatusLabel, runStatusTone } from "../../lib/format";
 import { describeUniverse, summarizeUniverse } from "../../lib/strategyText";
 
-/** Columns for a list of backtest runs; `withStrategy: false` drops the strategy column. */
-export function useRunColumns({ withStrategy = true } = {}): ColumnDef<BacktestRun, unknown>[] {
+function metric(
+  key: keyof BacktestRunSummary,
+  header: string,
+  render: (value: number) => string,
+  hideOnMobile = true,
+): ColumnDef<BacktestRunListItem, unknown> {
+  return {
+    id: key,
+    header,
+    meta: { numeric: true, hideOnMobile },
+    cell: ({ row }) => {
+      const value = row.original.summary?.[key];
+      return value == null ? "—" : render(value);
+    },
+  };
+}
+
+/** Result columns are sorted by the server, across every page. */
+export function useRunColumns({ withStrategy = true, recorded = false } = {}): ColumnDef<
+  BacktestRunListItem,
+  unknown
+>[] {
   const strategies = useStrategies();
   const nameOf = (id: string) => strategies.data?.find((s) => s.id === id)?.name ?? id;
-  const columns: (ColumnDef<BacktestRun, unknown> | false)[] = [
+  const columns: (ColumnDef<BacktestRunListItem, unknown> | false)[] = [
     {
       id: "name",
       header: "Name",
@@ -33,6 +53,7 @@ export function useRunColumns({ withStrategy = true } = {}): ColumnDef<BacktestR
       id: "strategy",
       header: "Strategy",
       accessorFn: (r) => nameOf(r.strategyId),
+      meta: { hideOnMobile: true },
       cell: ({ row }) => (
         <span>
           <Link to={`/strategies/${row.original.strategyId}`} className="hover:underline">
@@ -46,13 +67,14 @@ export function useRunColumns({ withStrategy = true } = {}): ColumnDef<BacktestR
       id: "version",
       header: "Version",
       accessorKey: "strategyVersion",
-      meta: { numeric: true },
+      meta: { numeric: true, hideOnMobile: true },
       cell: ({ getValue }) => `v${String(getValue())}`,
     },
     {
       id: "universe",
       header: "Symbols",
       accessorFn: (r) => summarizeUniverse(r.universe),
+      meta: { hideOnMobile: true },
       cell: ({ row }) => (
         <span title={describeUniverse(row.original.universe)}>
           {summarizeUniverse(row.original.universe)}
@@ -80,19 +102,28 @@ export function useRunColumns({ withStrategy = true } = {}): ColumnDef<BacktestR
       meta: { hideOnMobile: true },
     },
     {
-      id: "capital",
-      header: "Capital",
-      accessorKey: "initialCapitalPaise",
+      id: "netPnlPaise",
+      header: "Net P&L",
       meta: { numeric: true },
-      cell: ({ getValue }) => formatInr(getValue() as number, { decimals: 0 }),
+      cell: ({ row }) =>
+        row.original.summary ? <PnLText paise={row.original.summary.netPnlPaise} /> : "—",
     },
+    metric("returnPercent", "Return", (n) => formatPercent(n, { signed: true })),
+    metric("cagrPercent", "CAGR", (n) => formatPercent(n, { signed: true }), false),
+    metric("maxDrawdownPercent", "Max DD", (n) => formatPercent(n, { signed: true }), false),
+    metric("winRatePercent", "Win rate", (n) => formatPercent(n)),
+    metric("tradeCount", "Trades", (n) => n.toLocaleString("en-IN")),
+    metric("profitFactor", "Profit factor", (n) => n.toFixed(2)),
+    recorded && metric("spreadCostPaise", "Spread cost", (n) => formatInr(n)),
     {
       id: "createdAt",
       header: "Created",
       accessorKey: "createdAt",
-      meta: { numeric: true },
+      meta: { numeric: true, hideOnMobile: true },
       cell: ({ getValue }) => formatIstDate(getValue() as string),
     },
   ];
-  return columns.filter((c): c is ColumnDef<BacktestRun, unknown> => c !== false);
+  return columns
+    .filter((c): c is ColumnDef<BacktestRunListItem, unknown> => c !== false)
+    .map((column) => ({ ...column, enableSorting: false }));
 }

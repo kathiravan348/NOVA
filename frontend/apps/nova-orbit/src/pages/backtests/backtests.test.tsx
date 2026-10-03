@@ -27,10 +27,103 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe("Backtests list", () => {
+  it("restores the recorded tab and filters, sends them, and clears everything except the source", async () => {
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get("*/api/v1/backtests", ({ request }) => {
+        requests.push(new URL(request.url).searchParams);
+        return HttpResponse.json({ items: [], total: 0, nextCursor: null });
+      }),
+    );
+    const { router } = renderApp("/backtests?source=recorded&minCagr=10&sort=cagr&unknown=bad");
+    expect(await screen.findByRole("tab", { name: "Recorded data" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      (
+        await screen.findAllByText(
+          "No recorded-data backtests yet. Choose Recorded data when you run a backtest.",
+        )
+      ).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Min CAGR")).toHaveValue(10);
+    expect(
+      requests.some(
+        (p) =>
+          p.get("dataSource") === "recorded" &&
+          p.get("minCagr") === "10" &&
+          p.get("sort") === "cagr",
+      ),
+    ).toBe(true);
+    await waitFor(() => expect(router.state.location.search).not.toContain("unknown"));
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    await waitFor(() => expect(router.state.location.search).toBe("?source=recorded"));
+    expect(screen.getByLabelText("Sort by")).toHaveValue("created");
+  });
+
+  it("applies result filters in mock mode and preserves them when changing tabs", async () => {
+    renderApp("/backtests?minWinRate=80&profitable=true");
+    await screen.findByRole("tab", { name: "History data" });
+    await screen.findAllByText("No backtests yet");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("link", { name: "VWAP Intraday v1 Backtest" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByLabelText("Min win rate")).toHaveValue(80);
+    expect(screen.getByRole("switch", { name: "Only profitable" })).toBeChecked();
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Recorded data" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Recorded data" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
+    expect(screen.getByLabelText("Min win rate")).toHaveValue(80);
+    expect(screen.getByRole("switch", { name: "Only profitable" })).toBeChecked();
+  });
+
+  it("resets the page when a filter changes and keeps metric columns free of local sorting", async () => {
+    const queries: URLSearchParams[] = [];
+    const base = mockBacktestRuns[0]!;
+    const strategy = mockStrategies.find((s) => s.id === base.strategyId)!;
+    const spec = strategy.versions.find((v) => v.version === base.strategyVersion)!.spec;
+    server.use(
+      http.get("*/api/v1/backtests", ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        queries.push(params);
+        return HttpResponse.json({
+          items: [{ ...base, segment: spec.segment, timeframe: spec.timeframe, summary: null }],
+          total: 100,
+          nextCursor: null,
+        });
+      }),
+    );
+    renderApp("/backtests");
+    await screen.findByRole("columnheader", { name: "CAGR" });
+    expect(
+      within(screen.getByRole("columnheader", { name: "CAGR" })).queryByRole("button"),
+    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Next page" })).not.toBeDisabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    await waitFor(() => expect(queries.at(-1)?.get("offset")).toBe("50"));
+    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "completed" } });
+    await waitFor(() => expect(queries.at(-1)?.get("offset")).toBe("0"));
+    expect(queries.at(-1)?.get("status")).toBe("completed");
+  });
+
   it("lists every run with its status", async () => {
     renderApp("/backtests");
     // Only the newest version of each backtest is listed (D60): run_006 is v1 of run_002.
-    for (const run of mockBacktestRuns.filter((r) => r.id !== "run_006")) {
+    for (const run of mockBacktestRuns.filter(
+      (r) => r.id !== "run_006" && r.dataSource === "history",
+    )) {
       const name = run.version > 1 ? `${run.name} · v${run.version}` : run.name;
       expect((await screen.findAllByRole("link", { name })).length).toBeGreaterThan(0);
     }
@@ -40,6 +133,13 @@ describe("Backtests list", () => {
     expect(screen.getAllByText("Running · 56%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("12 symbols").length).toBeGreaterThan(0);
     expect(screen.getAllByText("NIFTY 50").length).toBeGreaterThan(0);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Recorded data" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    for (const run of mockBacktestRuns.filter((r) => r.dataSource === "recorded")) {
+      expect((await screen.findAllByRole("link", { name: run.name })).length).toBeGreaterThan(0);
+    }
   });
 });
 
