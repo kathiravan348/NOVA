@@ -1,6 +1,6 @@
 # NOVA-171 — Backtests page: History / Recorded tabs, result columns, filters (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
 
 ## Goal
 **Backtests** has two tabs, **History data** and **Recorded data**. The table shows each run's results, and a
@@ -48,3 +48,8 @@ Modify:
 ## Questions
 
 ## Handoff
+- Paused by Claude, 3 Oct 2026 (usage limit). Done on this branch, not yet checked: `runFilters.ts`
+  (URL ⇄ values ⇄ `BacktestFilter`) and `RunFilters.tsx` (filter bar, More filters, Clear, 400 ms typing delay).
+- Left: wire `BacktestsPage` (Tabs by `?source=`, filters in the URL, page reset), result columns in
+  `runColumns.tsx` (typed `BacktestRunListItem`, `enableSorting: false` when sorting is the server's),
+  `runFilters.test.ts`, page tests, USER-GUIDE, `pnpm review:check`, then merge.
