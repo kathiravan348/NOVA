@@ -1,6 +1,6 @@
 # NOVA-177 — Timeline events endpoint + held time on sells (D83)
 
-**Status:** ready-for-review · **Owner:** Claude · **Branch:** task/NOVA-177 · **Depends on:** NOVA-175
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-177 · **Depends on:** NOVA-175
 
 ## Goal
 `GET /backtests/{id}/timeline` returns a run's buys and sells as one flat list, oldest first, and paged.
@@ -63,4 +63,12 @@ _(implementer writes here if blocked)_
 **Known gaps:** none. Mocks filter by the UTC date prefix, like `/ledger/{date}` (all mock times are IST daytime).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked Claude to build and review).
+**Fixed directly (review: commits):** none needed.
+**Checks:** backend-check 1417 passed; frontend format, lint, typecheck, 1147 tests (4 workers), app + Storybook builds green.
+**Acceptance:** `entryAt` on sells / null on buys (unit + API + mock tests); timeline order, `total`, paging,
+symbol and IST date filters, 404 and both 400s plus reversed dates (API and mock); hook loads two pages then stops.
+The gateway routes `/backtests/*` by prefix, so the new path needs no gateway change.
+**Guides checked:** API.md rows (`/timeline`, `entryAt`) and CONTRACTS.md match the diff.
+**Rulebook issues found:** none. **Follow-up tasks created:** none.
