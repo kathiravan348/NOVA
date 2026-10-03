@@ -184,6 +184,7 @@ class Instrument(Base):
         check_in("exchange", "exchange", EXCHANGES),
         check_in("segment", "segment", SEGMENTS),
         CheckConstraint("lot_size IS NULL OR lot_size > 0", name="lot_size"),
+        CheckConstraint("tick_size_paise > 0", name="tick_size_paise"),
     )
 
     exchange: Mapped[str] = mapped_column(primary_key=True)
@@ -193,6 +194,7 @@ class Instrument(Base):
     sector: Mapped[str]
     indices: Mapped[list[str]] = mapped_column(server_default="{}")
     lot_size: Mapped[int | None] = mapped_column(Integer)
+    tick_size_paise: Mapped[int | None] = mapped_column(Integer)
     instrument_token: Mapped[int | None] = mapped_column(BigInteger, unique=True)
     updated_at: Mapped[datetime] = created_at_column()
 
@@ -308,6 +310,9 @@ class TickSession(Base):
     __table_args__ = (
         CheckConstraint("stocks >= 0 AND ticks >= 0", name="counts"),
         CheckConstraint("feed_gap_seconds BETWEEN 0 AND 22500", name="feed_gap_seconds"),
+        CheckConstraint(
+            "longest_feed_gap_seconds BETWEEN 0 AND 22500", name="longest_feed_gap_seconds"
+        ),
     )
 
     day: Mapped[date] = mapped_column(primary_key=True)
@@ -315,6 +320,7 @@ class TickSession(Base):
     ticks: Mapped[int] = mapped_column(BigInteger)
     # Session seconds (09:15–15:30 IST) in which no stock had a tick: the feed was down.
     feed_gap_seconds: Mapped[int] = mapped_column(Integer)
+    longest_feed_gap_seconds: Mapped[int | None] = mapped_column(Integer)
     summarized_at: Mapped[datetime]
 
 

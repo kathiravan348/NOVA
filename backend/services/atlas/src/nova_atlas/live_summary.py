@@ -7,6 +7,7 @@ with ticks. `GET /live/stocks` then reads only these small tables.
 
 import logging
 from datetime import UTC, date, datetime, time, timedelta
+from itertools import pairwise
 from pathlib import Path
 
 import pyarrow.parquet as pq
@@ -53,13 +54,18 @@ def _archived_days(root: Path) -> set[date]:
 
 
 def pending_days(db: Session, root: Path, now: datetime) -> list[date]:
-    """Weekdays with stored ticks and no summary yet, oldest first; today only after 15:35 IST.
+    """Weekdays with stored ticks and no complete summary, oldest first; today after 15:35 IST.
+
+    A summary without `longest_feed_gap_seconds` (written before migration 0031) is rebuilt
+    once, but only while the day's ticks are stored: rebuilding from nothing erases its counts.
 
     Cheap enough to run every minute: it lists chunks and folders, never scans tick rows.
     """
     local = now.astimezone(IST)
     candidates = set(db.scalars(_CHUNK_DAYS)) | _archived_days(root)
-    done = set(db.scalars(select(TickSession.day)))
+    done = set(
+        db.scalars(select(TickSession.day).where(TickSession.longest_feed_gap_seconds.is_not(None)))
+    )
     return sorted(
         day
         for day in candidates - done
@@ -114,7 +120,10 @@ def summarize_day(db: Session, root: Path, day: date, now: datetime) -> TickSess
                 for symbol, (ticks, size, seconds) in rows.items()
             ],
         )
+    boundaries = [first - 1, *sorted(active), last]
+    longest_gap = max(right - left - 1 for left, right in pairwise(boundaries)) if rows else 0
     values = {
+        "longest_feed_gap_seconds": longest_gap,
         "stocks": len(rows),
         "ticks": sum(ticks for ticks, _, _ in rows.values()),
         "feed_gap_seconds": SESSION_SECONDS - len(active) if rows else 0,

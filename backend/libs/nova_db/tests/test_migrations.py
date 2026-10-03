@@ -55,11 +55,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "index_ticks", "ticks"]
 
 
-def test_head_revision_is_0030(engine: Engine) -> None:
+def test_head_revision_is_0031(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0030"
+    assert head == "0031"
 
 
 def test_trade_exit_reason_round_trip(engine: Engine, database_url: str) -> None:
@@ -462,5 +462,52 @@ def test_index_ticks_migration_round_trip(engine: Engine, database_url: str) -> 
                 == 1
             )
         assert diff(database_url) == []
+    finally:
+        upgrade(database_url)
+
+
+def test_tick_size_feed_gap_round_trip(engine: Engine, database_url: str) -> None:
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    downgrade(database_url, "0030")
+    try:
+        assert "tick_size_paise" not in {
+            c["name"] for c in inspect(engine).get_columns("instruments")
+        }
+        assert "longest_feed_gap_seconds" not in {
+            c["name"] for c in inspect(engine).get_columns("tick_sessions")
+        }
+        upgrade(database_url)
+        assert diff(database_url) == []
+        for value in (0, -1):
+            with pytest.raises(IntegrityError), engine.begin() as connection:
+                connection.execute(
+                    text(
+                        "INSERT INTO instruments (exchange, symbol, name, segment, sector,"
+                        " tick_size_paise) VALUES ('NSE', 'STEP', 'Step',"
+                        " 'equity_delivery', 'Test', :value)"
+                    ),
+                    {"value": value},
+                )
+        for value in (-1, 22501):
+            with pytest.raises(IntegrityError), engine.begin() as connection:
+                connection.execute(
+                    text(
+                        "INSERT INTO tick_sessions (day, stocks, ticks, feed_gap_seconds,"
+                        " longest_feed_gap_seconds, summarized_at)"
+                        " VALUES ('2026-10-01', 0, 0, 0, :value, now())"
+                    ),
+                    {"value": value},
+                )
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO tick_sessions (day, stocks, ticks, feed_gap_seconds,"
+                    " longest_feed_gap_seconds, summarized_at)"
+                    " VALUES ('2026-10-01', 0, 0, 0, 0, now())"
+                )
+            )
+            connection.execute(text("DELETE FROM tick_sessions WHERE day = '2026-10-01'"))
     finally:
         upgrade(database_url)
