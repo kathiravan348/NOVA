@@ -8,7 +8,12 @@ from typing import Any
 import pytest
 from nova_broker.crypto import TokenCipher
 from nova_broker.recorder import Sink
-from nova_broker.recorder_loop import RecorderLoop, in_market_hours, session_progress
+from nova_broker.recorder_loop import (
+    RecorderLoop,
+    in_market_hours,
+    in_recording_window,
+    session_progress,
+)
 from nova_broker.settings import BrokerSettings
 from nova_db.models import DataJob, RecorderSetting, Tick
 from sqlalchemy import Engine, func, select, update
@@ -84,7 +89,9 @@ def job(engine: Engine, job_id: str) -> DataJob:
 
 def until_close(sink: Sink, should_stop: Callable[[], bool], clock: Clock) -> None:
     sink(rows(3, clock.at))
-    clock.at = FRIDAY_10_IST.replace(hour=10, minute=0)  # 15:30 IST
+    clock.at = FRIDAY_10_IST.replace(hour=10, minute=0)  # 15:30 IST: still recording (D81)
+    assert not should_stop()
+    clock.at = FRIDAY_10_IST.replace(hour=10, minute=1)  # 15:31 IST
     assert should_stop()
 
 
@@ -94,6 +101,36 @@ def test_market_hours_are_weekdays_0915_to_1530_ist() -> None:
     assert not in_market_hours(FRIDAY_10_IST.replace(hour=3, minute=44))  # 09:14 IST
     assert not in_market_hours(FRIDAY_10_IST.replace(hour=10, minute=0))  # 15:30 IST
     assert session_progress(FRIDAY_10_IST.replace(hour=3, minute=45)) == 0
+
+
+def test_recording_window_is_weekdays_0914_to_1531_ist() -> None:
+    friday = FRIDAY_10_IST
+    assert in_recording_window(friday.replace(hour=3, minute=44))  # 09:14:00
+    assert not in_recording_window(friday.replace(hour=3, minute=43, second=59))  # 09:13:59
+    assert in_recording_window(friday.replace(hour=10, minute=0, second=59))  # 15:30:59
+    assert not in_recording_window(friday.replace(hour=10, minute=1))  # 15:31:00
+    assert not in_recording_window(SATURDAY_10_IST)
+
+
+def test_a_recording_starts_at_0914_ist(
+    synced: Engine, kite_session: str, settings: BrokerSettings
+) -> None:
+    switch(synced, True)
+    at_0914 = Clock(FRIDAY_10_IST.replace(hour=3, minute=44))
+
+    assert make_loop(synced, settings, at_0914, until_close).step() is not None
+
+
+@pytest.mark.parametrize(
+    "at",
+    [FRIDAY_10_IST.replace(hour=3, minute=43, second=59), FRIDAY_10_IST.replace(hour=10, minute=1)],
+)
+def test_no_recording_before_0914_or_from_1531_ist(
+    synced: Engine, kite_session: str, settings: BrokerSettings, at: datetime
+) -> None:
+    switch(synced, True)
+
+    assert make_loop(synced, settings, Clock(at), until_close).step() is None
 
 
 def test_switched_off_does_nothing(

@@ -1,6 +1,6 @@
 # NOVA-163 — Recorder: record 09:14–15:31 and reconnect a silent feed after 10 s
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-163 · **Depends on:** —
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-163 · **Depends on:** —
 
 ## Goal
 The recorder connects before the open and stops after the close (09:14–15:31 IST), and inside the session a feed
@@ -48,7 +48,16 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+- Built by Claude, 3 Oct 2026. `recorder_loop.in_recording_window` (weekdays 09:14–15:31 IST) drives `step()` and
+  `should_stop`; `in_market_hours` stays because `recorder_settings` uses it for the `no_login` state.
+- `recorder.stall_limit(now)`: 10 s inside 09:15–15:30 IST, else 60 s (own IST constants); message names the limit.
+  `READ_TIMEOUT_SECONDS` 5 → 2.
+- Tests: window edges (09:13:59 / 09:14 / 15:30:59 / 15:31, Saturday), a recording starts at 09:14, stops at 15:31;
+  10 s stall in session, no reconnect for 30 s at 09:14, 60 s on a Saturday, `stall_limit` edges.
+- backend-check: 1,343/1,344; `core/test_agent_gateway.py::test_agent_local_access` failed once with a
+  `CancelledError` and passes alone (41/41): flaky, unrelated.
+- Guides: API (recorder row), USER-GUIDE (Live → Config).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+Self-review: yes (Owner allowed self-review on 3 Oct 2026). Matches the task; D79 backoff/buffer untouched.
+Deployed Saturday 3 Oct 2026 (market closed): `docker compose up -d --build --no-deps tick-recorder`. Verdict: done.

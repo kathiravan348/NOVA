@@ -1,8 +1,9 @@
 """The always-on tick recorder (D49, D54): records market hours while Relay's switch is on.
 
-Every `poll_seconds` it reads `recorder_settings`. On a weekday between 09:15 and 15:30 IST,
-with the switch on and a live Kite session, it opens a `tick_record` data job and records until
-15:30, until the switch goes off or the job is cancelled in Relay (a cancel also turns it off).
+Every `poll_seconds` it reads `recorder_settings`. On a weekday between 09:14 and 15:31 IST (D81:
+a minute either side of the 09:15–15:30 session, so neither end is cut by the poll or a small clock
+error), with the switch on and a live Kite session, it opens a `tick_record` data job and records
+until 15:31, the switch goes off or the job is cancelled in Relay (a cancel also turns it off).
 A failed recording is retried after 10 s, 30 s, then every 60 s (D79).
 """
 
@@ -36,6 +37,8 @@ logger = logging.getLogger("nova.broker.recorder_loop")
 IST = ZoneInfo("Asia/Kolkata")
 MARKET_OPEN = time(9, 15)
 MARKET_CLOSE = time(15, 30)
+RECORD_START = time(9, 14)
+RECORD_END = time(15, 31)
 CHECK_SECONDS = 5.0
 # Waits after consecutive failed recordings; a recording that ran RESET_AFTER starts again at 10 s.
 RETRY_STEPS = (timedelta(seconds=10), timedelta(seconds=30), timedelta(seconds=60))
@@ -44,6 +47,12 @@ ERROR_LENGTH = 500
 
 # (url, instrument token → symbol, sink, should_stop): records until should_stop() is true.
 Record = Callable[[str, dict[int, str], Sink, Callable[[], bool]], None]
+
+
+def in_recording_window(now: datetime) -> bool:
+    """Weekday 09:14–15:31 IST: when the recorder is connected (D81)."""
+    local = now.astimezone(IST)
+    return local.weekday() < 5 and RECORD_START <= local.time() < RECORD_END
 
 
 def in_market_hours(now: datetime) -> bool:
@@ -153,7 +162,7 @@ class RecorderLoop:
         with self.factory() as db:
             setting = load_setting(db)
             db.commit()
-            if not setting.enabled or not in_market_hours(now):
+            if not setting.enabled or not in_recording_window(now):
                 return None
             try:
                 live = active_session(db, self.cipher)
@@ -204,7 +213,7 @@ class RecorderLoop:
         def should_stop() -> bool:
             nonlocal last_check, wanted
             now = self.now()
-            if self.stop.is_set() or not in_market_hours(now):
+            if self.stop.is_set() or not in_recording_window(now):
                 return True
             if (now - last_check).total_seconds() >= CHECK_SECONDS:
                 last_check = now
