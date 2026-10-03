@@ -42,6 +42,8 @@ interface DataTableBaseProps<TData, TValue> {
 }
 
 interface DataTableSelectionProps<TData> {
+  /** Optional inline details after a desktop row and inside its mobile card. Return null when closed. */
+  renderRowDetails?: (row: TData) => React.ReactNode;
   /** Selection is on when both are set; needs `getRowId`. */
   selectedIds?: string[];
   onSelectedIdsChange?: (ids: string[]) => void;
@@ -50,6 +52,7 @@ interface DataTableSelectionProps<TData> {
 }
 
 interface DataTableGroupedProps<TData> {
+  renderRowDetails?: never;
   /**
    * Rows in collapsible groups, not paginated. Not combined with selection: a row in two groups
    * would show two checkboxes for one choice.
@@ -80,6 +83,7 @@ export function DataTable<TData, TValue = unknown>({
   search,
   toolbar,
   groups,
+  renderRowDetails,
 }: DataTableProps<TData, TValue>): React.ReactElement {
   const open = useOpenGroups(groups?.defaultOpen);
   const [sorting, setSorting] = React.useState<SortingState>(initialSort ?? []);
@@ -210,7 +214,21 @@ export function DataTable<TData, TValue = unknown>({
                     </td>
                   </tr>
                 ) : (
-                  table.getRowModel().rows.map((row) => <DataRow key={row.id} row={row} />)
+                  table.getRowModel().rows.map((row) => {
+                    const detail = renderRowDetails?.(row.original);
+                    return (
+                      <React.Fragment key={row.id}>
+                        <DataRow row={row} />
+                        {detail != null && (
+                          <tr>
+                            <td colSpan={allColumns.length} className="px-5 py-4">
+                              {detail}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })
                 )}
               </tbody>
             )}
@@ -236,6 +254,7 @@ export function DataTable<TData, TValue = unknown>({
               error={error}
               emptyState={emptyContent}
               rows={grouped ? [] : undefined}
+              renderRowDetails={renderRowDetails}
             />
           )}
         </div>

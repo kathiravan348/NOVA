@@ -2,12 +2,24 @@ import { formatInTimeZone } from "date-fns-tz";
 import type {
   BacktestRunStatus,
   DataSource,
+  ExitReason,
   Segment,
   StrategyStatus,
   StrategyTimeframe,
 } from "@nova/contracts";
 
 const IST = "Asia/Kolkata";
+
+export const exitReasonLabel: Record<ExitReason, string> = {
+  signal: "Signal",
+  stop: "Stop-loss",
+  target: "Target",
+  time_exit: "Time exit",
+  square_off: "Square-off 15:20",
+  market_filter: "Market filter",
+  rotation: "Rotation",
+  end_of_period: "End of period",
+};
 
 export const runStatusLabel: Record<BacktestRunStatus, string> = {
   queued: "Queued",

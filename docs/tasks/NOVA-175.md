@@ -1,6 +1,6 @@
 # NOVA-175 — Backtest Timeline popup (day ledger) (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-175 · **Depends on:** NOVA-173, NOVA-174
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-175 · **Depends on:** NOVA-173, NOVA-174
 
 ## Goal
 A backtest's page has a **Timeline** button. It opens a popup with one row per trading day (buys, sells,
@@ -13,8 +13,11 @@ reason and the cash left after it.
 
 ## Files
 Create:
+- `frontend/packages/ui-core/src/components/DataTable/DataTableDetails.stories.tsx`
 - `frontend/apps/nova-orbit/src/pages/backtests/TimelineDialog.tsx`, `TimelineDayEvents.tsx`, test `timeline.test.tsx`
 Modify:
+- `frontend/packages/ui-core/src/components/DataTable/{DataTable.tsx,DataTableCards.tsx,DataTable.test.tsx}` (optional inline row details)
+- `docs/COMPONENTS.md` (DataTable row details)
 - `frontend/apps/nova-orbit/src/pages/backtests/BacktestResultPage.tsx` (the button only)
 - `frontend/apps/nova-orbit/src/lib/format.ts` (`exitReasonLabel`)
 - `docs/guides/USER-GUIDE.md` (Backtest result → Timeline; explain "cash" and "holdings")
@@ -43,5 +46,6 @@ Modify:
 - Backend changes, a calendar view, CSV export, charts inside the popup.
 
 ## Questions
+- Scope clarification (ChatGPT, planner): the shared DataTable needs optional row details to expand a day inline in tables and mobile cards. Add this generic capability with a story and render test before using it in Timeline.
 
 ## Handoff

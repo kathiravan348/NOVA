@@ -38,81 +38,91 @@ import { SymbolBreakdown } from "./SymbolBreakdown";
 import { TradesTable } from "./TradesTable";
 import { VersionsTable } from "./VersionsTable";
 import { YearsTable } from "./YearsTable";
+import { TimelineDialog } from "./TimelineDialog";
 
 function RunHeader({ run }: { run: BacktestRun }) {
+  const [timeline, setTimeline] = useState(false);
   const strategy = useStrategy(run.strategyId);
   const navigate = useNavigate();
   const active = run.status === "queued" || run.status === "running";
   return (
-    <Card>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-page-title text-text-primary">
-            {run.name}
-            {run.version > 1 && <span className="text-text-muted"> · v{run.version}</span>}
-          </h2>
-          <StatusBadge tone={runStatusTone[run.status]} label={runStatusLabel[run.status]} />
-          <div className="flex flex-wrap gap-2 sm:ml-auto">
-            {run.status === "completed" && run.reportKept && (
-              <Button asChild variant="secondary" size="sm">
-                <Link to={`/compare?runs=${run.id}`}>
-                  <GitCompare className="h-4 w-4" aria-hidden="true" />
-                  Compare
-                </Link>
-              </Button>
-            )}
-            {!active && (
-              <Button asChild variant="secondary" size="sm">
-                <Link to={`/backtests/${run.id}/edit`}>
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                  Edit
-                </Link>
-              </Button>
-            )}
-            {run.status !== "running" && (
-              <DeleteBacktestButton
-                runId={run.id}
-                name={run.name}
-                onDeleted={() => navigate("/backtests")}
-              />
-            )}
+    <>
+      <Card>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-page-title text-text-primary">
+              {run.name}
+              {run.version > 1 && <span className="text-text-muted"> · v{run.version}</span>}
+            </h2>
+            <StatusBadge tone={runStatusTone[run.status]} label={runStatusLabel[run.status]} />
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
+              {run.status === "completed" && run.reportKept && (
+                <>
+                  <Button variant="secondary" size="sm" onClick={() => setTimeline(true)}>
+                    Timeline
+                  </Button>
+                  <Button asChild variant="secondary" size="sm">
+                    <Link to={`/compare?runs=${run.id}`}>
+                      <GitCompare className="h-4 w-4" aria-hidden="true" />
+                      Compare
+                    </Link>
+                  </Button>
+                </>
+              )}
+              {!active && (
+                <Button asChild variant="secondary" size="sm">
+                  <Link to={`/backtests/${run.id}/edit`}>
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    Edit
+                  </Link>
+                </Button>
+              )}
+              {run.status !== "running" && (
+                <DeleteBacktestButton
+                  runId={run.id}
+                  name={run.name}
+                  onDeleted={() => navigate("/backtests")}
+                />
+              )}
+            </div>
           </div>
+          <DescriptionList
+            columns={2}
+            items={[
+              {
+                label: "Strategy",
+                value: (
+                  <Link
+                    to={`/strategies/${run.strategyId}`}
+                    className="text-action-text hover:underline"
+                  >
+                    {strategy.data?.name ?? run.strategyId} · v{run.strategyVersion}
+                  </Link>
+                ),
+              },
+              { label: "Symbols", value: describeUniverse(run.universe) },
+              { label: "Period", value: formatPeriod(run.from, run.to) },
+              {
+                label: "Initial capital",
+                value: formatInr(run.initialCapitalPaise, { decimals: 0 }),
+                numeric: true,
+              },
+              { label: "Benchmark", value: run.benchmark ?? "None" },
+              { label: "Data", value: dataSourceLabel[run.dataSource] },
+              ...(run.dataSource === "recorded" && run.recordedDaysUsed !== null
+                ? [{ label: "Recorded days", value: <RecordedDays run={run} /> }]
+                : []),
+              { label: "Created", value: formatIstDateTime(run.createdAt) },
+              {
+                label: "Finished",
+                value: run.finishedAt ? formatIstDateTime(run.finishedAt) : "—",
+              },
+            ]}
+          />
         </div>
-        <DescriptionList
-          columns={2}
-          items={[
-            {
-              label: "Strategy",
-              value: (
-                <Link
-                  to={`/strategies/${run.strategyId}`}
-                  className="text-action-text hover:underline"
-                >
-                  {strategy.data?.name ?? run.strategyId} · v{run.strategyVersion}
-                </Link>
-              ),
-            },
-            { label: "Symbols", value: describeUniverse(run.universe) },
-            { label: "Period", value: formatPeriod(run.from, run.to) },
-            {
-              label: "Initial capital",
-              value: formatInr(run.initialCapitalPaise, { decimals: 0 }),
-              numeric: true,
-            },
-            { label: "Benchmark", value: run.benchmark ?? "None" },
-            { label: "Data", value: dataSourceLabel[run.dataSource] },
-            ...(run.dataSource === "recorded" && run.recordedDaysUsed !== null
-              ? [{ label: "Recorded days", value: <RecordedDays run={run} /> }]
-              : []),
-            { label: "Created", value: formatIstDateTime(run.createdAt) },
-            {
-              label: "Finished",
-              value: run.finishedAt ? formatIstDateTime(run.finishedAt) : "—",
-            },
-          ]}
-        />
-      </div>
-    </Card>
+      </Card>
+      {timeline && <TimelineDialog run={run} onOpenChange={setTimeline} />}
+    </>
   );
 }
 

@@ -5,6 +5,20 @@ import { DataTable } from "./DataTable";
 import { fileColumns, fileSearchText, sampleFiles, type FileItem } from "./storyData";
 
 describe("DataTable", () => {
+  it("renders inline details after a desktop row and inside its mobile card", () => {
+    render(
+      <DataTable
+        caption="Files with details"
+        columns={fileColumns}
+        data={sampleFiles.slice(0, 2)}
+        renderRowDetails={(row) => (row.id === sampleFiles[0]!.id ? <p>File detail</p> : null)}
+      />,
+    );
+    const details = screen.getAllByText("File detail");
+    expect(details).toHaveLength(2);
+    expect(details[0]!.closest("td")).toHaveAttribute("colspan", String(fileColumns.length));
+    expect(details[1]!.closest("li")).toBeInTheDocument();
+  });
   it("renders caption, headers and first page rows", () => {
     render(
       <DataTable<FileItem>
