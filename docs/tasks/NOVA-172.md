@@ -1,6 +1,6 @@
 # NOVA-172 — Compare: pick runs in a popup with filters (D82)
 
-**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-172 · **Depends on:** NOVA-171, NOVA-173
+**Status:** ready-for-review · **Owner:** ChatGPT · **Branch:** task/NOVA-172 · **Depends on:** NOVA-171, NOVA-173
 
 ## Goal
 **Compare** no longer lists every run above the results. The chosen runs show as a short row at the top;
@@ -34,11 +34,11 @@ Modify (guide):
    as today. Skipped-run note, metrics table and equity curves stay as they are.
 
 ## Acceptance checks
-- [ ] Opening `/compare?runs=a,b` shows the comparison immediately, with two chips and no run list.
-- [ ] In the dialog: filtering by Min CAGR narrows the table; choosing a history run and a recorded run, then
+- [x] Opening `/compare?runs=a,b` shows the comparison immediately, with two chips and no run list.
+- [x] In the dialog: filtering by Min CAGR narrows the table; choosing a history run and a recorded run, then
       **Compare**, updates the URL and the results; **Cancel** leaves the selection unchanged.
-- [ ] A fourth checkbox is disabled when three are chosen.
-- [ ] Checked at 360px (dialog fills the screen width) and desktop, dark and light; `pnpm review:check`.
+- [x] A fourth checkbox is disabled when three are chosen.
+- [x] Checked at 360px (dialog fills the screen width) and desktop, dark and light; `pnpm review:check`.
 
 ## Out of scope
 - More than 3 runs, new comparison metrics, backend changes.
