@@ -19,7 +19,7 @@
 | EmptyState | Centered empty or error placeholder with icon, title, description, and action | `Core/EmptyState` |
 | LoadMore | "Load more" button under a paged list; hidden when nothing is left, disabled while loading | `Core/LoadMore` |
 | Pager | Controlled entry range and total, page count, first/previous/next/last, Enter to jump, and rows per page (25/50/100/200); empty/loading states | `Core/Pager` |
-| Modal | Accessible Radix dialog with title, description, body scroll, and footer actions | `Core/Modal` |
+| Modal | Accessible Radix dialog with title, description, body scroll and footer actions; md/lg/xl widths with a mobile gutter | `Core/Modal` |
 | TextBlock | Full plain text in a wrapped, scrollable monospace block with keyboard focus; empty and long-content states | `Core/TextBlock` |
 | Tabs | Data-driven horizontal tabs with active indicator and mobile horizontal scroll | `Core/Tabs` |
 | ToastProvider / useToast | Radix toast notification manager with tone icons (success, danger, neutral) | `Core/Toast` |

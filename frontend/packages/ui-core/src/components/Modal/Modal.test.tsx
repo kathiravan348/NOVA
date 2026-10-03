@@ -3,6 +3,18 @@ import { describe, expect, it } from "vitest";
 import { Modal } from "./Modal";
 
 describe("Modal", () => {
+  it.each([
+    ["md", "max-w-lg"],
+    ["lg", "max-w-3xl"],
+    ["xl", "max-w-6xl"],
+  ] as const)("uses the %s width with the mobile gutter", (size, width) => {
+    render(
+      <Modal defaultOpen size={size} title="Size">
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog")).toHaveClass(width, "w-[calc(100%-2rem)]");
+  });
   it("opens from trigger, shows title, and closes via close button", () => {
     render(
       <Modal

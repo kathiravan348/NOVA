@@ -1,6 +1,6 @@
 # NOVA-173 — Results by symbol: best 5 / worst 5 + "View all" popup; Modal sizes (D82)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-173 · **Depends on:** NOVA-169 (same result page)
 
 ## Goal
 A backtest's page shows a short **Results by symbol** (best 5 and worst 5). **View all N symbols** opens a
@@ -41,3 +41,11 @@ Modify:
 ## Questions
 
 ## Handoff
+- Built by ChatGPT, 3 Oct 2026. Best/worst five, symbol/profitable counts, average profit per trade and full popup.
+- Popup: symbol search, All/Winners/Losers, sortable columns, 25-row pages and Show trades closing/filtering/scrolling.
+- Modal: optional md/lg/xl sizes, default preserved, mobile gutter, Sizes story and per-size render tests.
+- Changed: Modal component/story/tests; SymbolBreakdown, SymbolsDialog, result page, symbols tests, COMPONENTS and USER-GUIDE.
+- Checks: 9 focused tests; full review:check green (1111 tests, app and Storybook builds).
+- Visual: Sizes story and actual popup at 360px/1440px, dark/light; no modal overflow. Mock preview only.
+- Guides: USER-GUIDE (symbol report), COMPONENTS (Modal). Dependencies: none.
+- Not merged: independent review required; branch follows task/NOVA-171 in the sequential review chain.
