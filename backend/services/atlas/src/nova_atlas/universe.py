@@ -6,6 +6,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 
 from nova_db.models import Candle, Instrument, MarketIndex, UniverseEntry
 from sqlalchemy import select
@@ -30,6 +31,7 @@ class KiteStock:
     symbol: str
     name: str
     token: int
+    tick_size_paise: int | None = None
 
 
 @dataclass
@@ -64,6 +66,21 @@ def load_universe(db: Session) -> list[UniverseEntry]:
     return list(db.scalars(query.order_by(UniverseEntry.symbol)))
 
 
+def _tick_size(raw: str | None) -> int | None:
+    """Convert Kite's rupee decimal exactly; unavailable or invalid steps stay unknown."""
+    if not raw:
+        return None
+    try:
+        value = Decimal(raw) * 100
+    except InvalidOperation:
+        return None
+    return (
+        int(value)
+        if value.is_finite() and value > 0 and value == value.to_integral_value()
+        else None
+    )
+
+
 def kite_stocks(nse_csv: str) -> tuple[dict[str, KiteStock], dict[str, int]]:
     """NSE stocks by symbol, and index tokens by Kite trading symbol."""
     stocks: dict[str, KiteStock] = {}
@@ -79,7 +96,9 @@ def kite_stocks(nse_csv: str) -> tuple[dict[str, KiteStock], dict[str, int]]:
             and len(symbol) <= 20
         ):
             name = row["name"].strip() or symbol
-            stocks[symbol] = KiteStock(symbol, name[:NAME_LENGTH], token)
+            stocks[symbol] = KiteStock(
+                symbol, name[:NAME_LENGTH], token, _tick_size(row.get("tick_size"))
+            )
     return stocks, indices
 
 
@@ -199,6 +218,7 @@ def sync_instruments(
         instrument.indices = list(row.indices)
         instrument.lot_size = lots.get(symbol)
         instrument.instrument_token = stock.token
+        instrument.tick_size_paise = stock.tick_size_paise
         instrument.updated_at = now
         db.add(instrument)
         result.synced.append(symbol)

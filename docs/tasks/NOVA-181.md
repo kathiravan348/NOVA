@@ -1,6 +1,6 @@
 # NOVA-181 — Atlas: tick size per instrument + longest feed gap per session (D84, migration 0031)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-181 · **Depends on:** NOVA-179 (shares `models/data.py`, migration after 0030)
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-181 · **Depends on:** NOVA-179 (shares `models/data.py`, migration after 0030)
 
 ## Goal
 Every synced stock stores its price step (`tick_size_paise`) from Kite, and every summarized recording day stores

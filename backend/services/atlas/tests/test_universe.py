@@ -160,3 +160,22 @@ def test_a_hand_set_sector_is_kept(clean: Engine, broker: BrokerData) -> None:
         reliance = db.get(UniverseEntry, ("NSE", "RELIANCE"))
 
     assert reliance is not None and reliance.sector == "Energy"
+
+
+@pytest.mark.parametrize(("raw", "paise"), [("0.05", 5), ("0.01", 1), ("", None), ("0", None)])
+def test_kite_tick_size_is_exact_paise(raw: str, paise: int | None) -> None:
+    csv = KITE_HEADER + "\n" + f'1,1,INFY,"INFOSYS",0,,0,{raw},1,EQ,NSE,NSE'
+    stocks, _ = kite_stocks(csv)
+    assert stocks["INFY"].tick_size_paise == paise
+
+
+def test_sync_persists_and_refreshes_tick_sizes(clean: Engine, broker: BrokerData) -> None:
+    with Session(clean) as db:
+        sync_instruments(db, broker)
+        infy = db.get(Instrument, ("NSE", "INFY"))
+        assert infy is not None and infy.tick_size_paise == 5
+        infy.tick_size_paise = 1
+        db.commit()
+        sync_instruments(db, broker)
+        db.refresh(infy)
+        assert infy.tick_size_paise == 5
