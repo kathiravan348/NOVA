@@ -56,7 +56,19 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** migration 0033; `nova_backtest/intraday/` (tick_data, fills, position, replay, engine, dispatch, setups registry);
+`queue_run` + Edit check intraday runs (recorded, frozen profile version, scenario); the worker dispatches by spec mode.
+**Files changed:** the listed files, plus `versions.py` (`check_profile`, Edit inherits the profile), `convert.py` (run
+fields), `save.py` (`with_trades` callback gets the new trade ids), `book.py` (`ClosedTrade.proceeds`: exact sell
+money for exits filled in parts), `nova_db/enums.py` (`SCENARIOS`), `tests/conftest.py` (truncates research profiles;
+helper modules importable).
+**Commands run:** `docker compose run --rm backend-check` pass (1,565 tests).
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** API, DATABASE.
+**Deviations from task:** quote rule made concrete: the latest tick at or before the attempt if ≤ `maxQuoteAgeMs` old,
+else later ticks up to that age; no bid counts as `wide_spread`. Exits also wait the scenario delay after the trigger.
+Charges are per order (one call per buy/sell order by value). Equity = cash after each usable session. Unresolved
+positions are valued at the stock's last bid of the day (the stop if none). DB depth is read lazily in windows.
+**Known gaps:** sizing is 1 share until NOVA-186; no real setups until NOVA-188/189.
 
 ## Review
 _(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
