@@ -145,7 +145,7 @@ export function toQuery(values: RunFilterValues): BacktestFilter {
   return query;
 }
 
-/** True when any filter (not the sort) is set. */
+/** True when any filter or a non-default sort is set (**Clear filters** resets both). */
 export function hasFilters(values: RunFilterValues): boolean {
   return (
     Boolean(values.q.trim() || values.strategyId || values.status) ||

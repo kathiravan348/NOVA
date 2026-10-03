@@ -25,6 +25,12 @@ const rows = (count: number) =>
   }));
 
 describe("symbol result popup", () => {
+  it("offers no popup when the run has no symbol results", () => {
+    render(<SymbolBreakdown rows={[]} onShowTrades={vi.fn()} />);
+    expect(screen.getAllByText("No trades in this run").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /View all/ })).not.toBeInTheDocument();
+  });
+
   it("shows the best and worst five, then all 30 across two pages", () => {
     render(<SymbolBreakdown rows={rows(30)} onShowTrades={vi.fn()} />);
     const best = screen.getByRole("table", { name: "Best 5" });
