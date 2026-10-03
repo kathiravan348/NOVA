@@ -167,6 +167,10 @@
 | NOVA-159 | Archive: move ticks one stock at a time (bounded memory) | planned | — | 155 |
 | NOVA-160 | Recorded data history: daily tick summaries + `GET /live/stocks` (D80) | done | Claude | 155 |
 | NOVA-161 | Recorded data cards show history (D80) | done | Claude | 160 |
+| NOVA-162 | Recorder: real top 3000 (skip iNAVs, warn about unranked stocks) (D81) | planned | — | — |
+| NOVA-163 | Recorder: record 09:14–15:31, reconnect a silent feed after 10 s (D81) | planned | — | — |
+| NOVA-164 | Daily Kite check of recorded ticks + `GET /live/checks` (D81, migration 0027) | planned | — | — |
+| NOVA-165 | Recorded data shows the daily Kite check (D81) | planned | — | 164 |
 
 ## Parallel lanes (tasks that can run at the same time)
 - After 001: lane A = 002 → 003 → 007…, lane B = 004 → 023 → 005 → 024 → 006.
@@ -196,3 +200,4 @@
 - Recorder fast restart (D79): 158 is backend only and can run beside 156/157; start it after NOVA-155's review (same recorder files). Deploy after 15:45 IST (D76).
 - Archive memory (NOVA-155 review): 159 shares no files with 158/160/161 and can run beside them. Until it ships, do not start an archive job for a 3,000-stock day.
 - Recorded data history (D80): 160 (backend; shares no files with 158/159) → 161 (frontend, merges after 160 is deployed after 15:45 IST).
+- Recorder data quality (D81): 162 (frontend), 163 (broker recorder) and 164 (Atlas) share no files and can run in parallel; 165 after 164 (merges after 164 is deployed). Deploy 163 and 164 after 15:45 IST or at a weekend (D76). After 162 ships, the Owner downloads daily bars for the unranked stocks, then presses *Pick top 3000* and saves.
