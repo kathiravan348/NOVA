@@ -28,7 +28,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_constraint("ck_tick_sessions_longest_feed_gap_seconds", "tick_sessions", type_="check")
+    op.drop_constraint(
+        op.f("ck_tick_sessions_longest_feed_gap_seconds"), "tick_sessions", type_="check"
+    )
     op.drop_column("tick_sessions", "longest_feed_gap_seconds")
-    op.drop_constraint("ck_instruments_tick_size_paise", "instruments", type_="check")
+    op.drop_constraint(op.f("ck_instruments_tick_size_paise"), "instruments", type_="check")
     op.drop_column("instruments", "tick_size_paise")
