@@ -1,6 +1,6 @@
 # NOVA-186 — Intraday simulator: risk sizing, account guard, skip-reason log (D84, migration 0034)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-186 · **Depends on:** NOVA-185
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-186 · **Depends on:** NOVA-185
 
 ## Goal
 Every intraday candidate passes the account checks of `docs/INTRADAY-RESEARCH.md` §2 (Account) and §5 (2–4) before a
@@ -54,7 +54,25 @@ Modify:
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+**Done:** migration 0034 (`intraday_decisions`); `sizing.py` (risk search with real charges), `guard.py` (account
+state, §5.4 order, reservations, daily shutdown), `decisions.py` (one row per candidate per session, trade ids linked
+at save); replay and engine use them.
+**Files changed:** the listed files, plus `intraday/fills.py` (fills keep their per-level parts so the guard can cut a
+fill to the room at the real prices), `tests/intraday_factory.py` (`FixedQtyGuard`), `docs/guides/API.md` (sizing text).
+**Commands run:** `docker compose run --rm backend-check` pass (1,582 tests).
+**New dependencies:** none. **Maps updated:** none. **Guides updated:** DATABASE, API.
+**Deviations from task:** guide ch. 16 "≤ 450 shares" holds with the guide's ₹100 cost reserve (test); real charges
+for that example are about ₹50, so real sizing gives 475 (tested: < 500 and the largest fitting quantity).
+Sizing starts from the last ask at the decision + slippage; the fill is cut when real prices need it (`partial`).
+Pools are released when a position closes fully; the losing streak and cooldowns reset each day.
+**Known gaps:** relative volume ranks 0 until NOVA-187; signal checks arrive in NOVA-187.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** entries waiting for their fill now count toward `maxNewPositionsPerDay`
+(two candidates of one minute could pass the limit) + test.
+**Change requests:** none.
+**Guides checked:** DATABASE (0034, map, table) and API (sizing/guard text replaced the "1 share" note) match the diff.
+**Rulebook issues found:** none. Deploy (migrate 0034, `backtest backtest-worker`) waits for a quiet time (D76).
+**Follow-up tasks created:** none.

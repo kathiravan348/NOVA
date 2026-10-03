@@ -303,3 +303,32 @@ class IntradayTrade(Base):
     # Every buy: [{"at": ISO UTC, "qty": n, "price": paise}] (average price of that buy's fills).
     legs: Mapped[JsonList]
     unresolved: Mapped[bool] = mapped_column(server_default=false())
+
+
+class IntradayDecision(Base):
+    """D84 (NOVA-186): every intraday candidate (or add) and what became of it: its first blocking
+    reason and every failed check (`docs/INTRADAY-RESEARCH.md` §5.4)."""
+
+    __tablename__ = "intraday_decisions"
+    __table_args__ = (
+        check_in("action", "action", ("entry", "add")),
+        check_in("outcome", "outcome", ("filled", "partial", "skipped")),
+        CheckConstraint(
+            "(outcome = 'skipped') = (first_reason IS NOT NULL)", name="skip_has_reason"
+        ),
+        CheckConstraint("requested_qty >= 0 AND filled_qty >= 0", name="quantities"),
+        Index(None, "run_id", "at"),
+    )
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("backtest_runs.id", ondelete="CASCADE"))
+    at: Mapped[datetime]
+    symbol: Mapped[str]
+    setup: Mapped[str]
+    action: Mapped[str]
+    outcome: Mapped[str]
+    first_reason: Mapped[str | None]
+    reasons: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    requested_qty: Mapped[int] = mapped_column(Integer)
+    filled_qty: Mapped[int] = mapped_column(Integer)
+    trade_id: Mapped[str | None] = mapped_column(ForeignKey("trades.id", ondelete="SET NULL"))

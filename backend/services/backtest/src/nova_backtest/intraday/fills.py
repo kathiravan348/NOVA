@@ -44,6 +44,7 @@ class Fill:
     qty: int
     value: int  # Σ shares × price in paise (exact)
     spread: int  # that tick's ask − bid (paise)
+    parts: tuple[tuple[int, int], ...] = ()  # (shares, price) per level, best first
 
     @property
     def price(self) -> float:
@@ -178,7 +179,7 @@ def buy(
         return Refusal(reasons[0], tuple(reasons))
     walk(depth.ask_px[0], depth.ask_qty[0], want, "buy", execution, tick_size, taken)
     at = max(int(ticks.ts[i]), attempt_ms)
-    return Fill(i, at, got, sum(q * p for q, p in parts), spread)
+    return Fill(i, at, got, sum(q * p for q, p in parts), spread, tuple(parts))
 
 
 def sell(
@@ -201,4 +202,4 @@ def sell(
         return None
     ask = int(ticks.ask[i])
     spread = ask - int(ticks.bid[i]) if ask > 0 else 0
-    return Fill(i, int(ticks.ts[i]), got, sum(q * p for q, p in parts), spread)
+    return Fill(i, int(ticks.ts[i]), got, sum(q * p for q, p in parts), spread, tuple(parts))

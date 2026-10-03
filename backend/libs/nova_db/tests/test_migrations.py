@@ -4,6 +4,7 @@ from nova_db.models import Base
 from sqlalchemy import Engine, inspect, text
 
 EXPECTED_TABLES = {
+    "intraday_decisions",
     "intraday_trades",
     "research_profiles",
     "research_profile_versions",
@@ -58,11 +59,11 @@ def test_candles_is_a_hypertable(engine: Engine) -> None:
         assert sorted(names) == ["candles", "index_ticks", "ticks"]
 
 
-def test_head_revision_is_0033(engine: Engine) -> None:
+def test_head_revision_is_0034(engine: Engine) -> None:
     with engine.connect() as connection:
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
 
-    assert head == "0033"
+    assert head == "0034"
 
 
 def test_trade_exit_reason_round_trip(engine: Engine, database_url: str) -> None:
@@ -572,5 +573,17 @@ def test_intraday_runs_round_trip(engine: Engine, database_url: str) -> None:
         assert "unresolved" in checks["ck_trades_exit_reason"]
         assert "daily_shutdown" in checks["ck_trades_exit_reason"]
         assert "scenario IS NULL" in checks["ck_backtest_runs_profile_choice"]
+    finally:
+        upgrade(database_url)
+
+
+def test_intraday_decisions_round_trip(engine: Engine, database_url: str) -> None:
+    downgrade(database_url, "0033")
+    try:
+        assert "intraday_decisions" not in inspect(engine).get_table_names()
+        upgrade(database_url)
+        assert diff(database_url) == []
+        indexes = {i["name"] for i in inspect(engine).get_indexes("intraday_decisions")}
+        assert "ix_intraday_decisions_run_id_at" in indexes
     finally:
         upgrade(database_url)

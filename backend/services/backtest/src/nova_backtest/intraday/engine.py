@@ -20,13 +20,15 @@ from sqlalchemy.orm import Session
 
 from nova_backtest.bars import IST
 from nova_backtest.engine import EngineError
+from nova_backtest.intraday.decisions import DecisionLog
 from nova_backtest.intraday.fills import DepthAt, Execution
+from nova_backtest.intraday.guard import Guard
 from nova_backtest.intraday.position import Position
 from nova_backtest.intraday.replay import DayReplay, Timing
 from nova_backtest.intraday.setups import SetupFactory, StockDay, factory_for
+from nova_backtest.intraday.sizing import CostToClose
 from nova_backtest.intraday.tick_data import (
     MINUTE_MS,
-    Sessions,
     TickSource,
     build_bars,
     tick_sizes,
@@ -40,8 +42,6 @@ from nova_backtest.simulate import Simulation
 from nova_backtest.strategy_engine import DEFAULT_SCRATCH
 
 SEGMENT = "equity_intraday"
-# Until NOVA-186 sizes by risk, every entry asks for this many shares.
-TEST_QTY = 1
 
 
 def execution_for(settings: ResearchSettings, scenario: str | None) -> Execution:
@@ -107,8 +107,20 @@ class OrderCosts:
 
     def __call__(self, side: str, value: int, at_ms: int) -> Charges:
         day = datetime.fromtimestamp(at_ms / 1000, UTC).astimezone(IST).date()
+        return self.on_day(side, value, day)
+
+    def on_day(self, side: str, value: int, day: date) -> Charges:
         # One share at the order's value: every charge depends only on value and order count.
         return trade_charges(self.rates(day), "buy" if side == "buy" else "sell", 1, value, None)
+
+    def to_close(self, day: date) -> CostToClose:
+        """Sizing costs of a day: charges of the buy plus the sell at the stop (by value)."""
+
+        def costs(bought: int, sold: int) -> int:
+            buy = self.on_day("buy", bought, day).total_paise
+            return buy + self.on_day("sell", sold, day).total_paise
+
+        return costs
 
 
 class IntradayEngine:
@@ -125,35 +137,68 @@ class IntradayEngine:
         if run.profile_id is None or run.profile_version is None:
             raise EngineError("An intraday run needs a research profile version")
         settings = get_frozen_settings(db, run.profile_id, run.profile_version)
-        factory = factory_for(spec.setup)
-        symbols = run_symbols(db, run)
-        sessions = usable_sessions(
-            db, symbols, run.date_from, run.date_to, settings.data.max_session_gap_seconds
+        _Run(db, run, spec, settings, self.archive_root).execute(self.scratch_root, progress)
+
+
+class _Run:
+    """One intraday run from its first usable session to the saved result."""
+
+    def __init__(
+        self,
+        db: Session,
+        run: BacktestRun,
+        spec: StrategySpecIntraday,
+        settings: ResearchSettings,
+        archive_root: Path,
+    ) -> None:
+        self.db, self.run, self.spec, self.settings = db, run, spec, settings
+        self.archive_root = archive_root
+        self.make: SetupFactory = factory_for(spec.setup)
+        self.symbols = run_symbols(db, run)
+        self.sessions = usable_sessions(
+            db, self.symbols, run.date_from, run.date_to, settings.data.max_session_gap_seconds
         )
-        if not sessions.days:
+        if not self.sessions.days:
             raise EngineError("No usable recorded days in this period")
-        sizes, missing_sizes = tick_sizes(db, symbols)
-        scratch = RunScratch(self.scratch_root, run.id)
-        try:
-            positions, equity, loaded = self._replay(
-                db, run, spec, settings, sessions, symbols, sizes, factory, scratch, progress
+        self.sizes, self.missing_sizes = tick_sizes(db, self.symbols)
+        self.execution = execution_for(settings, run.scenario)
+        self.costs = OrderCosts(db)
+        rows = db.execute(
+            select(Instrument.symbol, Instrument.sector).where(
+                Instrument.exchange == "NSE", Instrument.symbol.in_(self.symbols)
             )
+        )
+        sectors = {symbol: sector or "" for symbol, sector in rows}
+        self.guard = Guard(
+            settings.account, run.initial_capital_paise, sectors, self.costs.to_close(run.date_from)
+        )
+        self.log = DecisionLog(db, run.id)
+        self.positions: list[Position] = []
+        self.equity: list[tuple[date, int]] = []
+        self.loaded: set[str] = set()
+        self.history_inputs: list[str] = []
+
+    def execute(self, scratch_root: Path, progress: ProgressSink) -> None:
+        run = self.run
+        scratch = RunScratch(scratch_root, run.id)
+        try:
+            self._days(scratch, progress)
         finally:
             scratch.close()
-        missing = sorted(set(symbols) - loaded)
+        missing = sorted(set(self.symbols) - self.loaded)
         if run.universe["type"] == "symbols" and missing:
             raise EngineError(f"No recorded ticks in the period for {', '.join(missing)}")
-        if not loaded:
-            raise EngineError(
-                f"No stock in {run.universe['index']} has recorded ticks in the period"
-            )
-        positions.sort(key=lambda p: (p.buys[0].at_ms, p.symbol))
-        result = Simulation([p.trade() for p in positions], equity)
-        inputs = [f"tick_size:{s}" for s in missing_sizes if s in loaded]
+        if not self.loaded:
+            index = run.universe["index"]
+            raise EngineError(f"No stock in {index} has recorded ticks in the period")
+        positions = sorted(self.positions, key=lambda p: (p.buys[0].at_ms, p.symbol))
+        result = Simulation([p.trade() for p in positions], self.equity)
+        inputs = [f"tick_size:{s}" for s in self.missing_sizes if s in self.loaded]
 
         def with_trades(ids: list[str]) -> None:
+            self.log.link({id(p): trade_id for trade_id, p in zip(ids, positions, strict=True)})
             for trade_id, position in zip(ids, positions, strict=True):
-                db.add(
+                self.db.add(
                     IntradayTrade(
                         trade_id=trade_id,
                         stop_paise=position.stop,
@@ -165,73 +210,57 @@ class IntradayEngine:
                     )
                 )
             run.incomplete = any(p.unresolved for p in positions)
-            run.history_inputs = inputs
+            run.history_inputs = list(dict.fromkeys(inputs + self.history_inputs))
 
         start = datetime.combine(run.date_from, time(0, 0), IST).astimezone(UTC)
         end = datetime.combine(run.date_to + timedelta(days=1), time(0, 0), IST).astimezone(UTC)
         save_result(
-            db,
+            self.db,
             run,
             SEGMENT,
-            sorted(loaded),
+            sorted(self.loaded),
             missing,
             result,
             (start, end),
             progress,
-            (len(sessions.days), sessions.skipped),
+            (len(self.sessions.days), self.sessions.skipped),
             with_trades,
         )
 
-    def _replay(
-        self,
-        db: Session,
-        run: BacktestRun,
-        spec: StrategySpecIntraday,
-        settings: ResearchSettings,
-        sessions: Sessions,
-        symbols: list[str],
-        sizes: dict[str, int],
-        make: SetupFactory,
-        scratch: RunScratch,
-        progress: ProgressSink,
-    ) -> tuple[list[Position], list[tuple[date, int]], set[str]]:
-        execution = execution_for(settings, run.scenario)
-        costs = OrderCosts(db)
-        cash = run.initial_capital_paise
-        positions: list[Position] = []
-        equity: list[tuple[date, int]] = []
-        loaded: set[str] = set()
-        total = sum(len(days) for days in sessions.by_symbol.values())
+    def _days(self, scratch: RunScratch, progress: ProgressSink) -> None:
+        total = sum(len(days) for days in self.sessions.by_symbol.values())
         progress.stage("simulating", total)
         done = 0
-        for day in sessions.days:
+        for day in self.sessions.days:
             folder = scratch.path / day.isoformat()
-            source = TickSource(db, self.archive_root, folder)
+            source = TickSource(self.db, self.archive_root, folder)
             stocks: dict[str, StockDay] = {}
-            for symbol in symbols:
-                if day not in sessions.by_symbol.get(symbol, []):
+            for symbol in self.symbols:
+                if day not in self.sessions.by_symbol.get(symbol, []):
                     continue
                 ticks = source.load(symbol, day)
                 done += 1
                 if len(ticks):
                     bars1, bars5 = build_bars(ticks, MINUTE_MS), build_bars(ticks, 5 * MINUTE_MS)
                     stocks[symbol] = StockDay(symbol, day, ticks, bars1, bars5)
-                    loaded.add(symbol)
-            replay = DayReplay(
-                stocks,
-                {s: make(spec.setup, stock) for s, stock in stocks.items()},
-                execution,
-                timing_for(settings, day),
-                sizes,
-                DepthAt(source.depth),
-                costs,
-                lambda _candidate: TEST_QTY,
-            )
-            replay.run()
-            for position in replay.closed:
-                cash += position.trade().net
-            positions.extend(replay.closed)
-            equity.append((day, cash))
-            progress.advance(done, day, len(positions))
+                    self.loaded.add(symbol)
+            self._day(day, stocks, source)
+            progress.advance(done, day, len(self.positions))
             shutil.rmtree(folder, ignore_errors=True)
-        return positions, equity, loaded
+
+    def _day(self, day: date, stocks: dict[str, StockDay], source: TickSource) -> None:
+        self.guard.costs = self.costs.to_close(day)
+        replay = DayReplay(
+            stocks,
+            {s: self.make(self.spec.setup, stock) for s, stock in stocks.items()},
+            self.execution,
+            timing_for(self.settings, day),
+            self.sizes,
+            DepthAt(source.depth),
+            self.costs,
+            self.guard,
+        )
+        replay.run()
+        self.log.write(replay.decisions)
+        self.positions.extend(replay.closed)
+        self.equity.append((day, self.guard.cash))
