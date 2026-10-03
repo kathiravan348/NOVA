@@ -1,6 +1,6 @@
 # NOVA-183 — Contracts: intraday strategy spec (setup + buying rule) + run profile/scenario fields (D84)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-183 · **Depends on:** NOVA-182
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-183 · **Depends on:** NOVA-182
 
 ## Goal
 A fourth strategy mode `intraday` (a setup + a buying rule, `docs/INTRADAY-RESEARCH.md` §3–§4) and the run fields
@@ -68,4 +68,11 @@ a plain error until NOVA-185; `ModeSwitch` needed no change (it never offered in
 **Known gaps:** the version-create mock handler inherits the previous run's profile when the body has none (NOVA-185 sets the backend rule).
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked for self-review, 4 Oct 2026; same session).
+**Fixed directly (review: commits):** `USER-GUIDE.md` (Intraday in the Mode filter, Setup/Buying lines, edit notice);
+editor test for the intraday notice (no form, link back).
+**Change requests:** none.
+**Guides checked:** USER-GUIDE fixed directly; API/DATABASE not affected (no endpoint or table change).
+**Rulebook issues found:** none. Deviations in the handoff accepted (`risingBars` ≥ 2, nullable create fields).
+**Follow-up tasks created:** none (backend version-create profile rule belongs to NOVA-185).

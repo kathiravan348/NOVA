@@ -31,6 +31,18 @@ const rows = (title: string) =>
   within(screen.getByText(title).closest("div.rounded-lg") as HTMLElement).getAllByRole("listitem");
 
 describe("Strategy editor", () => {
+  it("shows a notice and no form for an intraday strategy (D84)", async () => {
+    renderApp("/strategies/stg_006/edit");
+    expect(
+      await screen.findByText("Intraday setups are edited in their own form (coming soon)"),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to the strategy" })).toHaveAttribute(
+      "href",
+      "/strategies/stg_006",
+    );
+  });
+
   it("starts with one entry and one exit condition, and adds/removes rows", async () => {
     renderApp("/strategies/new");
     await screen.findByRole("heading", { name: "New strategy" });
