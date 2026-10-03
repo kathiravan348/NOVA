@@ -1,6 +1,6 @@
 # NOVA-188 — Intraday setups: opening range retest, previous day high retest, inside bar (D84)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-188 · **Depends on:** NOVA-187
+**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-188 · **Depends on:** NOVA-187
 
 ## Goal
 The three breakout ("trend" family) setups of `docs/INTRADAY-RESEARCH.md` §3 produce candidates with their own stop
