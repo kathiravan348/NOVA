@@ -55,12 +55,7 @@ export const SORT_LABELS: Record<BacktestListSort, string> = {
 };
 
 type NumberKey =
-  | "minReturn"
-  | "minCagr"
-  | "maxDrawdown"
-  | "minWinRate"
-  | "minTrades"
-  | "minProfitFactor";
+  "minReturn" | "minCagr" | "maxDrawdown" | "minWinRate" | "minTrades" | "minProfitFactor";
 
 /** Bounds of each number filter (the API's): [min, max, whole numbers only]. */
 export const NUMBER_RULES: Record<NumberKey, [number, number, boolean]> = {
@@ -117,7 +112,10 @@ export function toParams(values: RunFilterValues, keep: Record<string, string> =
     ["status", values.status],
     ["segment", values.segment],
     ["timeframe", values.timeframe],
-    ...NUMBER_KEYS.map((key): [string, string] => [key, values[key].trim()]),
+    ...NUMBER_KEYS.map((key): [string, string] => [
+      key,
+      numberValue(key, values[key]) === undefined ? "" : values[key].trim(),
+    ]),
   ];
   for (const [key, value] of text) if (value) params.set(key, value);
   if (values.sort !== "created") params.set("sort", values.sort);
@@ -150,7 +148,10 @@ export function toQuery(values: RunFilterValues): BacktestFilter {
 /** True when any filter (not the sort) is set. */
 export function hasFilters(values: RunFilterValues): boolean {
   return (
-    Boolean(values.q.trim() || values.strategyId || values.status) || hasMoreFilters(values)
+    Boolean(values.q.trim() || values.strategyId || values.status) ||
+    hasMoreFilters(values) ||
+    values.sort !== "created" ||
+    values.ascending
   );
 }
 

@@ -43,6 +43,9 @@ export function RunFilters({ values, onChange, strategies, hideStatus = false }:
   const [more, setMore] = useState(() => hasMoreFilters(values));
   useEffect(() => setDraft(values), [values]);
   useEffect(() => {
+    if (hasMoreFilters(values)) setMore(true);
+  }, [values]);
+  useEffect(() => {
     const typed = (["q", ...NUMBERS.map(([key]) => key)] as TextKey[]).some(
       (key) => draft[key] !== values[key],
     );
@@ -59,13 +62,17 @@ export function RunFilters({ values, onChange, strategies, hideStatus = false }:
         <Input
           label="Search"
           type="search"
+          maxLength={200}
           placeholder="Backtest name"
           value={draft.q}
           onChange={(e) => setDraft({ ...draft, q: e.target.value })}
         />
         <Select
           label="Strategy"
-          options={[...all("All strategies"), ...strategies.map((s) => ({ value: s.id, label: s.name }))]}
+          options={[
+            ...all("All strategies"),
+            ...strategies.map((s) => ({ value: s.id, label: s.name })),
+          ]}
           value={draft.strategyId}
           onChange={(e) => pick({ strategyId: e.target.value })}
         />
@@ -112,7 +119,7 @@ export function RunFilters({ values, onChange, strategies, hideStatus = false }:
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onChange({ ...EMPTY_FILTERS, sort: values.sort, ascending: values.ascending })}
+            onClick={() => onChange({ ...EMPTY_FILTERS })}
           >
             Clear filters
           </Button>
@@ -146,6 +153,7 @@ export function RunFilters({ values, onChange, strategies, hideStatus = false }:
                 trailing={unit || undefined}
                 min={Number.isFinite(min) ? min : undefined}
                 max={Number.isFinite(max) ? max : undefined}
+                step={key === "minTrades" ? 1 : "any"}
                 value={text}
                 error={bad ? "Not a valid number here" : undefined}
                 onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}

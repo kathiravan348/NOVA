@@ -1,6 +1,6 @@
 # NOVA-171 — Backtests page: History / Recorded tabs, result columns, filters (D82)
 
-**Status:** in-progress · **Owner:** Claude · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
+**Status:** in-progress · **Owner:** ChatGPT · **Branch:** task/NOVA-171 · **Depends on:** NOVA-169, NOVA-170
 
 ## Goal
 **Backtests** has two tabs, **History data** and **Recorded data**. The table shows each run's results, and a
@@ -14,7 +14,8 @@ filter bar narrows and sorts runs by name, strategy, status, segment, timeframe 
 Create:
 - `frontend/apps/nova-orbit/src/pages/backtests/RunFilters.tsx`, `runFilters.ts`, test `runFilters.test.ts`
 Modify:
-- `frontend/apps/nova-orbit/src/pages/backtests/{BacktestsPage,runColumns}.tsx`, test `backtests.test.tsx`
+- `frontend/apps/nova-orbit/src/pages/backtests/{BacktestsPage,runColumns}.tsx`, tests `backtests.test.tsx`,
+  `versions.test.tsx` (existing bulk-delete test follows the new source tabs)
 - `frontend/apps/nova-orbit/src/pages/strategies/StrategyDetailPage.tsx` (only if `useRunColumns` options change)
 - `docs/guides/USER-GUIDE.md` (Backtests page)
 
@@ -46,10 +47,15 @@ Modify:
 - Compare popup (172), strategies page (176), saved filter sets, column chooser, backend changes.
 
 ## Questions
+Resolved by ChatGPT as planner, 3 Oct 2026: the full gate's existing bulk-delete test spans data sources.
+Its fixture selection must follow History data; added that regression file to this task, with no feature change.
 
 ## Handoff
-- Paused by Claude, 3 Oct 2026 (usage limit). Done on this branch, not yet checked: `runFilters.ts`
-  (URL ⇄ values ⇄ `BacktestFilter`) and `RunFilters.tsx` (filter bar, More filters, Clear, 400 ms typing delay).
-- Left: wire `BacktestsPage` (Tabs by `?source=`, filters in the URL, page reset), result columns in
-  `runColumns.tsx` (typed `BacktestRunListItem`, `enableSorting: false` when sorting is the server's),
-  `runFilters.test.ts`, page tests, USER-GUIDE, `pnpm review:check`, then merge.
+- Built by Claude (initial filters) and ChatGPT (completed 3 Oct 2026), continuing the paused branch.
+- Added source tabs, canonical URL filters, server sorting, result columns, page/selection reset and empty copy.
+- Clear filters removes sort/order too; invalid numbers are omitted. Explicit JSX import avoids Windows casing ambiguity.
+- Changed: BacktestsPage, RunFilters, runFilters, runColumns, filter/page/version tests, USER-GUIDE.
+- Checks: 35 focused tests; bulk-delete and approvals regression tests (14); full review:check green (1104 tests).
+- Visual: 360px/1440px, dark/light, captured and inspected; no viewport overflow. Mock preview only.
+- Guides: USER-GUIDE (list tabs, results, filters, sorting and URL persistence). Dependencies: none.
+- Not merged: independent review required. Subsequent task branches may build on this verified branch.

@@ -1,7 +1,7 @@
 # NOVA — User guide (what works today)
 
 > Written for anyone in the family, no technical knowledge needed.
-> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-169). NOVA **never places real orders**: it only
+> State as of **3 Oct 2026** (Stage B, tasks up to NOVA-171). NOVA **never places real orders**: it only
 > tests trading ideas on past prices and manages the connection to Zerodha.
 > *Maintainers: update this guide in the same task as any screen change (`AGENTS.md` §7a).*
 
@@ -286,6 +286,15 @@ Press **Run backtest** (on a strategy, or **Backtests → Run backtest**).
    results as soon as the run completes. In the **Backtests** list a running run reads **Running · 42%**.
 
 ### Step 6 — Read the results
+The **Backtests** list has **History data** and **Recorded data** tabs. Both keep your current filters.
+The list shows each finished run's **Net P&L**, **Return**, **CAGR**, **Max DD**, **Win rate**, **Trades** and
+**Profit factor**; recorded runs also show **Spread cost**. Unfinished runs show “—” for results.
+**Search**, **Strategy** and **Status** narrow the list. **Sort by** sorts across all pages; **Ascending**
+reverses the order. **More filters** adds **Segment**, **Timeframe**, **Only profitable** and minimum result
+values. **Clear filters** clears those choices and sorting. Changing a filter returns to page 1.
+Your choices are kept in the page address, so reloading restores them. On a phone, each run is a card with
+its name, status, profit, yearly growth and biggest fall. An empty recorded tab explains how to start a run.
+
 Open a run from **Backtests**. You see:
 - If any index members were left out, a note below the run details says **Skipped 2 stocks with no prices
   in this period: HYUNDAI, TATACAP**, for example. It lists up to 10 names, then says how many more.
