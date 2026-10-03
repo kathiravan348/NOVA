@@ -111,6 +111,84 @@ describe("Live config", () => {
     expect(saved.at(-1)).toBe("S2998");
   });
 
+  it("warns about stocks without daily bars and opens a prefilled 1d download", async () => {
+    const { router } = renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
+    const ranked = new Set(mockInstruments.map((i) => i.symbol));
+    expect(await within(dialog).findByText(/stocks have no daily bars/)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Download daily bars" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/data-jobs/new"));
+    const { syncPlans } = router.state.location.state as {
+      syncPlans: { symbols: string[]; timeframe: string; from: string; mode: string }[];
+    };
+    expect(syncPlans.length).toBeGreaterThan(0);
+    for (const plan of syncPlans) {
+      expect(plan).toEqual(
+        expect.objectContaining({ timeframe: "1d", from: "2020-01-01", mode: "skip_existing" }),
+      );
+      expect(plan.symbols.some((s) => ranked.has(s))).toBe(false);
+    }
+    expect(screen.queryByRole("dialog", { name: "Stocks to record" })).not.toBeInTheDocument();
+  });
+
+  it("splits a large unranked list into plans of at most 200 stocks", async () => {
+    const symbols = Array.from({ length: 450 }, (_, i) => `U${String(i).padStart(3, "0")}`);
+    server.use(
+      http.get("*/api/v1/market-data/universe", () =>
+        HttpResponse.json(
+          symbols.map((symbol) => ({
+            symbol,
+            name: symbol,
+            sector: "Banking",
+            indices: [],
+            synced: true,
+            newListing: false,
+          })),
+        ),
+      ),
+      http.get("*/api/v1/market-data/instruments", () => HttpResponse.json([])),
+    );
+    const { router } = renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
+    expect(await within(dialog).findByText(/450 stocks have no daily bars/)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Download daily bars" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/data-jobs/new"));
+    const { syncPlans } = router.state.location.state as { syncPlans: { symbols: string[] }[] };
+    expect(syncPlans.map((p) => p.symbols.length)).toEqual([200, 200, 50]);
+  });
+
+  it("shows no unranked warning when every synced stock has daily bars", async () => {
+    const base = mockInstruments[0]!;
+    server.use(
+      http.get("*/api/v1/market-data/universe", () =>
+        HttpResponse.json([
+          {
+            symbol: "INFY",
+            name: "Infosys",
+            sector: "IT",
+            indices: [],
+            synced: true,
+            newListing: false,
+          },
+        ]),
+      ),
+      http.get("*/api/v1/market-data/instruments", () =>
+        HttpResponse.json([{ ...base, symbol: "INFY" }]),
+      ),
+    );
+    renderApp("/live/config");
+    fireEvent.click(await screen.findByRole("button", { name: "Choose stocks" }));
+    const dialog = await screen.findByRole("dialog", { name: "Stocks to record" });
+    await waitFor(() =>
+      expect(
+        within(dialog).getByRole("button", { name: "Pick top 3000 by traded value" }),
+      ).toBeEnabled(),
+    );
+    expect(within(dialog).queryByText(/no daily bars/)).not.toBeInTheDocument();
+  });
+
   it("disables Pick top and shows the error when instruments fail", async () => {
     server.use(
       http.get("*/api/v1/market-data/instruments", () =>

@@ -167,7 +167,7 @@
 | NOVA-159 | Archive: move ticks one stock at a time (bounded memory) | planned | — | 155 |
 | NOVA-160 | Recorded data history: daily tick summaries + `GET /live/stocks` (D80) | done | Claude | 155 |
 | NOVA-161 | Recorded data cards show history (D80) | done | Claude | 160 |
-| NOVA-162 | Recorder: real top 3000 (skip iNAVs, warn about unranked stocks) (D81) | planned | — | — |
+| NOVA-162 | Recorder: real top 3000 (skip iNAVs, warn about unranked stocks) (D81) | done | Claude | — |
 | NOVA-163 | Recorder: record 09:14–15:31, reconnect a silent feed after 10 s (D81) | planned | — | — |
 | NOVA-164 | Daily Kite check of recorded ticks + `GET /live/checks` (D81, migration 0027) | planned | — | — |
 | NOVA-165 | Recorded data shows the daily Kite check (D81) | planned | — | 164 |

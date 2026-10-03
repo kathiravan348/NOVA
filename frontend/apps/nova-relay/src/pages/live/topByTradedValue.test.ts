@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Instrument } from "@nova/contracts";
 import { mockInstruments } from "@nova/mocks";
-import { topByTradedValue } from "./topByTradedValue";
+import { isInav, topByTradedValue, unrankedStocks } from "./topByTradedValue";
 
 const base = mockInstruments[0]!;
 const stock = (symbol: string, avgDailyVolume: number, lastClosePaise: number): Instrument => ({
@@ -51,5 +51,35 @@ describe("topByTradedValue", () => {
 
   it("returns nothing when nothing is synced", () => {
     expect(topByTradedValue([], instruments, 3)).toEqual([]);
+  });
+
+  it("skips iNAV symbols, even the highest valued, and keeps them out of the unranked tail", () => {
+    const withInav = [...instruments, stock("ABCINAV", 10_000, 10_000)];
+    const picked = topByTradedValue([...synced, "ABCINAV", "XYZINAV"], withInav, 10);
+    expect(picked).not.toContain("ABCINAV");
+    expect(picked).not.toContain("XYZINAV");
+    expect(picked[0]).toBe("HIGH");
+  });
+});
+
+describe("isInav", () => {
+  it("matches symbols ending in INAV only", () => {
+    expect(isInav("NIFTYBEESINAV")).toBe(true);
+    expect(isInav("INAVX")).toBe(false);
+    expect(isInav("INFY")).toBe(false);
+  });
+});
+
+describe("unrankedStocks", () => {
+  it("returns synced non-iNAV stocks with no instrument row, sorted", () => {
+    const instruments = [stock("INFY", 1, 1)];
+    expect(unrankedStocks(["ZED", "INFY", "ABCINAV", "ALPHA", "ZED"], instruments)).toEqual([
+      "ALPHA",
+      "ZED",
+    ]);
+  });
+
+  it("is empty when every stock is ranked", () => {
+    expect(unrankedStocks(["INFY"], [stock("INFY", 1, 1)])).toEqual([]);
   });
 });
