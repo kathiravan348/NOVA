@@ -1,6 +1,6 @@
 # NOVA-178 — Timeline popup: trade-by-trade vertical timeline (D83)
 
-**Status:** planned · **Owner:** — · **Branch:** task/NOVA-178 · **Depends on:** NOVA-177 (merge after it is deployed)
+**Status:** done · **Owner:** Claude · **Branch:** task/NOVA-178 · **Depends on:** NOVA-177 (merge after it is deployed)
 
 ## Goal
 The backtest **Timeline** popup shows every buy and sell as a node on a coloured vertical rail, oldest first.
@@ -54,7 +54,24 @@ Delete: `frontend/apps/nova-orbit/src/pages/backtests/TimelineDayEvents.tsx`
 _(implementer writes here if blocked)_
 
 ## Handoff
-_(implementer, ≤ 20 lines — see `docs/templates/HANDOFF.md`)_
+
+**Done:** `TradeTimeline` + `heldTime` (ui-trading), `LoadMore auto`, Timeline popup rewritten as a trade-by-trade rail with pinned filters and scroll loading.
+**Files changed:** listed files, plus `TradeTimeline.fixtures.ts` (shared by story and test); `TimelineDayEvents.tsx` deleted.
+**Commands run:** review:check: format, lint, typecheck green; tests 1161/1162 (relay `approvalBatch` timeout, flaky before this task), re-run with 4 workers 1162/1162; builds green.
+**Checked:** 360px ✓ · desktop ✓ · dark ✓ · light ✓ (app popup on mock run_001 + TradeTimeline story).
+**New dependencies:** none. **Maps updated:** COMPONENTS. **Guides updated:** USER-GUIDE.
+**Deviations from task:** (1) at 360px From/To sit side by side and the cash explanation scrolls with the list, so the pinned block stays small (it took half the popup at first); (2) a fixtures file for story + test.
+**Known gaps:** `DataTable` row details (NOVA-175) is now unused by apps; kept as a generic feature.
 
 ## Review
-_(reviewer — Claude or ChatGPT, ≤ 20 lines — see `docs/templates/REVIEW.md`)_
+**Result:** done (3 Oct 2026).
+**Reviewer / built by:** Claude / Claude. **Self-review:** yes (Owner asked Claude to build and review).
+**Fixed directly (review: commits):** none needed.
+**Checks:** format, lint, typecheck, 1162 tests (4 workers; the relay `approvalBatch` timeout is pre-existing, follow-up
+suggested), app + Storybook builds green. Seen in the browser: popup at 1440px and 360px, dark and light; story Seconds.
+**Acceptance:** oldest-first nodes, colours, clock by source/timeframe, held time, Stock/From/To filters, next 50
+via LoadMore (offsets 0, 50), end line, filters pinned while scrolling (sticky top = scroll top): all tested or seen.
+A failed next page shows the error with Try again and stops auto-loading (no retry loop).
+**Deviations accepted:** compact 360px filter layout and the fixtures file (both improve the task's goal).
+**Guides checked:** USER-GUIDE Timeline paragraph and COMPONENTS rows match the diff.
+**Rulebook issues found:** none. **Follow-up tasks created:** none (flaky relay test offered as a separate session).
